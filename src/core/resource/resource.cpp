@@ -1,0 +1,145 @@
+#include <core/resource/resource.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <core/stream/streamer.hpp>
+#include <core/stream/unstreamer.hpp>
+
+namespace eXl
+{
+  IMPLEMENT_RefCCustom(Resource);
+  IMPLEMENT_RTTI(Resource);
+
+  Resource::~Resource()
+  {}
+
+  String Resource::UUID::ToString() const
+  {
+    String uuidStr("(");
+    uuidStr.append(StringUtil::FromInt(uuid_dwords[0]));
+    uuidStr.append(StringUtil::FromInt(uuid_dwords[1]));
+    uuidStr.append(StringUtil::FromInt(uuid_dwords[2]));
+    uuidStr.append(StringUtil::FromInt(uuid_dwords[3]));
+    uuidStr.append(")");
+
+    return uuidStr;
+  }
+
+  Err Resource::UUID::Stream(Streamer& iStreamer) const
+  {
+    iStreamer.BeginSequence();
+    iStreamer.Write(uuid_dwords + 0);
+    iStreamer.Write(uuid_dwords + 1);
+    iStreamer.Write(uuid_dwords + 2);
+    iStreamer.Write(uuid_dwords + 3);
+    iStreamer.EndSequence();
+
+    return Err::Success;
+  }
+
+  Err Resource::UUID::Unstream(Unstreamer& iStreamer)
+  {
+    if (iStreamer.BeginSequence())
+    {
+      uint32_t idx = 0;
+      do
+      {
+        eXl_ASSERT_REPAIR_RET(idx < 4, Err::Failure);
+        iStreamer.Read(uuid_dwords + idx);
+        ++idx;
+      } while (iStreamer.NextSequenceElement());
+    }
+    return Err::Success;
+  }
+
+  Err Resource::Header::Stream(Streamer& iStreamer) const
+  {
+    iStreamer.BeginStruct();
+    iStreamer.PushKey("UUID");
+    m_ResourceId.Stream(iStreamer);
+    iStreamer.PopKey();
+    iStreamer.PushKey("Name");
+    iStreamer.Write(&m_ResourceName);
+    iStreamer.PopKey();
+    iStreamer.PushKey("LoaderName");
+    iStreamer.Write(&m_LoaderName.get());
+    iStreamer.PopKey();
+    iStreamer.PushKey("LoaderVersion");
+    iStreamer.Write(&m_LoaderVersion);
+    iStreamer.PopKey();
+    iStreamer.PushKey("Hash");
+    iStreamer.Write(&m_ResourceHash);
+    iStreamer.PopKey();
+    iStreamer.PushKey("Flags");
+    iStreamer.Write(&m_Flags);
+    iStreamer.PopKey();
+    iStreamer.EndStruct();
+    return Err::Success;
+  }
+
+  Err Resource::Header::Unstream(Unstreamer& iStreamer)
+  {
+    iStreamer.BeginStruct();
+    iStreamer.PushKey("UUID");
+    m_ResourceId.Unstream(iStreamer);
+    iStreamer.PopKey();
+    iStreamer.PushKey("Name");
+    iStreamer.Read(&m_ResourceName);
+    iStreamer.PopKey();
+
+    iStreamer.PushKey("LoaderName");
+
+    String loaderName;
+    iStreamer.Read(&loaderName);
+
+    m_LoaderName = ResourceLoaderName(loaderName);
+
+    iStreamer.PopKey();
+    iStreamer.PushKey("LoaderVersion");
+    iStreamer.Read(&m_LoaderVersion);
+    iStreamer.PopKey();
+    iStreamer.PushKey("Hash");
+    iStreamer.Read(&m_ResourceHash);
+    iStreamer.PopKey();
+    iStreamer.PushKey("Flags");
+    iStreamer.Read(&m_Flags);
+    iStreamer.PopKey();
+    iStreamer.EndStruct();
+    return Err::Success;
+  }
+
+  Err Resource::Stream(Streamer& iStreamer) const
+  {
+    iStreamer.BeginStruct();
+    iStreamer.PushKey("Header");
+    GetHeader().Stream(iStreamer);
+    iStreamer.PopKey();
+
+    iStreamer.PushKey("Data");
+    Stream_Data(iStreamer);
+    iStreamer.PopKey();
+    iStreamer.EndStruct();
+
+    return Err::Success;
+  }
+
+  Err Resource::Unstream(Unstreamer& iStreamer)
+  {
+    iStreamer.BeginStruct();
+    //iStreamer.PushKey("Header");
+    //m_Header.Unstream(iStreamer);
+    //iStreamer.PopKey();
+
+    iStreamer.PushKey("Data");
+    Unstream_Data(iStreamer);
+    iStreamer.PopKey();
+    iStreamer.EndStruct();
+
+    PostLoad();
+
+    return Err::Success;
+  }
+
+  void Resource::PostLoad()
+  {
+
+  }
+}

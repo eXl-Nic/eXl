@@ -1,0 +1,12 @@
+Build
+Build_Android
+Build_Linux
+spatial_packages
+Tidy
+data
+Package
+schema
+snapshots
+.improbable
+contrib/SDL2-2.0.9/android-project
+contrib/SDL2-2.0.9/android-project/app

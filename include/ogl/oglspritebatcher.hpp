@@ -1,0 +1,276 @@
+/**
+
+  Copyright Nicolas Colombe
+  2009-2014
+
+  This file is part of eXl.
+
+  eXl is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eXl is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with eXl.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#pragma once
+
+#include <core/idgenerator.hpp>
+#include <core/image/image.hpp>
+#include <math/aabb2d.hpp>
+//#include <gametk/gfx/fontmanager.hpp>
+#include <ogl/renderer/ogltexture.hpp>
+#include <ogl/renderer/oglrendercommand.hpp>
+//#include <gametk/bitmap.hpp>
+//#include <gametk/spritedesc.hpp>
+
+#include <math/vector2.hpp>
+#include <math/aabb2d.hpp>
+
+namespace eXl
+{
+  class Image;
+
+  struct EXL_OGL_API Bitmap : public HeapObject
+  {
+    bool TestBox(AABB2Df const& iPickBox, AABB2Df const& iBoxPos, AABB2Df const& iBoxTex) const;
+    unsigned int m_Width;
+    unsigned int m_Height;
+    Vector<bool> m_Pixels;
+  };
+
+  struct AnimationDesc
+  {
+    enum Kind
+    {
+      Loop,
+      Once,
+      PingPong
+    };
+
+    Vector2f anim;
+    Vector2f step;
+    Vector2i size;
+    Kind animKind;
+    float time;
+  };
+
+  class EXL_OGL_API SpriteDesc : public HeapObject
+  {
+    DECLARE_RefC;
+
+  public:
+
+    enum SpriteFlags
+    {
+      Pickable = 1 << 0,
+      RotationShift = 1,
+      RotationMask = 3 << RotationShift,
+      Rot_0    = 0 << 1,
+      Rot_90   = 1 << 1,
+      Rot_180  = 2 << 1,
+      Rot_270  = 3 << 1,
+      FlipShift = 3,
+      FlipMask = 3 << (FlipShift + 0),
+      Flip_H   = 1 << (FlipShift + 0),
+      Flip_V   = 1 << (FlipShift + 1)
+    };
+
+    SpriteDesc(AString const& iFileName);
+	SpriteDesc(Image* iImage, Image::Storage iStorage);
+    ~SpriteDesc();
+
+    void AddAnim(AnimationDesc::Kind iAnimFlag,float iTime,Vector2f const& iOrig,Vector2f const& iStep,Vector2i const& iSize);
+
+    AString const& GetFileName()const{return m_FileName;}
+
+    Vector<AnimationDesc> const& GetAnimationTable()const{return m_Anims;}
+
+    enum
+    {
+      PreloadImage   = 1<<0,
+      PreloadBitmap  = 1<<1,
+      PreloadTexture = 1<<2
+    };
+
+    void Preload(unsigned int iPreloadFlags) const;
+
+    OGLTexture const* GetTexture() const;
+
+    void UnloadTexture() const;
+
+    Bitmap const* GetBitmap() const;
+
+    Image const* GetImage() const;
+
+  protected:
+
+    Vector<AnimationDesc> m_Anims;
+    AString m_FileName;
+
+    mutable Image::Size m_Size;
+    mutable IntrusivePtr<OGLTexture> m_Texture;
+    mutable boost::optional<Image>   m_Image;
+    mutable boost::optional<Bitmap>  m_Bitmap;
+  };
+
+  class OGLTexture;
+  //class OGLFontManager;
+  class OGLTextureLoader;
+  class OGLDisplayList;
+
+  enum OSMetrics 
+  {
+    OSPRITE_METRIC_ABS,
+    OSPRITE_METRIC_PIXELS,
+    OSPRITE_METRIC_RELATIVE,
+    OSPRITE_METRIC_SCREEN
+  };
+
+  class EXL_OGL_API OGLSpriteBatcher
+  {
+  public: 
+
+    struct SpriteElement
+    {
+      //~SpriteElement();
+      AABB2Df boxPos;// sprite coordinates
+      float tx1, ty1, tx2, ty2;// texture coordinates
+      void* pickId;
+      IntrusivePtr<SpriteDesc const> texHandle;// texture handle
+      float alpha;
+      unsigned int offsetInBuffer;
+      unsigned short layer;
+      unsigned short orient;
+    };
+
+    struct VertexChunk 
+    {
+      void Empty();
+      IntrusivePtr<SpriteDesc const> spriteDesc;
+      OGLShaderData const* data;
+      unsigned int vertexCount;
+      unsigned int m_Layer;
+    };
+
+    struct SpriteArray
+    {
+      void* pickId;
+      std::vector<VertexChunk> m_Chunks;
+      OGLVAssembly m_Assembly;
+      OGLBuffer* m_Buffer;
+      bool decal;
+    };
+
+    static AABB2Df const FULL_SPRITE;
+    //static AABB2Df const FULL_SCREEN;
+
+    /// Default constructor
+    OGLSpriteBatcher(float iAltCoeff, Vector3f const& iDepth/*, OGLFontManager& iFontMgr*/);
+
+    /// Destructor
+    virtual ~OGLSpriteBatcher();
+ 
+    //void Shutdown(void);
+
+    void SetAlphaCoeff(float iAlpha);
+
+    unsigned int AddSprite(void* iData, SpriteDesc const* iSprite, float alpha,unsigned int layer, unsigned int iOrient, AABB2Df const& destRect , AABB2Df const& spriteRect = FULL_SPRITE);
+
+    void UpdateSprite(unsigned int iId, AABB2Df const& destRect);
+
+    void UpdateSprite(unsigned int iId, AABB2Df const& destRect, unsigned int iOrient, AABB2Df const& spriteRect);
+
+    void RemoveSprite(unsigned int iId);
+
+    unsigned int CreateSpriteCollec(void* iData, unsigned int layer, unsigned int alpha, unsigned iNum, SpriteDesc const* const* iSprite, AABB2Df const* destRect, AABB2Df const* spriteRect, unsigned char const* iOrient);
+
+    void EraseSpriteCollec(unsigned int iId);
+
+    //unsigned int CreateText(String const& iFont, String const& iText, unsigned int iLayer, unsigned int iColor, Vector2f const& iPos, Vector2f const& iScale, FontManager::Anchor iAnchor);
+
+    //void EraseText(unsigned int iId);
+
+    void Hide(unsigned int iId);
+
+    void Unhide(unsigned int iId, void* iData);
+
+    //void Pick(Vector3f const& iPos, Vector3f const& iRay, float iRadius, unsigned int iMaxElem, std::vector<PickedElement>& oList, void* iUnpickable);
+
+    Bitmap const* GetBitmap(unsigned int iElem);
+
+    void Update();
+
+    void BatchRender(OGLDisplayList& iList, unsigned char iPrefix);
+
+    //void ShutdownAPI(GfxSys* iSys);
+
+    //void RestoreAPI(GfxSys* iSys);
+
+    SpriteElement const* GetElement(unsigned int iId);
+
+    SpriteArray const* GetArray(unsigned int iId);
+
+    inline OGLVAssembly const* GetDefaultAssembly() const{return &m_DefaultAssembly;}
+    //inline OGLTextureLoader* GetTextureLoader() const{return m_Loader;}
+ 
+    void StealSprites(Vector<SpriteElement>& oElems, Vector<VertexChunk>& oChunks, OGLVAssembly& oAssembly, OGLBuffer*& oBuffer);
+
+    void StealCollections(Vector<SpriteArray>& oCollecs);
+
+  protected:
+
+    //void Visit(OGLNodeVisitor* iVisitor);
+
+    struct CompareSprite
+    {
+      inline bool operator ()(SpriteElement const * const& iElem1, SpriteElement const* const& iElem2);
+    };
+
+    struct CompareLayer
+    {
+      inline bool operator ()(SpriteElement const * const& iElem1, SpriteElement const* const& iElem2);
+    };
+
+    void FillSpriteElem(SpriteElement& iElem, AABB2Df const& spriteRect, AABB2Df const& texRect, Vector2i const& iSpriteSize);
+
+    float* WriteGeomData(float* oGeom, SpriteElement const* iElem);
+ 
+    OGLTexture* LoadSprite(const String& spriteName);
+
+    //void convertScreenMetrics(OSMetrics metricFrom, const float sx, const float sy, OSMetrics metricTo, float& dx, float& dy);
+ 
+    //OGLTextureLoader* m_Loader;
+    //OGLFontManager& m_FontMgr;
+
+    Vector<SpriteElement> m_Sprites;
+
+    Vector<VertexChunk>   m_Chunks;
+
+    void EmptyChunks();
+
+    OGLVAssembly m_DefaultAssembly;
+    OGLBuffer* m_DefaultBuffer;
+
+    IdGenerator m_HeapCol;
+    Vector<SpriteArray> m_SpritesCol;
+
+    IdGenerator m_Heap; 
+    //Set<SpriteElement*,CompareSprite> 
+    bool dirty;
+    bool needUpdate;
+
+    bool cacheSprites;
+    bool registerSprites;
+    
+    float alphaCoeff;
+    float m_AltOffset;
+
+    Vector3f m_Depth;
+  };
+}

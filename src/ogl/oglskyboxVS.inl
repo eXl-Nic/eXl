@@ -1,0 +1,18 @@
+char const* skyBoxVS = 
+"#version 140\n"
+"attribute vec4 iPosition;\n"
+"attribute vec4 iNormal;\n"
+""
+"uniform mat4 iViewMatrix;\n"
+"uniform mat4 iProjMatrix;\n"
+"\n"
+"varying vec3 texCoord;\n"
+"\n"
+"void main()\n"
+"{\n"
+"  vec4 pos = iViewMatrix * vec4(iPosition.xyz, 0);\n"
+"  pos = iProjMatrix * vec4(pos.xyz, 1.0);\n"
+"  texCoord = iPosition.xyz;"
+"  gl_Position = pos;\n"
+"}\n"
+;

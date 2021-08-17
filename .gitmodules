@@ -1,0 +1,21 @@
+[submodule "modules/sdl"]
+	path = modules/sdl
+	url = https://github.com/libsdl-org/SDL
+[submodule "modules/xxHash"]
+	path = modules/xxHash
+	url = https://github.com/Cyan4973/xxHash
+[submodule "modules/imgui"]
+	path = modules/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "modules/bullet"]
+	path = modules/bullet
+	url = https://github.com/bulletphysics/bullet3
+[submodule "modules/lua"]
+	path = modules/lua
+	url = https://github.com/lua/lua
+[submodule "modules/lbfgs"]
+	path = modules/lbfgs
+	url = https://github.com/chokkan/liblbfgs
+[submodule "modules/libsvm"]
+	path = modules/libsvm
+	url = https://github.com/cjlin1/libsvm

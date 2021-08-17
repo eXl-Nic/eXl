@@ -1,0 +1,14 @@
+﻿  cencode.c
+g:\msvc14libs\libb64-1.2.1\src\cencode.c(45): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cencode.c(56): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cencode.c(67): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cencode.c(84): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cencode.c(107): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+  cdecode.c
+g:\msvc14libs\libb64-1.2.1\src\cdecode.c(43): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cdecode.c(54): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cdecode.c(66): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cdecode.c(78): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+g:\msvc14libs\libb64-1.2.1\src\cdecode.c(86): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+  Generating Code...
+  base64.vcxproj -> G:\MSVC14Libs\libb64-1.2.1\base64\VisualStudioProject\x64\Debug\base64_d.lib
