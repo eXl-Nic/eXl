@@ -162,3 +162,6 @@ set_target_properties(${LUA_LIBS} PROPERTIES
 	SOVERSION ${LUA_SOVERSION}
 	CLEAN_DIRECT_OUTPUT 1
 )
+
+set_target_properties(lua PROPERTIES FOLDER Dependencies/Lua)
+set_target_properties(lua_static PROPERTIES FOLDER Dependencies/Lua)

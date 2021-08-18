@@ -57,18 +57,16 @@ function(SETUP_EXL_TARGET TARGET_NAME)
     endif(${WIN32})
 
     add_custom_command(OUTPUT ${REFLANG_OUTPUT_CPP}
-    #add_custom_command(OUTPUT ${REFLANG_OUTPUT}
           COMMAND ${REFLANG_COMMAND}
           DEPENDS ${DEPENDENCIES} 
-          BYPRODUCTS ${REFLANG_OUTPUT_HPP} 
-          #${REFLANG_OUTPUT_CPP}
+          BYPRODUCTS ${REFLANG_OUTPUT_HPP}
     )
     
-    add_custom_target(${TARGET_NAME}_outputdebugcmd COMMAND ${CMAKE_COMMAND} -E echo ${REFLANG_COMMAND})
+    #add_custom_target(${TARGET_NAME}_outputdebugcmd COMMAND ${CMAKE_COMMAND} -E echo ${REFLANG_COMMAND})
     if(${WIN32})
-    add_dependencies(${TARGET_NAME} eXl_reflang)
+      add_dependencies(${TARGET_NAME} eXl_reflang)
     endif(${WIN32})
-    add_dependencies(${TARGET_NAME} ${TARGET_NAME}_outputdebugcmd)
+    #add_dependencies(${TARGET_NAME} ${TARGET_NAME}_outputdebugcmd)
     
     target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

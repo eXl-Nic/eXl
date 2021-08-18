@@ -21,6 +21,8 @@ set(BUILD_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 
 set(BULLET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/modules/bullet/src")
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 set(SDL_ROOT "${CMAKE_SOURCE_DIR}/modules/sdl")
 set(IMGUI_ROOT "${CMAKE_SOURCE_DIR}/modules/imgui")
 set(XXHASH_ROOT "${CMAKE_SOURCE_DIR}/modules/xxHash")
@@ -199,12 +201,26 @@ set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS}
 )
 
 add_subdirectory(${SDL_ROOT} ${OUT_DIR}/modules/sdl)
+set_target_properties(SDL2 PROPERTIES FOLDER Dependencies/SDL2)
+set_target_properties(SDL2main PROPERTIES FOLDER Dependencies/SDL2)
+set_target_properties(SDL2-static PROPERTIES FOLDER Dependencies/SDL2)
+set_target_properties(uninstall PROPERTIES FOLDER Dependencies/SDL2)
+
 add_subdirectory(${LIBB64_ROOT} ${OUT_DIR}/modules/libb64)
+set_target_properties(libb64 PROPERTIES FOLDER Dependencies)
+
 add_subdirectory(${VOROPP_ROOT} ${OUT_DIR}/modules/voropp)
+set_target_properties(Voro++ PROPERTIES FOLDER Dependencies)
+
 add_subdirectory(${LBFGS_ROOT} ${OUT_DIR}/modules/lbfgs)
+set_target_properties(lbfgs_lib PROPERTIES FOLDER Dependencies)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/libsvm ${OUT_DIR}/modules/libsvm)
+
 set(XXHASH_BUILD_XXHSUM OFF CACHE BOOL "Build the xxhsum binary" FORCE)
 add_subdirectory(${XXHASH_ROOT}/cmake_unofficial ${OUT_DIR}/modules/xxhash)
+set_target_properties(xxhash PROPERTIES FOLDER Dependencies)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/lua ${OUT_DIR}/modules/lua)
 add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/imgui ${OUT_DIR}/modules/imgui)
 add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/bullet ${OUT_DIR}/contrib/bullet)

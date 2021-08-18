@@ -43,3 +43,5 @@ target_link_libraries(imgui LINK_PRIVATE ${PREREQS_PRIV})
 if(${LINUX})
   SET_TARGET_PROPERTIES(imgui PROPERTIES COMPILE_FLAGS -fPIC)
 endif(${LINUX})
+
+set_target_properties(imgui PROPERTIES FOLDER Dependencies)

@@ -99,14 +99,10 @@ if(${ENABLE_FREEIMAGE})
   )
 endif()
 
-if(${ENABLE_THREAD})
-  set(SOURCES ${SOURCES}
-      thread/event.cpp
-      thread/workerthread.cpp
-      ${INCLUDE_DIR}/thread/event.hpp
-      ${INCLUDE_DIR}/thread/workerthread.hpp
-    )
-endif()
+set(SOURCES ${SOURCES}
+    thread/event.cpp
+    thread/workerthread.cpp
+)
 
 add_library(eXl_Core ${LIBRARY_TYPE} ${SOURCES})
 

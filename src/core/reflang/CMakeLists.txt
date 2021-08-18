@@ -11,6 +11,13 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(Clang REQUIRED)
 include_directories(${CLANG_INCLUDE_DIRS})
 
+set_target_properties(acc_gen PROPERTIES FOLDER Dependencies/Clang)
+set_target_properties(clang-tablegen-targets PROPERTIES FOLDER Dependencies/Clang)
+set_target_properties(intrinsics_gen PROPERTIES FOLDER Dependencies/Clang)
+set_target_properties(omp_gen PROPERTIES FOLDER Dependencies/Clang)
+
+
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
