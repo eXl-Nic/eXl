@@ -24,12 +24,11 @@ set (SOURCES
   pregraph.cpp
 ) 
 
-if(${WIN32})
-#set (SOURCES ${SOURCES}
-#	${INCLUDE_DIR}/terrain.hpp
-#	terrain.cpp
-#	${ARMADILLO_WRAPPER_SRC}
-#	)
+if(${ENABLE_ARMADILLO})
+set (SOURCES ${SOURCES}
+	terrain.cpp
+	${ARMADILLO_WRAPPER_SRC}
+	)
 endif()
 
 add_library(eXl_Gen ${LIBRARY_TYPE} ${SOURCES})
@@ -40,8 +39,11 @@ target_include_directories(eXl_Gen PRIVATE
 ${VOROPP_INCLUDE_DIR} 
 ${LBFGS_INCLUDE_DIR} 
 ${LIBSVM_INCLUDE_DIR} 
-#${ARMADILLO_INCLUDE_DIR}
 )
+
+if(${ENABLE_ARMADILLO})
+  target_include_directories(eXl_Gen PRIVATE ${ARMADILLO_INCLUDE_DIR})
+endif()
 
 target_link_libraries(eXl_Gen LINK_PUBLIC ${BOOST_LIBRARIES})
 
@@ -51,9 +53,9 @@ set(PRIVATE_LIBRARIES
 	lbfgs_lib
 )
 
-if(${WIN32})
-#target_link_directories(eXl_Gen ${LIBRARY_DEPS_VISIBILITY} ${ARMADILLO_LIBRARY_DIR})
-#set(PRIVATE_LIBRARIES ${PRIVATE_LIBRARIES} ${ARMADILLO_LIBRARIES})
+if(${ENABLE_ARMADILLO})
+target_link_directories(eXl_Gen ${LIBRARY_DEPS_VISIBILITY} ${ARMADILLO_LIBRARY_DIR})
+set(PRIVATE_LIBRARIES ${PRIVATE_LIBRARIES} ${ARMADILLO_LIBRARIES})
 endif()
 
 target_link_libraries(eXl_Gen PRIVATE ${PRIVATE_LIBRARIES})

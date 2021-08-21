@@ -8,32 +8,33 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef PRINCIPALAXIS_INCLUDED
-#define PRINCIPALAXIS_INCLUDED
+#pragma once
 
-#include "levelgen_exp.hpp"
+#include <math/mathexp.hpp>
 #include <math/polygon.hpp>
 
 namespace eXl
 {
-  class EXL_LEVELGEN_API ComputePrincipalAxis
+  class EXL_MATH_API ComputePrincipalAxis
   {
   public:
 
     bool operator()(Polygoni const& iPoly);
     bool operator()(Polygonf const& iPoly);
     bool operator()(Polygond const& iPoly);
+    bool operator()(Vector<Vector2f> const& iPoints);
+    bool operator()(Vector<Vector2d> const& iPoints);
 
-    //Vector2d const& GetCenter() const {return m_Center; }
+    Vector2d const& GetCenter() const {return m_Center; }
     Vector2d const& GetPrimaryAxis() const { return m_PrimaryAxis; }
 
   protected:
     template <typename Real>
     bool Compute(Polygon<Real> const& iPoly);
+    template <typename Real>
+    bool Compute(Vector2<Real> const* iPoints, uint32_t iNumPoints);
 
-    //Vector2d m_Center;
+    Vector2d m_Center;
     Vector2d m_PrimaryAxis;
   };
 }
-
-#endif

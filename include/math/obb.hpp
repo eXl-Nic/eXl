@@ -8,16 +8,15 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef OBB_INCLUDED
-#define OBB_INCLUDED
+#pragma once
 
-#include "levelgen_exp.hpp"
+#include <math/mathexp.hpp>
 #include <math/aabb2d.hpp>
 #include <math/polygon.hpp>
 
 namespace eXl
 {
-  struct EXL_LEVELGEN_API OBB
+  struct EXL_MATH_API OBB
   {
     AABB2Dd m_Dims;
     Vector2d m_Axis[2];
@@ -37,5 +36,3 @@ namespace eXl
 
   };
 }
-
-#endif
