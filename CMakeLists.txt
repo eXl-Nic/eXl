@@ -255,3 +255,6 @@ if(${BUILD_EXL_OGL})
 endif()
 
 add_subdirectory(src/engine ${OUT_DIR}/eXl/engine)
+
+set(CMAKE_DEBUG_POSTFIX "_d" CACHE STRING "" FORCE)
+set(CMAKE_RELWITHDEBINFO_POSTFIX "_dev" CACHE STRING "" FORCE)
