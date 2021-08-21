@@ -13,13 +13,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-#if !defined(__ANDROID__)
+#if defined(EXL_SHARED_LIBRARY) && defined(EXL_NAME_EXPLICIT_INIT)
   boost::aligned_storage<sizeof(NameCoreHolder)> s_NameSingleton;
 #endif
 
   void Name_Init()
   {
-#if !defined(__ANDROID__)
+#if defined(EXL_SHARED_LIBRARY) && defined(EXL_NAME_EXPLICIT_INIT)
     NameCore::reset_init();
     new(s_NameSingleton.address()) NameCoreHolder;
     NameCore::init();
@@ -28,12 +28,12 @@ namespace eXl
 
   void Name_Destroy()
   {
-#if !defined(__ANDROID__)
+#if defined(EXL_SHARED_LIBRARY) && defined(EXL_NAME_EXPLICIT_INIT)
     TNameCoreSingleton<NameCoreHolder>::get().~NameCoreHolder();
 #endif
   }
 
-#if !defined(__ANDROID__)
+#if defined(EXL_SHARED_LIBRARY) && defined(EXL_NAME_EXPLICIT_INIT)
   NameCoreHolder& TNameCoreSingleton<NameCoreHolder>::get()
   {
     return *reinterpret_cast<NameCoreHolder*>(s_NameSingleton.address());

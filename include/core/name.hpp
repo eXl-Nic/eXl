@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/coredef.hpp>
 #include <boost/flyweight.hpp>
 #include <boost/flyweight/no_tracking.hpp>
-//#include <boost/unordered_map.hpp>
+#include <boost/flyweight/intermodule_holder.hpp>
 
 #define MAKE_NAME_DECL(NameType) \
 struct NameType : eXl::Name \
@@ -46,11 +46,17 @@ MAKE_NAME_TYPE(NameType)
 namespace eXl
 {
   struct DefaultTag {};
-  //template <typename T = DefaultTag>
 
-#if defined(__ANDROID__)
+#if !defined(EXL_SHARED_LIBRARY)
   using Name = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, boost::flyweights::no_tracking>;
-#else
+#endif
+
+#if defined(EXL_SHARED_LIBRARY)
+#if defined(EXL_NAME_EXPLICIT_INIT)
+
+#if !defined(BOOST_FLYWEIGHT_EXPLICIT_INIT_PATCH)
+#error("Need boost patch")
+#endif
 
   template<typename C>
   struct TNameCoreSingleton;
@@ -78,7 +84,9 @@ namespace eXl
   {
     EXL_CORE_API static NameCoreHolder& get();
   };
-
+#else
+  using Name = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, boost::flyweights::intermodule_holder, boost::flyweights::no_tracking>;
+#endif
 #endif
 }
 

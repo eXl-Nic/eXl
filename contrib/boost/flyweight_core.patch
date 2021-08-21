@@ -1,0 +1,72 @@
+--- D:/MSVC14Libs/boost_1_72_0/boost/flyweight/detail/flyweight_core.hpp	Tue Dec 10 01:18:43 2019
++++ D:/MSVC14Libs/boost/boost/flyweight/detail/flyweight_core.hpp	Sat Aug 21 16:37:20 2021
+@@ -9,6 +9,10 @@
+ #ifndef BOOST_FLYWEIGHT_DETAIL_FLYWEIGHT_CORE_HPP
+ #define BOOST_FLYWEIGHT_DETAIL_FLYWEIGHT_CORE_HPP
+ 
++#if defined(BOOST_FLYWEIGHT_EXPLICIT_INIT)
++#define BOOST_FLYWEIGHT_EXPLICIT_INIT_PATCH
++#endif
++
+ #if defined(_MSC_VER)
+ #pragma once
+ #endif
+@@ -107,13 +111,20 @@
+ 
+   static bool init()
+   {
++#if !defined(BOOST_FLYWEIGHT_EXPLICIT_INIT)
+     if(static_initializer)return true;
+-    else{
++    else
++#endif
++    {
+       holder_arg& a=holder_type::get();
+       static_factory_ptr=&a.factory;
+       static_mutex_ptr=&a.mutex;
++#if !defined(BOOST_FLYWEIGHT_EXPLICIT_INIT)
+       static_initializer=(static_factory_ptr!=0);
+       return static_initializer;
++#else
++      return true;
++#endif
+     }
+   }
+ 
+@@ -169,6 +180,13 @@
+     factory_type factory;
+     mutex_type   mutex;
+   };
++#if defined(BOOST_FLYWEIGHT_EXPLICIT_INIT)
++public:
++
++  typedef holder_arg holder_struct;
++
++private:
++#endif
+   typedef typename mpl::apply1<
+     HolderSpecifier,
+     holder_arg
+@@ -260,11 +278,14 @@
+   }
+ #endif
+ 
++#if !defined(BOOST_FLYWEIGHT_EXPLICIT_INIT)
+   static bool          static_initializer;
++#endif
+   static factory_type* static_factory_ptr;
+   static mutex_type*   static_mutex_ptr;
+ };
+ 
++#if !defined(BOOST_FLYWEIGHT_EXPLICIT_INIT)
+ template<
+   typename ValuePolicy,typename Tag,typename TrackingPolicy,
+   typename FactorySpecifier,typename LockingPolicy,typename HolderSpecifier
+@@ -276,6 +297,7 @@
+   flyweight_core<
+       ValuePolicy,Tag,TrackingPolicy,
+       FactorySpecifier,LockingPolicy,HolderSpecifier>::init();
++#endif
+ 
+ template<
+   typename ValuePolicy,typename Tag,typename TrackingPolicy,
