@@ -388,11 +388,11 @@ namespace eXl
     }
 
     Vector2f vecDir[2];
-    Vector2f segDir = iSeg.m_Ext2 - iSeg.m_Ext1;
+    Vector2f segDir = orderedSeg.m_Ext2 - orderedSeg.m_Ext1;
     float segLen = segDir.Normalize();
 
-    vecDir[0] = (iSeg.m_Ext1 - segDir * iRadius) - m_CasterPos;
-    vecDir[1] = (iSeg.m_Ext2 + segDir * iRadius) - m_CasterPos;
+    vecDir[0] = (orderedSeg.m_Ext1 - segDir * iRadius) - m_CasterPos;
+    vecDir[1] = (orderedSeg.m_Ext2 + segDir * iRadius) - m_CasterPos;
 
     float disExt0 = vecDir[0].Normalize();
     float disExt1 = vecDir[1].Normalize();
@@ -486,7 +486,7 @@ namespace eXl
     }
 
     BestVelocity velocities(m_PureAvoidance ? 0.0 : 0.5);
-
+#if 1
     Vector<Vector2f> const& pts = GetSamples();
 
     for (int32_t i = -1; i<(int32_t)pts.size(); ++i)
@@ -549,6 +549,7 @@ namespace eXl
         drawer->DrawLine(MathTools::To3DVec(center) + Vector3f(1.0, -1.0, 0.0) * 0.25, MathTools::To3DVec(center) + Vector3f(-1.0, 1.0, 0.0) * 0.25, color);
       }
     }
+#endif
 
     float* bestScore = std::max_element(velocities.curScore, velocities.curScore + 4);
     uint32_t priority = bestScore - velocities.curScore;
@@ -629,6 +630,7 @@ namespace eXl
         }
       }
     }
+
 #if 0
     m_HalfSeg.clear();
     m_ObstacleSegs.clear();
