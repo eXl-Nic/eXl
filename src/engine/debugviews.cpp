@@ -1,13 +1,13 @@
 
 #include "debugviews.hpp"
 
-#include <dunatk/common/debugtool.hpp>
-#include <dunatk/common/transforms.hpp>
-#include <dunatk/common/neighbours.hpp>
+#include <engine/common/debugtool.hpp>
+#include <engine/common/transforms.hpp>
+#include <engine/common/neighbours.hpp>
 
-#include <dunatk/pathfinding/navmesh.hpp>
-#include <dunatk/pathfinding/navigator.hpp>
-#include <dunatk/map/dungeonlayout.hpp>
+#include <engine/pathfinding/navmesh.hpp>
+#include <engine/pathfinding/navigator.hpp>
+#include <engine/map/dungeonlayout.hpp>
 #include <math/mathtools.hpp>
 
 namespace eXl

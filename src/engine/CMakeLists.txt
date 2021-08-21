@@ -142,7 +142,7 @@ endif()
 SETUP_EXL_LIB(eXl_Engine "ENGINE" DEPENDENCIES ${EXL_DEPENDENCIES} HEADERS_TO_PARSE "${HEADERS_TO_PARSE}")
 
 set( PREREQS_PRIV
-  #imgui
+  imgui
   ${OGL_LIBRARIES}
   LinearMath
   BulletCollision

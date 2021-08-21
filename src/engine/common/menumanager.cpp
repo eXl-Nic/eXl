@@ -11,9 +11,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/menumanager.hpp>
 #include <core/heapobject.hpp>
 
-#define DISABLE_IMGUI
-
 #ifndef DISABLE_IMGUI
+#define IMGUI_API __declspec(dllimport)
 #include <imgui.h>
 #endif
 

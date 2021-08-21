@@ -1,11 +1,11 @@
 #pragma once
 
-#include <dunatk/common/world.hpp>
-#include <dunatk/pathfinding/navmesh.hpp>
-#include <dunatk/game/character.hpp>
-#include <dunatk/map/dungeonlayout.hpp>
+#include <engine/common/world.hpp>
+#include <engine/pathfinding/navmesh.hpp>
+#include <engine/game/character.hpp>
+#include <engine/map/dungeonlayout.hpp>
 
-#include <dunatk/common/app.hpp>
+#include <engine/common/app.hpp>
 
 namespace eXl
 {

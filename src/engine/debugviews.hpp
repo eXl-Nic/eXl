@@ -1,7 +1,7 @@
 #pragma once
 
-#include <core/base/containers.hpp>
-#include <dunatk/common/debugtool.hpp>
+#include <core/containers.hpp>
+#include <engine/common/debugtool.hpp>
 
 
 namespace eXl

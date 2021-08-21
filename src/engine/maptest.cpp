@@ -2,22 +2,22 @@
 
 #include <math/mathtools.hpp>
 
-#include <dunatk/common/world.hpp>
+#include <engine/common/world.hpp>
 
-#include <core/base/input.hpp>
+#include <core/input.hpp>
 
-#include <dunatk/map/dungeongraph_res.hpp>
-#include <dunatk/map/dungeongraph_z.hpp>
-#include <dunatk/map/dungeonlayout.hpp>
+#include <engine/map/dungeongraph_res.hpp>
+#include <engine/map/dungeongraph_z.hpp>
+#include <engine/map/dungeonlayout.hpp>
 
-#include <dunatk/physics/physicsys.hpp>
-#include <dunatk/physics/physiccomponent.hpp>
-#include <dunatk/pathfinding/navmesh.hpp>
+#include <engine/physics/physicsys.hpp>
+#include <engine/physics/physiccomponent.hpp>
+#include <engine/pathfinding/navmesh.hpp>
 
-#include <dunatk/map/tilinggroup.hpp>
-#include <dunatk/game/commondef.hpp>
+#include <engine/map/tilinggroup.hpp>
+#include <engine/game/commondef.hpp>
 
-#include <dunatk/map/maptiler.hpp>
+#include <engine/map/maptiler.hpp>
 
 namespace eXl
 {

@@ -2,40 +2,40 @@
 
 #include "maptest.hpp"
 
-#include <core/base/input.hpp>
+#include <core/input.hpp>
 
 #include <math/mathtools.hpp>
 
-#include <dunatk/common/animation.hpp>
-#include <dunatk/common/world.hpp>
+#include <engine/common/animation.hpp>
+#include <engine/common/world.hpp>
 
-#include <dunatk/gfx/gfxcomponent.hpp>
-#include <dunatk/gfx/gfxsystem.hpp>
+#include <engine/gfx/gfxcomponent.hpp>
+#include <engine/gfx/gfxsystem.hpp>
 
-#include <dunatk/map/dungeongraph_res.hpp>
-#include <dunatk/map/dungeonlayout.hpp>
-#include <dunatk/map/maptiler.hpp>
+#include <engine/map/dungeongraph_res.hpp>
+#include <engine/map/dungeonlayout.hpp>
+#include <engine/map/maptiler.hpp>
 
-#include <dunatk/physics/physicsys.hpp>
-#include <dunatk/physics/physiccomponent.hpp>
-#include <dunatk/pathfinding/navmesh.hpp>
-#include <dunatk/pathfinding/navigator.hpp>
+#include <engine/physics/physicsys.hpp>
+#include <engine/physics/physiccomponent.hpp>
+#include <engine/pathfinding/navmesh.hpp>
+#include <engine/pathfinding/navigator.hpp>
 
-#include <dunatk/game/character.hpp>
-#include <dunatk/game/characteranimation.hpp>
-#include <dunatk/game/ability.hpp>
-#include <dunatk/game/projectile.hpp>
-#include <dunatk/game/grabability.hpp>
-#include <dunatk/game/pickability.hpp>
-#include <dunatk/game/walkability.hpp>
-#include <dunatk/game/throwability.hpp>
-#include <dunatk/game/swordability.hpp>
+#include <engine/game/character.hpp>
+#include <engine/game/characteranimation.hpp>
+#include <engine/game/ability.hpp>
+#include <engine/game/projectile.hpp>
+#include <engine/game/grabability.hpp>
+#include <engine/game/pickability.hpp>
+#include <engine/game/walkability.hpp>
+#include <engine/game/throwability.hpp>
+#include <engine/game/swordability.hpp>
 
-#include <dunatk/script/luascriptsystem.hpp>
+#include <engine/script/luascriptsystem.hpp>
 
-#include <core/base/corelib.hpp>
+#include <core/corelib.hpp>
 
-#include <dunatk/net/network.hpp>
+//#include <engine/net/network.hpp>
 #include <imgui.h>
 
 #include "navigatorbench.hpp"
@@ -153,6 +153,7 @@ namespace eXl
 
   void AbilityRoom::StartServer(World& iWorld)
   {
+#if 0
     m_CurMode = Network::NetRole::Server;
     Network::OnNewPlayer = [this, &iWorld]()
     {
@@ -211,10 +212,12 @@ namespace eXl
         Network::UpdateObjects(objectsUpdate);
       });
     }
+#endif
   }
 
   void AbilityRoom::StartClient(World& iWorld, String const& iURL)
   {
+#if 0
     m_CurMode = Network::NetRole::Client;
     Network::OnNewObjectReceived = [this, &iWorld](Network::ClientData const& )
     {
@@ -261,6 +264,7 @@ namespace eXl
         }
       });
     }
+#endif
   }
 
   void AbilityRoom::StartLocal(World& iWorld)
@@ -1038,8 +1042,9 @@ return TriggerScriptXJKPQJDI
         inputData.m_Moving = (dir != Vector3f::ZERO);
         inputData.m_Dir = dir;
         inputData.m_Dir.Normalize();
-
+#if 0
         Network::SetClientInput(m_MainChar, inputData);
+#endif
       }
       else
       {

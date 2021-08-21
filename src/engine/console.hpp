@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/base/coredef.hpp>
+#include <core/coredef.hpp>
 #include <core/lua/luamanager.hpp>
 
 #include <imgui.h>

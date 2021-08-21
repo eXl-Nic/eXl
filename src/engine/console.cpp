@@ -143,7 +143,9 @@ namespace eXl
     if (copy_to_clipboard)
       ImGui::LogFinish();
     if (ScrollToBottom)
-      ImGui::SetScrollHere(1.0f);
+    {
+      ImGui::SetScrollHereY(1.0f);
+    }
     ScrollToBottom = false;
     ImGui::PopStyleVar();
     ImGui::EndChild();

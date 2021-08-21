@@ -4,32 +4,32 @@
 
 #include <math/mathtools.hpp>
 
-#include <dunatk/common/world.hpp>
+#include <engine/common/world.hpp>
 
-#include <dunatk/game/characteranimation.hpp>
-#include <dunatk/game/projectile.hpp>
-#include <core/base/input.hpp>
+#include <engine/game/characteranimation.hpp>
+#include <engine/game/projectile.hpp>
+#include <core/input.hpp>
 
-#include <dunatk/gfx/gfxcomponent.hpp>
-#include <dunatk/gfx/gfxsystem.hpp>
+#include <engine/gfx/gfxcomponent.hpp>
+#include <engine/gfx/gfxsystem.hpp>
 
-#include <dunatk/map/dungeongraph_res.hpp>
-#include <dunatk/map/dungeongraph_z.hpp>
-#include <dunatk/map/dungeonlayout.hpp>
+#include <engine/map/dungeongraph_res.hpp>
+#include <engine/map/dungeongraph_z.hpp>
+#include <engine/map/dungeonlayout.hpp>
 
-#include <dunatk/physics/physicsys.hpp>
-#include <dunatk/physics/physiccomponent.hpp>
-#include <dunatk/pathfinding/navmesh.hpp>
-#include <dunatk/pathfinding/navigator.hpp>
+#include <engine/physics/physicsys.hpp>
+#include <engine/physics/physiccomponent.hpp>
+#include <engine/pathfinding/navmesh.hpp>
+#include <engine/pathfinding/navigator.hpp>
 
-#include <dunatk/game/character.hpp>
+#include <engine/game/character.hpp>
 
 //#include "mapset.hpp"
-#include <dunatk/map/maptiler.hpp>
-#include <dunatk/map/tilinggroup.hpp>
+#include <engine/map/maptiler.hpp>
+#include <engine/map/tilinggroup.hpp>
 
 #define FULLSCALE_TEST
-#define COMPLEX_ROOM
+//#define COMPLEX_ROOM
 
 namespace eXl
 {
@@ -50,8 +50,8 @@ namespace eXl
   Vector2f PickRandomPosInBox(AABB2Df const& iBox, Random& iRand)
   {
     AABB2Df trimmedFace = iBox;
-    //trimmedFace.m_Data[0] += Vector2f::ONE * size16;
-    //trimmedFace.m_Data[1] -= Vector2f::ONE * size16;
+    trimmedFace.m_Data[0] += Vector2f::ONE * 2.0;
+    trimmedFace.m_Data[1] -= Vector2f::ONE * 2.0;
     Vector2f size = trimmedFace.GetSize();
 
     return trimmedFace.m_Data[0] + Vector2f(
@@ -118,6 +118,8 @@ namespace eXl
 
   NavMesh NavigatorBench::BuildMap(World& iWorld, ObjectHandle iMapHandle, Random& iRand)
   {
+
+#if defined(COMPLEX_ROOM)
     DungeonGraph_Z dung;
     dung.Init();
     printf("\nBefore Expand\n");
@@ -128,6 +130,10 @@ namespace eXl
     }
     printf("\nAfter Expand\n");
     dung.PrintGraph();
+#else
+    DungeonGraph_Res dung;
+    dung.MakeSingleRoom(8);
+#endif
 
 #if 0
     DungeonGraph_Res dung;

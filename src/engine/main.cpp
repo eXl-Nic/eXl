@@ -1,23 +1,25 @@
-#include <core/base/corelib.hpp>
-#include <core/base/log.hpp>
+#include <core/corelib.hpp>
+#include <core/log.hpp>
 
 #ifndef __ANDROID__
 #define SDL_MAIN_HANDLED
 #endif
 
-#include <core/base/plugin.hpp>
-#include <core/base/random.hpp>
-#include <core/base/clock.hpp>
-#include <core/base/coretest.hpp>
+#include <core/plugin.hpp>
+#include <core/random.hpp>
+#include <core/clock.hpp>
+#include <core/coretest.hpp>
 #include <core/image/imagestreamer.hpp>
 #include <core/resource/resourcemanager.hpp>
 
 #include <core/utils/filetextreader.hpp>
 #include <core/stream/inputstream.hpp>
 
+#include <backends/imgui_impl_sdl.h>
+
+#define IMGUI_API __declspec(dllimport)
 #include <imgui.h>
-#include <examples/imgui_impl_sdl.h>
-#include <examples/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_opengl3.h>
 
 #include <SDL.h>
 
@@ -46,8 +48,8 @@ extern "C"
 #endif
 
 
-#include <core/base/name.hpp>
-#include <core/base/input.hpp>
+#include <core/name.hpp>
+#include <core/input.hpp>
 #include <core/type/typemanager.hpp>
 #include <math/mathtools.hpp>
 
@@ -55,24 +57,24 @@ extern "C"
 #include "console.hpp"
 #include "sdlkeytranslator.hpp"
 
-#include <dunatk/common/debugtool.hpp>
+#include <engine/common/debugtool.hpp>
 
 #include "debugpanel.hpp"
 #include "debugviews.hpp"
-#include <dunatk/common/menumanager.hpp>
-#include <dunatk/common/app.hpp>
+#include <engine/common/menumanager.hpp>
+#include <engine/common/app.hpp>
 
 #include "navigatorbench.hpp"
 #include "abilityroom.hpp"
 #include "maptest.hpp"
 #include "sampleexperiment.hpp"
 
-#include <dunatk/common/transforms.hpp>
-#include <dunatk/gfx/gfxsystem.hpp>
-#include <dunatk/physics/physicsys.hpp>
-#include <dunatk/pathfinding/navigator.hpp>
-#include <dunatk/common/project.hpp>
-#include <dunatk/game/scenariobase.hpp>
+#include <engine/common/transforms.hpp>
+#include <engine/gfx/gfxsystem.hpp>
+#include <engine/physics/physicsys.hpp>
+#include <engine/pathfinding/navigator.hpp>
+#include <engine/common/project.hpp>
+#include <engine/game/scenariobase.hpp>
 
 #ifndef EXL_SHARED_LIBRARY
 
@@ -197,7 +199,7 @@ public:
 private:
   void Display() override
   {
-    ImGui::DragFloat("Time Scaling", &m_State.m_TimeScaling, 0.1, 0.001, 100.0, "%.3f", 2.0f);
+    ImGui::DragFloat("Time Scaling", &m_State.m_TimeScaling, 0.1, 0.001, 100.0, "%.3f", ImGuiSliderFlags_Logarithmic);
     ImGui::Checkbox("Nav Mesh", &m_State.m_ViewNavMesh);
     ImGui::Checkbox("Physic", &m_State.m_ViewPhysic);
     ImGui::Checkbox("Neighbours", &m_State.m_ViewNeighbours);
@@ -329,7 +331,7 @@ namespace eXl
         .AddOpenPanelCommand("Profiling", [this] {return eXl_NEW ProfilingPanel(m_World->GetProfilingState()); })
         .AddOpenPanelCommand("Debug", [this] {return eXl_NEW DebugPanel(m_World->GetWorld()); })
         .AddOpenPanelCommand("Debug Visualizer", [this] {return eXl_NEW DebugVisualizerPanel(m_DebugVisState); })
-        .AddOpenPanelCommand("Console", [this] {return eXl_NEW LuaConsolePanel(m_Console); })
+        //.AddOpenPanelCommand("Console", [this] {return eXl_NEW LuaConsolePanel(m_Console); })
         .EndMenu();
 #endif
 

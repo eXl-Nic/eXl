@@ -32,6 +32,7 @@ ${OGL_LIBRARIES}
 )
 if(${BUILD_EXL_SHARED})
 add_definitions(-DBUILD_IMGUI)
+add_definitions("-DIMGUI_API=__declspec(dllexport)")
 else()
 add_definitions(-DIMGUI_API=)
 endif()

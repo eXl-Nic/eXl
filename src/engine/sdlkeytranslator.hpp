@@ -7,7 +7,7 @@ Copyright Nicolas Colombe
 #define SDLKEYTRANSLATOR_INCLUDED
 
 #include <SDL_keycode.h>
-#include <core/base/keytranslator.hpp>
+#include <core/keytranslator.hpp>
 
 namespace eXl
 {

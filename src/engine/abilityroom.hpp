@@ -1,13 +1,13 @@
 #pragma once
 
-#include <dunatk/common/world.hpp>
-#include <dunatk/pathfinding/navmesh.hpp>
+#include <engine/common/world.hpp>
+#include <engine/pathfinding/navmesh.hpp>
 
-#include <dunatk/common/app.hpp>
-#include <dunatk/common/transformanim.hpp>
+#include <engine/common/app.hpp>
+#include <engine/common/transformanim.hpp>
 
-#include <dunatk/net/network.hpp>
-#include <dunatk/physics/physicsdef.hpp>
+#include <engine/net/network.hpp>
+#include <engine/physics/physicsdef.hpp>
 
 #include <math/quaternion.hpp>
 

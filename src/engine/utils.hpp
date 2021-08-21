@@ -1,6 +1,6 @@
 #pragma once
 
-#include <dunatk/gfx/gfxcomponent.hpp>
+#include <engine/gfx/gfxcomponent.hpp>
 
 namespace eXl
 {
