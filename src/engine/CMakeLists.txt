@@ -160,7 +160,7 @@ endif()
 
 target_link_libraries(eXl_Engine LINK_PRIVATE ${PREREQS_PRIV})
 
-if(${WIN32})
+if(${BUILD_EXL_EDITOR})
 add_subdirectory(editor ${OUT_DIR}/engine/editor)
-endif(${WIN32})
+endif()
 

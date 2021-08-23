@@ -18,6 +18,7 @@ set(LLVM_DIR "" CACHE PATH "Path to LLVM")
 
 set(BUILD_EXL_OGL ON CACHE BOOL "Build the opengl renderer")
 set(BUILD_EXL_SHARED ON CACHE BOOL "Build library as dlls")
+set(BUILD_EXL_EDITOR ON CACHE BOOL "Build the eXl editor")
 set(BUILD_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 
 set(BULLET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/modules/bullet/src")
