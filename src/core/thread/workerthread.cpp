@@ -9,17 +9,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <core/thread/workerthread.hpp>
-#include <boost/thread.hpp>
+#include <thread>
+#include <condition_variable>
 
 namespace eXl
 {
 
-  class WorkerThread_Impl : public boost::thread
+  class WorkerThread_Impl : public std::thread
   {
   public:
     WorkerThread_Impl(WorkerThread& iHost) 
       : m_Host(iHost)
-      , boost::thread(boost::ref(*this))
+      , std::thread(std::ref(*this))
       , m_ThreadState(eWaiting)
       , m_Request(eWaiting)
     {}
@@ -29,9 +30,9 @@ namespace eXl
       m_Host.InternalRun();
     }
 
-    boost::condition_variable m_CondThread;
-    boost::condition_variable m_CondMain;
-    boost::mutex m_Mutex;
+    std::condition_variable m_CondThread;
+    std::condition_variable m_CondMain;
+    std::mutex m_Mutex;
 
     enum ThreadState
     {
@@ -50,7 +51,7 @@ namespace eXl
 
   unsigned int WorkerThread::GetHardwareConcurrency()
   {
-    return boost::thread::hardware_concurrency();
+    return std::thread::hardware_concurrency();
   }
 
   WorkerThread::WorkerThread()
@@ -71,14 +72,14 @@ namespace eXl
   void WorkerThread::Start()
   {
     //Interrupt();
-    boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+    std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
     m_Impl->m_Request = WorkerThread_Impl::eRunning;
     m_Impl->m_CondThread.notify_one();
   }
 
   void WorkerThread::Interrupt()
   {
-    boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+    std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
     if(m_Impl->m_ThreadState == WorkerThread_Impl::eRunning)
     {
       m_Impl->m_Request = WorkerThread_Impl::eWaiting;
@@ -92,14 +93,14 @@ namespace eXl
 
   void WorkerThread::Stop()
   {
-    boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+    std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
     m_Impl->m_Request = WorkerThread_Impl::eStop;
     m_Impl->m_CondThread.notify_one();
   }
 
   bool WorkerThread::CheckInterrupt()
   {
-    boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+    std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
     return m_Impl->m_Request == WorkerThread_Impl::eWaiting;
   }
 
@@ -110,7 +111,7 @@ namespace eXl
     while(notStopping)
     {
       {
-        boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+        std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
         if(m_Impl->m_Request != WorkerThread_Impl::eNoRequest
           && m_Impl->m_ThreadState != m_Impl->m_Request)
         {
@@ -136,7 +137,7 @@ namespace eXl
       if(running)
       {
         Run();
-        boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+        std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
         m_Impl->m_ThreadState = WorkerThread_Impl::eWaiting;
         running = false;
       }

@@ -19,3 +19,6 @@
 [submodule "modules/libsvm"]
 	path = modules/libsvm
 	url = https://github.com/cjlin1/libsvm
+[submodule "modules/cxxopts"]
+	path = modules/cxxopts
+	url = https://github.com/jarro2783/cxxopts/

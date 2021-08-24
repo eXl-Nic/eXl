@@ -10,18 +10,15 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(Clang REQUIRED)
 include_directories(${CLANG_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
 
 set_target_properties(acc_gen PROPERTIES FOLDER Dependencies/Clang)
 set_target_properties(clang-tablegen-targets PROPERTIES FOLDER Dependencies/Clang)
 set_target_properties(intrinsics_gen PROPERTIES FOLDER Dependencies/Clang)
 set_target_properties(omp_gen PROPERTIES FOLDER Dependencies/Clang)
 
-
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR+")
 
 add_executable(
 	eXl_reflang
@@ -39,4 +36,4 @@ add_executable(
 	types.cpp types.hpp)
 
 ADD_EXL_COMMON_DEFS(eXl_reflang)
-target_link_libraries(eXl_reflang eXl_Core libclang Boost::program_options)
+target_link_libraries(eXl_reflang eXl_Core libclang)

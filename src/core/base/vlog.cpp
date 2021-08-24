@@ -18,8 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <boost/container/static_vector.hpp>
 
 #ifdef EXL_THREADAWARE
-#include <boost/thread/thread.hpp>
-#include <boost/thread/tss.hpp>
+#include <thread>
 #endif
 
 using namespace std;
@@ -33,7 +32,7 @@ namespace eXl
   };
 
 #ifdef EXL_THREADAWARE
-  boost::thread_specific_ptr<LocStrStorage> s_tlsLogStorage;
+  thread_local std::unique_ptr<LocStrStorage> s_tlsLogStorage;
 #else
   LocStrStorage s_Storage;
 #endif

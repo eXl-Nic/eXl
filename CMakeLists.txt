@@ -33,8 +33,6 @@ set(VOROPP_ROOT "${CMAKE_SOURCE_DIR}/contrib/voro++-0.4.6")
 set(LBFGS_ROOT "${CMAKE_SOURCE_DIR}/modules/lbfgs")
 set(LIBSVM_ROOT "${CMAKE_SOURCE_DIR}/modules/libsvm")
 
-set(BOOST_COMPONENTS_LIST COMPONENTS)
-
 if(${ANDROID})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fno-rtti")
 add_compile_options(-Wno-undefined-var-template)
@@ -45,18 +43,9 @@ if(MSVC)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR- /we4541 /std:c++17")
 endif()
 
-
-set(BOOST_COMPONENTS_LIST ${BOOST_COMPONENTS_LIST} filesystem program_options)
-
 set(EXL_COMPILER_DEFINITIONS)
 set(EXL_DEPS_INCLUDE)
 
-set(BOOST_COMPONENTS_LIST ${BOOST_COMPONENTS_LIST}
-    system 
-    thread 
-    date_time 
-  ) 
-  
 set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_THREADAWARE)
 set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_TYPE_ENABLED)
 set(LUABIND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua/luabind)
@@ -112,42 +101,22 @@ if(${BUILD_EXL_OGL})
 	
 endif()
 
-list(LENGTH BOOST_COMPONENTS_LIST NUM_BOOST_COMPS)
-
-if(${NUM_BOOST_COMPS} GREATER 1)
-  list(REMOVE_DUPLICATES BOOST_COMPONENTS_LIST)  
-else()
-  unset(BOOST_COMPONENTS_LIST)
-endif()
-
 if(${ANDROID})  
   SET(Boost_INCLUDE_DIR ${Boost_ROOT})
   
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
   SET(Boost_LIBRARY_DIR ${Boost_ROOT}/stage_arm_r20/lib)
-  SET(Boost_LIBRARIES 
-  boost_system-mt-a32 
-  boost_date_time-mt-a32 
-  boost_thread-mt-a32 
-  #boost_filesystem-mt-a32
-  )
+  SET(Boost_LIBRARIES )
 else()
   SET(Boost_LIBRARY_DIR ${Boost_ROOT}/stage/lib)
-  SET(Boost_LIBRARIES 
-  boost_system-clang-mt-a64-1_70
-  boost_date_time-clang-mt-a64-1_70
-  boost_thread-clang-mt-a64-1_70
-  #boost_filesystem-mt-a32
-  )
+  SET(Boost_LIBRARIES )
 endif()
 
 link_directories(${Boost_LIBRARY_DIR})
   
 else()
   SET(Boost_USE_STATIC_LIBS TRUE)
-  find_package(Boost 1.47.0 
-    ${BOOST_COMPONENTS_LIST}
-  )
+  find_package(Boost 1.47.0 )
 endif()
 
 set(MAIN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)

@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/clock.hpp>
 
 #include <vector>
+#include <thread>
 
 #ifdef __ANDROID__
 #include <unistd.h>

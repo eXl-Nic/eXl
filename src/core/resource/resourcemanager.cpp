@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <boost/uuid/random_generator.hpp>
 #include <core/type/resourcehandletype.hpp>
 #include <core/type/typemanager.hpp>
+#include <fstream>
 
 #define CLEAR_WHITESPACES  do {\
 if (!iReader.ClearWhiteSpaces()) \
@@ -438,7 +439,7 @@ namespace eXl
       ResourceMetaData* newEntry = eXl_NEW ResourceMetaData;
       newEntry->m_Header = iHeader;
 #ifdef EXL_RSC_HAS_FILESYSTEM
-      newEntry->m_Path = Filesystem::absolute(Filesystem::canonical(iPath)).string().c_str();
+      newEntry->m_Path = ToString(Filesystem::absolute(Filesystem::canonical(iPath)));
 #else
       newEntry->m_Path = iPath;
 #endif
@@ -449,9 +450,9 @@ namespace eXl
       if (alreadyExistingEntry != GetImpl().m_UUIDToEntry.end())
       {
 
-        time_t lastNew = Filesystem::last_write_time(iPath);
+        auto lastNew = Filesystem::last_write_time(iPath);
         Path existingPath(alreadyExistingEntry->second->m_Path.c_str());
-        time_t lastExisting = Filesystem::last_write_time(existingPath);
+        auto lastExisting = Filesystem::last_write_time(existingPath);
 
         ResourceMetaData* entryToRewrite = lastNew > lastExisting ? newEntry : alreadyExistingEntry->second;
         ResourceMetaData* oldEntry = lastNew > lastExisting ? newEntry : alreadyExistingEntry->second;
@@ -560,7 +561,7 @@ namespace eXl
     {
       if (!Filesystem::is_directory(iPath))
       {
-        LOG_ERROR << "Path " << iPath.string() << " is not a directory" << "\n";
+        LOG_ERROR << "Path " << ToString(iPath) << " is not a directory" << "\n";
         return;
       }
 
@@ -570,7 +571,7 @@ namespace eXl
       {
         Path toScan = std::move(directoriesToScan.back());
         directoriesToScan.pop_back();
-        boost::system::error_code ec;
+        std::error_code ec;
         for (Filesystem::directory_iterator iter(toScan, ec); iter != Filesystem::directory_iterator(); ++iter)
         {
           Path currentPath = iter->path();
@@ -580,12 +581,12 @@ namespace eXl
           }
           else
           {
-            if (currentPath.extension().string() == GetAssetExtension())
+            if (ToString(currentPath.extension()) == GetAssetExtension())
             {
               Resource::Header header;
-              if (ProcessFile(currentPath.string().c_str(), header))
+              if (ProcessFile(ToString(currentPath).c_str(), header))
               {
-                AddNewEntry(currentPath.string().c_str(), header);
+                AddNewEntry(ToString(currentPath).c_str(), header);
               }
             }
           }
@@ -595,7 +596,7 @@ namespace eXl
     Resource* LoadExpectedType(Path const& iPath, const ResourceLoaderName& iExpectedLoader)
     {
       ResourceLoaderName actualResourceName;
-      Resource* loadedResource = Load(iPath.string().c_str(), &actualResourceName);
+      Resource* loadedResource = Load(ToString(iPath.string()).c_str(), &actualResourceName);
 
       eXl_ASSERT_MSG_REPAIR_RET((!loadedResource || actualResourceName == iExpectedLoader), "Unexpected resource type", nullptr);
 
@@ -614,7 +615,7 @@ namespace eXl
 
       Path pathToLookFor = Filesystem::absolute(Filesystem::canonical(iPath));
 
-      auto foundEntry = GetImpl().m_PathToEntry.find(pathToLookFor.string().c_str());
+      auto foundEntry = GetImpl().m_PathToEntry.find(ToString(pathToLookFor));
       if (foundEntry != GetImpl().m_PathToEntry.end())
       {
         ResourceMetaData* entry = foundEntry->second;
@@ -709,7 +710,7 @@ namespace eXl
             auto alreadySavedResource = GetImpl().m_PathToEntry.find(metaData->m_Path);
             if (alreadySavedResource != GetImpl().m_PathToEntry.end() && alreadySavedResource->second != metaData)
             {
-              LOG_ERROR << "Tried to save " << metaData->m_Header.m_ResourceName << " to " << path.string()
+              LOG_ERROR << "Tried to save " << metaData->m_Header.m_ResourceName << " to " << ToString(path)
                 << " but it the resource " << alreadySavedResource->second->m_Header.m_ResourceName << " is already saved there" << "\n";
 
               return Err::Failure;
@@ -724,7 +725,7 @@ namespace eXl
 
           {
             std::ofstream outputStream;
-            outputStream.open(tempPath.string());
+            outputStream.open(tempPath);
 
             StdOutWriter writer(outputStream);
 
@@ -738,31 +739,31 @@ namespace eXl
             }
           }
 
-          boost::system::error_code err;
+          std::error_code err;
           if (!Filesystem::remove(path, err))
           {
-            boost::system::error_code errDummy;
+            std::error_code errDummy;
             if (Filesystem::exists(path, errDummy))
             {
-              LOG_ERROR << "Error while trying to replace resource at : " << path.string() << ":" << err.message() << "\n";
+              LOG_ERROR << "Error while trying to replace resource at : " << ToString(path) << ":" << err.message() << "\n";
               return Err::Failure;
             }
           }
 
           err.clear();
           Filesystem::rename(tempPath, path, err);
-          if (err.failed())
+          if (!err)
           {
-            LOG_ERROR << "Error while trying to replace resource at : " << path.string() << ":" << err.message() << "\n";
+            LOG_ERROR << "Error while trying to replace resource at : " << ToString(path) << ":" << err.message() << "\n";
             return Err::Failure;
           }
 
           if (firstTimeSaved)
           {
-            boost::system::error_code ec;
+            std::error_code ec;
             Path sanitizedPath = Filesystem::absolute(Filesystem::canonical(path));
             path = sanitizedPath;
-            GetImpl().m_PathToEntry.insert(std::make_pair(String(sanitizedPath.string().c_str()), foundEntry->second));
+            GetImpl().m_PathToEntry.insert(std::make_pair(ToString(sanitizedPath), foundEntry->second));
           }
 
           return Err::Success;
@@ -805,7 +806,7 @@ namespace eXl
           String const& rscName = iRsc->GetName();
           if (rscName.empty())
           {
-            LOG_ERROR << "Given empty resource name to save to" << iPath.string() << "\n";
+            LOG_ERROR << "Given empty resource name to save to" << ToString(iPath) << "\n";
             return Err::Failure;
           }
           candidatePath = iPath / rscName.c_str();
@@ -815,11 +816,11 @@ namespace eXl
 
         if (bPathExists)
         {
-          LOG_ERROR << "Cannot save resource to overwrite" << candidatePath.string() << "\n";
+          LOG_ERROR << "Cannot save resource to overwrite" << ToString(candidatePath) << "\n";
           return Err::Failure;
         }
 
-        metaData->m_Path = candidatePath.string().c_str();
+        metaData->m_Path = ToString(candidatePath);
 
         return Err::Success;
       }
@@ -827,17 +828,17 @@ namespace eXl
       {
         if (bPathExists)
         {
-          boost::system::error_code ec;
+          std::error_code ec;
           Path sanitizedPath = Filesystem::absolute(Filesystem::canonical(iPath));
-          if (!ec || String(sanitizedPath.string().c_str()) != metaData->m_Path)
+          if (!ec || ToString(sanitizedPath) != metaData->m_Path)
           {
-            LOG_ERROR << "Cannot change saved resource " << iRsc->GetName() << " path to : " << iPath.string() << "\n";
+            LOG_ERROR << "Cannot change saved resource " << iRsc->GetName() << " path to : " << ToString(iPath) << "\n";
             return Err::Failure;
           }
         }
         if(bIsDirectory)
         {
-          LOG_ERROR << "Cannot change resource " << iRsc->GetName() << " path to a directory : " << iPath.string() << "\n";
+          LOG_ERROR << "Cannot change resource " << iRsc->GetName() << " path to a directory : " << ToString(iPath) << "\n";
           return Err::Failure;
         }
         else
@@ -849,14 +850,14 @@ namespace eXl
 
             if (!Filesystem::exists(existingDir) || !Filesystem::exists(newDir))
             {
-              LOG_ERROR << "Cannot change resource " << iRsc->GetName() << " path to non-existing directory : " << iPath.string() << "\n";
+              LOG_ERROR << "Cannot change resource " << iRsc->GetName() << " path to non-existing directory : " << ToString(iPath) << "\n";
               return Err::Failure;
             }
             existingDir = Filesystem::absolute(Filesystem::canonical(existingDir));
             newDir = Filesystem::absolute(Filesystem::canonical(newDir));
             if (existingDir != newDir)
             {
-              LOG_ERROR << "Cannot change resource " << iRsc->GetName() << " path to a different directory : " << iPath.string() << " because resource dir is locked" << "\n";
+              LOG_ERROR << "Cannot change resource " << iRsc->GetName() << " path to a different directory : " << ToString(iPath) << " because resource dir is locked" << "\n";
               return Err::Failure;
             }
           }
@@ -915,7 +916,7 @@ namespace eXl
 
           ResourceLoader& loader = *GetImpl().m_Loaders[resourceType].loader;
           std::ofstream outputStream;
-          outputStream.open(completePath.string().c_str());
+          outputStream.open(completePath);
 
           StdOutWriter writer(outputStream);
           
@@ -936,7 +937,7 @@ namespace eXl
       Path manifestPath = iDest / "eXlManifest";
 
       std::ofstream outputStream;
-      outputStream.open(manifestPath.string());
+      outputStream.open(manifestPath);
 
       JSONStreamer streamer(&outputStream);
       streamer.Begin();

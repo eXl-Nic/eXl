@@ -10,8 +10,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/thread/event.hpp>
 
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
+#include <thread>
+#include <condition_variable>
 
 namespace eXl
 {
@@ -25,8 +25,8 @@ namespace eXl
 
     }
 
-    boost::condition_variable m_Cond;
-    boost::mutex m_Mutex;
+    std::condition_variable m_Cond;
+    std::mutex m_Mutex;
     volatile unsigned int m_Counter;
   };
 
@@ -42,7 +42,7 @@ namespace eXl
 
   void Event::Reset(unsigned int iNum)
   {
-    boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+    std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
     /*
     m_Impl->m_Counter = 0;
     m_Impl->m_Cond.notify_all();
@@ -54,7 +54,7 @@ namespace eXl
   {
     unsigned int val = 0;
     {
-      boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+      std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
       if(m_Impl->m_Counter > 0)
         val = --m_Impl->m_Counter;
     }
@@ -64,13 +64,13 @@ namespace eXl
 
   bool Event::Wait(unsigned int iTimeOut)
   {
-    boost::unique_lock<boost::mutex> lock(m_Impl->m_Mutex);
+    std::unique_lock<std::mutex> lock(m_Impl->m_Mutex);
     while(m_Impl->m_Counter != 0)
     {
       if(iTimeOut != 0xFFFFFFFF)
       {
-        boost::cv_status status = m_Impl->m_Cond.wait_for(lock, boost::chrono::duration<long long, boost::micro>(iTimeOut));
-        if(status == boost::cv_status::timeout)
+        std::cv_status status = m_Impl->m_Cond.wait_for(lock, std::chrono::duration<long long, std::micro>(iTimeOut));
+        if(status == std::cv_status::timeout)
         {
           return false;
         }

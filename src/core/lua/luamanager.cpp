@@ -14,8 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/lua/luascript.hpp>
 
 #ifdef EXL_THREADAWARE
-#include <boost/thread.hpp>
-#include <boost/thread/tss.hpp>
+#include <thread>
 #endif
 
 #include <core/heapobject.hpp>
@@ -174,7 +173,7 @@ namespace eXl
     {
 
 #ifdef EXL_THREADAWARE
-      boost::thread_specific_ptr<LuaImplState> currentState;
+      thread_local std::unique_ptr<LuaImplState> currentState;
 #else
       std::unique_ptr<LuaImplState> currentState;
 #endif

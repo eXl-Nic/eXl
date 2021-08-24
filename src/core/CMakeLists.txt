@@ -108,9 +108,6 @@ add_library(eXl_Core ${LIBRARY_TYPE} ${SOURCES})
 
 target_compile_definitions(eXl_Core PRIVATE -DLUABIND_BUILDING)
 
-SET(CORE_LIBS Boost::filesystem)
-SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} Boost::thread)
-
 if(${ENABLE_FREEIMAGE})
   target_include_directories(eXl_Core PRIVATE ${FREEIMAGE_INCLUDE_DIR})
   target_link_directories(eXl_Core ${LIBRARY_DEPS_VISIBILITY} ${FREEIMAGE_LIBRARY_DIR})

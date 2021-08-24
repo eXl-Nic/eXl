@@ -14,11 +14,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #if !defined(__ANDROID__)
 #define EXL_RSC_HAS_FILESYSTEM
-#include <boost/filesystem.hpp>
+#include <filesystem>
+#include <core/string.hpp>
 
 namespace eXl
 {
-  using Path = boost::filesystem::path;
-  namespace Filesystem = boost::filesystem;
+  using Path = std::filesystem::path;
+  namespace Filesystem = std::filesystem;
+
+  inline String ToString(Path const& iPath)
+  {
+    return iPath.string<eXl::Char, String::traits_type, eXl::Allocator<eXl::Char>>(eXl::Allocator<eXl::Char>());
+  }
 }
 #endif
