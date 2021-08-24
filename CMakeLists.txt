@@ -23,8 +23,8 @@ set(BUILD_EXL_SHARED ON CACHE BOOL "Build library as dlls")
 set(BUILD_EXL_OGL ON CACHE BOOL "Build the opengl renderer")
 set(BUILD_EXL_ENGINE ON CACHE BOOL "Build the eXl engine")
 set(BUILD_EXL_EDITOR ON CACHE BOOL "Build the eXl editor")
-set(EXL_WITH_LUA ON CACHE BOOL "Enable eXl lua integration")
-set(BUILD_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
+set(BUILD_EXL_WITH_LUA ON CACHE BOOL "Enable eXl lua integration")
+set(BUILD_EXL_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 
 set(BULLET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/modules/bullet/src")
 
@@ -132,7 +132,7 @@ set(OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE} ${CMAKE_SOURCE_DIR}/include ${Boost_INCLUDE_DIR})
 
-if(${EXL_WITH_LUA})
+if(${BUILD_EXL_WITH_LUA})
   set(LUABIND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua/luabind)
   set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_LUA)
   set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DLUABIND_DYNAMIC_LINK )
@@ -179,7 +179,7 @@ endif()
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
-if(BUILD_FOR_UE4)
+if(BUILD_EXL_FOR_UE4)
   add_definitions(-D_ITERATOR_DEBUG_LEVEL=0 -DBOOST_FLYWEIGHT_EXPLICIT_INIT -DEXL_NAME_EXPLICIT_INIT)
 endif()
 
