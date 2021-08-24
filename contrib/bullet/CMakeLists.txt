@@ -15,7 +15,7 @@ set(USE_GRAPHICAL_BENCHMARK OFF CACHE BOOL "" FORCE)
 set(USE_MSVC_RUNTIME_LIBRARY_DLL ON CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/modules/bullet ${OUT_DIR}/module/bullet)
+add_subdirectory(${CMAKE_SOURCE_DIR}/modules/bullet ${OUT_DIR}/modules/bullet)
 
 set_target_properties(Bullet3Common PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(BulletCollision PROPERTIES FOLDER Dependencies/Bullet)

@@ -262,9 +262,11 @@ namespace eXl{
 #endif
 }
 
+#if EXL_LUA
 #include <luabind/typeid.hpp>
 
 const char* luabind::type_id::name() const
 {
   return id->GetName().c_str();
 }
+#endif

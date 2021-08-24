@@ -12,11 +12,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/stream/stream_base.hpp>
 #include <core/stream/jsonunstreamer.hpp>
 #include <core/stream/jsonstreamer.hpp>
-#include <core/lua/luascript.hpp>
 #include <core/log.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <core/type/resourcehandletype.hpp>
 #include <core/type/typemanager.hpp>
+#include <core/lua/luascript.hpp>
+
 #include <fstream>
 
 #define CLEAR_WHITESPACES  do {\

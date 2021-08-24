@@ -21,8 +21,6 @@ if(NOT ${BUILD_EXL_SHARED})
 add_definitions(-DIMGUI_API=)
 endif()
 
-message(${BULLET_INCLUDE_DIR})
-
 include_directories(${BULLET_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${LIBB64_INCLUDE_DIR})
 
 link_directories(${OGL_LIBRARY_DIR} ${OPENCV_LIBRARY_DIR})

@@ -10,6 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <core/type/fielddesc.hpp>
 #include <core/type/tupletype.hpp>
 
 #ifdef EXL_LUA
@@ -100,8 +101,6 @@ namespace eXl
     Err ConvertFromLuaRaw_Uninit(lua_State* iState,unsigned int& ioIndex,void* oObj) const override;
 
     void RegisterLua(lua_State* iState) const override;
-
-    //luabind::object MakePropertyAccessor(lua_State* iState, Type const* iHolder, uint32_t iOffset) const override;
 #endif
     Err ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType) const override;
     
@@ -121,10 +120,6 @@ namespace eXl
     const Type* GetFieldDetails(unsigned int iNum) const override;
 
     const Type* GetFieldDetails(TypeFieldName iFieldName) const override;
-
-    //void DoEnable();
-
-    //void DoDisable();
     
   protected:
 

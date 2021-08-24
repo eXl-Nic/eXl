@@ -11,7 +11,6 @@ SET(IMGUI_SOURCES
   ${IMGUI_DIR}/imgui_tables.cpp 
   ${IMGUI_DIR}/imgui_widgets.cpp 
 )
-message("IMGUI SOURCES")
 
 if(${BUILD_EXL_OGL})
 

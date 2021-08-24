@@ -22,11 +22,6 @@ namespace eXl
   public:
     AString m_Script;
 
-    AString const& GetModuleName() const
-    {
-      return m_ModuleName;
-    }
-
     Err Stream_Data(Streamer& iStreamer) const override;
     Err Unstream_Data(Unstreamer& iStreamer) override;
 
@@ -34,8 +29,6 @@ namespace eXl
     uint32_t ComputeHash() override;
     Err Serialize(Serializer& iSerialize);
     LuaScript(ResourceMetaData&);
-
-    AString m_ModuleName;
 
   };
 
@@ -56,50 +49,4 @@ namespace eXl
 
   template <typename T>
   using LuaScriptLoader_T = TResourceLoader<T, LuaScriptLoader>;
-
-#if 0
-
-  template <typename T>
-  class LuaScriptLoader_T : public LuaScriptLoader
-  {
-  public:
-
-    static LuaScriptLoader_T<T>& Get()
-    {
-      static LuaScriptLoader_T<T> s_This;
-      return s_This;
-    }
-
-    LuaScriptLoader_T()
-      : LuaScriptLoader(T::StaticLoaderName(), 1)
-    {
-
-    }
-
-#ifdef EXL_RSC_HAS_FILESYSTEM
-    T* Create(Path const& iDir, String const& iName) const
-    {
-      ResourceMetaData* metaData = CreateNewMetaData(iName);
-
-      Path rscPath = iDir / Path(iName.c_str());
-      rscPath.replace_extension(ResourceManager::GetAssetExtension().c_str());
-
-      T* newRsc = Create_Impl(metaData);
-      if (ResourceManager::SetPath(newRsc, rscPath))
-      {
-        return newRsc;
-      }
-
-      return nullptr;
-    }
-#endif
-
-  protected:
-
-    T* Create_Impl(ResourceMetaData* iMetaData) const override
-    {
-      return eXl_NEW T(*iMetaData);
-    }
-  };
-#endif
 }

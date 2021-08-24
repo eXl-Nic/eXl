@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/stream/serializer.hpp>
 #include <xxhash.h>
 
-#include <boost/uuid/uuid_io.hpp>
 #include <sstream>
 
 #include <core/stream/jsonstreamer.hpp>
@@ -43,8 +42,6 @@ namespace eXl
   LuaScript::LuaScript(ResourceMetaData& iData)
     : Resource(iData)
   {
-    //String uuidStr(boost::uuids::to_string(GetHeader().m_ResourceId.uuid).c_str());
-    //m_ModuleName = "LuaScript_" + uuidStr;
   }
 
   uint32_t LuaScript::ComputeHash()

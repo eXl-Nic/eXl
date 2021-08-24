@@ -154,7 +154,7 @@ Err CoreTupleType<T>::ConvertFromLuaRaw_Uninit(lua_State* iState,unsigned int& i
 {
   return Err::Undefined;
 }
-#endif
+
 template <class T>
 Err CoreTupleType<T>::ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType)const
 {
@@ -177,3 +177,4 @@ void CoreTupleType<T>::RegisterLua(lua_State* iState) const
       newClass
     ];
 }
+#endif

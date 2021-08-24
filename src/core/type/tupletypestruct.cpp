@@ -13,10 +13,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/dynobject.hpp>
 #include <core/type/arraytype.hpp>
 #include <core/type/typemanager.hpp>
+
+#ifdef EXL_LUA
 #include <luabind/class.hpp>
 #include <luabind/lua_proxy_interface.hpp>
 #include <luabind/make_function.hpp>
 #include <core/lua/luabind_eXl.hpp>
+#endif
 
 namespace eXl
 {

@@ -103,26 +103,6 @@ namespace eXl
     return Err::Success;
   }
 
-  //Err MCMC2D::PlacedElement::Stream(Streamer& iStreamer) const
-  //{
-  //  iStreamer.BeginStruct();
-  //  iStreamer.PushKey("Position");
-  //  iStreamer.Write(&m_Pos);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("Angle");
-  //  iStreamer.WriteFloat(&m_Angle);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("Element");
-  //  iStreamer.WriteInt(&m_Element);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("SubElement");
-  //  iStreamer.WriteInt(&m_ShapeNum);
-  //  iStreamer.PopKey();
-  //  iStreamer.EndStruct();
-  //
-  //  return Err::Success;
-  //}
-
   Err MCMC2D::LearnExample::Serialize(Serializer iStreamer)
   {
     iStreamer.BeginStruct();
@@ -151,33 +131,6 @@ namespace eXl
     return Err::Success;
   }
 
-  //Err MCMC2D::LearnParams::Unstream(Unstreamer& streamer)
-  //{
-  //  streamer.BeginStruct();
-  //  streamer.PushKey("QuantileCull");
-  //  streamer.Read(&m_QuantileCull);
-  //  streamer.PopKey();
-  //  streamer.PushKey("MaxDist");
-  //  streamer.Read(&m_MaxDist_);
-  //  streamer.PopKey();
-  //  streamer.EndStruct();
-  //
-  //  return Err::Success;
-  //}
-  //
-  //Err MCMC2D::LearnExample::Unstream(Unstreamer& streamer)
-  //{
-  //  streamer.BeginStruct();
-  //  streamer.PushKey("Shape");
-  //  MathTools::Unstream(m_Shape, streamer);
-  //  streamer.PopKey();
-  //  streamer.PushKey("Elements");
-  //  streamer.Read(&m_Elements);
-  //  streamer.PopKey();
-  //  streamer.EndStruct();
-  //  return Err::Success;
-  //}
-
   Err MCMC2D::RunParams::Serialize(Serializer iStreamer)
   {
     iStreamer.BeginStruct();
@@ -197,25 +150,6 @@ namespace eXl
 
     return Err::Success;
   }
-
-  //Err MCMC2D::RunParams::Unstream(Unstreamer& streamer)
-  //{
-  //  streamer.BeginStruct();
-  //  streamer.PushKey("Shape");
-  //  MathTools::Unstream(m_Shape, streamer);
-  //  streamer.PopKey();
-  //  streamer.PushKey("NumIter");
-  //  streamer.Read(&m_NumIter);
-  //  streamer.PopKey();
-  //  streamer.PushKey("Placed");
-  //  streamer.Read(&m_Placed);
-  //  streamer.PopKey();
-  //  streamer.PushKey("Static");
-  //  streamer.Read(&m_Static);
-  //  streamer.PopKey();
-  //  streamer.EndStruct();
-  //  return Err::Success;
-  //}
 
   Err MCMC2D::Element::Serialize(Serializer iStreamer)
   {
@@ -253,44 +187,6 @@ namespace eXl
 
     return Err::Success;
   }
-
-  //Err MCMC2D::Element::Stream(Streamer& iStreamer) const
-  //{
-  //  iStreamer.BeginStruct();
-  //  iStreamer.PushKey("RelDensity");
-  //  iStreamer.Write(&m_RelDensity);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("AbsDensity");
-  //  iStreamer.Write(&m_AbsDensity);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("Turn");
-  //  iStreamer.Write(&m_Turn);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("GridX");
-  //  iStreamer.Write(&m_GridX);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("GridY");
-  //  iStreamer.Write(&m_GridY);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("Layer");
-  //  iStreamer.Write(&m_Layer);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("DirMethod");
-  //  unsigned int method = m_DirMethod;
-  //  iStreamer.Write(&method);
-  //  iStreamer.PopKey();
-  //  iStreamer.PushKey("Shapes");
-  //  iStreamer.Write(&m_Shapes);
-  //  iStreamer.PopKey();
-  //  iStreamer.EndStruct();
-  //
-  //  return Err::Success;
-  //}
-
-  /*typedef boost::fast_pool_allocator<MCMC2D::PlacedElement,
-    boost::default_user_allocator_new_delete,
-    boost::details::pool::default_mutex,
-    64, 128> allocator;*/
 
   struct PlacedElementAndBox : MCMC2D::PlacedElement
   {

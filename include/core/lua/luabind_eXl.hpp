@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <core/type/dynobject.hpp>
+#if EXL_LUA
 #include <luabind/class.hpp>
 
 namespace eXl
@@ -229,3 +230,4 @@ namespace eXl
     Type const* m_SequenceType;
   };
 }
+#endif

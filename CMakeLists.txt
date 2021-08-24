@@ -8,6 +8,9 @@ add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
 
 set(ANDROID_PLATFORM 19)
 
+set(CMAKE_DEBUG_POSTFIX "_d" CACHE STRING "")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "_dev" CACHE STRING "")
+
 set(Boost_ROOT "" CACHE PATH "Path to boost root directory")
 set(GLEW_ROOT "" CACHE PATH "Path to glew root directory")
 set(FREEIMAGE_ROOT "" CACHE PATH "Path to FreeImage")
@@ -16,9 +19,11 @@ set(ARMADILLO_ROOT "" CACHE PATH "Path to armadillo root directory")
 set(Clang_DIR "" CACHE PATH "Path to Clang")
 set(LLVM_DIR "" CACHE PATH "Path to LLVM")
 
-set(BUILD_EXL_OGL ON CACHE BOOL "Build the opengl renderer")
 set(BUILD_EXL_SHARED ON CACHE BOOL "Build library as dlls")
+set(BUILD_EXL_OGL ON CACHE BOOL "Build the opengl renderer")
+set(BUILD_EXL_ENGINE ON CACHE BOOL "Build the eXl engine")
 set(BUILD_EXL_EDITOR ON CACHE BOOL "Build the eXl editor")
+set(EXL_WITH_LUA ON CACHE BOOL "Enable eXl lua integration")
 set(BUILD_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 
 set(BULLET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/modules/bullet/src")
@@ -43,14 +48,17 @@ if(MSVC)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR- /we4541 /std:c++17")
 endif()
 
+if(${BUILD_EXL_OGL} OR ${BUILD_EXL_ENGINE})
+set(EXL_REFLANG_ENABLED ON)
+else()
+set(EXL_REFLANG_ENABLED OFF)
+endif()
+
 set(EXL_COMPILER_DEFINITIONS)
 set(EXL_DEPS_INCLUDE)
 
 set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_THREADAWARE)
 set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_TYPE_ENABLED)
-set(LUABIND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua/luabind)
-set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_LUA)
-set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DLUABIND_DYNAMIC_LINK )
 
 #if(${BUILD_TESTS})
 #  SET(GTEST_INCLUDE_DIR ${GTEST_ROOT}/include)
@@ -122,18 +130,22 @@ endif()
 set(MAIN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE} ${CMAKE_SOURCE_DIR}/include
-  ${Boost_INCLUDE_DIR}
-)
+set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE} ${CMAKE_SOURCE_DIR}/include ${Boost_INCLUDE_DIR})
 
-set (LUA_ROOT ${CMAKE_SOURCE_DIR}/modules/lua)
-set (LUA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/modules/lua)
-set (LUA_LIBRARIES lua)
+if(${EXL_WITH_LUA})
+  set(LUABIND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua/luabind)
+  set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_LUA)
+  set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DLUABIND_DYNAMIC_LINK )
 
-set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE}
-  ${LUA_INCLUDE_DIR} 
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua
-)
+  set (LUA_ROOT ${CMAKE_SOURCE_DIR}/modules/lua)
+  set (LUA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/modules/lua)
+  set (LUA_LIBRARIES lua)
+
+  set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE}
+    ${LUA_INCLUDE_DIR} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua
+  )
+endif()
 
 SET(SDL_INCLUDE_DIR ${SDL_ROOT}/include)
 SET(SDL_LIBRARY_DIR ${SDL_ROOT}/include)
@@ -224,7 +236,6 @@ if(${BUILD_EXL_OGL})
   add_subdirectory(src/ogl ${OUT_DIR}/eXl/ogl)
 endif()
 
-add_subdirectory(src/engine ${OUT_DIR}/eXl/engine)
-
-set(CMAKE_DEBUG_POSTFIX "_d" CACHE STRING "" FORCE)
-set(CMAKE_RELWITHDEBINFO_POSTFIX "_dev" CACHE STRING "" FORCE)
+if(${BUILD_EXL_ENGINE})
+  add_subdirectory(src/engine ${OUT_DIR}/eXl/engine)
+endif()
