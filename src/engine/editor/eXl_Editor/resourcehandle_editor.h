@@ -3,6 +3,7 @@
 #include "../dynobjecteditor.hpp"
 
 class QComboBox;
+class QAbstractItemModel;
 
 class ResourceHandle_Editor : public DynObjectEditor
 {
@@ -22,5 +23,6 @@ protected:
 
   bool m_Integer;
   QComboBox* m_ResourceCombo;
+  QAbstractItemModel* m_CurModel = nullptr;
 
 };
