@@ -75,7 +75,9 @@ namespace eXl
 
     T const* Get(ObjectHandle iObject) const;
     T* Get(ObjectHandle iObject);
+    T* GetDataForDeletion(ObjectHandle iObject);
     T& GetOrCreate(ObjectHandle iObject);
+    void Erase(ObjectHandle iObject);
 
     template <typename Functor>
     void Iterate(Functor const& iFn);
@@ -89,14 +91,68 @@ namespace eXl
     ObjectTable<T>& m_ObjectSpec;
   };
 
+
   template <typename T>
   struct PropertySheetAllocator : PropertySheetAllocatorBase
   {
-    PropertySheetAllocator(World& iWorld);
+    PropertySheetAllocator(World& iWorld, Type const* iType);
     ObjectTableHandle_Base Alloc() override;
     void Release(ObjectTableHandle_Base iHandle) override;
     ObjectTable<T> m_ObjectsSpec;
     GameDataView<T> m_View;
+  };
+
+  template <typename T>
+  class GameDataStorage
+  {
+  public:
+    GameDataStorage(World& iWorld)
+      : m_Alloc(iWorld, nullptr)
+    {}
+
+    T const* Get(ObjectHandle iObject) const
+    {
+      return m_Alloc.m_View.Get(iObject);
+    }
+    T* Get(ObjectHandle iObject)
+    {
+      return m_Alloc.m_View.Get(iObject);
+    }
+    T* GetDataForDeletion(ObjectHandle iObject)
+    {
+      return m_Alloc.m_View.GetDataForDeletion(iObject);
+    }
+    T& GetOrCreate(ObjectHandle iObject)
+    {
+      return m_Alloc.m_View.GetOrCreate(iObject);
+    }
+    void Erase(ObjectHandle iObject)
+    {
+      return m_Alloc.m_View.Erase(iObject);
+    }
+
+    template <typename Functor>
+    void Iterate(Functor const& iFn)
+    {
+      m_Alloc.m_View.Iterate(iFn);
+    }
+
+    template <typename Functor>
+    void Iterate(Functor const& iFn) const
+    {
+      m_Alloc.m_View.Iterate(iFn);
+    }
+
+    void Clear()
+    {
+      m_Alloc.m_ObjectsSpec.Reset();
+      m_Alloc.m_ArchetypeHandle.clear();
+      m_Alloc.m_ObjectHandles.clear();
+      m_Alloc.m_WorldObjects.clear();
+    }
+
+  protected:
+    PropertySheetAllocator<T> m_Alloc;
   };
 
   struct GnrPropertySheetAllocator : PropertySheetAllocatorBase

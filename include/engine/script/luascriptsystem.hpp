@@ -35,6 +35,7 @@ namespace eXl
   public:
 
     LuaScriptSystem();
+    ~LuaScriptSystem();
 
     static void AddBehaviourDesc(BehaviourDesc iDesc);
     static BehaviourDesc const* GetBehaviourDesc(Name iName);

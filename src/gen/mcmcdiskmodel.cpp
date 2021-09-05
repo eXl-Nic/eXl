@@ -33,13 +33,18 @@ namespace eXl
       return s_modelName;
     }
 
-    LearnedModel* DiskLearner::UnstreamModel(Unstreamer& streamer) const
+    LearnedModel* DiskLearner::StaticUnstreamModel(Unstreamer& streamer)
     {
       DiskModel* newModel = new DiskModel;
 
       newModel->Unstream(streamer);
 
       return newModel;
+    }
+
+    LearnedModel* DiskLearner::UnstreamModel(Unstreamer& streamer) const
+    {
+      return StaticUnstreamModel(streamer);
     }
 
     Err DiskModel::Stream(Streamer& streamer) const

@@ -182,6 +182,12 @@ namespace eXl
     return TryGetObjectInfo(iHandle) != nullptr;
   }
 
+  bool World::IsObjectBeingDestroyed(ObjectHandle iHandle)
+  {
+    ObjectInfo* info = m_Objects.TryGet(iHandle);
+    return info ? info->m_PendingDeletion : false;
+  }
+
   void World::DeleteObject(ObjectHandle iObject)
   {
     if (ObjectInfo* info = TryGetObjectInfo(iObject))

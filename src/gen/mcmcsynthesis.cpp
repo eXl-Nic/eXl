@@ -531,7 +531,7 @@ namespace eXl
   {
     if(j < 0)
     {
-      eXl_ASSERT(!toroidal);
+      //eXl_ASSERT(!toroidal);
       return i;
     }
     else
@@ -614,7 +614,10 @@ namespace eXl
 
       if(iSameLayer)
       {
-        overlaps = boost::geometry::intersects(iPoly1, iPoly2) || boost::geometry::overlaps(iPoly1, iPoly2);
+        overlaps |= iPoly1.GetAABB().IsInside(iPoly2.GetAABB());
+        overlaps |= iPoly2.GetAABB().IsInside(iPoly1.GetAABB());
+        overlaps |= iPoly1.GetAABB().Intersect(iPoly2.GetAABB());
+        overlaps &= boost::geometry::intersects(iPoly1, iPoly2) || boost::geometry::overlaps(iPoly1, iPoly2);
       }
 
       if(!overlaps)
@@ -755,7 +758,7 @@ namespace eXl
     MCMC2D::InputBuilder& m_InputBuilder;
   };
 
-#define INDIVIDUAL_SPACE
+//#define INDIVIDUAL_SPACE
 
   void MCMC2D::Run(Random& iRand, RunParams& iParams, LearnedModel* iModel, Debug* iDebug)
   {
@@ -1001,18 +1004,18 @@ namespace eXl
             currentElement.m_Angle = turn > 1 ? (iRand.Generate() % turn) * (Mathf::PI * 2 / float(turn)) : 0.0;
             currentElement.m_Pos += iParams.m_Shape.GetAABB().m_Data[0];
           }
+          Element const& elemDef = m_Elements[currentElement.m_Element - 1];
+          if(elemDef.m_GridX > 1)
+          {
+            currentElement.m_Pos.X() = currentElement.m_Pos.X() - Mathi::Mod(currentElement.m_Pos.X(), elemDef.m_GridX);
+            currentElement.m_Pos.X() += elemDef.m_GridX / 2;
+          }
+          if(elemDef.m_GridY > 1)
+          {
+            currentElement.m_Pos.Y() = currentElement.m_Pos.Y() - Mathi::Mod(currentElement.m_Pos.Y(), elemDef.m_GridY);
+            currentElement.m_Pos.Y() += elemDef.m_GridY / 2;
+          }
 
-          //if(m_Elements[currentElement.m_Element].m_GridX > 1)
-          //{
-          //  currentElement.m_Pos.X() = currentElement.m_Pos.X() - (currentElement.m_Pos.X() % m_Elements//[currentElement.m_Element].m_GridX);
-          //}
-          //if(m_Elements[currentElement.m_Element].m_GridY > 1)
-          //{
-          //  int sign = currentElement.m_Pos.X() > 0 ? 1 : -1;
-          //  currentElement.m_Pos.Y() = currentElement.m_Pos.Y() - ( currentElement.m_Pos.Y() % m_Elements//[currentElement.m_Element].m_GridY);
-          //}
-
-          
           inShape = iParams.m_Shape.ContainsPoint(currentElement.m_Pos);
         }
         while(!inShape && sampleCount < 10000);
@@ -1031,12 +1034,17 @@ namespace eXl
 
       unsigned int element = currentElement.m_Element - 1;
       //AABB2Di sampleBox(MathTools::ToDVec(origPt), Vector2d::ONE * 2 * iQuerySize + MathTools::ToDVec(m_Elements[element - 1].m_Shape.GetAABB().GetSize()));
-      Polygoni samplePoly(querySize[element]);
-      samplePoly.Rotate(currentElement.m_Angle);
+      //Polygoni samplePoly(querySize[element]);
+      //samplePoly.Rotate(currentElement.m_Angle);
 
-      AABB2Di sampleBox = samplePoly.GetAABB();
-      sampleBox.m_Data[0] += currentElement.m_Pos;
-      sampleBox.m_Data[1] += currentElement.m_Pos;
+      AABB2Df sampleBoxf;
+      sampleBoxf.m_Data[0] = MathTools::ToFVec(querySize[element].m_Data[0]);
+      sampleBoxf.m_Data[1] = MathTools::ToFVec(querySize[element].m_Data[1]);
+      sampleBoxf.Rotate(currentElement.m_Angle);
+
+      AABB2Di sampleBox;
+      sampleBox.m_Data[0] = MathTools::ToIVec(sampleBoxf.m_Data[0]) + currentElement.m_Pos;
+      sampleBox.m_Data[1] = MathTools::ToIVec(sampleBoxf.m_Data[1]) + currentElement.m_Pos;
 
       AABB2Di newBox = birth ? AABB2Di() : elemIter->curBox;
       AABB2Di prevBox = newBox;
@@ -1264,7 +1272,10 @@ namespace eXl
 
       if(iSameLayer)
       {
-        overlaps = boost::geometry::intersects(iPoly1, iPoly2) || boost::geometry::overlaps(iPoly1, iPoly2);
+        overlaps |= iPoly1.GetAABB().IsInside(iPoly2.GetAABB());
+        overlaps |= iPoly2.GetAABB().IsInside(iPoly1.GetAABB());
+        overlaps |= iPoly1.GetAABB().Intersect(iPoly2.GetAABB());
+        overlaps &= boost::geometry::intersects(iPoly1, iPoly2) || boost::geometry::overlaps(iPoly1, iPoly2);
       }
 
       if(m_AllowOverlap || !overlaps)
@@ -1394,7 +1405,10 @@ namespace eXl
               //Vector<Polygoni> inter;
               //iPoly1.Intersection(iPoly2, inter);
               //overlaps = !inter.empty();
-              overlaps = boost::geometry::intersects(iPoly1, iPoly2) || boost::geometry::overlaps(iPoly1, iPoly2);
+              overlaps |= iPoly1.GetAABB().IsInside(iPoly2.GetAABB());
+              overlaps |= iPoly2.GetAABB().IsInside(iPoly1.GetAABB());
+              overlaps |= iPoly1.GetAABB().Intersect(iPoly2.GetAABB());
+              overlaps &= boost::geometry::intersects(iPoly1, iPoly2) || boost::geometry::overlaps(iPoly1, iPoly2);
             }
 
             float len = overlaps ? 0.0 : (iSameLayer ? boost::geometry::distance(iPoly1, iPoly2) : centroidalLen);
@@ -1824,8 +1838,8 @@ namespace eXl
       cellToSamples[i].push_back(i);
       PlacedElement const& currentElement = ex.m_Elements[i];
       unsigned int element = currentElement.m_Element - 1;
-      Polygoni samplePoly(querySize[element]);
-      samplePoly.Rotate(currentElement.m_Angle);
+      //Polygoni samplePoly(querySize[element]);
+      //samplePoly.Rotate(currentElement.m_Angle);
 
       AABB2Di sampleBox = maxQuery;//samplePoly.GetAABB();
       sampleBox.m_Data[0] += currentElement.m_Pos;
@@ -2140,7 +2154,7 @@ namespace eXl
   {
     if(iOneHotIdx >= iDists.size())
     {
-      eXl_ASSERT(iDists.size() == 1);
+      //eXl_ASSERT(iDists.size() == 1);
       return iDists[0].m_MaxDist;
     }
     else
@@ -2174,6 +2188,51 @@ namespace eXl
     return std::move(result);
   }
 
+  Image MCMC2D::DrawDbgImg(LearnedModel* iModel, uint32_t iOneHotIdx)
+  {
+    const int imgSize = 256;
+
+    Vector2f range;
+    range.X() = FLT_MAX;
+    range.Y() = -FLT_MAX;
+
+    Vector<InteractionGeom> interactions;
+    for (int j = 0; j < imgSize; ++j)
+    {
+      for (int k = 0; k < imgSize; ++k)
+      {
+        Vector2f dir(k - imgSize / 2, j - imgSize / 2);
+        dir *= (2.0 / imgSize);
+        float len = dir.Normalize();
+
+        InteractionGeom inter;
+        inter.dir1 = Vector2d(dir.X(), dir.Y());
+        inter.dist = len * iModel->GetMaxDist(iOneHotIdx);
+
+        interactions.push_back(inter);
+      }
+    }
+
+    Vector<float> out = iModel->Sample(iOneHotIdx, interactions);
+
+    for (auto score : out)
+    {
+      range.Y() = Mathd::Max(score, range.Y());
+      range.X() = Mathd::Min(score, range.X());
+    }
+
+    Vector<int> image(imgSize * imgSize);
+    double amplitude = range.X() != range.Y() ? range.Y() - range.X() : range.Y();
+    double minVal = range.X() != range.Y() ? range.X() : 0.0;
+    for (unsigned int pix = 0; pix < image.size(); ++pix)
+    {
+      double val = (out[pix] - minVal) / amplitude;
+      image[pix] = 255 << 24 | (unsigned char)(val * 255) << 8 | (unsigned char)((1.0 - val) * 255);
+    }
+
+    return Image(image.data(), Image::Size(imgSize, imgSize), Image::RGBA, Image::Char, 1, Image::Copy);
+  }
+
 #ifdef EXL_IMAGESTREAMER_ENABLED
   void MCMC2D::DrawDbgImg(String const& iPath, LearnedModel* iModel)
   {
@@ -2187,58 +2246,9 @@ namespace eXl
 
     InputBuilder builder(elements, iModel->IsToroidal());
 
-    const int imgSize = 256;
-    auto evalInter = [iModel](FullInteraction const& inter)
+    auto writeImage = [](String const& iName, Image const& iImg)
     {
-      return iModel->Sample(inter);
-    };
-
-    auto evalImgFunc = [iModel, imgSize](unsigned int oneHotIdx, Vector2f& oRange)
-    {
-      oRange.X() = FLT_MAX;
-      oRange.Y() = -FLT_MAX;
-
-      Vector<InteractionGeom> interactions;
-      for (int j = 0; j<imgSize; ++j)
-      {
-        for (int k = 0; k<imgSize; ++k)
-        {
-          Vector2f dir(k - imgSize / 2, j - imgSize / 2);
-          dir *= (2.0 / imgSize);
-          float len = dir.Normalize();
-
-          InteractionGeom inter;
-          inter.dir1 = Vector2d(dir.X(), dir.Y());
-          inter.dist = len * iModel->GetMaxDist(oneHotIdx);
-
-          interactions.push_back(inter);
-        }
-      }
-
-      Vector<float> dVal = iModel->Sample(oneHotIdx, interactions);
-      
-      for(auto score : dVal)
-      {
-        oRange.Y() = Mathd::Max(score, oRange.Y());
-        oRange.X() = Mathd::Min(score, oRange.X());
-      }
-      
-
-      return dVal;
-    };
-
-    auto writeImage = [imgSize](String const& iName, Vector<float> values, Vector2f iRange)
-    {
-      Vector<int> image(imgSize * imgSize);
-
-      for (unsigned int pix = 0; pix<image.size(); ++pix)
-      {
-        double val = (values[pix] - iRange.X()) / (iRange.Y() - iRange.X());
-        image[pix] = 255 << 24 | (unsigned char)(val * 255) << 8 | (unsigned char)((1.0 - val) * 255);
-      }
-
-      Image tempImg(image.data(), Image::Size(imgSize, imgSize), Image::RGBA, Image::Char, 1, Image::Reference);
-      ImageStreamer::Save(&tempImg, StringUtil::ToASCII(iName));
+      ImageStreamer::Save(&iImg, StringUtil::ToASCII(iName));
     };
 
     auto makeBorderName = [&iPath](unsigned int i, String const& iSuffix)->String
@@ -2275,14 +2285,12 @@ namespace eXl
       int startElem = iModel->IsToroidal() ? 0 : -1;
       for (int j = startElem; j < static_cast<int>(elements.size() - i); ++j)
       {
-        Vector2f range;
-        Vector<float> out;
         if (j < 0)
         {
           unsigned int oneHotIdx = builder.BuildOneHot(i, -1, 0.0);
 
-          out = evalImgFunc(oneHotIdx, range);
-          writeImage(makeBorderName(i, "Density"), out, range);
+          Image out = DrawDbgImg(iModel, oneHotIdx);
+          writeImage(makeBorderName(i, "Density"), out);
         }
         else
         {
@@ -2293,8 +2301,8 @@ namespace eXl
 
             unsigned int oneHotIdx = builder.BuildOneHot(i, j, angle2);
 
-            out = evalImgFunc(oneHotIdx, range);
-            writeImage(makeName(i, j, turn, "Density"), out, range);
+            Image out = DrawDbgImg(iModel, oneHotIdx);
+            writeImage(makeName(i, j, turn, "Density"), out);
           }
         }
       }

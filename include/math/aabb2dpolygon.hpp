@@ -110,7 +110,13 @@ namespace eXl
     void*           m_Cache;
   };
 
-  
+  namespace TypeTraits
+  {
+    template <typename Real>
+    struct IsComparable<AABB2DPolygon<Real>> { static constexpr bool s_Value = false; };
+  }
+
+  DEFINE_MATH_TYPE_EX(AABB2DPolygon<int>, AABB2DPolygoni)
 }
 
 #ifdef EXL_SHARED_LIBRARY

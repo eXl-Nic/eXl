@@ -44,6 +44,8 @@ namespace eXl
 
       String const& GetModelName() const override;
 
+      static LearnedModel* StaticUnstreamModel(Unstreamer& streamer);
+
       LearnedModel* UnstreamModel(Unstreamer& streamer) const override;
 
       virtual SVMLearnParams const& GetParams() const { return static_cast<SVMLearnParams&>(m_Params); }

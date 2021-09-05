@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/matrix4.hpp>
 #include <math/quaternion.hpp>
 #include <math/aabb2d.hpp>
+#include <math/aabb2dpolygon.hpp>
 
 #if EXL_TYPE_ENABLED
 #include <core/type/typemanager.hpp>
@@ -42,9 +43,10 @@ namespace eXl
   IMPLEMENT_TYPE(Vector2i)
   IMPLEMENT_TYPE(Quaternionf)
   IMPLEMENT_TYPE(Matrix4f)
+  IMPLEMENT_TYPE(AABB2DPolygoni)
 
-  IMPLEMENT_TAG_TYPE(AABB2Di)
-  IMPLEMENT_TAG_TYPE(AABB2Df)
+  IMPLEMENT_TYPE(AABB2Di)
+  IMPLEMENT_TYPE(AABB2Df)
 
   void DeclareMath()
   {

@@ -246,7 +246,9 @@ namespace eXl
         m_Holes[i][j] += iTrans;
       }
     }
-    UpdateAABB();
+    //UpdateAABB();
+    m_AABB.m_Data[0] += iTrans;
+    m_AABB.m_Data[1] += iTrans;
   }
 
   template <typename Real>
@@ -271,7 +273,7 @@ namespace eXl
   template <typename Real>
   void Polygon<Real>::Rotate(typename eXl::PreciseType<Real>::type iAngle)
   {
-    if(iAngle != 0)
+    if(Math<typename eXl::PreciseType<Real>::type>::Abs(iAngle) > Math<typename eXl::PreciseType<Real>::type>::ZERO_TOLERANCE)
     {
       auto xAxis = Vector2<typename eXl::PreciseType<Real>::type>(Math<typename eXl::PreciseType<Real>::type>::Cos(iAngle), Math<typename eXl::PreciseType<Real>::type>::Sin(iAngle));
       auto yAxis = Vector2<typename eXl::PreciseType<Real>::type>(-xAxis.Y(), xAxis.X());
@@ -290,8 +292,9 @@ namespace eXl
           m_Holes[i][j] = Vector2<Real>(Math<Real>::Round(vec.X()), Math<Real>::Round(vec.Y()));
         }
       }
+
+      UpdateAABB();
     }
-    UpdateAABB();
   }
 
   template <typename Real>
@@ -328,12 +331,6 @@ namespace eXl
     
     m_AABB = iBox;
   }
-
-  //template <typename Real>
-  //Polygon<Real>::Polygon(AABB2D<Real> const& iBox)
-  //{
-  //  AddBox(iBox);
-  //}
 
   template <typename Real>
   void Polygon<Real>::Swap(Polygon& iOther)

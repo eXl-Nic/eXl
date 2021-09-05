@@ -50,6 +50,8 @@ namespace eXl
 
       LearnedModel* UnstreamModel(Unstreamer& streamer) const override;
 
+      static LearnedModel* StaticUnstreamModel(Unstreamer& streamer);
+
       virtual DiskLearnParams const& GetParams() const { return static_cast<DiskLearnParams&>(m_Params); }
 
     };

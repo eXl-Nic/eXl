@@ -44,10 +44,6 @@ namespace eXl
 
 		struct PlacedObject
 		{
-			Vector2i m_Position;
-			ResourceHandle<Archetype> m_Archetype;
-			uint64_t m_UUID;
-
       CustomizationData m_CustoData;
 
       AABB2Di m_BoxCache;
@@ -57,11 +53,15 @@ namespace eXl
 
 		void Initialize(MapResource const& iMap);
 		
-
 		void EnableTool() override;
 		void DisableTool() override;
 
-    GameDataView<PlacedObject> const & GetObjects() const { return m_ObjectsView; }
+    GameDataView<MapResource::ObjectHeader> const& GetObjects() const { return m_ObjectsView; }
+    GameDataStorage<PlacedObject> const& GetObjectsAdditionalData() const { return m_ObjectsEditorData; }
+
+    ObjectHandle AddAt(Archetype const* iArchetype, Vector2i iPixelPos);
+
+    void Cleanup(ObjectHandle);
 
 	protected:
 
@@ -77,12 +77,12 @@ namespace eXl
 
 		void SetupSelectionTool();
 
-		ObjectHandle AddAt(Vector2i iPixelPos, bool iAppend);
+		ObjectHandle AddAt(Vector2i iPixelPos);
 		ObjectHandle GetAt(Vector2i iWorldPos);
     void Remove(ObjectHandle iObject);
 
-		void AddToWorld(ObjectHandle, PlacedObject&);
-    void UpdateObjectBoxAndTile(ObjectHandle, PlacedObject&);
+		void AddToWorld(ObjectHandle, MapResource::ObjectHeader const& iObject);
+    void UpdateObjectBoxAndTile(ObjectHandle, MapResource::ObjectHeader& iObject);
 
     void AddTileToWorld(ObjectHandle iObj, GfxSpriteComponent::Desc const* iDesc);
 
@@ -92,12 +92,13 @@ namespace eXl
 		Vector<QMetaObject::Connection> m_ToolConnections;
 
 		World& m_World;
-    GameDataView<PlacedObject>& m_ObjectsView;
+    GameDataView<MapResource::ObjectHeader>& m_ObjectsView;
+    GameDataStorage<PlacedObject> m_ObjectsEditorData;
 		Vector<BoxIndexEntry> m_ResultsCache;
 		BoxIndex m_TilesIdx;
 		UnorderedMap<uint64_t, ObjectHandle> m_IDs;
     ObjectHandle m_SelectionHandle;
-		PlacedObject* m_Selection = nullptr;
+		MapResource::ObjectHeader* m_Selection = nullptr;
 		QAction* m_Actions[3];
 		QIcon m_Icons[3];
 		QIcon m_HIcons[3];

@@ -113,6 +113,7 @@ map/dungeonlayout.cpp
 map/tilinggroup.cpp
 map/map.cpp
 map/map_instantiate.cpp
+map/mcmcmodelrsc.cpp
 
 #net/network.cpp
 

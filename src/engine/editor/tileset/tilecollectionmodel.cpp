@@ -25,7 +25,6 @@ namespace eXl
         Vector2i size = tile->m_Size;
         Vector2i orig = tile->m_Frames.size() > 0 ? tile->m_Frames[0] : Vector2i::ZERO;
 
-        //QRect tileDim(QPoint(orig.X(), m_CacheTileset.height() - orig.Y()),QSize(size.X(), size.Y()));
         QRect tileDim(QPoint(orig.X(), orig.Y()), QSize(size.X(), size.Y()));
 
         auto iter = m_CacheTileset.find(tile->m_ImageName);
@@ -44,7 +43,7 @@ namespace eXl
           
         }
 
-        return QPixmap::fromImage(iter->second.copy(tileDim))/*.mirrored()*/;
+        return QPixmap::fromImage(iter->second.copy(tileDim));
       }
     }
 

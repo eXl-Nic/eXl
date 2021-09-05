@@ -399,7 +399,18 @@ namespace eXl
     return newDoc;
   }
 
-  ResourceEditor* EditorState::OpenResourceEditor(Resource::UUID const& iUUID, QWidget* iParent)
+  DocumentState* EditorState::GetOpenedDocument(Resource::UUID const& iUUID)
+  {
+    auto openedDocIter = s_OpenedDocuments.find(iUUID);
+
+    if (openedDocIter == s_OpenedDocuments.end())
+    {
+      return nullptr;
+    }
+    return openedDocIter->second.get();
+  }
+
+  DocumentState* EditorState::OpenDocument(Resource::UUID const& iUUID)
   {
     auto openedDocIter = s_OpenedDocuments.find(iUUID);
 
@@ -420,7 +431,12 @@ namespace eXl
       openedDocIter = s_OpenedDocuments.insert(std::make_pair(iUUID, newDoc)).first;
     }
 
-    DocumentState* openedDoc = openedDocIter->second.get();
+    return openedDocIter->second.get();
+  }
+
+  ResourceEditor* EditorState::OpenResourceEditor(Resource::UUID const& iUUID, QWidget* iParent)
+  {
+    DocumentState* openedDoc = OpenDocument(iUUID);
 
     return OpenResourceEditor(openedDoc, iParent);
   }

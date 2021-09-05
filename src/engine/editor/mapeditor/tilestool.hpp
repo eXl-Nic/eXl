@@ -9,6 +9,7 @@
 
 #include "commonwidgets.hpp"
 #include "utils.hpp"
+#include "mapitemdata.hpp"
 
 
 #include <QIcon>
@@ -50,13 +51,7 @@ namespace eXl
     struct PlacedTile
     {
       // -> Position in PIXELS !!!
-      Vector2i m_Position;
-      uint32_t m_Layer;
-      ResourceHandle<Tileset> m_Tileset;
-      TileName m_Tile;
-      TerrainTypeName m_Type;
-      uint32_t m_Index;
-
+      
       AABB2Di GetBox()
       {
         return m_BoxCache;
@@ -84,22 +79,24 @@ namespace eXl
     static PropertySheetName ToolDataName();
 
     void Initialize(MapResource const& iMap);
+
     ObjectHandle GetAt(Vector2i iWorldPos);
     ObjectHandle AddAt(Vector2i iWorldPos, bool iAppend);
+    ObjectHandle AddAt(ResourceHandle<Tileset> iTileset, TileName iTile, uint32_t iLayer, TerrainTypeName iTypename, Vector2i iWorldPos, bool iAppend);
     void Remove(ObjectHandle);
+    void Cleanup(ObjectHandle);
     void SelectTile(ObjectHandle);
 
-    void AddTileToWorld(ObjectHandle iHandle, PlacedTile& iTile);
+    void AddTileToWorld(ObjectHandle iHandle, TileItemData& iTile);
     uint32_t GetLayer() { return m_LayerWidget->GetCurLayer(); }
 
     void EnableTool() override;
     void DisableTool() override;
 
-    //UnorderedMap<uint32_t, IntrusivePtr<PlacedTile>> const& GetTiles() const { return m_Tiles; }
-    GameDataView<PlacedTile> const& GetTiles() const { return m_TilesView; }
+    GameDataView<TileItemData> const& GetTiles() const { return m_TilesView; }
   protected:
 
-    void UpdateObjectBoxAndTile(ObjectHandle iHandle, PlacedTile&);
+    void UpdateObjectBoxAndTile(ObjectHandle iHandle, TileItemData&);
 
     void CleanupToolConnections();
 
@@ -124,7 +121,9 @@ namespace eXl
     Vector<QMetaObject::Connection> m_ToolConnections;
 
     World& m_World;
-    GameDataView<PlacedTile>& m_TilesView;
+    
+    GameDataView<TileItemData>& m_TilesView;
+    GameDataStorage<PlacedTile> m_PlacedTileData;
 
     Vector<BoxIndexEntry> m_ResultsCache;
     LayerWidget* m_LayerWidget;
@@ -135,7 +134,7 @@ namespace eXl
     uint32_t m_CurrentHistoryPointer = 0;
     
     ObjectHandle m_SelectionHandle;
-    PlacedTile* m_Selection = nullptr;
+    TileItemData* m_Selection = nullptr;
     QAction* m_Actions[3];
     QIcon m_Icons[3];
     QIcon m_HIcons[3];
@@ -146,6 +145,4 @@ namespace eXl
     QSpinBox* m_SelectionX;
     QSpinBox* m_SelectionY;
   };
-
-  DEFINE_TYPE_EX(TilesTool::PlacedTile, TilesTool__PlacedTile, )
 }

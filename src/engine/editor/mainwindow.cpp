@@ -45,6 +45,7 @@
 #include <editor/mapeditor/mapeditor.hpp>
 #include <editor/projecteditor.hpp>
 #include <editor/scripteditor.hpp>
+#include <editor/mcmcmodeleditor.hpp>
 #include <engine/gfx/tileset.hpp>
 
 namespace eXl
@@ -256,6 +257,7 @@ namespace eXl
     EditorState::AddResourceHandler(&MapEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&ProjectEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&LuaScriptEditor::GetEditorHandler());
+    EditorState::AddResourceHandler(&MCMCModelEditor::GetEditorHandler());
 
     connect(ui->actionNewProject, &QAction::triggered, this, &MainWindow::newProject);
     connect(ui->actionOpenProject, &QAction::triggered, this, &MainWindow::openProject);

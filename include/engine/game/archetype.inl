@@ -29,6 +29,23 @@ T* GameDataView<T>::Get(ObjectHandle iObject)
 }
 
 template <typename T>
+T* GameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
+{
+  if (!m_World.IsObjectBeingDestroyed(iObject))
+  {
+    return nullptr;
+  }
+
+  m_Alloc.EnsureStorage(iObject);
+  if (m_Alloc.m_WorldObjects[iObject.GetId()] != iObject)
+  {
+    return nullptr;
+  }
+
+  return &m_ObjectSpec.Get(ObjectTable<T>::Handle(m_Alloc.m_ObjectHandles[iObject.GetId()]));
+}
+
+template <typename T>
 T& GameDataView<T>::GetOrCreate(ObjectHandle iObject)
 {
   m_Alloc.EnsureStorage(iObject);
@@ -42,17 +59,32 @@ T& GameDataView<T>::GetOrCreate(ObjectHandle iObject)
     else
     {
       T& prop = m_ObjectSpec.Get(typename ObjectTable<T>::Handle(m_Alloc.m_ObjectHandles[iObject.GetId()]));
-      Type const* type = TypeManager::GetType<T>();
-
+      
       // Ensure data is in default state when recycling storage
-      type->Destruct(&prop);
-      type->Construct(&prop);
+      prop.~T();
+      new(&prop) T;
 
       return prop;
     }
   }
 
   return m_ObjectSpec.Get(typename ObjectTable<T>::Handle(m_Alloc.m_ObjectHandles[iObject.GetId()]));
+}
+
+template <typename T>
+void GameDataView<T>::Erase(ObjectHandle iObject)
+{
+  if (m_Alloc.m_WorldObjects.size() > iObject.GetId()
+    && m_Alloc.m_WorldObjects[iObject.GetId()].IsAssigned())
+  {
+    m_Alloc.m_WorldObjects[iObject.GetId()] = ObjectHandle();
+    if (!m_Alloc.m_ArchetypeHandle[iObject.GetId()].IsAssigned()
+      || m_Alloc.m_ObjectHandles[iObject.GetId()] != m_Alloc.m_ArchetypeHandle[iObject.GetId()])
+    {
+      m_Alloc.Release(m_Alloc.m_ObjectHandles[iObject.GetId()]);
+      m_Alloc.m_ObjectHandles[iObject.GetId()] = ObjectTableHandle_Base();
+    }
+  }
 }
 
 template <typename T>
@@ -84,8 +116,8 @@ void GameDataView<T>::Iterate(Functor const& iFn) const
 }
 
 template <typename T>
-PropertySheetAllocator<T>::PropertySheetAllocator(World& iWorld)
-  : PropertySheetAllocatorBase(TypeManager::GetType<T>(), m_ObjectsSpec.GetImplementation())
+PropertySheetAllocator<T>::PropertySheetAllocator(World& iWorld, Type const* iType)
+  : PropertySheetAllocatorBase(iType, m_ObjectsSpec.GetImplementation())
   , m_View(iWorld, *this, m_ObjectsSpec)
 {
   m_HasView = true;
@@ -106,5 +138,5 @@ void PropertySheetAllocator<T>::Release(ObjectTableHandle_Base iHandle)
 template <typename T>
 void PropertiesManifest::RegisterPropertySheet(PropertySheetName iName, bool iIsArchetype)
 {
-  RegisterPropertySheet(iName, TypeManager::GetType<T>(), [](World& iWorld) { return new PropertySheetAllocator<T>(iWorld); }, iIsArchetype);
+  RegisterPropertySheet(iName, TypeManager::GetType<T>(), [](World& iWorld) { return new PropertySheetAllocator<T>(iWorld, TypeManager::GetType<T>()); }, iIsArchetype);
 }

@@ -15,6 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/containers.hpp>
 #include <math/polygon.hpp>
 #include <core/stream/serializer.hpp>
+#include <core/image/image.hpp>
 
 namespace eXl
 {
@@ -144,13 +145,13 @@ namespace eXl
       float m_Dispersion = 0.1;
       bool m_Resample = false;
       bool m_QuantileCull = true;
-      float m_SigmaDist;
+      float m_SigmaDist = 0.2;
       float m_SigmaAngle = Mathf::Sqrt(1.0 - Mathf::Cos(Mathf::PI / 8.0));
 
       SERIALIZE_METHODS;
     };
 
-    struct InputBuilder
+    struct EXL_GEN_API InputBuilder
     {
       static unsigned int ComputeNumElems(Vector<MCMC2D::Element> const& iElems, bool iToroidal);
 
@@ -315,7 +316,7 @@ namespace eXl
     };
 
     EXL_GEN_API void Run(Random& iRand, RunParams& iParams, LearnedModel* model, Debug* iDebug = nullptr);
-
+    EXL_GEN_API Image DrawDbgImg(LearnedModel* iModel, uint32_t iOneHotIdx);
 #ifdef EXL_IMAGESTREAMER_ENABLED
     EXL_GEN_API void DrawDbgImg(String const& iPath, LearnedModel* model);
 #endif

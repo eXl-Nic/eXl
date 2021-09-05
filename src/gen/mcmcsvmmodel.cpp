@@ -104,7 +104,7 @@ namespace eXl
 
 
 #define EXP_METHOD
-//#define ONE_BETA
+#define ONE_BETA
 
   namespace MCMC2D
   {
@@ -126,6 +126,11 @@ namespace eXl
     }
 
     LearnedModel* SVMLearner::UnstreamModel(Unstreamer& streamer) const
+    {
+      return StaticUnstreamModel(streamer);
+    }
+
+    LearnedModel* SVMLearner::StaticUnstreamModel(Unstreamer& streamer)
     {
       SVMModel* newModel = new SVMModel;
 

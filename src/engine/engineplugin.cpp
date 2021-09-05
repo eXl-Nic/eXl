@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/gfx/tileset.hpp>
 #include <engine/map/tilinggroup.hpp>
+#include <engine/map/mcmcmodelrsc.hpp>
 #include <engine/game/archetype.hpp>
 #include <engine/common/project.hpp>
 
@@ -226,6 +227,7 @@ namespace eXl
       Project::Init();
       Archetype::Init();
       MapResource::Init();
+      MCMCModelRsc::Init();
 #ifdef EXL_LUA
       LuaScriptBehaviour::Init();
 #endif

@@ -202,6 +202,8 @@ namespace eXl
 
     bool IsObjectValid(ObjectHandle iHandle);
 
+    bool IsObjectBeingDestroyed(ObjectHandle iHandle);
+
     template <typename T>
     T* AddSystem(std::unique_ptr<T>&& iSystem)
     {

@@ -44,6 +44,8 @@ archetypeeditor.cpp
 projectresourcesmodel.cpp
 projecteditor.cpp
 scripteditor.cpp
+mcmcmodeleditor.cpp
+miniaturecache.cpp
 
 tileset/tileselectionwidget.cpp
 tileset/tileseteditor.cpp
@@ -59,6 +61,11 @@ mapeditor/objectstool.cpp
 mapeditor/pentoolfilter.cpp
 mapeditor/terraintool.cpp
 mapeditor/editortool.cpp
+mapeditor/mcmclearntool.cpp
+
+
+${CMAKE_CURRENT_BINARY_DIR}/editor_gen.cpp
+${CMAKE_CURRENT_BINARY_DIR}/editor_gen.hpp
 )
 
 SET(HEADERS
@@ -93,6 +100,8 @@ archetypeeditor.hpp
 projectresourcesmodel.hpp
 projecteditor.hpp
 scripteditor.hpp
+mcmcmodeleditor.hpp
+miniaturecache.hpp
 
 tileset/tileseteditor.hpp
 tileset/tilinggroupeditor.hpp
@@ -109,6 +118,8 @@ mapeditor/objectstool.hpp
 mapeditor/pentoolfilter.hpp
 mapeditor/terraintool.hpp
 mapeditor/editortool.hpp
+mapeditor/mcmclearntool.hpp
+mapeditor/mapitemdata.hpp
 )
 
 QT5_WRAP_CPP(QTAppl_MOC_SRC 
@@ -117,7 +128,12 @@ OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
 
 add_executable(eXl_Editor ${QTAppl_MOC_HEADERS} ${QTAppl_SRCS} ${QTAppl_MOC_SRC} ${HEADERS})
 
-SETUP_EXL_TARGET(eXl_Editor DEPENDENCIES eXl_Engine)
+set(HEADERS_TO_PARSE 
+  ${CMAKE_CURRENT_SOURCE_DIR}/mapeditor/mapitemdata.hpp
+)
+
+SETUP_EXL_TARGET(eXl_Editor DEPENDENCIES eXl_Engine HEADERS_TO_PARSE ${HEADERS_TO_PARSE} LIB_SUFFIX "EDITOR")
+
 target_link_libraries(eXl_Editor PRIVATE ${QT_LIBRARIES})
 
 add_custom_command(

@@ -132,6 +132,8 @@ namespace eXl
     static Vector<ResourceLoaderName> GetAllRegisteredHandlers();
 
     static DocumentState* CreateResource(ResourceLoaderName iName, QWidget* iParent = nullptr);
+    static DocumentState* GetOpenedDocument(Resource::UUID const& iUUID);
+    static DocumentState* OpenDocument(Resource::UUID const& iUUID);
 
     static ResourceEditor* OpenResourceEditor(Resource::UUID const& iUUID, QWidget* iParent);
     static ResourceEditor* OpenResourceEditor(DocumentState* iDoc, QWidget* iParent);

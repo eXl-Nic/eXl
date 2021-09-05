@@ -7,6 +7,7 @@
 
 #include "commonwidgets.hpp"
 #include "utils.hpp"
+#include "mapitemdata.hpp"
 
 #include <QIcon>
 #include <QPainterPath>
@@ -42,13 +43,9 @@ namespace eXl
     {
     public:
 
-      void ComputePainterPath();
+      void ComputePainterPath(TerrainIslandItemData const& iData);
 
-      AABB2DPolygoni m_IslandPoly;
-      ResourceHandle<TilingGroup> m_TilingGroup;
-      TerrainTypeName m_Terrain;
       QPainterPath m_PolyPath;
-      uint8_t m_Layer;
     };
 
     static PropertySheetName ToolDataName();
@@ -59,7 +56,7 @@ namespace eXl
 
     static Vector2i SafeGetTilingSize(TilingGroup const*);
 
-    GameDataView<Island> const& GetIslands() const { return m_IslandsView; }
+    GameDataView<TerrainIslandItemData> const& GetIslands() const { return m_IslandsView; }
 
   protected:
 
@@ -80,7 +77,7 @@ namespace eXl
 
     void UpdatePolygon(ObjectHandle iIsland, AABB2DPolygoni&& iNewPoly);
     void RemoveIsland(ObjectHandle iIsland);
-    void AddIsland(Island iIsland);
+    void AddIsland(TerrainIslandItemData iIsland);
 
     void SetTilingGroup(ResourceHandle<TilingGroup> const& iHandle);
 
@@ -94,7 +91,8 @@ namespace eXl
     Vector<QMetaObject::Connection> m_ToolConnections;
 
     World& m_World;
-    GameDataView<Island>& m_IslandsView;
+    GameDataView<TerrainIslandItemData>& m_IslandsView;
+    GameDataStorage<Island> m_PolyView;
     Vector<BoxIndexEntry> m_ResultsCache;
     LayerWidget* m_LayerWidget;
     TerrainWidget* m_TerrainWidget;

@@ -90,6 +90,13 @@ namespace eXl
     : m_LuaWorld(LuaManager::CreateWorld(this))
   {}
 
+  LuaScriptSystem::~LuaScriptSystem()
+  {
+    m_ObjectToBehaviour.clear();
+    m_LoadedScripts.clear();
+    m_Scripts.Reset();
+  }
+
   World* LuaScriptSystem::GetWorld()
   {
     LuaStateHandle curState = LuaManager::GetCurrentState();

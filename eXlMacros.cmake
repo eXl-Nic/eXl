@@ -42,7 +42,7 @@ function(SETUP_EXL_TARGET TARGET_NAME)
 		set(REFLANG_PATH $<TARGET_FILE:eXl_reflang>)
     endif(${WIN32})
     
-    string(TOLOWER ${LIB_SUFFIX} LIB_SUFFIX_FILENAME)
+    string(TOLOWER ${ARGS_LIB_SUFFIX} LIB_SUFFIX_FILENAME)
 
     set(REFLANG_OUTPUT ${LIB_SUFFIX_FILENAME}_gen)
     set(REFLANG_OUTPUT_HPP ${CMAKE_CURRENT_BINARY_DIR}/${LIB_SUFFIX_FILENAME}_gen.hpp)
@@ -62,11 +62,11 @@ function(SETUP_EXL_TARGET TARGET_NAME)
           BYPRODUCTS ${REFLANG_OUTPUT_HPP}
     )
     
-    #add_custom_target(${TARGET_NAME}_outputdebugcmd COMMAND ${CMAKE_COMMAND} -E echo ${REFLANG_COMMAND})
+    add_custom_target(${TARGET_NAME}_outputdebugcmd COMMAND ${CMAKE_COMMAND} -E echo ${REFLANG_COMMAND})
     if(${WIN32})
       add_dependencies(${TARGET_NAME} eXl_reflang)
     endif(${WIN32})
-    #add_dependencies(${TARGET_NAME} ${TARGET_NAME}_outputdebugcmd)
+    add_dependencies(${TARGET_NAME} ${TARGET_NAME}_outputdebugcmd)
     
     target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

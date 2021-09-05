@@ -9,11 +9,13 @@
 #include <editor/tileset/tileselectionwidget.hpp>
 
 #include <core/input.hpp>
+#include <core/resource/resourcemanager.hpp>
 
 #include "tilestool.hpp"
 #include "terraintool.hpp"
 #include "pentoolfilter.hpp"
 #include "objectstool.hpp"
+#include "mcmclearntool.hpp"
 
 #include <math/mathtools.hpp>
 #include <math/aabb2dpolygon.hpp>
@@ -50,18 +52,34 @@ namespace eXl
     return s_Handler;
   }
 
+  class MapEditorComponentMgr : public ToolEditorComponentMgr
+  {
+  public:
+
+    MapEditorComponentMgr(MapEditor::Impl& iEditorImpl)
+      : m_EditorImpl(iEditorImpl)
+    {}
+
+    void DeleteComponent(ObjectHandle) override;
+  protected:
+    MapEditor::Impl& m_EditorImpl;
+  };
+
 	struct MapEditor::Impl
 	{
 		Impl(MapEditor* iEditor)
 		{
       PropertiesManifest mapEditorManifest = EditorState::GetProjectProperties();
-      mapEditorManifest.RegisterPropertySheet<TilesTool::PlacedTile>(TilesTool::ToolDataName(), false);
-      mapEditorManifest.RegisterPropertySheet<TerrainTool::Island>(TerrainTool::ToolDataName(), false);
-      mapEditorManifest.RegisterPropertySheet<ObjectsTool::PlacedObject>(ObjectsTool::ToolDataName(), false);
+      mapEditorManifest.RegisterPropertySheet<TileItemData>(TilesTool::ToolDataName(), false);
+      mapEditorManifest.RegisterPropertySheet<TerrainIslandItemData>(TerrainTool::ToolDataName(), false);
+      mapEditorManifest.RegisterPropertySheet<MapResource::ObjectHeader>(ObjectsTool::ToolDataName(), false);
 
       m_World.Init(mapEditorManifest).WithGfx();
 
       World& world = m_World.GetWorld();
+
+      world.AddSystem(std::make_unique<MapEditorComponentMgr>(*this));
+
       GfxSystem& gfx = *world.GetSystem<GfxSystem>();
       PhysicsSystem& ph = *world.GetSystem<PhysicsSystem>();
       
@@ -101,12 +119,16 @@ namespace eXl
         m_ObjectsTool->Initialize(*m_Map);
       }
 
+      m_MCMCTool = new MCMCLearnTool(m_Editor, m_World.GetWorld(), m_Editor);
+
       int tilesTabIdx = tools->addTab(m_TilesTool, "Tiles");
       m_Tools[tilesTabIdx] = m_TilesTool;
       int islandsTabIdx = tools->addTab(m_IslandsTool, "Terrain");
       m_Tools[islandsTabIdx] = m_IslandsTool;
       int objectsTabIdx = tools->addTab(m_ObjectsTool, "Objects");
       m_Tools[objectsTabIdx] = m_ObjectsTool;
+      int mcmcTabIdx = tools->addTab(m_MCMCTool, "MCMC");
+      m_Tools[mcmcTabIdx] = m_MCMCTool;
 
       m_CurTool = m_TilesTool;
 
@@ -204,6 +226,7 @@ namespace eXl
     TilesTool* m_TilesTool;
     TerrainTool* m_IslandsTool;
     ObjectsTool* m_ObjectsTool;
+    MCMCLearnTool* m_MCMCTool;
 
     Map<uint32_t, EditorTool*> m_Tools;
 
@@ -235,7 +258,7 @@ namespace eXl
 
     auto const& tiles = m_Impl->m_TilesTool->GetTiles();
     UnorderedMap<std::pair<ResourceHandle<Tileset>, Name>, uint32_t> tileGroups;
-    tiles.Iterate([&](ObjectHandle, TilesTool::PlacedTile const& iTile)
+    tiles.Iterate([&](ObjectHandle, TileItemData const& iTile)
       {
         auto key = std::make_pair(iTile.m_Tileset, iTile.m_Type);
         auto insertRes = tileGroups.insert(std::make_pair(key, map->m_Tiles.size()));
@@ -254,7 +277,7 @@ namespace eXl
 
     auto const& islands = m_Impl->m_IslandsTool->GetIslands();
     UnorderedMap<std::pair<ResourceHandle<TilingGroup>, Name>, uint32_t> terrainGroups;
-    islands.Iterate([&](ObjectHandle, TerrainTool::Island const& iIsland)
+    islands.Iterate([&](ObjectHandle, TerrainIslandItemData const& iIsland)
       {
         auto key = std::make_pair(iIsland.m_TilingGroup, iIsland.m_Terrain);
         auto insertRes = terrainGroups.insert(std::make_pair(key, map->m_Terrains.size()));
@@ -274,18 +297,52 @@ namespace eXl
       });
 
     auto const& objects = m_Impl->m_ObjectsTool->GetObjects();
-    
-    objects.Iterate([&](ObjectHandle, ObjectsTool::PlacedObject const& iObject)
+
+    objects.Iterate([&](ObjectHandle iHandle, MapResource::ObjectHeader const& iObject)
       {
         map->m_Objects.push_back(MapResource::Object());
         MapResource::Object& newObject = map->m_Objects.back();
-        newObject.m_Header.m_Archetype = iObject.m_Archetype;
-        newObject.m_Header.m_ObjectId = iObject.m_UUID;
-        newObject.m_Header.m_Position = MathTools::To3DVec(MathTools::ToFVec(iObject.m_Position));
-        newObject.m_Header.m_Position.X() /= EngineCommon::s_WorldToPixel;
-        newObject.m_Header.m_Position.Y() /= EngineCommon::s_WorldToPixel;
-        newObject.m_Data = iObject.m_CustoData;
+        newObject.m_Header = iObject;
+        ObjectsTool::PlacedObject const* additionalData = m_Impl->m_ObjectsTool->GetObjectsAdditionalData().Get(iHandle);
+        newObject.m_Data = additionalData->m_CustoData;
       });
+  }
 
+  ObjectHandle MapEditor::Place(Resource::UUID const& iUUID, Name iSubobject, Vector2i const& iPos)
+  {
+    Resource::Header const* header = ResourceManager::GetHeader(iUUID);
+    if (header == nullptr)
+    {
+      return ObjectHandle();
+    }
+    if (header->m_LoaderName == Tileset::StaticLoaderName())
+    {
+      ResourceHandle<Tileset> handle;
+      handle.SetUUID(iUUID);
+      return m_Impl->m_TilesTool->AddAt(handle, TileName(iSubobject.get()), 0, TerrainTypeName("Wall"), iPos, false);
+    }
+    else if (header->m_LoaderName == Archetype::StaticLoaderName())
+    {
+      ResourceHandle<Archetype> handle;
+      handle.SetUUID(iUUID);
+      if (Archetype const* archetype = handle.GetOrLoad())
+      {
+        return m_Impl->m_ObjectsTool->AddAt(archetype, iPos);
+      }
+    }
+    return ObjectHandle();
+  }
+
+  void MapEditorComponentMgr::DeleteComponent(ObjectHandle iObject)
+  {
+    GameDatabase& database = *GetWorld().GetSystem<GameDatabase>();
+    if (database.GetView<TileItemData>(TilesTool::ToolDataName())->GetDataForDeletion(iObject) != nullptr)
+    {
+      m_EditorImpl.m_TilesTool->Cleanup(iObject);
+    }
+    if (database.GetView<MapResource::ObjectHeader>(ObjectsTool::ToolDataName())->GetDataForDeletion(iObject) != nullptr)
+    {
+      m_EditorImpl.m_ObjectsTool->Cleanup(iObject);
+    }
   }
 }

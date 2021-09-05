@@ -1,8 +1,6 @@
 #include "tilestool.hpp"
 #include "pentoolfilter.hpp"
 
-#include <core/type/tagtype.hpp>
-
 #include <editor/editordef.hpp>
 #include <editor/gamewidgetselection.hpp>
 #include <editor/tileset/tileselectionwidget.hpp>
@@ -31,8 +29,6 @@
 
 namespace eXl
 {
-  IMPLEMENT_TAG_TYPE_EX(TilesTool::PlacedTile, TilesTool__PlacedTile);
-
   PropertySheetName TilesTool::ToolDataName()
   {
     static PropertySheetName s_Name("PlacedTile");
@@ -40,9 +36,10 @@ namespace eXl
   }
 
   TilesTool::TilesTool(QWidget* parent, Tools iTools, World& iWorld)
-    : EditorTool(parent)
+    : EditorTool(parent, iWorld)
     , m_World(iWorld)
-    , m_TilesView(*iWorld.GetSystem<GameDatabase>()->GetView<PlacedTile>(ToolDataName()))
+    , m_TilesView(*iWorld.GetSystem<GameDatabase>()->GetView<TileItemData>(ToolDataName()))
+    , m_PlacedTileData(iWorld)
     , m_Tools(iTools)
   {
     m_Icons[None] = EditorIcons::GetMoveToolIcon();
@@ -199,13 +196,13 @@ namespace eXl
       for (auto const& tile : tileGroup.m_Tiles)
       {
         ObjectHandle tileHandle = m_World.CreateObject();
-        PlacedTile& newTile = m_TilesView.GetOrCreate(tileHandle);
+        TileItemData& newTile = m_TilesView.GetOrCreate(tileHandle);
         newTile.m_Position = tile.m_Position;
         newTile.m_Layer = tile.m_Layer;
         newTile.m_Tileset = tileGroup.m_Tileset;
         newTile.m_Tile = tile.m_Name;
         newTile.m_Type = tileGroup.m_Type;
-
+        m_EditorMgr.CreateComponent(tileHandle);
         UpdateObjectBoxAndTile(tileHandle, newTile);
 
         AddTileToWorld(tileHandle, newTile);
@@ -216,7 +213,7 @@ namespace eXl
   void TilesTool::ChangeLowLight(LowLightSettings iLowLight)
   {
     GfxSystem& sys = *m_World.GetSystem<GfxSystem>();
-    m_TilesView.Iterate([this, iLowLight, &sys](ObjectHandle iObject, PlacedTile& iTile)
+    m_TilesView.Iterate([this, iLowLight, &sys](ObjectHandle iObject, TileItemData& iTile)
       {
         if (iLowLight == EnableAll || (iLowLight == Layer
           && iTile.m_Layer == m_LayerWidget->GetCurLayer()))
@@ -262,7 +259,7 @@ namespace eXl
       return;
     }
 
-    TilesTool::PlacedTile dummyTile;
+    TileItemData dummyTile;
     dummyTile.m_Tileset = m_TileSelection->GetTileset();
     dummyTile.m_Tile = tile;
     dummyTile.m_Layer = m_LayerWidget->GetCurLayer();
@@ -279,7 +276,7 @@ namespace eXl
     auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
     {
       ObjectHandle curTileHandle = GetAt(iPos);
-      PlacedTile* curTile = m_TilesView.Get(curTileHandle);
+      TileItemData* curTile = m_TilesView.Get(curTileHandle);
       if (curTile && curTile->m_Layer == GetLayer())
       {
         return ;
@@ -430,7 +427,7 @@ namespace eXl
     {
       m_SelectionHandle = iTile;
       m_SelectionSettings->setEnabled(true);
-      PlacedTile* tileDesc = m_TilesView.Get(iTile);
+      TileItemData* tileDesc = m_TilesView.Get(iTile);
 
       m_SelectionTile->ForceSelection(tileDesc->m_Tileset, tileDesc->m_Tile);
       m_SelectionLayer->SetLayer(tileDesc->m_Layer);
@@ -458,14 +455,24 @@ namespace eXl
 
   ObjectHandle TilesTool::AddAt(Vector2i iPixelPos, bool iAppend)
   {
-    ObjectHandle tileHandle = m_World.CreateObject();
+    return AddAt(m_TileSelection->GetTileset(), 
+      m_TileSelection->GetTileName(), 
+      m_LayerWidget->GetCurLayer(), 
+      m_TerrainWidget->GetCurTerrain(), 
+      iPixelPos, iAppend);
+  }
 
-    PlacedTile& newTile = m_TilesView.GetOrCreate(tileHandle);
+  ObjectHandle TilesTool::AddAt(ResourceHandle<Tileset> iTileset, TileName iTile, uint32_t iLayer, TerrainTypeName iTerrain, Vector2i iPixelPos, bool iAppend)
+  {
+    ObjectHandle tileHandle = m_World.CreateObject();
+    TileItemData& newTile = m_TilesView.GetOrCreate(tileHandle);
     newTile.m_Position = iPixelPos;
-    newTile.m_Layer = m_LayerWidget->GetCurLayer();
-    newTile.m_Tileset = m_TileSelection->GetTileset();
-    newTile.m_Tile = m_TileSelection->GetTileName();
-    newTile.m_Type = m_TerrainWidget->GetCurTerrain();
+    newTile.m_Layer = iLayer;
+    newTile.m_Tileset = iTileset;
+    newTile.m_Tile = iTile;
+    newTile.m_Type = iTerrain;
+
+    m_EditorMgr.CreateComponent(tileHandle);
 
 #if 0
     if (iAppend)
@@ -495,7 +502,7 @@ namespace eXl
     return tileHandle;
   }
 
-  void TilesTool::AddTileToWorld(ObjectHandle iHandle, PlacedTile& iTile)
+  void TilesTool::AddTileToWorld(ObjectHandle iHandle, TileItemData& iTile)
   {
     Transforms& trans = *m_World.GetSystem<Transforms>();
     GfxSystem& gfx = *m_World.GetSystem<GfxSystem>();
@@ -510,28 +517,48 @@ namespace eXl
     gfxComp.SetTileName(iTile.m_Tile);
     gfxComp.SetLayer(iTile.m_Layer);
   }
-
+  
   void TilesTool::Remove(ObjectHandle iHandle)
   {
-    PlacedTile* tileDesc = m_TilesView.Get(iHandle);
+    TileItemData* tileDesc = m_TilesView.Get(iHandle);
     if (tileDesc == nullptr)
     {
       return;
     }
     tileDesc->m_Tileset = ResourceHandle<Tileset>();
-    m_TilesIdx.remove(std::make_pair(tileDesc->GetBox(), iHandle));
+
+    PlacedTile* placedTile = m_PlacedTileData.Get(iHandle);
+    eXl_ASSERT_REPAIR_BEGIN(placedTile != nullptr) {}
+    else
+    {
+      m_TilesIdx.remove(std::make_pair(placedTile->GetBox(), iHandle));
+      m_PlacedTileData.Erase(iHandle);
+    }
 
     m_World.DeleteObject(iHandle);
 
     emit onEditDone();
   }
 
-  void TilesTool::UpdateObjectBoxAndTile(ObjectHandle iHandle, PlacedTile& iTile)
+  void TilesTool::Cleanup(ObjectHandle iHandle)
   {
-    BoxIndexEntry oldBoxEntry(iTile.m_BoxCache, iHandle);
+    PlacedTile* placedTile = m_PlacedTileData.GetDataForDeletion(iHandle);
+    if(placedTile == nullptr) 
+    {
+      return;
+    }
+    
+    m_TilesIdx.remove(std::make_pair(placedTile->GetBox(), iHandle));
+    m_PlacedTileData.Erase(iHandle);
+  }
+
+  void TilesTool::UpdateObjectBoxAndTile(ObjectHandle iHandle, TileItemData& iTile)
+  {
+    AABB2Di& tileBox = m_PlacedTileData.GetOrCreate(iHandle).m_BoxCache;
+    BoxIndexEntry oldBoxEntry(tileBox, iHandle);
    
     Vector2i size = SafeGetTileSize(iTile.m_Tileset, iTile.m_Tile);
-    iTile.m_BoxCache = AABB2Di(iTile.m_Position - size / 2, size);
+    tileBox = AABB2Di(iTile.m_Position - size / 2, size);
 
     m_World.AddTimer(0.0, false, [&iTile, iHandle](World& iWorld)
     {
@@ -546,6 +573,6 @@ namespace eXl
     });
 
     m_TilesIdx.remove(oldBoxEntry);
-    m_TilesIdx.insert(std::make_pair(iTile.m_BoxCache, iHandle));
+    m_TilesIdx.insert(std::make_pair(tileBox, iHandle));
   }
 }

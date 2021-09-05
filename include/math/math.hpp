@@ -398,4 +398,38 @@ namespace eXl
     }
   };
 
+  template <typename Real>
+  struct StreamerTemplateHandler<AABB2D<Real> >
+  {
+    static Err Do(Streamer& iStreamer, AABB2D<Real> const* iObj)
+    {
+      iStreamer.BeginStruct();
+      iStreamer.PushKey("Min");
+      iStreamer.Write(iObj->m_Data);
+      iStreamer.PopKey();
+      iStreamer.PushKey("Max");
+      iStreamer.Write(iObj->m_Data + 1);
+      iStreamer.PopKey();
+      iStreamer.EndStruct();
+      return Err::Success;
+    }
+  };
+
+  template <typename Real>
+  struct UnstreamerTemplateHandler<AABB2D<Real> >
+  {
+    static Err Do(Unstreamer& iStreamer, AABB2D<Real>* iObj)
+    {
+      iStreamer.BeginStruct();
+      iStreamer.PushKey("Min");
+      iStreamer.Read(iObj->m_Data);
+      iStreamer.PopKey();
+      iStreamer.PushKey("Max");
+      iStreamer.Read(iObj->m_Data + 1);
+      iStreamer.PopKey();
+      iStreamer.EndStruct();
+      return Err::Success;
+    }
+  };
+
 }

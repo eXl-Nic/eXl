@@ -43,4 +43,6 @@ namespace eXl
 	};
 
   Vector2i SafeGetTileSize(ResourceHandle<Tileset> const& iHandle, TileName iName);
+  Vector2i SafeGetSizeFromArchetype(ResourceHandle<Archetype> const& iArchetype);
+  Vector2i GetSizeFromArchetype(Archetype const* iArchetype);
 }
