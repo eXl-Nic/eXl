@@ -3,7 +3,9 @@
 #include <QVariant>
 #include <core/resource/resource.hpp>
 #include <core/type/dynobject.hpp>
+#include <core/type/typetraits.hpp>
 
+#define DEFINE_EDITOR_TYPE(Type) DEFINE_TYPE_EX(Type, Type, )
 
 namespace eXl
 {

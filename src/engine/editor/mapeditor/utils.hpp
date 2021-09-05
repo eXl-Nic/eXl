@@ -17,7 +17,7 @@ namespace eXl
     });
   }
 
-	using BoxIndexEntry = std::pair<AABB2Di, uint32_t>;
+	using BoxIndexEntry = std::pair<AABB2Di, ObjectHandle>;
 	using BoxIndex = boost::geometry::index::rtree<BoxIndexEntry, boost::geometry::index::rstar<16, 4>>;
 	struct QueryResult
 	{

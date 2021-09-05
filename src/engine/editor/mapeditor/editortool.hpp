@@ -1,6 +1,7 @@
 #pragma once
 
 #include <editor/gamewidget.hpp>
+#include <editor/editordef.hpp>
 
 #include <QWidget>
 

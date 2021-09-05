@@ -47,11 +47,8 @@ namespace eXl
     
     TileSelectionWidget* m_TileSelection;
 
-    class PlacedTile : public HeapObject
+    struct PlacedTile
     {
-      DECLARE_RefC;
-    public:
-
       // -> Position in PIXELS !!!
       Vector2i m_Position;
       uint32_t m_Layer;
@@ -65,7 +62,6 @@ namespace eXl
         return m_BoxCache;
       }
 
-      ObjectHandle m_WorldTile;
       AABB2Di m_BoxCache;
     };
 
@@ -81,28 +77,29 @@ namespace eXl
       };
       Operation(Kind iKind) : m_Kind(iKind)
       {}
-      SmallVector<IntrusivePtr<PlacedTile>, 1> m_Tiles;
+      SmallVector<PlacedTile, 1> m_Tiles;
       const Kind m_Kind;
     };
 
-    void Initialize(MapResource const& iMap);
-    PlacedTile* GetAt(Vector2i iWorldPos);
-    PlacedTile* AddAt(Vector2i iWorldPos, bool iAppend);
-    void Remove(PlacedTile* iTile);
-    void SelectTile(PlacedTile* iTile);
+    static PropertySheetName ToolDataName();
 
-    void AddTileToWorld(PlacedTile& iTile);
-    void RemoveFromWorld(PlacedTile& iTile);
+    void Initialize(MapResource const& iMap);
+    ObjectHandle GetAt(Vector2i iWorldPos);
+    ObjectHandle AddAt(Vector2i iWorldPos, bool iAppend);
+    void Remove(ObjectHandle);
+    void SelectTile(ObjectHandle);
+
+    void AddTileToWorld(ObjectHandle iHandle, PlacedTile& iTile);
     uint32_t GetLayer() { return m_LayerWidget->GetCurLayer(); }
 
     void EnableTool() override;
     void DisableTool() override;
 
-    UnorderedMap<uint32_t, IntrusivePtr<PlacedTile>> const& GetTiles() const { return m_Tiles; }
-
+    //UnorderedMap<uint32_t, IntrusivePtr<PlacedTile>> const& GetTiles() const { return m_Tiles; }
+    GameDataView<PlacedTile> const& GetTiles() const { return m_TilesView; }
   protected:
 
-    void UpdateObjectBoxAndTile(PlacedTile&);
+    void UpdateObjectBoxAndTile(ObjectHandle iHandle, PlacedTile&);
 
     void CleanupToolConnections();
 
@@ -127,14 +124,17 @@ namespace eXl
     Vector<QMetaObject::Connection> m_ToolConnections;
 
     World& m_World;
+    GameDataView<PlacedTile>& m_TilesView;
+
     Vector<BoxIndexEntry> m_ResultsCache;
     LayerWidget* m_LayerWidget;
     TerrainWidget* m_TerrainWidget;
     BoxIndex m_TilesIdx;
-    UnorderedMap<uint32_t, IntrusivePtr<PlacedTile>> m_Tiles;
+    
     Vector<Operation> m_TilesHistory;
     uint32_t m_CurrentHistoryPointer = 0;
-    uint32_t m_Counter = 0;
+    
+    ObjectHandle m_SelectionHandle;
     PlacedTile* m_Selection = nullptr;
     QAction* m_Actions[3];
     QIcon m_Icons[3];
@@ -146,4 +146,6 @@ namespace eXl
     QSpinBox* m_SelectionX;
     QSpinBox* m_SelectionY;
   };
+
+  DEFINE_TYPE_EX(TilesTool::PlacedTile, TilesTool__PlacedTile, )
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editortool.hpp"
+
 #include <math/aabb2dpolygon.hpp>
 #include <engine/map/tilinggroup.hpp>
 
@@ -37,9 +38,8 @@ namespace eXl
 
     CurTool m_Tool = BoxTool;
 
-    class Island : public HeapObject
+    struct Island
     {
-      DECLARE_RefC;
     public:
 
       void ComputePainterPath();
@@ -51,13 +51,15 @@ namespace eXl
       uint8_t m_Layer;
     };
 
+    static PropertySheetName ToolDataName();
+
     void Initialize(MapResource const& iMap);
     void EnableTool() override;
     void DisableTool() override;
 
     static Vector2i SafeGetTilingSize(TilingGroup const*);
 
-    UnorderedMap<uint32_t, IntrusivePtr<Island>> const& GetIslands() const { return m_Islands; }
+    GameDataView<Island> const& GetIslands() const { return m_IslandsView; }
 
   protected:
 
@@ -76,9 +78,9 @@ namespace eXl
     void AddBox(AABB2Di const&);
     void RemoveBox(AABB2Di const&);
 
-    void UpdatePolygon(uint32_t iIsland, AABB2DPolygoni&& iNewPoly);
-    void RemoveIsland(uint32_t iIdx);
-    void AddIsland(IntrusivePtr<Island> iIslandPtr);
+    void UpdatePolygon(ObjectHandle iIsland, AABB2DPolygoni&& iNewPoly);
+    void RemoveIsland(ObjectHandle iIsland);
+    void AddIsland(Island iIsland);
 
     void SetTilingGroup(ResourceHandle<TilingGroup> const& iHandle);
 
@@ -92,20 +94,16 @@ namespace eXl
     Vector<QMetaObject::Connection> m_ToolConnections;
 
     World& m_World;
+    GameDataView<Island>& m_IslandsView;
     Vector<BoxIndexEntry> m_ResultsCache;
     LayerWidget* m_LayerWidget;
     TerrainWidget* m_TerrainWidget;
     TerrainToolDrawer* m_Drawer;
     BoxIndex m_IslandsIdx;
-    UnorderedMap<uint32_t, IntrusivePtr<Island>> m_Islands;
-    uint32_t m_Counter = 0;
     ResourceHandle_Editor* m_TilingGroupSelector;
     ResourceHandle<TilingGroup> m_TilingGroup;
     Vector2i m_TilingSize;
     uint8_t m_CurSelectedLayer = 0;
-    //Vector<Operation> m_TilesHistory;
-    //uint32_t m_CurrentHistoryPointer = 0;
-    //PlacedTile* m_Selection = nullptr;
 
     Map<uint8_t, Vector<ObjectHandle>> m_LayerViews;
 
@@ -113,4 +111,6 @@ namespace eXl
     QIcon m_Icons[3];
     QIcon m_HIcons[3];
   };
+
+  DEFINE_TYPE_EX(TerrainTool::Island, TerrainTool__Island, );
 }

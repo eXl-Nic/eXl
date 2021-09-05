@@ -1,5 +1,7 @@
 #include "terraintool.hpp"
 
+#include <core/type/tagtype.hpp>
+
 #include <editor/editordef.hpp>
 #include <editor/gamewidgetselection.hpp>
 #include <editor/editoricons.hpp>
@@ -26,7 +28,7 @@
 
 namespace eXl
 {
-  IMPLEMENT_RefC(TerrainTool::Island)
+  IMPLEMENT_TAG_TYPE_EX(TerrainTool::Island, TerrainTool__Island);
 
   class TerrainToolDrawer : public GameWidget::PainterInterface
   {
@@ -34,8 +36,8 @@ namespace eXl
     TerrainToolDrawer(QObject* iParent) : PainterInterface(iParent)
     {}
 
-    UnorderedMap<uint32_t, QPainterPath*> m_CurIslands;
-    UnorderedMap<uint32_t, QPainterPath*> m_OtherIslands;
+    UnorderedMap<ObjectHandle, QPainterPath*> m_CurIslands;
+    UnorderedMap<ObjectHandle, QPainterPath*> m_OtherIslands;
     AABB2Di m_CurSelection;
 
   protected:
@@ -85,10 +87,16 @@ namespace eXl
     }
   };
 
+  PropertySheetName TerrainTool::ToolDataName()
+  {
+    static PropertySheetName s_Name("TerrainIsland");
+    return s_Name;
+  }
 
   TerrainTool::TerrainTool(QWidget* parent, Tools iTools, World& iWorld)
     : EditorTool(parent)
     , m_World(iWorld)
+    , m_IslandsView(*iWorld.GetSystem<GameDatabase>()->GetView<Island>(ToolDataName()))
     , m_Tools(iTools)
   {
 
@@ -194,12 +202,12 @@ namespace eXl
       Vector2i tilingSize = SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
       for (auto const& block : terrainGroup.m_Blocks)
       {
-        IntrusivePtr<Island> newIsland(new Island);
-        newIsland->m_Layer = block.m_Layer;
-        newIsland->m_Terrain = terrainGroup.m_Type;
-        newIsland->m_TilingGroup = terrainGroup.m_TilingGroup;
-        newIsland->m_IslandPoly = block.m_Shape;
-        newIsland->m_IslandPoly.ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
+        Island newIsland;
+        newIsland.m_Layer = block.m_Layer;
+        newIsland.m_Terrain = terrainGroup.m_Type;
+        newIsland.m_TilingGroup = terrainGroup.m_TilingGroup;
+        newIsland.m_IslandPoly = block.m_Shape;
+        newIsland.m_IslandPoly.ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
 
         AddIsland(std::move(newIsland));
       }
@@ -231,22 +239,22 @@ namespace eXl
   {
     m_Drawer->m_CurIslands.clear();
     m_Drawer->m_OtherIslands.clear();
-    for (auto const& island : m_Islands)
-    {
-      Island* islandPtr = island.second.get();
-      if (islandPtr->m_Layer == GetCurLayer())
-      {
-        auto drawPair = std::make_pair(island.first, &islandPtr->m_PolyPath);
-        if (islandPtr->m_Terrain == GetCurTerrain())
+    
+    m_IslandsView.Iterate([this](ObjectHandle iObject, Island& iIsland)
+      {    
+        if (iIsland.m_Layer == GetCurLayer())
         {
-          m_Drawer->m_CurIslands.insert(drawPair);
+          auto drawPair = std::make_pair(iObject, &iIsland.m_PolyPath);
+          if (iIsland.m_Terrain == GetCurTerrain())
+          {
+            m_Drawer->m_CurIslands.insert(drawPair);
+          }
+          else
+          {
+            m_Drawer->m_OtherIslands.insert(drawPair);
+          }
         }
-        else
-        {
-          m_Drawer->m_OtherIslands.insert(drawPair);
-        }
-      }
-    }
+      });
   }
 
   AABB2Di TerrainTool::ScreenBoxFromPixelWorldBox(AABB2Di const& iBox)
@@ -445,56 +453,59 @@ namespace eXl
     m_PolyPath = std::move(polyPath);
   }
 
-  void TerrainTool::UpdatePolygon(uint32_t iIdx, AABB2DPolygoni&& iNewPoly)
+  void TerrainTool::UpdatePolygon(ObjectHandle iHandle, AABB2DPolygoni&& iNewPoly)
   {
-    auto iter = m_Islands.find(iIdx);
-    if (iter != m_Islands.end())
+    Island* island = m_IslandsView.Get(iHandle);
+    if (island != nullptr)
     {
-      IntrusivePtr<Island>& islandPtr = iter->second;
-      m_IslandsIdx.remove(BoxIndexEntry(islandPtr->m_IslandPoly.GetAABB(), iIdx));
+      m_IslandsIdx.remove(BoxIndexEntry(island->m_IslandPoly.GetAABB(), iHandle));
 
-      iter->second->m_IslandPoly = std::move(iNewPoly);
-      iter->second->ComputePainterPath();
+      island->m_IslandPoly = std::move(iNewPoly);
+      island->ComputePainterPath();
 
-      m_IslandsIdx.insert(BoxIndexEntry(islandPtr->m_IslandPoly.GetAABB(), iIdx));
+      m_IslandsIdx.insert(BoxIndexEntry(island->m_IslandPoly.GetAABB(), iHandle));
     }
   }
 
-  void TerrainTool::RemoveIsland(uint32_t iIdx)
+  void TerrainTool::RemoveIsland(ObjectHandle iHandle)
   {
-    auto iter = m_Islands.find(iIdx);
-    if (iter != m_Islands.end())
+    Island* island = m_IslandsView.Get(iHandle);
+    if (island != nullptr)
     {
-      IntrusivePtr<Island>& islandPtr = iter->second;
-      if (islandPtr->m_Layer == GetCurLayer())
+      if (island->m_Layer == GetCurLayer())
       {
-        if (islandPtr->m_Terrain == GetCurTerrain())
+        if (island->m_Terrain == GetCurTerrain())
         {
-          m_Drawer->m_CurIslands.erase(iIdx);
+          m_Drawer->m_CurIslands.erase(iHandle);
         }
         else
         {
-          m_Drawer->m_OtherIslands.erase(iIdx);
+          m_Drawer->m_OtherIslands.erase(iHandle);
         }
       }
-      m_IslandsIdx.remove(BoxIndexEntry(islandPtr->m_IslandPoly.GetAABB(), iIdx));
-      m_Islands.erase(iIdx);
+      m_IslandsIdx.remove(BoxIndexEntry(island->m_IslandPoly.GetAABB(), iHandle));
+      island->m_IslandPoly.Clear();
+      island->m_PolyPath.clear();
+      island->m_TilingGroup = ResourceHandle<TilingGroup>();
+      m_World.DeleteObject(iHandle);
     }
   }
 
-  void TerrainTool::AddIsland(IntrusivePtr<Island> iIslandPtr)
+  void TerrainTool::AddIsland(Island iIsland)
   {
-    auto insertIter = m_Islands.insert(std::make_pair(m_Counter++, iIslandPtr)).first;
+    ObjectHandle newIslandHandle = m_World.CreateObject();
+    Island& newIsland = m_IslandsView.GetOrCreate(newIslandHandle);
+    newIsland = std::move(iIsland);
 
-    iIslandPtr->ComputePainterPath();
+    newIsland.ComputePainterPath();
 
-    m_IslandsIdx.insert(BoxIndexEntry(iIslandPtr->m_IslandPoly.GetAABB(), insertIter->first));
+    m_IslandsIdx.insert(BoxIndexEntry(newIsland.m_IslandPoly.GetAABB(), newIslandHandle));
 
-    auto drawPair = std::make_pair(insertIter->first, &iIslandPtr->m_PolyPath);
+    auto drawPair = std::make_pair(newIslandHandle, &newIsland.m_PolyPath);
 
-    if (iIslandPtr->m_Layer == GetCurLayer())
+    if (newIsland.m_Layer == GetCurLayer())
     {
-      if (iIslandPtr->m_Terrain == GetCurTerrain())
+      if (newIsland.m_Terrain == GetCurTerrain())
       {
         m_Drawer->m_CurIslands.insert(drawPair);
       }
@@ -511,59 +522,59 @@ namespace eXl
     m_IslandsIdx.query(
       boost::geometry::index::intersects(iBox), results.Inserter());
 
-    UnorderedSet<uint32_t> islandsToRemove;
+    UnorderedSet<ObjectHandle> islandsToRemove;
 
-    UnorderedSet<uint32_t> islandsToMerge;
+    UnorderedSet<ObjectHandle> islandsToMerge;
 
-    Vector<IntrusivePtr<Island>> newIslands;
+    Vector<Island> newIslands;
 
     Vector<AABB2DPolygoni> temp;
     AABB2DPolygoni additionalBox(iBox);
-    for (auto islandIdx : results)
+    for (auto res : results)
     {
-      auto iter = m_Islands.find(islandIdx.second);
-      if (iter != m_Islands.end())
+      ObjectHandle islandHandle = res.second;
+      Island* island = m_IslandsView.Get(islandHandle);
+      if (island != nullptr)
       {
-        Island& island = *iter->second;
-        if (island.m_Layer == GetCurLayer())
+        if (island->m_Layer == GetCurLayer())
         {
           temp.clear();
-          if (iter->second->m_Terrain == GetCurTerrain())
+          if (island->m_Terrain == GetCurTerrain())
           {
-            if (boost::geometry::within(additionalBox, island.m_IslandPoly))
+            if (boost::geometry::within(additionalBox, island->m_IslandPoly))
             {
               return;
             }
 
-            if(boost::geometry::overlaps(additionalBox, island.m_IslandPoly)
-              || boost::geometry::touches(additionalBox, island.m_IslandPoly))
+            if(boost::geometry::overlaps(additionalBox, island->m_IslandPoly)
+              || boost::geometry::touches(additionalBox, island->m_IslandPoly))
             {
-              islandsToMerge.insert(iter->first);
+              islandsToMerge.insert(islandHandle);
             }
           }
           else
           {
-            iter->second->m_IslandPoly.Difference(additionalBox, temp);
-            m_Drawer->m_OtherIslands.find(iter->first);
+            island->m_IslandPoly.Difference(additionalBox, temp);
+            m_Drawer->m_OtherIslands.find(islandHandle);
             if (temp.empty())
             {
-              islandsToRemove.insert(iter->first);
+              islandsToRemove.insert(islandHandle);
             }
             else if (temp.size() == 1)
             {
-              UpdatePolygon(iter->first, std::move(temp[0]));
+              UpdatePolygon(islandHandle, std::move(temp[0]));
             }
             else
             {
-              islandsToRemove.insert(iter->first);
+              islandsToRemove.insert(islandHandle);
 
               for (auto& poly : temp)
               {
-                IntrusivePtr<Island> newIsland = new Island;
-                newIsland->m_Layer = iter->second->m_Layer;
-                newIsland->m_Terrain = iter->second->m_Terrain;
-                newIsland->m_TilingGroup = iter->second->m_TilingGroup;
-                newIsland->m_IslandPoly = std::move(poly);
+                Island newIsland;
+                newIsland.m_Layer = island->m_Layer;
+                newIsland.m_Terrain = island->m_Terrain;
+                newIsland.m_TilingGroup = island->m_TilingGroup;
+                newIsland.m_IslandPoly = std::move(poly);
 
                 newIslands.push_back(std::move(newIsland));
               }
@@ -573,31 +584,31 @@ namespace eXl
       }
     }
 
-    for (uint32_t idx : islandsToRemove)
+    for (ObjectHandle handle : islandsToRemove)
     {
-      RemoveIsland(idx);
+      RemoveIsland(handle);
     }
 
     Vector<AABB2DPolygoni> polys;
     polys.push_back(std::move(additionalBox));
-    for (uint32_t idx : islandsToMerge)
+    for (ObjectHandle handle : islandsToMerge)
     {
-      auto iter = m_Islands.find(idx);
-      if (iter != m_Islands.end())
+      Island* island = m_IslandsView.Get(handle);
+      if (island != nullptr)
       {
-        polys.push_back(std::move(iter->second->m_IslandPoly));
+        polys.push_back(std::move(island->m_IslandPoly));
       }
-      RemoveIsland(idx);
+      RemoveIsland(handle);
     }
 
     AABB2DPolygoni::Merge(polys);
     for (auto& poly : polys)
     {
-      IntrusivePtr<Island> newIsland(new Island);
-      newIsland->m_Layer = GetCurLayer();
-      newIsland->m_Terrain = GetCurTerrain();
-      newIsland->m_TilingGroup = m_TilingGroup;
-      newIsland->m_IslandPoly = std::move(poly);
+      Island newIsland;
+      newIsland.m_Layer = GetCurLayer();
+      newIsland.m_Terrain = GetCurTerrain();
+      newIsland.m_TilingGroup = m_TilingGroup;
+      newIsland.m_IslandPoly = std::move(poly);
       AddIsland(std::move(newIsland));
     }
     for (auto& newIsland : newIslands)
@@ -614,44 +625,44 @@ namespace eXl
     m_IslandsIdx.query(
       boost::geometry::index::intersects(iBox), results.Inserter());
 
-    UnorderedSet<uint32_t> islandsToRemove;
+    UnorderedSet<ObjectHandle> islandsToRemove;
 
-    Vector<IntrusivePtr<Island>> newIslands;
+    Vector<Island> newIslands;
 
     Vector<AABB2DPolygoni> temp;
     AABB2DPolygoni additionalBox(iBox);
     for (auto islandIdx : results)
     {
-      auto iter = m_Islands.find(islandIdx.second);
-      if (iter != m_Islands.end())
+      ObjectHandle islandHandle = islandIdx.second;
+      Island* island = m_IslandsView.Get(islandHandle);
+      if (island != nullptr)
       {
-        Island& island = *iter->second;
-        if (island.m_Layer == GetCurLayer())
+        if (island->m_Layer == GetCurLayer())
         {
           temp.clear();
-          if (iter->second->m_Terrain == GetCurTerrain())
+          if (island->m_Terrain == GetCurTerrain())
           {
-            iter->second->m_IslandPoly.Difference(additionalBox, temp);
-            m_Drawer->m_OtherIslands.find(iter->first);
+            island->m_IslandPoly.Difference(additionalBox, temp);
+            m_Drawer->m_OtherIslands.find(islandHandle);
             if (temp.empty())
             {
-              islandsToRemove.insert(iter->first);
+              islandsToRemove.insert(islandHandle);
             }
             else if (temp.size() == 1)
             {
-              UpdatePolygon(iter->first, std::move(temp[0]));
+              UpdatePolygon(islandHandle, std::move(temp[0]));
             }
             else
             {
-              islandsToRemove.insert(iter->first);
+              islandsToRemove.insert(islandHandle);
 
               for (auto& poly : temp)
               {
-                IntrusivePtr<Island> newIsland = new Island;
-                newIsland->m_Layer = iter->second->m_Layer;
-                newIsland->m_Terrain = iter->second->m_Terrain;
-                newIsland->m_TilingGroup = iter->second->m_TilingGroup;
-                newIsland->m_IslandPoly = std::move(poly);
+                Island newIsland;
+                newIsland.m_Layer = island->m_Layer;
+                newIsland.m_Terrain = island->m_Terrain;
+                newIsland.m_TilingGroup = island->m_TilingGroup;
+                newIsland.m_IslandPoly = std::move(poly);
 
                 newIslands.push_back(std::move(newIsland));
               }
@@ -661,7 +672,7 @@ namespace eXl
       }
     }
 
-    for (uint32_t idx : islandsToRemove)
+    for (ObjectHandle idx : islandsToRemove)
     {
       RemoveIsland(idx);
     }
@@ -711,28 +722,27 @@ namespace eXl
     MapTiler::Batcher batcher;
     Map<TilingGroup const*, MapTiler::Blocks> blocks;
     AABB2Di fullSize;
-    for (auto const& island : m_Islands)
-    {
-      IntrusivePtr<Island> const& islandPtr = island.second;
-      if (islandPtr->m_Layer == iLayer)
+    m_IslandsView.Iterate([this, iLayer, &blocks, &fullSize](ObjectHandle iHandle, Island& iIsland)
       {
-        auto iter = blocks.insert(std::make_pair(islandPtr->m_TilingGroup.GetOrLoad(), MapTiler::Blocks())).first;
-        MapTiler::Blocks& block = iter->second;
-        block.group = islandPtr->m_TilingGroup.Get();
-        Tileset const* groupTileset = block.group->GetTileset().GetOrLoad();
-        Vector2i tilingSize = SafeGetTilingSize(block.group);
-        block.islands.push_back(islandPtr->m_IslandPoly);
-        block.islands.back().ScaleComponents(1, 1, tilingSize.X(), tilingSize.Y());
-        if (fullSize.Empty())
+        if (iIsland.m_Layer == iLayer)
         {
-          fullSize = block.islands.back().GetAABB();
+          auto iter = blocks.insert(std::make_pair(iIsland.m_TilingGroup.GetOrLoad(), MapTiler::Blocks())).first;
+          MapTiler::Blocks& block = iter->second;
+          block.group = iIsland.m_TilingGroup.Get();
+          Tileset const* groupTileset = block.group->GetTileset().GetOrLoad();
+          Vector2i tilingSize = SafeGetTilingSize(block.group);
+          block.islands.push_back(iIsland.m_IslandPoly);
+          block.islands.back().ScaleComponents(1, 1, tilingSize.X(), tilingSize.Y());
+          if (fullSize.Empty())
+          {
+            fullSize = block.islands.back().GetAABB();
+          }
+          else
+          {
+            fullSize.Absorb(block.islands.back().GetAABB());
+          }
         }
-        else
-        {
-          fullSize.Absorb(block.islands.back().GetAABB());
-        }
-      }
-    }
+      });
 
     if (!fullSize.Empty())
     {
@@ -764,13 +774,12 @@ namespace eXl
 
   void TerrainTool::UpdateMapView()
   {
-    for (auto const& island : m_Islands)
-    {
-      IntrusivePtr<Island> const& islandPtr = island.second;
-      if (m_LayerViews.count(islandPtr->m_Layer) == 0)
+    m_IslandsView.Iterate([this](ObjectHandle iHandle, Island& iIsland)
       {
-        UpdateLayerView(islandPtr->m_Layer);
-      }
-    }
+        if (m_LayerViews.count(iIsland.m_Layer) == 0)
+        {
+          UpdateLayerView(iIsland.m_Layer);
+        }
+      });
   }
 }

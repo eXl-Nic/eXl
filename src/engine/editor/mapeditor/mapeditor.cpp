@@ -54,7 +54,12 @@ namespace eXl
 	{
 		Impl(MapEditor* iEditor)
 		{
-      m_World.Init(EditorState::GetProjectProperties()).WithGfx();
+      PropertiesManifest mapEditorManifest = EditorState::GetProjectProperties();
+      mapEditorManifest.RegisterPropertySheet<TilesTool::PlacedTile>(TilesTool::ToolDataName(), false);
+      mapEditorManifest.RegisterPropertySheet<TerrainTool::Island>(TerrainTool::ToolDataName(), false);
+      mapEditorManifest.RegisterPropertySheet<ObjectsTool::PlacedObject>(ObjectsTool::ToolDataName(), false);
+
+      m_World.Init(mapEditorManifest).WithGfx();
 
       World& world = m_World.GetWorld();
       GfxSystem& gfx = *world.GetSystem<GfxSystem>();
@@ -230,60 +235,57 @@ namespace eXl
 
     auto const& tiles = m_Impl->m_TilesTool->GetTiles();
     UnorderedMap<std::pair<ResourceHandle<Tileset>, Name>, uint32_t> tileGroups;
-    for (auto const& tileEntry : tiles)
-    {
-      auto const& placedTilePtr = tileEntry.second;
-      auto key = std::make_pair(placedTilePtr->m_Tileset, placedTilePtr->m_Type);
-      auto insertRes = tileGroups.insert(std::make_pair(key, map->m_Tiles.size()));
-      if (insertRes.second)
+    tiles.Iterate([&](ObjectHandle, TilesTool::PlacedTile const& iTile)
       {
-        map->m_Tiles.push_back(MapResource::PlacedTiles());
-        map->m_Tiles.back().m_Tileset = key.first;
-        map->m_Tiles.back().m_Type = placedTilePtr->m_Type;
-      }
-      MapResource::PlacedTiles::Tile newTile;
-      newTile.m_Name = placedTilePtr->m_Tile;
-      newTile.m_Layer = placedTilePtr->m_Layer;
-      newTile.m_Position = placedTilePtr->m_Position;
-      map->m_Tiles[insertRes.first->second].m_Tiles.push_back(newTile);
-    }
+        auto key = std::make_pair(iTile.m_Tileset, iTile.m_Type);
+        auto insertRes = tileGroups.insert(std::make_pair(key, map->m_Tiles.size()));
+        if (insertRes.second)
+        {
+          map->m_Tiles.push_back(MapResource::PlacedTiles());
+          map->m_Tiles.back().m_Tileset = key.first;
+          map->m_Tiles.back().m_Type = iTile.m_Type;
+        }
+        MapResource::PlacedTiles::Tile newTile;
+        newTile.m_Name = iTile.m_Tile;
+        newTile.m_Layer = iTile.m_Layer;
+        newTile.m_Position = iTile.m_Position;
+        map->m_Tiles[insertRes.first->second].m_Tiles.push_back(newTile);
+      });
 
     auto const& islands = m_Impl->m_IslandsTool->GetIslands();
     UnorderedMap<std::pair<ResourceHandle<TilingGroup>, Name>, uint32_t> terrainGroups;
-    for (auto const& islandEntry : islands)
-    {
-      auto const& islandPtr = islandEntry.second;
-      auto key = std::make_pair(islandPtr->m_TilingGroup, islandPtr->m_Terrain);
-      auto insertRes = terrainGroups.insert(std::make_pair(key, map->m_Terrains.size()));
-      if (insertRes.second)
+    islands.Iterate([&](ObjectHandle, TerrainTool::Island const& iIsland)
       {
-        map->m_Terrains.push_back(MapResource::Terrain());
-        map->m_Terrains.back().m_TilingGroup = key.first;
-        map->m_Terrains.back().m_Type = islandPtr->m_Terrain;
-      }
-      MapResource::Terrain::Block newBlock;
-      newBlock.m_Layer = islandPtr->m_Layer;
-      newBlock.m_Shape = islandPtr->m_IslandPoly;
-      MapResource::Terrain& terrainGroup = map->m_Terrains[insertRes.first->second];
-      Vector2i tilingSize = TerrainTool::SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
-      newBlock.m_Shape.ScaleComponents(1, 1, tilingSize.X(), tilingSize.Y());
-      terrainGroup.m_Blocks.push_back(std::move(newBlock));
-    }
+        auto key = std::make_pair(iIsland.m_TilingGroup, iIsland.m_Terrain);
+        auto insertRes = terrainGroups.insert(std::make_pair(key, map->m_Terrains.size()));
+        if (insertRes.second)
+        {
+          map->m_Terrains.push_back(MapResource::Terrain());
+          map->m_Terrains.back().m_TilingGroup = key.first;
+          map->m_Terrains.back().m_Type = iIsland.m_Terrain;
+        }
+        MapResource::Terrain::Block newBlock;
+        newBlock.m_Layer = iIsland.m_Layer;
+        newBlock.m_Shape = iIsland.m_IslandPoly;
+        MapResource::Terrain& terrainGroup = map->m_Terrains[insertRes.first->second];
+        Vector2i tilingSize = TerrainTool::SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
+        newBlock.m_Shape.ScaleComponents(1, 1, tilingSize.X(), tilingSize.Y());
+        terrainGroup.m_Blocks.push_back(std::move(newBlock));
+      });
 
     auto const& objects = m_Impl->m_ObjectsTool->GetObjects();
     
-    for (auto const& objectEntry : objects)
-    {
-      auto const& objectPtr = objectEntry.second;
-      map->m_Objects.push_back(MapResource::Object());
-      MapResource::Object& newObject = map->m_Objects.back();
-      newObject.m_Header.m_Archetype = objectPtr->m_Archetype;
-      newObject.m_Header.m_ObjectId = objectPtr->m_UUID;
-      newObject.m_Header.m_Position = MathTools::To3DVec(MathTools::ToFVec(objectPtr->m_Position));
-      newObject.m_Header.m_Position.X() /= DunAtk::s_WorldToPixel;
-      newObject.m_Header.m_Position.Y() /= DunAtk::s_WorldToPixel;
-      newObject.m_Data = objectPtr->m_CustoData;
-    }
+    objects.Iterate([&](ObjectHandle, ObjectsTool::PlacedObject const& iObject)
+      {
+        map->m_Objects.push_back(MapResource::Object());
+        MapResource::Object& newObject = map->m_Objects.back();
+        newObject.m_Header.m_Archetype = iObject.m_Archetype;
+        newObject.m_Header.m_ObjectId = iObject.m_UUID;
+        newObject.m_Header.m_Position = MathTools::To3DVec(MathTools::ToFVec(iObject.m_Position));
+        newObject.m_Header.m_Position.X() /= DunAtk::s_WorldToPixel;
+        newObject.m_Header.m_Position.Y() /= DunAtk::s_WorldToPixel;
+        newObject.m_Data = iObject.m_CustoData;
+      });
 
   }
 }

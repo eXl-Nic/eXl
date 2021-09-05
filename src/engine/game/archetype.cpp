@@ -330,7 +330,7 @@ namespace eXl
         }
         void* sheetData = alloc->m_ObjectData.Get(existingHandle);
         void const* archetypeData = alloc->m_ObjectData.Get(entry.second.handle);
-        alloc->m_Type->Copy_Uninit(archetypeData, sheetData);
+        alloc->m_Type->Copy(archetypeData, sheetData);
         if (iCusto)
         {
           DynObject data(alloc->m_Type, sheetData);

@@ -19,6 +19,8 @@ namespace eXl
     public:
       TypeFilter(QObject* Parent, ProjectResourcesModel* iOrigModel, ResourceLoaderName iResourceType, bool iIncludeNullRsc);
 
+      ResourceLoaderName GetResourceType() const { return m_ResourceType; }
+
       Resource::UUID const* GetResourceIDFromIndex(QModelIndex const& iIndex) const
       {
         return static_cast<ProjectResourcesModel*>(sourceModel())->GetResourceIDFromIndex(mapToSource(iIndex));

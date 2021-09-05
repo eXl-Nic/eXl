@@ -3,6 +3,8 @@
 #include "archetypecustomization.hpp"
 #include "utils.hpp"
 
+#include <core/type/tagtype.hpp>
+
 #include <editor/editordef.hpp>
 #include <editor/gamewidgetselection.hpp>
 #include <editor/tileset/tilecollectionmodel.hpp>
@@ -32,7 +34,7 @@
 
 namespace eXl
 {
-	IMPLEMENT_RefC(ObjectsTool::PlacedObject);
+	IMPLEMENT_TAG_TYPE_EX(ObjectsTool::PlacedObject, ObjectsTool__PlacedObject);
 
   Vector2i GetSizeFromArchetype(Archetype const* iArchetype)
   {
@@ -51,9 +53,9 @@ namespace eXl
     return Vector2i::ONE;
   }
 
-  void ObjectsTool::UpdateObjectBoxAndTile(PlacedObject& iObject)
+  void ObjectsTool::UpdateObjectBoxAndTile(ObjectHandle iHandle, PlacedObject& iObject)
   {
-    BoxIndexEntry oldBoxEntry(iObject.m_BoxCache, iObject.m_Index);
+    BoxIndexEntry oldBoxEntry(iObject.m_BoxCache, iHandle);
 
     Archetype const* archetype = iObject.m_Archetype.GetOrLoad();
     auto const& components = archetype->GetComponents();
@@ -80,13 +82,11 @@ namespace eXl
       
       iObject.m_BoxCache = AABB2Di(iObject.m_Position - tileSize / 2, tileSize);
 
-      if (iObject.m_WorldObject.IsAssigned())
+      
+      GfxSpriteComponent* spriteComp = m_World.GetSystem<GfxSystem>()->GetSpriteComponent(iHandle);
+      if (spriteComp)
       {
-        GfxSpriteComponent* spriteComp = m_World.GetSystem<GfxSystem>()->GetSpriteComponent(iObject.m_WorldObject);
-        if (spriteComp)
-        {
-          spriteComp->SetDesc(*spriteData);
-        }
+        spriteComp->SetDesc(*spriteData);
       }
     }
     else
@@ -94,22 +94,26 @@ namespace eXl
       iObject.m_BoxCache = AABB2Di(iObject.m_Position, Vector2i::ONE);
     }
 
-    if (iObject.m_WorldObject.IsAssigned())
-    {
-      Transforms& trans = *m_World.GetSystem<Transforms>();
-      Matrix4f mat = trans.GetLocalTransform(iObject.m_WorldObject);
-      MathTools::GetPosition2D(mat) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / DunAtk::s_WorldToPixel;
+    Transforms& trans = *m_World.GetSystem<Transforms>();
+    Matrix4f mat = trans.GetLocalTransform(iHandle);
+    MathTools::GetPosition2D(mat) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / DunAtk::s_WorldToPixel;
 
-      trans.UpdateTransform(iObject.m_WorldObject, mat);
-    }
+    trans.UpdateTransform(iHandle, mat);
 
     m_TilesIdx.remove(oldBoxEntry);
-    m_TilesIdx.insert(BoxIndexEntry(iObject.m_BoxCache, iObject.m_Index));
+    m_TilesIdx.insert(BoxIndexEntry(iObject.m_BoxCache, iHandle));
+  }
+
+  PropertySheetName ObjectsTool::ToolDataName()
+  {
+    static PropertySheetName s_Name("PlacedObject");
+    return s_Name;
   }
 
 	ObjectsTool::ObjectsTool(QWidget* parent, Tools iTools, World& iWorld)
 		: EditorTool(parent)
 		, m_World(iWorld)
+    , m_ObjectsView(*iWorld.GetSystem<GameDatabase>()->GetView<PlacedObject>(ToolDataName()))
 		, m_Tools(iTools)
 	{
 		m_Icons[None] = EditorIcons::GetMoveToolIcon();
@@ -190,7 +194,7 @@ namespace eXl
         if (m_Selection)
         {
           m_Selection->m_Position.X() = iNewValue;
-          UpdateObjectBoxAndTile(*m_Selection);
+          UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
         }
       });
 
@@ -199,7 +203,7 @@ namespace eXl
         if (m_Selection)
         {
           m_Selection->m_Position.Y() = iNewValue;
-          UpdateObjectBoxAndTile(*m_Selection);
+          UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
         }
       });
 
@@ -228,20 +232,18 @@ namespace eXl
 	{
 		for (auto const& object : iMap.m_Objects)
 		{
-			IntrusivePtr<PlacedObject> newObject = eXl_NEW PlacedObject;
+      ObjectHandle newObjectHandle = m_World.CreateObject();
+			PlacedObject& newObject = m_ObjectsView.GetOrCreate(newObjectHandle);
+			newObject.m_Position = MathTools::ToIVec(MathTools::As2DVec(object.m_Header.m_Position)) *  DunAtk::s_WorldToPixel;
+			newObject.m_UUID = object.m_Header.m_ObjectId;
+      newObject.m_Archetype = object.m_Header.m_Archetype;
+      newObject.m_CustoData = object.m_Data;
+      AddToWorld(newObjectHandle, newObject);
 
-			newObject->m_Position = MathTools::ToIVec(MathTools::As2DVec(object.m_Header.m_Position)) *  DunAtk::s_WorldToPixel;
-			newObject->m_UUID = object.m_Header.m_ObjectId;
-      newObject->m_Archetype = object.m_Header.m_Archetype;
-			newObject->m_Index = m_Counter++;
-      newObject->m_CustoData = object.m_Data;
-      AddToWorld(*newObject);
-
-			m_Objects.insert(std::make_pair(newObject->m_Index, newObject));
-			m_TilesIdx.insert(std::make_pair(newObject->m_BoxCache, newObject->m_Index));
-			m_IDs.insert(std::make_pair(object.m_Header.m_ObjectId, newObject->m_Index));
+			m_TilesIdx.insert(std::make_pair(newObject.m_BoxCache, newObjectHandle));
+			m_IDs.insert(std::make_pair(object.m_Header.m_ObjectId, newObjectHandle));
 			
-      UpdateObjectBoxAndTile(*newObject);
+      UpdateObjectBoxAndTile(newObjectHandle, newObject);
 		}
 	}
 
@@ -285,15 +287,15 @@ namespace eXl
 
 		auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
 		{
-			ObjectsTool::PlacedObject* obj = GetAt(iPos);
-			if (obj)
+			ObjectHandle obj = GetAt(iPos);
+			if (obj.IsAssigned())
 			{
 				return;
 			}
 			if (m_SelectedArchetype != nullptr)
 			{
-				PlacedObject* newObj = AddAt(iPos, iWasDrawing);
-        AddToWorld(*newObj);
+				ObjectHandle object = AddAt(iPos, iWasDrawing);
+        
 			}
 		});
 
@@ -305,27 +307,34 @@ namespace eXl
     m_Tools.m_Pen->SetSnapSize(Vector2i::ONE);
     auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
     {
-      ObjectsTool::PlacedObject* obj = GetAt(iPos);
-      if (obj == nullptr)
+      ObjectHandle obj = GetAt(iPos);
+      if (!obj.IsAssigned())
       {
         return;
       }
-      Remove(*obj);
+      Remove(obj);
     });
 
     m_ToolConnections.push_back(newConnection);
   }
 
-  void ObjectsTool::Remove(PlacedObject& iObject)
+  void ObjectsTool::Remove(ObjectHandle iHandle)
   {
-    AABB2Di objBox = iObject.m_BoxCache;
-    RemoveFromWorld(iObject);
+    PlacedObject* object = m_ObjectsView.Get(iHandle);
+    if (object != nullptr)
+    {
+      AABB2Di objBox = object->m_BoxCache;
+      
+      m_IDs.erase(object->m_UUID);
+      m_TilesIdx.remove(std::make_pair(objBox, iHandle));
+      object->m_Archetype = ResourceHandle<Archetype>();
+      object->m_CustoData.m_ComponentCustomization.clear();
+      object->m_CustoData.m_PropertyCustomization.clear();
 
-    m_IDs.erase(iObject.m_UUID);
-    m_TilesIdx.remove(std::make_pair(objBox, iObject.m_Index));
-    m_Objects.erase(iObject.m_Index);
+      m_World.DeleteObject(iHandle);
 
-    emit onEditDone();
+      emit onEditDone();
+    }
   }
 
 	void ObjectsTool::EnableTool()
@@ -420,46 +429,47 @@ namespace eXl
 				return;
 			}
 
-			auto iter = m_Objects.find(m_ResultsCache[0].second);
-			eXl_ASSERT(iter != m_Objects.end());
-      SelectObject(iter->second.get());
-
+      SelectObject(results.m_Result[0].second);
 		});
 
 		m_ToolConnections.push_back(newConnection);
 	}
 
-	void ObjectsTool::SelectObject(PlacedObject* iObject)
+	void ObjectsTool::SelectObject(ObjectHandle iHandle)
 	{
-		if (iObject == m_Selection)
+		if (iHandle == m_SelectionHandle)
 		{
 			return;
 		}
 
-		if (iObject == nullptr)
+		if (!m_World.IsObjectValid(iHandle))
 		{
 			m_SelectionSettings->setEnabled(false);
       ArchetypeCustomizationModel::ClearModelFromView(m_CustoView);
 		}
 
 		m_Selection = nullptr;
-		if (iObject)
+    m_SelectionHandle = ObjectHandle();
+		if (m_World.IsObjectValid(iHandle))
 		{
+      m_SelectionHandle = iHandle;
 			m_SelectionSettings->setEnabled(true);
+      PlacedObject* object = m_ObjectsView.Get(iHandle);
+      eXl_ASSERT(object != nullptr);
 
-      auto* model = ArchetypeCustomizationModel::CreateOrUpdateModel(m_CustoView, iObject->m_Archetype.GetOrLoad(), iObject->m_CustoData);
+      auto* model = ArchetypeCustomizationModel::CreateOrUpdateModel(m_CustoView, object->m_Archetype.GetOrLoad(), object->m_CustoData);
 
-			m_SelectionX->setValue(iObject->m_Position.X());
-			m_SelectionY->setValue(iObject->m_Position.Y());
+			m_SelectionX->setValue(object->m_Position.X());
+			m_SelectionY->setValue(object->m_Position.Y());
 
-			m_Selection = iObject;
+			m_Selection = object;
 
       QObject::connect(model, &ArchetypeCustomizationModel::dataChanged, [this, model](QModelIndex)
       {
         if (m_Selection)
         {
           m_Selection->m_CustoData = model->GetCustomization();
-          UpdateObjectBoxAndTile(*m_Selection);
+          UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
 
           emit onEditDone();
         }
@@ -467,7 +477,7 @@ namespace eXl
 		}
 	}
 
-	ObjectsTool::PlacedObject* ObjectsTool::GetAt(Vector2i iWorldPos)
+	ObjectHandle ObjectsTool::GetAt(Vector2i iWorldPos)
 	{
 		AABB2Di queryBox(iWorldPos, Vector2i::ONE);
 
@@ -476,60 +486,50 @@ namespace eXl
 
 		if (results.empty())
 		{
-			return nullptr;
+			return ObjectHandle();
 		}
 
-		auto iter = m_Objects.find(m_ResultsCache[0].second);
-		eXl_ASSERT(iter != m_Objects.end());
-
-		return iter->second.get();
+		return m_ResultsCache[0].second;
 	}
 
-	ObjectsTool::PlacedObject* ObjectsTool::AddAt(Vector2i iPixelPos, bool iAppend)
+	ObjectHandle ObjectsTool::AddAt(Vector2i iPixelPos, bool iAppend)
 	{
-		IntrusivePtr<PlacedObject> newObject = eXl_NEW PlacedObject;
-		newObject->m_Position = iPixelPos;
-    newObject->m_Archetype.Set(m_SelectedArchetype);
-		newObject->m_Index = m_Counter++;
+    ObjectHandle newObjectHandle = m_World.CreateObject();
+		PlacedObject& newObject = m_ObjectsView.GetOrCreate(newObjectHandle);
+		newObject.m_Position = iPixelPos;
+    newObject.m_Archetype.Set(m_SelectedArchetype);
     do
     {
-      newObject->m_UUID = MapResource::ObjectHeader::AllocObjectID();
-    } while (m_IDs.count(newObject->m_UUID) > 0);
-    AddToWorld(*newObject);
+      newObject.m_UUID = MapResource::ObjectHeader::AllocObjectID();
+    } while (m_IDs.count(newObject.m_UUID) > 0);
+    AddToWorld(newObjectHandle, newObject);
 
-		m_Objects.insert(std::make_pair(newObject->m_Index, newObject));
-    m_IDs.insert(std::make_pair(newObject->m_UUID, newObject->m_Index));
-		m_TilesIdx.insert(std::make_pair(newObject->m_BoxCache, newObject->m_Index));
+    m_IDs.insert(std::make_pair(newObject.m_UUID, newObjectHandle));
+		m_TilesIdx.insert(std::make_pair(newObject.m_BoxCache, newObjectHandle));
 
 		emit onEditDone();
 
-    UpdateObjectBoxAndTile(*newObject);
-    SelectObject(newObject.get());
+    UpdateObjectBoxAndTile(newObjectHandle, newObject);
+    SelectObject(newObjectHandle);
 
-		return newObject.get();
+		return newObjectHandle;
 	}
 
-	void ObjectsTool::AddToWorld(PlacedObject& iObject)
+	void ObjectsTool::AddToWorld(ObjectHandle iHandle, PlacedObject& iObject)
 	{
-		if (iObject.m_WorldObject.IsAssigned())
-		{
-			return;
-		}
-
-		iObject.m_WorldObject = m_World.CreateObject();
 		Transforms& trans = *m_World.GetSystem<Transforms>();
 		GfxSystem& gfx = *m_World.GetSystem<GfxSystem>();
 
 		Matrix4f worldTrans;
 		worldTrans.MakeIdentity();
 		MathTools::GetPosition2D(worldTrans) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / DunAtk::s_WorldToPixel;
-		trans.AddTransform(iObject.m_WorldObject, &worldTrans);
+		trans.AddTransform(iHandle, &worldTrans);
 
     auto const& components = iObject.m_Archetype.GetOrLoad()->GetComponents();
     auto iterGfx = components.find(DunAtk::GfxSpriteComponentName());
     if (iterGfx != components.end())
     {
-      AddTileToWorld(iObject.m_WorldObject, iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>());
+      AddTileToWorld(iHandle, iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>());
     }
 	}
 
@@ -538,14 +538,4 @@ namespace eXl
     GfxSpriteComponent& sprite = m_World.GetSystem<GfxSystem>()->CreateSpriteComponent(iObj);
     sprite.SetDesc(*iDesc);
   }
-
-	void ObjectsTool::RemoveFromWorld(PlacedObject& iTile)
-	{
-		if (!iTile.m_WorldObject.IsAssigned())
-		{
-			return;
-		}
-		m_World.DeleteObject(iTile.m_WorldObject);
-		iTile.m_WorldObject = ObjectHandle();
-	}
 }

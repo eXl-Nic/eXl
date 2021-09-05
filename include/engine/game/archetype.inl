@@ -39,6 +39,17 @@ T& GameDataView<T>::GetOrCreate(ObjectHandle iObject)
     {
       m_Alloc.m_ObjectHandles[iObject.GetId()] = m_ObjectSpec.Alloc();
     }
+    else
+    {
+      T& prop = m_ObjectSpec.Get(typename ObjectTable<T>::Handle(m_Alloc.m_ObjectHandles[iObject.GetId()]));
+      Type const* type = TypeManager::GetType<T>();
+
+      // Ensure data is in default state when recycling storage
+      type->Destruct(&prop);
+      type->Construct(&prop);
+
+      return prop;
+    }
   }
 
   return m_ObjectSpec.Get(typename ObjectTable<T>::Handle(m_Alloc.m_ObjectHandles[iObject.GetId()]));

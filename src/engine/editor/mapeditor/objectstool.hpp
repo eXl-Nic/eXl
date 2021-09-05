@@ -42,22 +42,18 @@ namespace eXl
 
 		CurTool m_Tool = None;
 
-		class PlacedObject : public HeapObject
+		struct PlacedObject
 		{
-			DECLARE_RefC;
-		public:
-
 			Vector2i m_Position;
 			ResourceHandle<Archetype> m_Archetype;
 			uint64_t m_UUID;
-			uint32_t m_Index;
 
       CustomizationData m_CustoData;
 
       AABB2Di m_BoxCache;
-
-			ObjectHandle m_WorldObject;
 		};
+
+    static PropertySheetName ToolDataName();
 
 		void Initialize(MapResource const& iMap);
 		
@@ -65,14 +61,14 @@ namespace eXl
 		void EnableTool() override;
 		void DisableTool() override;
 
-		UnorderedMap<uint32_t, IntrusivePtr<PlacedObject>> const& GetObjects() const { return m_Objects; }
+    GameDataView<PlacedObject> const & GetObjects() const { return m_ObjectsView; }
 
 	protected:
 
 		void CleanupToolConnections();
 
 		void ChangeTool(CurTool iTool, bool iForceRefresh = false);
-		void SelectObject(PlacedObject* iObject);
+		void SelectObject(ObjectHandle);
 
 		void ClearPenToolTile();
 		void SetupPenTool();
@@ -81,13 +77,12 @@ namespace eXl
 
 		void SetupSelectionTool();
 
-		PlacedObject* AddAt(Vector2i iPixelPos, bool iAppend);
-		PlacedObject* GetAt(Vector2i iWorldPos);
-    void Remove(PlacedObject& iObject);
+		ObjectHandle AddAt(Vector2i iPixelPos, bool iAppend);
+		ObjectHandle GetAt(Vector2i iWorldPos);
+    void Remove(ObjectHandle iObject);
 
-		void AddToWorld(PlacedObject&);
-    void UpdateObjectBoxAndTile(PlacedObject&);
-		void RemoveFromWorld(PlacedObject&);
+		void AddToWorld(ObjectHandle, PlacedObject&);
+    void UpdateObjectBoxAndTile(ObjectHandle, PlacedObject&);
 
     void AddTileToWorld(ObjectHandle iObj, GfxSpriteComponent::Desc const* iDesc);
 
@@ -97,11 +92,11 @@ namespace eXl
 		Vector<QMetaObject::Connection> m_ToolConnections;
 
 		World& m_World;
+    GameDataView<PlacedObject>& m_ObjectsView;
 		Vector<BoxIndexEntry> m_ResultsCache;
 		BoxIndex m_TilesIdx;
-		UnorderedMap<uint32_t, IntrusivePtr<PlacedObject>> m_Objects;
-		UnorderedMap<uint64_t, uint32_t> m_IDs;
-		uint32_t m_Counter = 0;
+		UnorderedMap<uint64_t, ObjectHandle> m_IDs;
+    ObjectHandle m_SelectionHandle;
 		PlacedObject* m_Selection = nullptr;
 		QAction* m_Actions[3];
 		QIcon m_Icons[3];
@@ -112,4 +107,6 @@ namespace eXl
 		QSpinBox* m_SelectionX;
 		QSpinBox* m_SelectionY;
 	};
+
+  DEFINE_TYPE_EX(ObjectsTool::PlacedObject, ObjectsTool__PlacedObject, )
 }
