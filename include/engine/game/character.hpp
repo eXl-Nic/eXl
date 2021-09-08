@@ -80,5 +80,14 @@ namespace eXl
 
     ObjectTable<Entry> m_Entries;
     UnorderedMap<ObjectHandle, ObjectTable<Entry>::Handle> m_Characters;
+  public:
+    template <typename Functor>
+    void Iterate(Functor&& iFn)
+    {
+      m_Entries.Iterate([&iFn](Entry const& iEntry, ObjectTable<Entry>::Handle&)
+        {
+          iFn(iEntry.m_Handle, iEntry.m_Desc);
+        });
+    }
 	};
 }

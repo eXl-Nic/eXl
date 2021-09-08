@@ -15,10 +15,15 @@
 #include <core/utils/filetextreader.hpp>
 #include <core/stream/inputstream.hpp>
 
-#include <backends/imgui_impl_sdl.h>
-
 #define IMGUI_API __declspec(dllimport)
 #include <imgui.h>
+#undef IMGUI_API
+#undef IMGUI_IMPL_API
+#define IMGUI_API
+#define IMGUI_IMPL_API
+
+#include <backends/imgui_impl_sdl.h>
+
 #include <backends/imgui_impl_opengl3.h>
 
 #include <SDL.h>
@@ -609,9 +614,20 @@ int main(int argc, char* argv[])
   });
 
   Path appPath(GetAppPath().c_str());
-  
+
+  Path projectPath = appPath.parent_path().parent_path() / "eXlTestProject";
+  if (!Filesystem::exists(projectPath))
+  {
+    Path driveLetter = appPath.root_name() / appPath.root_directory();
+    projectPath = driveLetter / Path("eXlTestProject");
+
+  }
+  if (!Filesystem::exists(projectPath))
+  {
+    return -1;
+  }
   ResourceManager::BootstrapDirectory(appPath.parent_path() / "data", true);
-  ResourceManager::BootstrapDirectory(Path("D:/eXlTestProject"), true);
+  ResourceManager::BootstrapDirectory(projectPath, true);
 
 #endif
 
@@ -639,15 +655,20 @@ int main(int argc, char* argv[])
 
   PropertiesManifest appManifest = DunAtk::GetBaseProperties();
   app.m_Manifest = &appManifest;
-  Project* project = ResourceManager::Load<Project>(Path("D:/eXlTestProject/TestProject.eXlProject"));
-
+  Path projectFilePath = projectPath / "TestProject.eXlProject";
+  Project* project = ResourceManager::Load<Project>(projectFilePath);
+  if (!project)
+  {
+    return -1;
+  }
+  
   Project::ProjectTypes types;
   project->FillProperties(types, appManifest);
 
   ResourceManager::AddManifest(DunAtk::GetComponents());
   ResourceManager::AddManifest(appManifest);
 
-  ResourceManager::Bake(Path("D:/eXlBakedProject"));
+  //ResourceManager::Bake(Path("D:/eXlBakedProject"));
 
   Random* randGen = Random::CreateDefaultRNG(0);
   NavigatorBench navigatorBench(randGen);
@@ -655,13 +676,13 @@ int main(int argc, char* argv[])
   MapTest map(randGen);
   Scenario_Base scenario;
 
-  MapResource const* mapRsc = ResourceManager::Load<MapResource>(Path("D:/eXlTestProject/aaa.eXlAsset"));
-  if (mapRsc)
-  {
-    ResourceHandle<MapResource> mapRef;
-    mapRef.Set(mapRsc);
-    scenario.SetMap(mapRef);
-  }
+  //MapResource const* mapRsc = ResourceManager::Load<MapResource>(Path("../eXlTestProject/aaa.eXlAsset"));
+  //if (mapRsc)
+  //{
+  //  ResourceHandle<MapResource> mapRef;
+  //  mapRef.Set(mapRsc);
+  //  scenario.SetMap(mapRef);
+  //}
 
   //app.m_Scenario = &navigatorBench;
   app.m_Scenario = &room;

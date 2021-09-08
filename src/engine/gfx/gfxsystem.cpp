@@ -66,10 +66,23 @@ namespace eXl
       boxes.push_back(iBox);
     }
 
+    virtual void DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace)
+    {
+      auto matEntry = m_Colors.insert(std::make_pair(iColor, (uint32_t)m_Colors.size())).first;
+      while (m_Convex.size() <= matEntry->second)
+      {
+        m_Convex.push_back(Vector<Vector<Vector2f>>());
+      }
+
+      auto& boxes = m_Convex[matEntry->second];
+      boxes.push_back(iConvex);
+    }
+
   protected:
 
     Vector<Vector<Vector3f>> m_Lines;
     Vector<Vector<AABB2Df>> m_Boxes;
+    Vector<Vector<Vector<Vector2f>>> m_Convex;
     Map<Vector4f, uint32_t> m_Colors;
     float m_CurrentScreenSize;
   };
@@ -602,7 +615,7 @@ namespace eXl
     list.SetDefaultViewport(Vector2i::ZERO, m_Impl->m_ViewportSize);
     list.SetDefaultDepth(true, true);
     list.SetDefaultScissor(Vector2i(0,0),Vector2i(-1,-1));
-    list.SetDefaultBlend(false, OGLBlend::SRC_ALPHA, OGLBlend::ONE_MINUS_SRC_ALPHA);
+    list.SetDefaultBlend(true, OGLBlend::SRC_ALPHA, OGLBlend::ONE_MINUS_SRC_ALPHA);
 
     list.InitForPush();
 
@@ -688,6 +701,8 @@ namespace eXl
 			data.Push(list);
 		});
 
+    list.SetDepth(false, false);
+
     Matrix4f identMatrix;
     identMatrix.MakeIdentity();
     OGLBuffer* debugGeomLines = nullptr;
@@ -703,6 +718,7 @@ namespace eXl
     Vector<OGLShaderData> colors(debugDrawer.m_Colors.size());
     Vector<uint32_t> lineNums(debugDrawer.m_Colors.size(), 0);
     Vector<uint32_t> boxNums(debugDrawer.m_Colors.size(), 0);
+    Vector<uint32_t> convexNumPts(debugDrawer.m_Colors.size(), 0);
     for(auto const& matEntry : debugDrawer.m_Colors)
     {
       spriteInfo[matEntry.second].alphaMult = 1.0f;
@@ -720,6 +736,13 @@ namespace eXl
       {
         boxNums[matEntry.second] = debugDrawer.m_Boxes[matEntry.second].size();
       }
+      if (debugDrawer.m_Convex.size() > matEntry.second)
+      {
+        for (auto const& cvx : debugDrawer.m_Convex[matEntry.second])
+        {
+          convexNumPts[matEntry.second] += 3 * cvx.size() ;
+        }
+      }
     }
 
     uint32_t totNumLines = 0;
@@ -735,6 +758,14 @@ namespace eXl
       size_t numBoxes = offset;
       offset = totNumBoxes;
       totNumBoxes += numBoxes;
+    }
+    Vector<uint32_t> convexOffset;
+    uint32_t totNumConvexPt = 0;
+    uint32_t startOffsetConvex = totNumBoxes * 6;
+    for (auto numPts : convexNumPts)
+    {
+      convexOffset.push_back(totNumConvexPt + startOffsetConvex);
+      totNumConvexPt += numPts;
     }
 
     if(!debugDrawer.m_Lines.empty())
@@ -772,33 +803,61 @@ namespace eXl
       }
     }
 
-    if (!debugDrawer.m_Boxes.empty())
+    if (!debugDrawer.m_Boxes.empty()
+      || !debugDrawer.m_Convex.empty())
     {
       list.SetTechnique(OGLSpriteAlgo::GetSpriteTechnique());
 
-      debugGeomBoxes = OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, totNumBoxes * sizeof(Vector3f) * 6, nullptr);
-
-      Vector<Vector3f> boxPts;
-      boxPts.resize(totNumBoxes * 6);
-
+      Vector<Vector3f> triangles;
+      triangles.resize(totNumBoxes * 6 + totNumConvexPt);
+      
       for(uint32_t i = 0; i<debugDrawer.m_Boxes.size(); ++i)
       {
         auto const& boxDL = debugDrawer.m_Boxes[i];
+
+        Vector3f* ptData = triangles.data() + 6 * boxNums[i];
 
         for (uint32_t j = 0; j<boxDL.size(); ++j)
         {
           auto const& box = boxDL[j];
 
-          boxPts[6 * (j + boxNums[i]) + 0] = (Vector3f(box.m_Data[0].X(), box.m_Data[0].Y(), 0.0));
-          boxPts[6 * (j + boxNums[i]) + 1] = (Vector3f(box.m_Data[1].X(), box.m_Data[0].Y(), 0.0));
-          boxPts[6 * (j + boxNums[i]) + 2] = (Vector3f(box.m_Data[0].X(), box.m_Data[1].Y(), 0.0));
-          boxPts[6 * (j + boxNums[i]) + 3] = (Vector3f(box.m_Data[1].X(), box.m_Data[0].Y(), 0.0));
-          boxPts[6 * (j + boxNums[i]) + 4] = (Vector3f(box.m_Data[1].X(), box.m_Data[1].Y(), 0.0));
-          boxPts[6 * (j + boxNums[i]) + 5] = (Vector3f(box.m_Data[0].X(), box.m_Data[1].Y(), 0.0));
+          *(ptData++) = (Vector3f(box.m_Data[0].X(), box.m_Data[0].Y(), 0.0));
+          *(ptData++) = (Vector3f(box.m_Data[1].X(), box.m_Data[0].Y(), 0.0));
+          *(ptData++) = (Vector3f(box.m_Data[0].X(), box.m_Data[1].Y(), 0.0));
+          *(ptData++) = (Vector3f(box.m_Data[1].X(), box.m_Data[0].Y(), 0.0));
+          *(ptData++) = (Vector3f(box.m_Data[1].X(), box.m_Data[1].Y(), 0.0));
+          *(ptData++) = (Vector3f(box.m_Data[0].X(), box.m_Data[1].Y(), 0.0));
         }
       }
 
-      debugGeomBoxes->SetData(0, totNumBoxes * sizeof(Vector3f) * 6, (void*)boxPts.data());
+      for (uint32_t i = 0; i < debugDrawer.m_Convex.size(); ++i)
+      {
+        auto const& cvxDL = debugDrawer.m_Convex[i];
+        Vector3f* ptData = triangles.data() + convexOffset[i];
+        for (auto const& cvx : cvxDL)
+        {
+          if (cvx.empty())
+          {
+            continue;
+          }
+          Vector2f midPt;
+          for (auto const& pt : cvx)
+          {
+            midPt += pt;
+          }
+          midPt /= cvx.size();
+          for (uint32_t j = 0; j < cvx.size(); ++j)
+          {
+            uint32_t nextPt = (j + 1) % cvx.size();
+            *(ptData++) = Vector3f(midPt.X(), midPt.Y(), 0.0);
+            *(ptData++) = Vector3f(cvx[j].X(), cvx[j].Y(), 0.0);
+            *(ptData++) = Vector3f(cvx[nextPt].X(), cvx[nextPt].Y(), 0.0);
+          }
+        }
+      }
+
+      debugGeomBoxes = OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, (totNumBoxes * 6 + totNumConvexPt) * sizeof(Vector3f), (void*)triangles.data());
+      //debugGeomBoxes->SetData(0, triangles.size() * sizeof(Vector3f), (void*)triangles.data());
 
       debugGeomAssemblyB.AddAttrib(debugGeomBoxes, OGLBaseAlgo::GetPosAttrib(), 3, sizeof(Vector3f), 0);
       debugGeomAssemblyB.m_IBuffer = nullptr;
@@ -808,14 +867,19 @@ namespace eXl
 
       for (auto const& matEntry : debugDrawer.m_Colors)
       {
-        if(debugDrawer.m_Boxes.size() > matEntry.second)
+        if(debugDrawer.m_Boxes.size() > matEntry.second
+          || debugDrawer.m_Convex.size() > matEntry.second)
         {
-          auto const& boxDL = debugDrawer.m_Boxes[matEntry.second];
-
           list.PushData(colors.data() + matEntry.second);
-
-          list.PushDraw(0x0100, OGLDraw::TriangleList, boxDL.size() * 6, boxNums[matEntry.second]);
-
+          if (debugDrawer.m_Boxes.size() > matEntry.second)
+          {
+            auto const& boxDL = debugDrawer.m_Boxes[matEntry.second];
+            list.PushDraw(0x0100, OGLDraw::TriangleList, boxDL.size() * 6, boxNums[matEntry.second] * 6);
+          }
+          if (debugDrawer.m_Convex.size() > matEntry.second)
+          {
+            list.PushDraw(0x0100, OGLDraw::TriangleList, convexNumPts[matEntry.second], convexOffset[matEntry.second]);
+          }
           list.PopData();
         }
       }
@@ -836,6 +900,7 @@ namespace eXl
     debugDrawer.m_Lines.clear();
     debugDrawer.m_Colors.clear();
     debugDrawer.m_Boxes.clear();
+    debugDrawer.m_Convex.clear();
 
     if(debugGeomLines)
     {

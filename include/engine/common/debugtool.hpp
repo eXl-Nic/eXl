@@ -26,6 +26,7 @@ namespace eXl
     public:
       virtual void DrawLine(const Vector3f& iFrom, const Vector3f& iTo, const Vector4f& iColor, bool iScreenSpace = false) = 0;
       virtual void DrawBox(AABB2Df const& iBox, const Vector4f& iColor, bool iScreenSpace = false) = 0;
+      virtual void DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace = false) = 0;
     };
 
     enum System

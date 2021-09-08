@@ -276,12 +276,12 @@ namespace eXl
     }
 
     // Neg value -> distance to min, Pos value -> distance to max, 0, inside
-    Vector2f Classify(Vector2<Real>const& iPoint, Real iEpsilon = Math<Real>::ZERO_TOLERANCE)
+    Vector2f Classify(Vector2<Real>const& iPoint, Real iEpsilon = Math<Real>::ZERO_TOLERANCE) const
     {
       Vector2f res(iPoint.X() - m_Data[0].X(), iPoint.Y() - m_Data[0].Y());
       for(uint32_t axis = 0; axis < 2; ++axis)
       {
-        if(!(res.m_Data[0] < -iEpsilon))
+        if(!(res.m_Data[axis] < -iEpsilon))
         {
           res.m_Data[axis] = m_Data[1].m_Data[axis] - iPoint.m_Data[axis];
           if(res.m_Data[axis] < -iEpsilon)

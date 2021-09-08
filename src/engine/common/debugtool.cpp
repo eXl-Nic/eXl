@@ -23,6 +23,8 @@ namespace eXl
         {}
         void DrawBox(AABB2Df const& iBox, const Vector4f& iColor, bool iScreenSpace = false) override
         {}
+        void DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace = false) override
+        {}
       };
 
       struct DebugToolState
