@@ -105,7 +105,7 @@ namespace eXl
       }
       iComp.m_Object->setWorldTransform(trans);
       iComp.m_Object->setInterpolationWorldTransform(trans);
-      if (iComp.GetFlags() & PhysicFlags::IsGhost)
+      //if (iComp.GetFlags() & PhysicFlags::IsGhost)
       {
         iComp.setWorldTransform(trans);
       }

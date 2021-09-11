@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <engine/common/world.hpp>
+#include <engine/common/debugtool.hpp>
 #include <engine/common/menumanager.hpp>
 
 namespace eXl

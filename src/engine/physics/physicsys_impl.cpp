@@ -283,7 +283,8 @@ namespace eXl
       OrderedColDat res;
       CollisionData& colData=res.m_ColDat;
       PhysicComponent_Impl* bcA = static_cast<PhysicComponent_Impl*>(rayResult.m_collisionObject->getUserPointer());
-      eXl_ASSERT_MSG(bcA!=NULL,"Error with object in collision query");
+      eXl_ASSERT_MSG_REPAIR_RET(bcA != NULL, "Foreign object in collision query (need to support triggers)", 1.0);
+      
       colData.obj1 = bcA->m_ObjectId;
       btVector3 ptA;
       ptA.setInterpolate3(m_rayFromWorld,m_rayToWorld,rayResult.m_hitFraction);

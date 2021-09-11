@@ -137,6 +137,7 @@ if(${UNIX})
 endif()
 
 target_include_directories(eXl_Core PRIVATE ${XXHASH_INCLUDE_DIR})
+target_include_directories(eXl_Core PRIVATE ${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
 target_link_libraries(eXl_Core LINK_PUBLIC ${CORE_LIBS})
 target_link_libraries(eXl_Core LINK_PRIVATE ${CORE_LIBS_PRIVATE})
 

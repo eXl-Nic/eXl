@@ -16,6 +16,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 #include <core/clock.hpp>
 
+#define CXXOPTS_NO_RTTI
+#include <cxxopts.hpp>
+
 #include <vector>
 #include <thread>
 
@@ -28,13 +31,15 @@ namespace eXl
 
   static Application* s_Instance = nullptr;
 
-  Application::Application():m_Width(1024),m_Height(768)
+  Application::Application()
+    : m_Width(1024)
+    , m_Height(768)
   { 
     eXl::StartCoreLib(nullptr);
     {
       LOG_INFO<<"Started Core lib"<<"\n";
     }
-    
+    SetAppPath(Path(::eXl::GetAppPath()));
     running = false;
     eXl_ASSERT_MSG(s_Instance == nullptr, "Nope");
     s_Instance = this;
@@ -56,6 +61,29 @@ namespace eXl
 
   void Application::Start()
   {
+    cxxopts::Options options(m_ArgV[0]);
+
+    options.allow_unrecognised_options();
+    options.add_options()
+      ("w,width", "Window width", cxxopts::value<int>())
+      ("h,height", "Window width", cxxopts::value<int>())
+      ("s, seed", "App random seed", cxxopts::value<int>());
+
+    cxxopts::ParseResult result = options.parse(m_Argc, m_ArgV);
+
+    if (result.count("width"))
+    {
+      m_Width = result["width"].as<int>();
+    }
+    if (result.count("height"))
+    {
+      m_Height = result["height"].as<int>();
+    }
+    if (result.count("seed"))
+    {
+      m_Seed = result["seed"].as<int>();
+    }
+
     running = true;
   }
 

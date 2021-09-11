@@ -1,9 +1,7 @@
+#include <engine/eXl_Main.hpp>
+
 #include <core/corelib.hpp>
 #include <core/log.hpp>
-
-#ifndef __ANDROID__
-#define SDL_MAIN_HANDLED
-#endif
 
 #include <core/plugin.hpp>
 #include <core/random.hpp>
@@ -61,18 +59,11 @@ extern "C"
 
 #include "console.hpp"
 #include "sdlkeytranslator.hpp"
-
-#include <engine/common/debugtool.hpp>
-
 #include "debugpanel.hpp"
 #include "debugviews.hpp"
+#include <engine/common/debugtool.hpp>
 #include <engine/common/menumanager.hpp>
 #include <engine/common/app.hpp>
-
-#include "navigatorbench.hpp"
-#include "abilityroom.hpp"
-#include "maptest.hpp"
-#include "sampleexperiment.hpp"
 
 #include <engine/common/transforms.hpp>
 #include <engine/gfx/gfxsystem.hpp>
@@ -87,13 +78,13 @@ namespace eXl
 {
   Plugin& MathPlugin_GetPlugin();
   Plugin& OGLPlugin_GetPlugin();
-  Plugin& DunatkPlugin_GetPlugin();
+  Plugin& EnginePlugin_GetPlugin();
 
   PluginLoadMap s_StaticPluginMap =
   {
     {"eXl_OGL", &OGLPlugin_GetPlugin},
     {"eXl_Math", &MathPlugin_GetPlugin},
-    {"DunAtk", &DunatkPlugin_GetPlugin}
+    {"eXl_Engine", &EnginePlugin_GetPlugin}
   };
 }
 #endif
@@ -236,7 +227,7 @@ private:
 
 namespace eXl
 {
-  class SDL_Application : public DunAtk_Application
+  class SDL_Application : public Engine_Application
   {
   public:
     SDL_Application()
@@ -271,13 +262,17 @@ namespace eXl
 
       GfxSystem::StaticInit();
 
-      m_World->Init(*m_Manifest).WithGfx().WithScenario(m_Scenario);
+      m_World->Init(*m_Manifest).WithGfx();
+      if (GetScenario())
+      {
+        m_World->WithScenario(GetScenario());
+      }
 
       GfxSystem* gfxSys = m_World->GetWorld().GetSystem<GfxSystem>();
       DebugTool::SetDrawer(gfxSys->GetDebugDrawer());
     }
 
-    void Start() override
+    void Start_SDLApp()
     {
       SDL_SetMainReady();
 
@@ -301,17 +296,7 @@ namespace eXl
 #endif
       win = SDL_CreateWindow("eXl", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewportSize.X(), viewportSize.Y(), windowFlags);
 
-      DunAtk_Application::Start();
-
       InitOGL();
-
-      //renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
-      //if (!renderer) {
-      //  return;
-      //}
-      //
-      //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-      //SDL_RenderClear(renderer);
 
       for (uint32_t logLevel = INFO_STREAM; logLevel <= ERROR_STREAM; ++logLevel)
       {
@@ -372,9 +357,6 @@ namespace eXl
           || curEvent.type == SDL_MOUSEBUTTONUP)
         {
           SDL_MouseButtonEvent& mouseEvt = reinterpret_cast<SDL_MouseButtonEvent&>(curEvent);
-
-
-          LOG_INFO << "Mouse button event at : (" << m_MousePos.X() << ", " << m_MousePos.Y() << ")\n";
 
           MouseButton button;
           switch (mouseEvt.button)
@@ -465,37 +447,12 @@ namespace eXl
     {
       PumpMessages(iDelta);
 
-      //SDL_Event e;
-      //SDL_Rect r;
-      //// For mouse rectangle (static to presist between function calls)
-      //static int mx0 = -1, my0 = -1, mx1 = -1, my1 = -1;
-      //
-      //// Clear the window to white
-      //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-      //SDL_RenderClear(renderer);
-      //
-      //// Set drawing color to black
-      //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-      //
-      //SDL_RenderDrawPoint(renderer, 10, 10);
-      //SDL_RenderDrawLine(renderer, 10, 20, 10, 100);
-      //
-      //r.x = 20;
-      //r.y = 20;
-      //r.w = 100;
-      //r.h = 100;
-      //SDL_RenderFillRect(renderer, &r);
-      //
-      //
-      //// Update window
-      //SDL_RenderPresent(renderer);
-
       if (context == 0)
       {
         return;
       }
 
-      DunAtk_Application::Tick(iDelta);
+      Engine_Application::Tick(iDelta);
 
       MenuManager& menuMgr = GetMenuManager();
 #ifndef __ANDROID__
@@ -582,29 +539,37 @@ namespace eXl
     LuaConsole m_Console;
     DebugVisualizerState m_DebugVisState;
     Vector2i m_MousePos;
-
-    Scenario* m_Scenario = nullptr;
   };
 }
 
-struct DummyNode
+namespace
 {
-  
-};
+  SDL_Application& GetApp()
+  {
+    static SDL_Application s_App;
+    return s_App;
+  }
+}
 
-int main(int argc, char* argv[])
+eXl_Main::eXl_Main()
 {
-  SDL_Application app;
+  GetApp();
+}
+
+int eXl_Main::Start(int argc, char* argv[])
+{
+  SDL_Application& app = GetApp();
   InitConsoleLog();
 
-  app.SetArgs(argc, argv);
-
   app.SetWindowSize(1024, 768);
-
-  uint32_t w, h;
+  app.SetArgs(argc, argv);
 
   WorldState world;
   app.m_World = &world;
+
+  app.Start();
+
+  Path projectPath = app.GetProjectPath();
 
 #if defined(WIN32) && !defined(USE_BAKED)
 
@@ -612,83 +577,67 @@ int main(int argc, char* argv[])
   {
     return std::unique_ptr<TextReader>(FileTextReader::Create(iFilePath));
   });
-
-  Path appPath(GetAppPath().c_str());
-
-  Path projectPath = appPath.parent_path().parent_path() / "eXlTestProject";
-  if (!Filesystem::exists(projectPath))
-  {
-    Path driveLetter = appPath.root_name() / appPath.root_directory();
-    projectPath = driveLetter / Path("eXlTestProject");
-
-  }
-  if (!Filesystem::exists(projectPath))
-  {
-    return -1;
-  }
-  ResourceManager::BootstrapDirectory(appPath.parent_path() / "data", true);
-  ResourceManager::BootstrapDirectory(projectPath, true);
-
 #endif
 
 #if defined(__ANDROID__) || defined(USE_BAKED)
-  //SetErrorHandling(CRASH_ASSERT);
   ResourceManager::SetTextFileReadFactory([](char const* iFilePath) -> std::unique_ptr<TextReader>
-  {
-    std::unique_ptr<SDLFileInputStream> stream = std::make_unique<SDLFileInputStream>(iFilePath);
-    if (stream->GetSize() > 0)
     {
-      return std::make_unique<InputStreamTextReader>(std::move(stream));
+      std::unique_ptr<SDLFileInputStream> stream = std::make_unique<SDLFileInputStream>(iFilePath);
+      if (stream->GetSize() > 0)
+      {
+        return std::make_unique<InputStreamTextReader>(std::move(stream));
+      }
+      return std::unique_ptr<TextReader>();
+    });
+#endif
+
+  Path appPath(GetAppPath().begin(), GetAppPath().end());
+  PropertiesManifest appManifest = DunAtk::GetBaseProperties();
+
+  if (!projectPath.empty())
+  {
+    Path projectDir = projectPath.parent_path();
+#if defined(USE_BAKED) && defined(WIN32)
+    ResourceManager::BootstrapAssetsFromManifest(projectDir);
+#else
+    ResourceManager::BootstrapDirectory(projectDir, true);
+#endif
+
+    app.m_Manifest = &appManifest;
+    Project* project = ResourceManager::Load<Project>(projectPath);
+    if (!project)
+    {
+      return -1;
     }
-    return std::unique_ptr<TextReader>();
-  });
+
+    Project::ProjectTypes types;
+    project->FillProperties(types, appManifest);
+
+    ResourceManager::AddManifest(DunAtk::GetComponents());
+    ResourceManager::AddManifest(appManifest);
+  }
 
 #if defined(__ANDROID__)
-  ResourceManager::BootstrapAssetsFromManifest(String(/*"D:/eXlBakedProject"*/));
+  ResourceManager::BootstrapAssetsFromManifest(String());
 #endif
-
-#if defined(WIN32)
-  ResourceManager::BootstrapAssetsFromManifest(String("D:/eXlBakedProject"));
-#endif
-
-#endif
-
-  PropertiesManifest appManifest = DunAtk::GetBaseProperties();
-  app.m_Manifest = &appManifest;
-  Path projectFilePath = projectPath / "TestProject.eXlProject";
-  Project* project = ResourceManager::Load<Project>(projectFilePath);
-  if (!project)
-  {
-    return -1;
-  }
-  
-  Project::ProjectTypes types;
-  project->FillProperties(types, appManifest);
-
-  ResourceManager::AddManifest(DunAtk::GetComponents());
-  ResourceManager::AddManifest(appManifest);
 
   //ResourceManager::Bake(Path("D:/eXlBakedProject"));
 
-  Random* randGen = Random::CreateDefaultRNG(0);
-  NavigatorBench navigatorBench(randGen);
-  AbilityRoom room(randGen);
-  MapTest map(randGen);
-  Scenario_Base scenario;
+  if (!app.GetScenario() && !app.GetMapPath().empty())
+  {
+    std::unique_ptr<Scenario_Base> scenario = std::make_unique<Scenario_Base>();
+    
+    MapResource const* mapRsc = ResourceManager::Load<MapResource>(app.GetMapPath());
+    if (mapRsc)
+    {
+      ResourceHandle<MapResource> mapRef;
+      mapRef.Set(mapRsc);
+      scenario->SetMap(mapRef);
+    }
+    app.SetScenario(std::move(scenario));
+  }
 
-  //MapResource const* mapRsc = ResourceManager::Load<MapResource>(Path("../eXlTestProject/aaa.eXlAsset"));
-  //if (mapRsc)
-  //{
-  //  ResourceHandle<MapResource> mapRef;
-  //  mapRef.Set(mapRsc);
-  //  scenario.SetMap(mapRef);
-  //}
-
-  //app.m_Scenario = &navigatorBench;
-  app.m_Scenario = &room;
-  //app.m_Scenario = &scenario;
-
-  app.Start();
+  app.Start_SDLApp();
 
   app.DefaultLoop();
   

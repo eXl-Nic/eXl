@@ -111,9 +111,9 @@ namespace eXl
     return iCurPos;
   };
 
-  NavigatorBench::NavigatorBench(Random* iRand)
+  NavigatorBench::NavigatorBench()
   {
-    m_RandGen = iRand;
+    m_RandGen = Random::CreateDefaultRNG(Application::GetAppl().GetSeed());
   }
 
   NavMesh NavigatorBench::BuildMap(World& iWorld, ObjectHandle iMapHandle, Random& iRand)
@@ -526,7 +526,7 @@ namespace eXl
 
   void NavigatorBench::ProcessInputs(World& iWorld)
   {
-    DunAtk_Application& app = DunAtk_Application::GetAppl();
+    Engine_Application& app = Engine_Application::GetAppl();
 
     InputSystem& iInputs = app.GetInputSystem();
 

@@ -21,7 +21,7 @@ namespace eXl
   class AbilityRoom : public Scenario
   {
   public:
-    AbilityRoom(Random* iRand);
+    AbilityRoom();
 
     void Init(World& iWorld) override;
 

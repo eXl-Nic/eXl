@@ -53,7 +53,12 @@ namespace eXl
 
   namespace
   {
-    String s_AppPath;
+#ifdef WIN32
+    char exePath[MAX_PATH + 1] = { 0 };
+#else
+    char exePath[512] = { 0 };
+#endif
+    std::string_view exePathView;
   }
 
 
@@ -77,9 +82,35 @@ namespace eXl
   IMPLEMENT_TAG_TYPE(Rtti)
   IMPLEMENT_TAG_TYPE(Err)
 
-  String const& GetAppPath()
+  std::string_view GetAppPath()
   {
-    return s_AppPath;
+    if (exePath[0] == 0)
+    {
+#ifdef WIN32
+      HMODULE exeModule = GetModuleHandleA(nullptr);
+      uint32_t length = GetModuleFileNameA(exeModule, exePath, MAX_PATH);
+
+      for (uint32_t i = 0; i < length; ++i)
+      {
+        if (exePath[i] == '\\')
+        {
+          exePath[i] = '/';
+        }
+      }
+      exePathView = std::string_view(exePath, length);
+#else
+      ssize_t len = ::readlink("/proc/self/exe", exePath, sizeof(exePath) - 1);
+      if (len != -1)
+      {
+        exePath[len] = '\0';
+        char* posBack = strrchr(exePath, '/');
+        exePathView = std::string_view(exePath, len);
+        chdir(exePathView.begin());
+      }
+#endif
+    }
+
+    return exePathView;
   }
 
   void Name_Init();
@@ -119,19 +150,6 @@ namespace eXl
     }
 
     LOG_INFO << "Start eXl initialization";
-
-#ifdef WIN32
-    char exePath[MAX_PATH + 1] = {0};
-    HMODULE exeModule = GetModuleHandleA(nullptr);
-    GetModuleFileNameA(exeModule, exePath, MAX_PATH);
-
-    s_AppPath = exePath;
-    size_t idx = String::npos;
-    while ((idx = s_AppPath.find("\\")) != String::npos)
-    {
-      s_AppPath.replace(idx, 1, "/");
-    }
-#endif
 
 #ifdef EXL_TYPE_ENABLED
 
@@ -182,8 +200,6 @@ namespace eXl
 #ifdef EXL_LUA
     LuaManager::Destroy();
 #endif
-
-    s_AppPath = String();
     //TypeManager::Destroy();
     detail::_PLClose();
 #ifdef _DEBUG

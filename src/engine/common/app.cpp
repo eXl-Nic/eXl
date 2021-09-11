@@ -29,6 +29,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/game/scripttrigger.hpp>
 
+#define CXXOPTS_NO_RTTI
+#include <cxxopts.hpp>
+
 namespace eXl
 {
   struct WorldState::Impl
@@ -61,35 +64,113 @@ namespace eXl
     ProfilingState m_ProfilingState;
   };
 
-  struct DunAtk_Application::Impl : public HeapObject
+  struct Engine_Application::Impl : public HeapObject
   {
     MenuManager m_MenuManager;
     InputSystem m_Inputs;
 
   };
 
-  DunAtk_Application& DunAtk_Application::GetAppl()
+  Engine_Application& Engine_Application::GetAppl()
   {
-    return static_cast<DunAtk_Application&>(Application::GetAppl());
+    return static_cast<Engine_Application&>(Application::GetAppl());
   }
 
-  DunAtk_Application::DunAtk_Application() : m_Impl(eXl_NEW Impl)
+  Engine_Application::Engine_Application() : m_Impl(eXl_NEW Impl)
   {
 
   }
 
-  DunAtk_Application::~DunAtk_Application() = default;
+  Engine_Application::~Engine_Application() = default;
 
-  void DunAtk_Application::Start()
+  void Engine_Application::Start()
   {
     Application::Start();
-    //Plugin::LoadLib("eXl_Math");
 
 #ifdef EXL_IMAGESTREAME_ENABLED
     ImageStreamer::Initialize();
 #endif
 
-    //Plugin::LoadLib("eXl_OGL");
+    cxxopts::Options options(m_ArgV[0]);
+
+    options.allow_unrecognised_options();
+    options.add_options()
+      ("p,project", "Project path", cxxopts::value<std::string>())
+      ("plugin", "Additional plugins to load", cxxopts::value<std::vector<std::string>>())
+      ("m,map", "Map to load", cxxopts::value<std::string>());
+
+    cxxopts::ParseResult result = options.parse(m_Argc, m_ArgV);
+
+    Path projectPathInput = m_ProjectPath;
+
+    if (result.count("project"))
+    {
+      projectPathInput = (result["project"].as<std::string>().c_str());
+    }
+
+    if(!projectPathInput.empty())
+    {
+      Path projectPathCandidate = projectPathInput;
+      if (!Filesystem::exists(projectPathCandidate))
+      {
+        Path appDir = m_AppPath.parent_path();
+        projectPathCandidate = m_AppPath / projectPathInput;
+      }
+      if (!Filesystem::exists(projectPathCandidate))
+      {
+        Path appDirParentDir = m_AppPath.parent_path().parent_path();
+        projectPathCandidate = m_AppPath / projectPathInput;
+      }
+      if (!Filesystem::exists(projectPathCandidate))
+      {
+        Path drive = m_AppPath.root_name() / m_AppPath.root_directory();
+        projectPathCandidate = drive / projectPathInput;
+      }
+      if (Filesystem::exists(projectPathCandidate)
+        && projectPathCandidate.extension() == ".eXlProject")
+      {
+        m_ProjectPath = projectPathCandidate;
+      }
+      else
+      {
+        LOG_ERROR << ToString(projectPathInput) << " is not a eXl project path";
+      }
+    }
+    if (result.count("plugin"))
+    {
+      std::vector<std::string> plugins = result["plugin"].as<std::vector<std::string>>();
+      for (auto const& pluginName : plugins)
+      {
+        Plugin* loadedPlugin = Plugin::LoadLib(pluginName.c_str());
+        if (loadedPlugin == nullptr)
+        {
+          LOG_ERROR << "Could not load plugin " << pluginName;
+        }
+      }
+    }
+    
+    Path mapInput = m_MapPath;
+
+    if (result.count("map"))
+    {
+      mapInput = result["map"].as<std::string>();
+    }
+
+    if(!mapInput.empty())
+    {
+      if (m_ProjectPath.empty())
+      {
+        LOG_ERROR << "Cannot load map without a project";
+      }
+
+      Path projectDir = m_ProjectPath.parent_path();
+      Path fullMapPath = projectDir / mapInput;
+      if (!Filesystem::exists(fullMapPath))
+      {
+        LOG_ERROR << "Map " << ToString(mapInput) << " not found in project " << ToString(m_ProjectPath);
+      }
+      m_MapPath = fullMapPath;
+    }
   }
 
   WorldState::WorldState()
@@ -393,7 +474,7 @@ namespace eXl
 
   void WorldState::Impl::Tick(float iDelta)
   {
-    DunAtk_Application& app = DunAtk_Application::GetAppl();
+    Engine_Application& app = Engine_Application::GetAppl();
     InputSystem& inputs = app.GetInputSystem();
 
     world.Tick(iDelta, m_ProfilingState);
@@ -417,12 +498,12 @@ namespace eXl
 #endif
   }
 
-  MenuManager& DunAtk_Application::GetMenuManager() 
+  MenuManager& Engine_Application::GetMenuManager() 
   { 
     return m_Impl->m_MenuManager;
   }
 
-  InputSystem& DunAtk_Application::GetInputSystem()
+  InputSystem& Engine_Application::GetInputSystem()
   {
     return m_Impl->m_Inputs;
   }

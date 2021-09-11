@@ -16,7 +16,7 @@ namespace eXl
   public:
     using ProbaTable = Vector<std::pair<float, uint32_t>>;
 
-    NavigatorBench(Random* iRand);
+    NavigatorBench();
 
     void Init(World& iWorld) override;
 

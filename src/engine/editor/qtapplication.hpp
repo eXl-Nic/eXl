@@ -8,7 +8,7 @@ namespace eXl
 {
   class GameWidget;
   
-  class QTApplication : public DunAtk_Application
+  class QTApplication : public Engine_Application
   {
   public:
 

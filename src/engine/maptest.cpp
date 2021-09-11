@@ -255,7 +255,7 @@ namespace eXl
 
   void MapTest::ProcessInputs(World& iWorld)
   {
-    DunAtk_Application& app = DunAtk_Application::GetAppl();
+    Engine_Application& app = Engine_Application::GetAppl();
 
     InputSystem& iInputs = app.GetInputSystem();
 

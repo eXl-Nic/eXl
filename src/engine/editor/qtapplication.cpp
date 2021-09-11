@@ -41,15 +41,12 @@ stop:0.6 rgba(255, 255, 255, 0));
     
     m_Appl->setStyleSheet(styleSheet);
 
-    eXl::Plugin::LoadLib("eXl_Math");
-    eXl::Plugin::LoadLib("eXl_OGL");
-
     ResourceManager::SetTextFileReadFactory([](char const* iFilePath)
     {
       return std::unique_ptr<TextReader>(FileTextReader::Create(iFilePath));
     });
     
-    DunAtk_Application::Start();
+    Engine_Application::Start();
     InitConsoleLog();
     InitFileLog("DunAtkEditor.log");
     MainWindow* mainWindow = new MainWindow;

@@ -12,7 +12,7 @@ namespace eXl
       {
         IconsStore()
         {
-          Path appPath(GetAppPath().c_str());
+          Path appPath(GetAppPath().begin(), GetAppPath().end());
           appPath = appPath.parent_path();
           appPath /= "editor_rsc";
           appPath /= "editor_icons.png";

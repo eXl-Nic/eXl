@@ -14,6 +14,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/string.hpp>
 #include <core/intrusiveptr.hpp>
 
+#include <string_view>
+
 namespace eXl
 {
   namespace Log_Manager
@@ -21,7 +23,7 @@ namespace eXl
     class LogOutput;
   }
 
-  EXL_CORE_API String const& GetAppPath();
+  EXL_CORE_API std::string_view GetAppPath();
   
   void EXL_CORE_API StartCoreLib(IntrusivePtr<Log_Manager::LogOutput> iInitStream);
 

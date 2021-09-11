@@ -67,6 +67,12 @@ namespace eXl
       oWidth = m_Width;
       oHeight = m_Height;
     }
+
+    uint32_t GetSeed()
+    {
+      return m_Seed;
+    }
+
 #ifdef EXL_RSC_HAS_FILESYSTEM
     Path const& GetAppPath()
     {
@@ -86,7 +92,8 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
     Path m_AppPath;
 #endif
-    unsigned int m_Width = 0;
-    unsigned int m_Height = 0;
+    uint32_t m_Width = 0;
+    uint32_t m_Height = 0;
+    uint32_t m_Seed = 0;
   };
 }

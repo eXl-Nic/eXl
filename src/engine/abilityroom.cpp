@@ -146,9 +146,9 @@ namespace eXl
   //  m_System->RemoveEffect(state.m_Target, m_Name, iToApply);
   //}
   
-  AbilityRoom::AbilityRoom(Random* iRand)
+  AbilityRoom::AbilityRoom()
   {
-    m_RandGen = iRand;
+    m_RandGen = Random::CreateDefaultRNG(Application::GetAppl().GetSeed());
   }
 
   void AbilityRoom::StartServer(World& iWorld)
@@ -368,7 +368,7 @@ namespace eXl
 
   void AbilityRoom::Init(World& world)
   {
-    DunAtk_Application& appl = static_cast<DunAtk_Application&>(Application::GetAppl());
+    Engine_Application& appl = Engine_Application::GetAppl();
 
     appl.GetMenuManager().AddMenu("Network")
       .AddOpenPanelCommand("Connect", [this, &world] { return new NetworkPanel(world, *this); })
@@ -847,7 +847,7 @@ return TriggerScriptXJKPQJDI
 
   void AbilityRoom::ProcessInputs(World& iWorld)
   {
-    DunAtk_Application& app = DunAtk_Application::GetAppl();
+    Engine_Application& app = Engine_Application::GetAppl();
 
     InputSystem& iInputs = app.GetInputSystem();
 

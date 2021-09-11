@@ -22,6 +22,7 @@ add_definitions(-DIMGUI_API=)
 endif()
 
 include_directories(${BULLET_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${LIBB64_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
 
 link_directories(${OGL_LIBRARY_DIR} ${OPENCV_LIBRARY_DIR})
 
@@ -158,7 +159,51 @@ endif()
 
 target_link_libraries(eXl_Engine LINK_PRIVATE ${PREREQS_PRIV})
 
+set( MAIN_SOURCES
+	eXl_main.cpp 
+	console.cpp
+	debugviews.cpp
+	sdlkeytranslator.cpp
+    ${CMAKE_SOURCE_DIR}/modules/imgui/backends/imgui_impl_sdl.cpp
+)
+
+add_library(eXl_Main ${LIBRARY_TYPE} ${MAIN_SOURCES})
+
+target_include_directories(eXl_Main PRIVATE ${IMGUI_INCLUDE_DIR} ${GLEW_INCLUDE_DIR})
+target_link_directories(eXl_Main PRIVATE ${GLEW_LIBRARY_DIR})
+SETUP_EXL_LIB(eXl_Main "MAIN" DEPENDENCIES eXl_Engine)
+
+set(PRIVATE_LIBRARIES
+	imgui
+)
+
+if(${MSVC})
+	set( PRIVATE_LIBRARIES  
+	${PRIVATE_LIBRARIES}
+	legacy_stdio_definitions 
+	${OGL_LIBRARIES} 
+	SDL2)
+endif()
+
+if(${ANDROID})
+set( PRIVATE_LIBRARIES  
+	${PRIVATE_LIBRARIES}
+	 SDL2-static)
+endif()
+
+target_link_libraries(eXl_Main PRIVATE ${PRIVATE_LIBRARIES})
+
 if(${BUILD_EXL_EDITOR})
 add_subdirectory(editor ${OUT_DIR}/engine/editor)
 endif()
+
+add_executable(eXl_Player main_player.cpp)
+SETUP_EXL_TARGET(eXl_Player DEPENDENCIES eXl_Main)
+
+add_executable(Navigator_Sample main_navigator.cpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
+SETUP_EXL_TARGET(Navigator_Sample DEPENDENCIES eXl_Main)
+
+add_executable(Abilities_Sample main_abilities.cpp abilityroom.cpp abilityroom.hpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
+SETUP_EXL_TARGET(Abilities_Sample DEPENDENCIES eXl_Main)
+target_link_libraries(Abilities_Sample PRIVATE imgui)
 

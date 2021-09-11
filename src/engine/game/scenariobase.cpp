@@ -33,7 +33,7 @@ namespace eXl
 {
   void Scenario_Base::Init(World& iWorld)
   {
-    DunAtk_Application& appl = static_cast<DunAtk_Application&>(Application::GetAppl());
+    Engine_Application& appl = static_cast<Engine_Application&>(Application::GetAppl());
 
     auto& transforms = *iWorld.GetSystem<Transforms>();
     //auto& phSys = *iWorld.GetSystem<PhysicsSystem>();
@@ -257,7 +257,7 @@ namespace eXl
 
   void Scenario_Base::ProcessInputs(World& iWorld)
   {
-    DunAtk_Application& app = DunAtk_Application::GetAppl();
+    Engine_Application& app = Engine_Application::GetAppl();
 
     InputSystem& iInputs = app.GetInputSystem();
 
