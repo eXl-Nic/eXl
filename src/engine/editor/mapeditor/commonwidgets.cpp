@@ -41,6 +41,7 @@ namespace eXl
 		layout->addWidget(new QLabel("Terrain : ", this));
 		layout->addWidget(m_TerrainSelector);
 		
+    m_CurTerrainType = types[0].m_TerrainType;
     for (auto const& type : types)
     {
       m_TerrainSelector->addItem(type.m_TerrainType.get().c_str());

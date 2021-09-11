@@ -593,6 +593,7 @@ int eXl_Main::Start(int argc, char* argv[])
 
   Path appPath(GetAppPath().begin(), GetAppPath().end());
   PropertiesManifest appManifest = DunAtk::GetBaseProperties();
+  app.m_Manifest = &appManifest;
 
   if (!projectPath.empty())
   {
@@ -603,7 +604,6 @@ int eXl_Main::Start(int argc, char* argv[])
     ResourceManager::BootstrapDirectory(projectDir, true);
 #endif
 
-    app.m_Manifest = &appManifest;
     Project* project = ResourceManager::Load<Project>(projectPath);
     if (!project)
     {
