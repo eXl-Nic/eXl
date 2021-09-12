@@ -197,15 +197,16 @@ namespace eXl
     baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
     baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false);
     baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false);
+    baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName(), true);
 
     return baseManifest;
   }
 
-  class DunatkPlugin : public Plugin
+  class EnginePlugin : public Plugin
   {
   public:
-    DunatkPlugin() 
-      : Plugin("DunatkPlugin")
+    EnginePlugin() 
+      : Plugin("EbninePlugin")
     {
       m_Dependencies.push_back("eXl_Math");
 #ifdef EXL_WITH_OGL
@@ -395,5 +396,5 @@ namespace eXl
     }
   };
 
-  PLUGIN_FACTORY(DunatkPlugin)
+  PLUGIN_FACTORY(EnginePlugin)
 }

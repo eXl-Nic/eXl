@@ -36,8 +36,6 @@ namespace eXl
     Vector<MapTiler::Batcher> tilesByLayer;
     Vector<UnorderedMap<TilingGroup const*, MapTiler::Blocks>> blocksByLayer;
     UnorderedMap<TerrainTypeName, Vector<AABB2DPolygoni>> components;
-    //UnorderedMap<TerrainTypeName, PhysicInitData> physicLayer;
-    Vector<AABB2DPolygoni> floor;
     AABB2Di fullSize;
 
     for (auto const& terrainItem : m_Terrains)
@@ -87,9 +85,13 @@ namespace eXl
       }
 
       Vector2f worldScaling(tilingSize.X() / EngineCommon::s_WorldToPixel, tilingSize.Y() / EngineCommon::s_WorldToPixel);
-      TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(terrainItem.m_Type);
-      if (terrainDesc.m_Height > Mathf::ZERO_TOLERANCE)
+      auto insertRes = components.insert(std::make_pair(terrainItem.m_Type, Vector<AABB2DPolygoni>()));
+      auto& blocks = insertRes.first->second;
+      for (auto const& terrainBlock : terrainItem.m_Blocks)
       {
+        blocks.push_back(terrainBlock.m_Shape);
+        blocks.back().ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
+      }
         //auto insertRes = physicLayer.insert(std::make_pair(terrainItem.m_Type, PhysicInitData()));
         //PhysicInitData& phData = insertRes.first->second;
         //if (insertRes.second)
@@ -113,22 +115,7 @@ namespace eXl
         //    phData.AddBox(size, orig + MathTools::GetPosition(iPos));
         //  }
         //}
-        auto insertRes = components.insert(std::make_pair(terrainItem.m_Type, Vector<AABB2DPolygoni>()));
-        auto& blocks = insertRes.first->second;
-        for (auto const& terrainBlock : terrainItem.m_Blocks)
-        {
-          blocks.push_back(terrainBlock.m_Shape);
-        }
-      }
-      else if (terrainItem.m_Type == TerrainTypeName("Floor"))
-      {
-        for (auto const& block : terrainItem.m_Blocks)
-        {
-          floor.push_back(block.m_Shape);
-          floor.back().Translate(MathTools::ToIVec(MathTools::GetPosition2D(iPos)) * EngineCommon::s_WorldToPixel);
-          floor.back().ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
-        }
-      }
+        
     }
 
     if (!fullSize.Empty())
@@ -166,28 +153,13 @@ namespace eXl
             Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / EngineCommon::s_WorldToPixel;
             Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / EngineCommon::s_WorldToPixel;
 
-            TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(tiles.m_Type);
-            if (terrainDesc.m_Height > Mathf::ZERO_TOLERANCE)
-            {
-              //auto insertRes = physicLayer.insert(std::make_pair(tiles.m_Type, PhysicInitData()));
-              //PhysicInitData& phData = insertRes.first->second;
-              //if (insertRes.second)
-              //{
-              //  phData.SetCategory(terrainDesc.m_PhysicCategory, terrainDesc.m_PhysicFilter);
-              //  phData.SetFlags(EngineCommon::s_BasePhFlags | PhysicFlags::Static);
-              //}
-              //
-              //Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / EngineCommon::s_WorldToPixel;
-              //Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / EngineCommon::s_WorldToPixel;
-              //Vector3f orig = MathTools::To3DVec(tilePos, terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
-              //Vector3f size = MathTools::To3DVec(phSize, terrainDesc.m_Height);
-              //phData.AddBox(size, orig + MathTools::GetPosition(iPos));
-              auto insertRes = components.insert(std::make_pair(tiles.m_Type, Vector<AABB2DPolygoni>()));
-              auto& blocks = insertRes.first->second;
-              AABB2Di tileBox(tile.m_Position - tileDesc->m_Size / 2, tileDesc->m_Size);
-              blocks.push_back(AABB2DPolygoni(tileBox));
-            }
+            auto insertRes = components.insert(std::make_pair(tiles.m_Type, Vector<AABB2DPolygoni>()));
+            auto& blocks = insertRes.first->second;
+            AABB2Di tileBox(tile.m_Position - tileDesc->m_Size / 2, tileDesc->m_Size);
+            blocks.push_back(AABB2DPolygoni(tileBox));
 
+            TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(tiles.m_Type);
+            
             if (gfx != nullptr)
             {
               if (tileDesc->m_Frames.size() == 1)
@@ -287,6 +259,7 @@ namespace eXl
       if (carver != nullptr)
       {
         Vector2i offset(carver->m_Shape.m_Offset.X() * EngineCommon::s_WorldToPixel, carver->m_Shape.m_Offset.Y() * EngineCommon::s_WorldToPixel);
+        offset += MathTools::ToIVec(MathTools::As2DVec(objectDesc.m_Header.m_Position) * EngineCommon::s_WorldToPixel);
         Vector2i size;
         switch (carver->m_Shape.m_Type)
         {
@@ -303,6 +276,11 @@ namespace eXl
         Vector<AABB2DPolygoni> diffResult;
         for (auto& entry : components)
         {
+          if (entry.first == carver->m_TerrainType)
+          {
+            entry.second.push_back(AABB2DPolygoni(pixelBox));
+            continue;
+          }
           Vector<AABB2DPolygoni> newComponents;
           for (auto& poly : entry.second)
           {
@@ -344,26 +322,47 @@ namespace eXl
             entry.second.push_back(std::move(newComp));
           }
         }
-
-        if (carver->m_AffectNavMesh)
-        {
-          floor.push_back(AABB2DPolygoni(pixelBox));
-        }
       }
     }
 
-    AABB2DPolygoni::Merge(floor);
+    for (auto& entry : components)
+    {
+      AABB2DPolygoni::Merge(entry.second);
+    }
 
-    //if (PhysicsSystem* physics = iWorld.GetSystem<PhysicsSystem>())
-    //{
-    //  for (auto const& phEntry : physicLayer)
-    //  {
-    //    ObjectHandle terrainPhysics = iWorld.CreateObject();
-    //    allObjects.terrain.push_back(terrainPhysics);
-    //    //trans->AddTransform(terrainPhysics, &iPos);
-    //    physics->CreateComponent(terrainPhysics, phEntry.second);
-    //  }
-    //}
+    if (PhysicsSystem* physics = iWorld.GetSystem<PhysicsSystem>())
+    {
+      for (auto const& entry : components)
+      {
+        TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(entry.first);
+        if (terrainDesc.m_Height > Mathf::ZERO_TOLERANCE)
+        {
+          for (auto const& poly : entry.second)
+          {
+            Vector<AABB2Di> boxes;
+            poly.GetBoxes(boxes);
+            for (auto const& box : boxes)
+            {
+              ObjectHandle terrainPhysics = iWorld.CreateObject();
+              allObjects.terrain.push_back(terrainPhysics);
+
+              PhysicInitData phData;
+              phData.SetCategory(terrainDesc.m_PhysicCategory, terrainDesc.m_PhysicFilter);
+              phData.SetFlags(EngineCommon::s_BasePhFlags | PhysicFlags::Static);
+              Vector2f phSize = MathTools::ToFVec(box.GetSize()) / EngineCommon::s_WorldToPixel;
+              phData.AddBox(MathTools::To3DVec(phSize, terrainDesc.m_Height));
+              
+              Vector2f tilePos = MathTools::ToFVec(box.GetCenter()) / EngineCommon::s_WorldToPixel;
+              Vector3f orig = MathTools::To3DVec(tilePos, terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
+              Matrix4f boxPos = iPos;
+              MathTools::GetPosition(boxPos) += orig;
+              trans->AddTransform(terrainPhysics, &boxPos);
+              physics->CreateComponent(terrainPhysics, phData);
+            }
+          }
+        }
+      }
+    }
 
     if (gfx != nullptr)
     {
@@ -429,6 +428,13 @@ namespace eXl
 
           }
         }
+      }
+
+      Vector<AABB2DPolygoni> floor;
+      auto iter = components.find(TerrainTypeName("Floor"));
+      if (iter != components.end())
+      {
+        floor = std::move(iter->second);
       }
 
       Vector<AABB2DPolygoni> resVec;

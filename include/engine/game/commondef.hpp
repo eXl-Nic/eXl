@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/game/ability.hpp>
 #include <engine/game/archetype.hpp>
 #include <engine/script/luascriptbehaviour.hpp>
+#include <engine/map/map.hpp>
 
 #define EXL_REFLECT_PROPERTY \
 EXL_REFLECT; \
@@ -143,8 +144,8 @@ namespace eXl
 
     struct EXL_ENGINE_API TerrainCarver
     {
+      TerrainTypeName m_TerrainType;
       PhysicsShape m_Shape;
-      bool m_AffectNavMesh = true;
 
       EXL_REFLECT_PROPERTY;
     };
