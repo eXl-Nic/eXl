@@ -48,7 +48,7 @@ stop:0.6 rgba(255, 255, 255, 0));
     
     Engine_Application::Start();
     InitConsoleLog();
-    InitFileLog("DunAtkEditor.log");
+    InitFileLog("EngineCommonEditor.log");
     MainWindow* mainWindow = new MainWindow;
     mainWindow->show();
 

@@ -262,8 +262,8 @@ namespace eXl
     GfxSystem& gfxSys = *m_World.GetSystem<GfxSystem>();
 
     AABB2Di screenBox;
-    screenBox.m_Data[0] = gfxSys.WorldToScreen(MathTools::To3DVec(MathTools::ToFVec(iBox.m_Data[0]) / DunAtk::s_WorldToPixel));
-    screenBox.m_Data[1] = gfxSys.WorldToScreen(MathTools::To3DVec(MathTools::ToFVec(iBox.m_Data[1]) / DunAtk::s_WorldToPixel));
+    screenBox.m_Data[0] = gfxSys.WorldToScreen(MathTools::To3DVec(MathTools::ToFVec(iBox.m_Data[0]) / EngineCommon::s_WorldToPixel));
+    screenBox.m_Data[1] = gfxSys.WorldToScreen(MathTools::To3DVec(MathTools::ToFVec(iBox.m_Data[1]) / EngineCommon::s_WorldToPixel));
 
     // World and Screen space have opposite Y directions
     std::swap(screenBox.m_Data[0].Y(), screenBox.m_Data[1].Y());
@@ -279,9 +279,9 @@ namespace eXl
     Vector3f worldPos;
     Vector3f viewDir;
     gfxSys.ScreenToWorld(iBox.m_Data[0], worldPos, viewDir);
-    worldBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * DunAtk::s_WorldToPixel;
+    worldBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
     gfxSys.ScreenToWorld(iBox.m_Data[1], worldPos, viewDir);
-    worldBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * DunAtk::s_WorldToPixel;
+    worldBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 
     // World and Screen space have opposite Y directions
     std::swap(worldBox.m_Data[0].Y(), worldBox.m_Data[1].Y());
@@ -432,7 +432,7 @@ namespace eXl
       QPolygonF outer;
       for (auto const& point : m_IslandPoly.Border())
       {
-        outer << QPointF(point.X(), point.Y()) / DunAtk::s_WorldToPixel;
+        outer << QPointF(point.X(), point.Y()) / EngineCommon::s_WorldToPixel;
       }
 
       polyPath.addPolygon(std::move(outer));
@@ -443,7 +443,7 @@ namespace eXl
       QPolygonF holePoly;
       for (auto const& point : hole)
       {
-        holePoly << QPointF(point.X(), point.Y()) / DunAtk::s_WorldToPixel;
+        holePoly << QPointF(point.X(), point.Y()) / EngineCommon::s_WorldToPixel;
       }
       QPainterPath holePath;
       holePath.addPolygon(std::move(holePoly));

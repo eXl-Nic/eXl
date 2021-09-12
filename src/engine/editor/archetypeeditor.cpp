@@ -266,7 +266,7 @@ namespace eXl
       {
         ComponentName oldName = m_IndexToName[iIndex.row()];
 
-        Type const* type = DunAtk::GetComponents().GetComponentTypeFromName(name);
+        Type const* type = EngineCommon::GetComponents().GetComponentTypeFromName(name);
         DynObject newData;
         newData.SetType(type, type->Build(), true);
         m_Resource->SetComponent(name, newData);
@@ -289,7 +289,7 @@ namespace eXl
 
   bool ComponentCollectionModel::AddToResource(ComponentName const& iName, ConstDynObject const& iObject)
   {
-    if (DunAtk::GetComponents().GetComponentTypeFromName(iName))
+    if (EngineCommon::GetComponents().GetComponentTypeFromName(iName))
     {
       m_Resource->SetComponent(iName, iObject);
     }
@@ -526,7 +526,7 @@ namespace eXl
     componentCollectionLayout->addWidget(new QLabel(QString::fromUtf8("Component"), componentCollection));
     QComboBox* componentSelector = new QComboBox(componentCollection);
     componentCollectionLayout->addWidget(componentSelector);
-    m_Impl->m_AvailableComponentNames = DunAtk::GetComponents().GetComponents();
+    m_Impl->m_AvailableComponentNames = EngineCommon::GetComponents().GetComponents();
     for (auto name : m_Impl->m_AvailableComponentNames)
     {
       componentSelector->addItem(name.get().c_str());
@@ -650,7 +650,7 @@ namespace eXl
   void ArchetypeEditor::Impl::UpdateTileItemDelegate()
   {
     TileItemDelegate* itemDelegate = static_cast<TileItemDelegate*>(m_ComponentDataView->itemDelegate());
-    if (m_CurrentEditedComponentName != DunAtk::GfxSpriteComponentName())
+    if (m_CurrentEditedComponentName != EngineCommon::GfxSpriteComponentName())
     {
       itemDelegate->Clear();
     }
@@ -713,7 +713,7 @@ namespace eXl
 
     QAbstractItemDelegate* delegate = m_ComponentDataView->itemDelegate();
 
-    if (*name == DunAtk::GfxSpriteComponentName())
+    if (*name == EngineCommon::GfxSpriteComponentName())
     {  
       UpdateTileItemDelegate();
     }

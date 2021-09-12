@@ -27,8 +27,8 @@ namespace eXl
   {
     m_RequireTarget = false;
     m_RequireUserTags.insert(PickAbility::CarryingTagName());
-    m_ApplyUserTags.insert(DunAtk::ActionLock());
-    m_ApplyUserTags.insert(DunAtk::AnimLocked());
+    m_ApplyUserTags.insert(EngineCommon::ActionLock());
+    m_ApplyUserTags.insert(EngineCommon::AnimLocked());
   }
 
   AbilityUseState ThrowAbility::GetUseState(AbilityStateHandle iId)
@@ -103,7 +103,7 @@ namespace eXl
 
     PhysicInitData phData;
     phData.SetShapeObj(state.m_ThrownObject);
-    phData.SetFlags(DunAtk::s_BasePhFlags);
+    phData.SetFlags(EngineCommon::s_BasePhFlags);
     phSys.CreateComponent(state.m_ProjectileProxy, phData);
 
     transforms.Attach(state.m_ThrownObject, state.m_ProjectileProxy, Transforms::AttachType::Position);
@@ -111,7 +111,7 @@ namespace eXl
     projectiles.AddProjectile(state.m_ProjectileProxy, desc, throwDir * 20.0);
 
     auto& animMgr = *world.GetSystem<TransformAnimManager>();
-    /*state.m_AnimHandle =*/ animMgr.Start(state.m_ThrownObject, GetFallAnimation(), DunAtk::GetProjectionMatrix() * DunAtk::GetRotationMatrix(MathTools::As2DVec(throwDir)));
+    /*state.m_AnimHandle =*/ animMgr.Start(state.m_ThrownObject, GetFallAnimation(), EngineCommon::GetProjectionMatrix() * EngineCommon::GetRotationMatrix(MathTools::As2DVec(throwDir)));
 
     world.AddTimer(0.3, false, [this, user = state.m_User](World& iWorld)
     {

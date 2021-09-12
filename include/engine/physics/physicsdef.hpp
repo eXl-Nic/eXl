@@ -220,8 +220,8 @@ namespace eXl
 #include <engine/game/commondef.hpp>
 
 inline eXl::TriggerDef::TriggerDef()
-  : m_Category(eXl::DunAtk::s_TriggerCategory)
-  , m_Filter(eXl::DunAtk::s_TriggerMask)
+  : m_Category(eXl::EngineCommon::s_TriggerCategory)
+  , m_Filter(eXl::EngineCommon::s_TriggerMask)
 {
 
 }

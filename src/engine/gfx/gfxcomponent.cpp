@@ -243,7 +243,7 @@ namespace eXl
     GameDatabase* database = iWorld.GetSystem<GameDatabase>();
     if (database)
     {
-      return database->GetView<GfxSpriteComponent::Desc>(DunAtk::GfxSpriteDescName());
+      return database->GetView<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName());
     }
     return nullptr;
   }

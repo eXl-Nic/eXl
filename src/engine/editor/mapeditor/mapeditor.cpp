@@ -158,7 +158,7 @@ namespace eXl
         GfxSystem::ViewInfo& view = m_GameWidget->GetViewInfo();
         view.pos = Vector3f::UNIT_Z + Vector3f::UNIT_X * 2;
         view.projection = GfxSystem::Orthographic;
-        m_World.GetCamera().view.displayedSize = view.displayedSize = DunAtk::s_WorldToPixel * 20;
+        m_World.GetCamera().view.displayedSize = view.displayedSize = EngineCommon::s_WorldToPixel * 20;
         view.backgroundColor = Vector4f::ONE;
 
         m_World.GetCamera().view = view;
@@ -282,8 +282,8 @@ namespace eXl
         newObject.m_Header.m_Archetype = iObject.m_Archetype;
         newObject.m_Header.m_ObjectId = iObject.m_UUID;
         newObject.m_Header.m_Position = MathTools::To3DVec(MathTools::ToFVec(iObject.m_Position));
-        newObject.m_Header.m_Position.X() /= DunAtk::s_WorldToPixel;
-        newObject.m_Header.m_Position.Y() /= DunAtk::s_WorldToPixel;
+        newObject.m_Header.m_Position.X() /= EngineCommon::s_WorldToPixel;
+        newObject.m_Header.m_Position.Y() /= EngineCommon::s_WorldToPixel;
         newObject.m_Data = iObject.m_CustoData;
       });
 

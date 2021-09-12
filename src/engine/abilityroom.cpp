@@ -532,9 +532,9 @@ namespace eXl
     for (auto agent : agents)
     {
       GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(agent);
-      gfxComp.SetSize(Vector2f::ONE / DunAtk::s_WorldToPixel);
+      gfxComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
       gfxComp.SetTileset(m_CharacterTileset);
-      gfxComp.SetOffset(Vector2f::UNIT_Y / DunAtk::s_WorldToPixel);
+      gfxComp.SetOffset(Vector2f::UNIT_Y / EngineCommon::s_WorldToPixel);
     
       charSys.AddCharacter(agent, baseDesc);
     }
@@ -579,7 +579,7 @@ namespace eXl
     emitterComp.SetTileName(emitterTile);
 
     PhysicInitData emitterPh;
-    emitterPh.SetFlags(DunAtk::s_BasePhFlags | PhysicFlags::Static);
+    emitterPh.SetFlags(EngineCommon::s_BasePhFlags | PhysicFlags::Static);
     emitterPh.AddBox(Vector3f::ONE);
     phSys.CreateComponent(emitter, emitterPh);
 
@@ -646,17 +646,17 @@ return TriggerScriptXJKPQJDI
 )-";
 
     Archetype* arch = Archetype::Create("D://TestData", "dummy");
-    DunAtk::TurretData dummyData;
+    EngineCommon::TurretData dummyData;
     dummyData.m_FireDir = Vector3f::ONE * 4;
     dummyData.m_FireRate = 1.0;
      
-    arch->SetProperty(DunAtk::TurretData::PropertyName(), ConstDynObject(DunAtk::TurretData::GetType(), &dummyData), false);
+    arch->SetProperty(EngineCommon::TurretData::PropertyName(), ConstDynObject(EngineCommon::TurretData::GetType(), &dummyData), false);
 
-    DunAtk::HealthData health;
+    EngineCommon::HealthData health;
     health.currentHealth = 10;
     health.maxHealth = 10;
 
-    arch->SetProperty(DunAtk::HealthData::PropertyName(), ConstDynObject(DunAtk::HealthData::GetType(), &health), true);
+    arch->SetProperty(EngineCommon::HealthData::PropertyName(), ConstDynObject(EngineCommon::HealthData::GetType(), &health), true);
 
     archSys.InstantiateArchetype(pressurePlate, arch, nullptr);
 
@@ -686,8 +686,8 @@ return TriggerScriptXJKPQJDI
     ObjectHandle fireball = ProjectileSystem::Build(iWorld, iPos, fireballDesc);
     {
       GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(fireball);
-      gfxComp.SetSize(Vector2f::ONE / DunAtk::s_WorldToPixel);
-      gfxComp.SetOffset(((-Vector2f::UNIT_X) / DunAtk::s_WorldToPixel));
+      gfxComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
+      gfxComp.SetOffset(((-Vector2f::UNIT_X) / EngineCommon::s_WorldToPixel));
       gfxComp.SetTileset(m_FireballTileset);
       gfxComp.SetTileName(TileName("Right"));
       gfxComp.SetRotateSprite(true);
@@ -733,7 +733,7 @@ return TriggerScriptXJKPQJDI
     phSys.GetNeighborhoodExtraction().AddObject(crateObject, 2, false);
 
     GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(crateObject);
-    gfxComp.SetSize(Vector2f::ONE / DunAtk::s_WorldToPixel);
+    gfxComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
     gfxComp.SetTileset(m_CrateTileset);
     gfxComp.SetTileName(TileName("Crate"));
     gfxComp.SetRotateSprite(true);
@@ -789,7 +789,7 @@ return TriggerScriptXJKPQJDI
     phSys.GetNeighborhoodExtraction().AddObject(vaseObject, 0.75, false);
 
     GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(vaseObject);
-    gfxComp.SetSize(Vector2f::ONE / DunAtk::s_WorldToPixel);
+    gfxComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
     gfxComp.SetOffset((Vector2f::UNIT_Y * 0.25));
     gfxComp.SetTileset(m_VaseTileset);
     gfxComp.SetTileName(TileName("Vase"));
@@ -828,7 +828,7 @@ return TriggerScriptXJKPQJDI
     ObjectHandle newChar = CharacterSystem::Build(iWorld, MathTools::To3DVec(m_RoomCenter), defaultDesc);
     {
       GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(newChar);
-      gfxComp.SetSize(Vector2f::ONE / DunAtk::s_WorldToPixel);
+      gfxComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
       gfxComp.SetTileset(m_CharacterTileset);
       //gfxComp.SetTint(Vector4f(1.0, 0.0, 0.0, 1.0));
 

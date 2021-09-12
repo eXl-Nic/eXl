@@ -42,7 +42,7 @@ namespace eXl
 
     for (auto const& terrainItem : m_Terrains)
     {
-      Vector2i tilingSize = Vector2i::ONE * DunAtk::s_WorldToPixel;
+      Vector2i tilingSize = Vector2i::ONE * EngineCommon::s_WorldToPixel;
       TilingGroup const* group = terrainItem.m_TilingGroup.GetOrLoad();
       if (group != nullptr)
       {
@@ -86,7 +86,7 @@ namespace eXl
         LOG_ERROR << "Could not load tilegorup " << terrainItem.m_TilingGroup.GetUUID().ToString();
       }
 
-      Vector2f worldScaling(tilingSize.X() / DunAtk::s_WorldToPixel, tilingSize.Y() / DunAtk::s_WorldToPixel);
+      Vector2f worldScaling(tilingSize.X() / EngineCommon::s_WorldToPixel, tilingSize.Y() / EngineCommon::s_WorldToPixel);
       TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(terrainItem.m_Type);
       if (terrainDesc.m_Height > Mathf::ZERO_TOLERANCE)
       {
@@ -95,7 +95,7 @@ namespace eXl
         //if (insertRes.second)
         //{
         //  phData.SetCategory(terrainDesc.m_PhysicCategory, terrainDesc.m_PhysicFilter);
-        //  phData.SetFlags(DunAtk::s_BasePhFlags | PhysicFlags::Static);
+        //  phData.SetFlags(EngineCommon::s_BasePhFlags | PhysicFlags::Static);
         //}
         //for (auto const& terrainBlock : terrainItem.m_Blocks)
         //{
@@ -125,7 +125,7 @@ namespace eXl
         for (auto const& block : terrainItem.m_Blocks)
         {
           floor.push_back(block.m_Shape);
-          floor.back().Translate(MathTools::ToIVec(MathTools::GetPosition2D(iPos)) * DunAtk::s_WorldToPixel);
+          floor.back().Translate(MathTools::ToIVec(MathTools::GetPosition2D(iPos)) * EngineCommon::s_WorldToPixel);
           floor.back().ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
         }
       }
@@ -163,8 +163,8 @@ namespace eXl
           Tile const* tileDesc = tileset->Find(tile.m_Name);
           if (tileDesc != nullptr)
           {
-            Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / DunAtk::s_WorldToPixel;
-            Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / DunAtk::s_WorldToPixel;
+            Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / EngineCommon::s_WorldToPixel;
+            Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / EngineCommon::s_WorldToPixel;
 
             TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(tiles.m_Type);
             if (terrainDesc.m_Height > Mathf::ZERO_TOLERANCE)
@@ -174,11 +174,11 @@ namespace eXl
               //if (insertRes.second)
               //{
               //  phData.SetCategory(terrainDesc.m_PhysicCategory, terrainDesc.m_PhysicFilter);
-              //  phData.SetFlags(DunAtk::s_BasePhFlags | PhysicFlags::Static);
+              //  phData.SetFlags(EngineCommon::s_BasePhFlags | PhysicFlags::Static);
               //}
               //
-              //Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / DunAtk::s_WorldToPixel;
-              //Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / DunAtk::s_WorldToPixel;
+              //Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / EngineCommon::s_WorldToPixel;
+              //Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / EngineCommon::s_WorldToPixel;
               //Vector3f orig = MathTools::To3DVec(tilePos, terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
               //Vector3f size = MathTools::To3DVec(phSize, terrainDesc.m_Height);
               //phData.AddBox(size, orig + MathTools::GetPosition(iPos));
@@ -283,18 +283,18 @@ namespace eXl
         LOG_ERROR << "Archetype missing for object " << objectDesc.m_Header.m_DisplayName << ", id : " << objectDesc.m_Header.m_ObjectId;
       }
 
-      auto const* carver = database->GetData<DunAtk::TerrainCarver>(mapObject, DunAtk::TerrainCarver::PropertyName());
+      auto const* carver = database->GetData<EngineCommon::TerrainCarver>(mapObject, EngineCommon::TerrainCarver::PropertyName());
       if (carver != nullptr)
       {
-        Vector2i offset(carver->m_Shape.m_Offset.X() * DunAtk::s_WorldToPixel, carver->m_Shape.m_Offset.Y() * DunAtk::s_WorldToPixel);
+        Vector2i offset(carver->m_Shape.m_Offset.X() * EngineCommon::s_WorldToPixel, carver->m_Shape.m_Offset.Y() * EngineCommon::s_WorldToPixel);
         Vector2i size;
         switch (carver->m_Shape.m_Type)
         {
-        case DunAtk::PhysicsShapeType::Box:
-          size = Vector2i(carver->m_Shape.m_Dims.X(), carver->m_Shape.m_Dims.Y()) * DunAtk::s_WorldToPixel;
+        case EngineCommon::PhysicsShapeType::Box:
+          size = Vector2i(carver->m_Shape.m_Dims.X(), carver->m_Shape.m_Dims.Y()) * EngineCommon::s_WorldToPixel;
           break;
-        case DunAtk::PhysicsShapeType::Sphere:
-          size = Vector2i(carver->m_Shape.m_Dims.X(), carver->m_Shape.m_Dims.X()) * DunAtk::s_WorldToPixel;
+        case EngineCommon::PhysicsShapeType::Sphere:
+          size = Vector2i(carver->m_Shape.m_Dims.X(), carver->m_Shape.m_Dims.X()) * EngineCommon::s_WorldToPixel;
           break;
         }
         
@@ -392,16 +392,16 @@ namespace eXl
             Matrix4f const& pos = trans->GetWorldTransform(obj);
             for (auto const& geom : phData->GetGeoms())
             {
-              Vector2i pixelMin = MathTools::ToIVec(MathTools::As2DVec((MathTools::GetPosition(pos) + geom.position) * DunAtk::s_WorldToPixel));
+              Vector2i pixelMin = MathTools::ToIVec(MathTools::As2DVec((MathTools::GetPosition(pos) + geom.position) * EngineCommon::s_WorldToPixel));
               Vector2i shapeSize;
               switch (geom.shape)
               {
               case GeomDef::Sphere:
               case GeomDef::Capsule:
-                shapeSize = Vector2i(geom.geomData.X(), geom.geomData.X()) * DunAtk::s_WorldToPixel;
+                shapeSize = Vector2i(geom.geomData.X(), geom.geomData.X()) * EngineCommon::s_WorldToPixel;
                 break;
               case GeomDef::Box:
-                shapeSize = Vector2i(geom.geomData.X(), geom.geomData.Y()) * DunAtk::s_WorldToPixel;
+                shapeSize = Vector2i(geom.geomData.X(), geom.geomData.Y()) * EngineCommon::s_WorldToPixel;
                 break;
               }
 
@@ -457,7 +457,7 @@ namespace eXl
 
       for (auto& floorPiece : floor)
       {
-        floorPiece.Scale(1, DunAtk::s_WorldToPixel);
+        floorPiece.Scale(1, EngineCommon::s_WorldToPixel);
       }
 
       allObjects.navMesh = std::make_unique<NavMesh>(NavMesh::MakeFromAABB2DPoly(floor));

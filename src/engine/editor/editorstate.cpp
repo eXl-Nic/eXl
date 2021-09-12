@@ -121,12 +121,12 @@ namespace eXl
 
   void UpdateProjectTypes()
   {
-    s_Properties = DunAtk::GetBaseProperties();
+    s_Properties = EngineCommon::GetBaseProperties();
     static_cast<Project*>(s_CurrentProject->GetResource())->FillProperties(s_Types, s_Properties);
 
     ResourceManager::RemoveManifest(PropertiesManifest::StaticRtti());
     ResourceManager::RemoveManifest(ComponentManifest::StaticRtti());
-    ResourceManager::AddManifest(DunAtk::GetComponents());
+    ResourceManager::AddManifest(EngineCommon::GetComponents());
     ResourceManager::AddManifest(s_Properties);
   }
 

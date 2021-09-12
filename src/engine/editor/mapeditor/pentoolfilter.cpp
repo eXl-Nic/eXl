@@ -66,7 +66,7 @@ namespace eXl
       Vector3f viewDir;
       m_GfxSys.ScreenToWorld(m_CurrentMousePos, m_CurrentWorldPos, viewDir);
 
-      Vector2i snapPos(m_CurrentWorldPos.X() * DunAtk::s_WorldToPixel, m_CurrentWorldPos.Y() * DunAtk::s_WorldToPixel);
+      Vector2i snapPos(m_CurrentWorldPos.X() * EngineCommon::s_WorldToPixel, m_CurrentWorldPos.Y() * EngineCommon::s_WorldToPixel);
       snapPos.X() -= Mathi::Mod(snapPos.X(), m_Snap.X());
       snapPos.Y() -= Mathi::Mod(snapPos.Y(), m_Snap.Y());
       snapPos += m_Snap / 2;
@@ -78,7 +78,7 @@ namespace eXl
         {
           Matrix4f newPos;
           newPos.MakeIdentity();
-          MathTools::GetPosition2D(newPos) = Vector2f(m_CurrentSnapPos.X(), m_CurrentSnapPos.Y()) / DunAtk::s_WorldToPixel;
+          MathTools::GetPosition2D(newPos) = Vector2f(m_CurrentSnapPos.X(), m_CurrentSnapPos.Y()) / EngineCommon::s_WorldToPixel;
 
           m_Transforms.UpdateTransform(m_PenObject, newPos);
           m_GfxSys.SynchronizeTransforms();

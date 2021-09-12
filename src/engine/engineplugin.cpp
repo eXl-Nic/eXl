@@ -166,37 +166,37 @@ namespace eXl
   GameTagName WalkAbility::YLocked() { return s_NameRegistry->m_YLocked; }
   AbilityName WalkAbility::Name() { return s_NameRegistry->m_WalkAbilityName; }
 
-  GameTagName DunAtk::ActionLock() { return s_NameRegistry->m_ActionLock; }
-  GameTagName DunAtk::WalkingTag() { return s_NameRegistry->m_WalkingTag; }
-  GameTagName DunAtk::AnimLocked() { return s_NameRegistry->m_AnimLocked; }
+  GameTagName EngineCommon::ActionLock() { return s_NameRegistry->m_ActionLock; }
+  GameTagName EngineCommon::WalkingTag() { return s_NameRegistry->m_WalkingTag; }
+  GameTagName EngineCommon::AnimLocked() { return s_NameRegistry->m_AnimLocked; }
 
-  ComponentName DunAtk::GfxSpriteComponentName() { return s_NameRegistry->m_GfxSpriteComponentName; }
-  ComponentName DunAtk::PhysicsComponentName() { return s_NameRegistry->m_PhysicsComponentName; }
-  ComponentName DunAtk::TriggerComponentName() { return s_NameRegistry->m_TriggerComponentName; }
-  PropertySheetName DunAtk::VelocityName() { return s_NameRegistry->m_VelocityName; }
+  ComponentName EngineCommon::GfxSpriteComponentName() { return s_NameRegistry->m_GfxSpriteComponentName; }
+  ComponentName EngineCommon::PhysicsComponentName() { return s_NameRegistry->m_PhysicsComponentName; }
+  ComponentName EngineCommon::TriggerComponentName() { return s_NameRegistry->m_TriggerComponentName; }
+  PropertySheetName EngineCommon::VelocityName() { return s_NameRegistry->m_VelocityName; }
 
-  PropertySheetName DunAtk::GrabData::PropertyName() { return s_NameRegistry->m_GrabDataName; }
-  PropertySheetName DunAtk::HealthData::PropertyName() { return s_NameRegistry->m_HealthDataName; }
-  PropertySheetName DunAtk::TurretData::PropertyName() { return s_NameRegistry->m_TurretDataName; }
-  PropertySheetName DunAtk::TerrainCarver::PropertyName() { return s_NameRegistry->m_TerrainCarverName; }
-  PropertySheetName DunAtk::GfxSpriteDescName() { return s_NameRegistry->m_SpriteDescDataName; }
-  PropertySheetName DunAtk::PhysicsInitDataName() { return s_NameRegistry->m_PhysicsInitDataName; }
+  PropertySheetName EngineCommon::GrabData::PropertyName() { return s_NameRegistry->m_GrabDataName; }
+  PropertySheetName EngineCommon::HealthData::PropertyName() { return s_NameRegistry->m_HealthDataName; }
+  PropertySheetName EngineCommon::TurretData::PropertyName() { return s_NameRegistry->m_TurretDataName; }
+  PropertySheetName EngineCommon::TerrainCarver::PropertyName() { return s_NameRegistry->m_TerrainCarverName; }
+  PropertySheetName EngineCommon::GfxSpriteDescName() { return s_NameRegistry->m_SpriteDescDataName; }
+  PropertySheetName EngineCommon::PhysicsInitDataName() { return s_NameRegistry->m_PhysicsInitDataName; }
 
   void Register_ENGINE_Types();
   LUA_REG_FUN(BindDunatk);
 
-  boost::optional<ComponentManifest> s_DunAtkManifest;
+  boost::optional<ComponentManifest> s_EngineCommonManifest;
 
-  ComponentManifest const& DunAtk::GetComponents() { return s_DunAtkManifest.get(); }
-  PropertiesManifest DunAtk::GetBaseProperties()
+  ComponentManifest const& EngineCommon::GetComponents() { return s_EngineCommonManifest.get(); }
+  PropertiesManifest EngineCommon::GetBaseProperties()
   {
     PropertiesManifest baseManifest;
     baseManifest.RegisterPropertySheet<HealthData>(HealthData::PropertyName());
     baseManifest.RegisterPropertySheet<GrabData>(GrabData::PropertyName());
     baseManifest.RegisterPropertySheet<TurretData>(TurretData::PropertyName());
     baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
-    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(DunAtk::GfxSpriteDescName(), false);
-    baseManifest.RegisterPropertySheet<PhysicInitData>(DunAtk::PhysicsInitDataName(), false);
+    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false);
+    baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false);
 
     return baseManifest;
   }
@@ -251,38 +251,38 @@ namespace eXl
       auto createPhysicsFactory = [](World& iWorld, ObjectHandle iObject, ConstDynObject const& iComponentData)
       {
         PhysicsSystem& ph = *iWorld.GetSystem<PhysicsSystem>();
-        DunAtk::PhysicsCompTestData const* phDesc = iComponentData.CastBuffer<DunAtk::PhysicsCompTestData>();
+        EngineCommon::PhysicsCompTestData const* phDesc = iComponentData.CastBuffer<EngineCommon::PhysicsCompTestData>();
 
         PhysicInitData initData;
-        initData.SetFlags(DunAtk::s_BasePhFlags);
+        initData.SetFlags(EngineCommon::s_BasePhFlags);
         switch (phDesc->m_Type)
         {
-        case DunAtk::PhysicsType::Static:
+        case EngineCommon::PhysicsType::Static:
           initData.SetFlags(initData.GetFlags() | PhysicFlags::Static);
           break;
-        case DunAtk::PhysicsType::Kinematic:
+        case EngineCommon::PhysicsType::Kinematic:
           initData.SetFlags(initData.GetFlags() | PhysicFlags::Kinematic);
           break;
         }
 
         switch (phDesc->m_Category)
         {
-        case DunAtk::PhysicsCollisionCategory::Default:
-          initData.SetCategory(DunAtk::s_DefaultCategory, ~1);
+        case EngineCommon::PhysicsCollisionCategory::Default:
+          initData.SetCategory(EngineCommon::s_DefaultCategory, ~1);
           break;
-        case DunAtk::PhysicsCollisionCategory::Wall:
-          initData.SetCategory(DunAtk::s_WallCategory, DunAtk::s_WallMask);
+        case EngineCommon::PhysicsCollisionCategory::Wall:
+          initData.SetCategory(EngineCommon::s_WallCategory, EngineCommon::s_WallMask);
           break;
-        case DunAtk::PhysicsCollisionCategory::Character:
-          initData.SetCategory(DunAtk::s_CharacterCategory, DunAtk::s_CharacterMask);
+        case EngineCommon::PhysicsCollisionCategory::Character:
+          initData.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
           break;
-        case DunAtk::PhysicsCollisionCategory::Trigger:
-          initData.SetCategory(DunAtk::s_TriggerCategory, DunAtk::s_TriggerMask);
+        case EngineCommon::PhysicsCollisionCategory::Trigger:
+          initData.SetCategory(EngineCommon::s_TriggerCategory, EngineCommon::s_TriggerMask);
           break;
-        case DunAtk::PhysicsCollisionCategory::Projectile:
-          initData.SetCategory(DunAtk::s_ProjectileCategory, DunAtk::s_ProjectileMask);
+        case EngineCommon::PhysicsCollisionCategory::Projectile:
+          initData.SetCategory(EngineCommon::s_ProjectileCategory, EngineCommon::s_ProjectileMask);
           break;
-        case DunAtk::PhysicsCollisionCategory::None:
+        case EngineCommon::PhysicsCollisionCategory::None:
           initData.SetCategory(0, 0);
           break;
         }
@@ -291,10 +291,10 @@ namespace eXl
         {
           switch (shape.m_Type)
           {
-          case DunAtk::PhysicsShapeType::Sphere:
+          case EngineCommon::PhysicsShapeType::Sphere:
             initData.AddSphere(shape.m_Dims.X(), shape.m_Offset);
             break;
-          case DunAtk::PhysicsShapeType::Box:
+          case EngineCommon::PhysicsShapeType::Box:
             initData.AddBox(shape.m_Dims, shape.m_Offset);
             break;
           }
@@ -313,7 +313,7 @@ namespace eXl
           return;
         }
 
-        DunAtk::TriggerComponentDesc const* desc = iComponentData.CastBuffer<DunAtk::TriggerComponentDesc>();
+        EngineCommon::TriggerComponentDesc const* desc = iComponentData.CastBuffer<EngineCommon::TriggerComponentDesc>();
 
         LuaScriptBehaviour const* script = desc->m_Script.GetOrLoad();
         if (!script)
@@ -325,26 +325,26 @@ namespace eXl
 
         switch (desc->m_Shape.m_Type)
         {
-        case DunAtk::PhysicsShapeType::Sphere:
+        case EngineCommon::PhysicsShapeType::Sphere:
           def.m_Geom = GeomDef::MakeSphere(desc->m_Shape.m_Dims.X());
           break;
-        case DunAtk::PhysicsShapeType::Box:
+        case EngineCommon::PhysicsShapeType::Box:
           def.m_Geom = GeomDef::MakeBox(desc->m_Shape.m_Dims);
           break;
         }
 
-        def.m_Category = DunAtk::s_TriggerCategory;
-        def.m_Filter = DunAtk::s_TriggerMask;
+        def.m_Category = EngineCommon::s_TriggerCategory;
+        def.m_Filter = EngineCommon::s_TriggerMask;
 
         phSys->AddTrigger(iObject, def, triggerSys->GetScriptCallbackhandle());
         scriptSys->AddBehaviour(iObject, *script);
       };
 
-      s_DunAtkManifest.emplace();
+      s_EngineCommonManifest.emplace();
 
-      s_DunAtkManifest->RegisterComponent(DunAtk::GfxSpriteComponentName(), GfxSpriteComponent::Desc::GetType(), createGfxSpriteFactory);
-      s_DunAtkManifest->RegisterComponent(DunAtk::PhysicsComponentName(), DunAtk::PhysicsCompTestData::GetType(), createPhysicsFactory);
-      s_DunAtkManifest->RegisterComponent(DunAtk::TriggerComponentName(), DunAtk::TriggerComponentDesc::GetType(), createTriggerFactory);
+      s_EngineCommonManifest->RegisterComponent(EngineCommon::GfxSpriteComponentName(), GfxSpriteComponent::Desc::GetType(), createGfxSpriteFactory);
+      s_EngineCommonManifest->RegisterComponent(EngineCommon::PhysicsComponentName(), EngineCommon::PhysicsCompTestData::GetType(), createPhysicsFactory);
+      s_EngineCommonManifest->RegisterComponent(EngineCommon::TriggerComponentName(), EngineCommon::TriggerComponentDesc::GetType(), createTriggerFactory);
 #if 0
       String appPath(GetAppPath());
       Path appDir(appPath.c_str());
@@ -391,7 +391,7 @@ namespace eXl
       Script_StaticDestroy();
       CharacterAnimation_StaticDestroy();
       s_NameRegistry.reset();
-      s_DunAtkManifest.reset();
+      s_EngineCommonManifest.reset();
     }
   };
 

@@ -59,7 +59,7 @@ namespace eXl
     
     desc.SetFlags(flags);
     desc.AddSphere(iDesc.size);
-    desc.SetCategory(DunAtk::s_CharacterCategory, DunAtk::s_CharacterMask);
+    desc.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
 
     phSys->CreateComponent(newObject, desc);
     
@@ -100,7 +100,7 @@ namespace eXl
   {
     Transforms* transforms = GetWorld().GetSystem<Transforms>();
     NavigatorSystem* navSys = GetWorld().GetSystem<NavigatorSystem>();
-    GameDataView<Vector3f>* velocities = DunAtk::GetVelocities(GetWorld());
+    GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
     m_Entries.Iterate([this, transforms, navSys, velocities](Entry& entry, ObjectTable<Entry>::Handle)
     {
       Vector3f linVel;

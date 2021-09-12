@@ -544,7 +544,7 @@ namespace eXl
       [&](decltype(m_ComponentCustomization)& oMap, Unstreamer& iStreamer)
     {
       UnstreamCustoMap(compKeyName, oMap, iStreamer,
-        [](ComponentName iName) { return DunAtk::GetComponents().GetComponentTypeFromName(iName); });
+        [](ComponentName iName) { return EngineCommon::GetComponents().GetComponentTypeFromName(iName); });
 
     },
       [&](decltype(m_ComponentCustomization)::value_type const& iProperty, Streamer& iStreamer)
@@ -581,7 +581,7 @@ namespace eXl
 
   void CustomizationData::ApplyCustomization(ComponentName iName, DynObject& ioData) const
   {
-    TupleType const* objType = DunAtk::GetComponents().GetComponentTypeFromName(iName)->IsTuple();
+    TupleType const* objType = EngineCommon::GetComponents().GetComponentTypeFromName(iName)->IsTuple();
     eXl_ASSERT_REPAIR_RET(ioData.GetType() == objType, );
 
     auto compCusto = m_ComponentCustomization.find(iName);

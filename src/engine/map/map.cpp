@@ -25,7 +25,7 @@ namespace eXl
 
   static TerrainType WallType()
   {
-    static TerrainType s_WallType = { 0.0, 1.0, DunAtk::s_WallCategory, DunAtk::s_WallMask, TerrainTypeName("Wall") };
+    static TerrainType s_WallType = { 0.0, 1.0, EngineCommon::s_WallCategory, EngineCommon::s_WallMask, TerrainTypeName("Wall") };
     return s_WallType;
   }
 

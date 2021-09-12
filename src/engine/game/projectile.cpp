@@ -51,7 +51,7 @@ namespace eXl
 
     desc.SetFlags(flags);
     desc.AddSphere(iDesc.size);
-    desc.SetCategory(DunAtk::s_ProjectileCategory, DunAtk::s_ProjectileMask);
+    desc.SetCategory(EngineCommon::s_ProjectileCategory, EngineCommon::s_ProjectileMask);
 
     phSys->CreateComponent(newObject, desc);
 
@@ -68,7 +68,7 @@ namespace eXl
   {
     Transforms* transforms = GetWorld().GetSystem<Transforms>();
     NavigatorSystem* navSys = GetWorld().GetSystem<NavigatorSystem>();
-    GameDataView<Vector3f>* velocities = DunAtk::GetVelocities(GetWorld());
+    GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
     if (velocities == nullptr)
     {
       return;

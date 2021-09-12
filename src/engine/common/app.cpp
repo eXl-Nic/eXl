@@ -253,7 +253,7 @@ namespace eXl
   }
 
   WorldState::Impl::Impl(PropertiesManifest const& iManifest)
-    : world(DunAtk::GetComponents())
+    : world(EngineCommon::GetComponents())
     , m_Manifest(iManifest)
   {
     transforms = world.AddSystem(std::make_unique<Transforms>());

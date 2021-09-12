@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  namespace DunAtk
+  namespace EngineCommon
   {
     GameDataView<Vector3f>* GetVelocities(World& iWorld)
     {

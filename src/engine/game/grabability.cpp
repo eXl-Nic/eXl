@@ -71,8 +71,8 @@ namespace eXl
   {
     m_RequireTarget = true;
     m_RequireTargetTags.insert(GrabbableTagName());
-    m_ApplyUserTags.insert(DunAtk::ActionLock());
-    m_BlockedByTags.insert(DunAtk::ActionLock());
+    m_ApplyUserTags.insert(EngineCommon::ActionLock());
+    m_BlockedByTags.insert(EngineCommon::ActionLock());
     m_BlockedByTargetTags.insert(GrabbedEffect::GrabbedTagName());
   }
 

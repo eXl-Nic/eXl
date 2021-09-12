@@ -149,7 +149,7 @@ namespace eXl
       ResourceHandle<Tileset> m_Tileset;
       TileName m_TileName;
       Vector4f m_Tint = Vector4f(1.0, 1.0, 1.0, 1.0);
-      Vector2f m_Size = Vector2f(1.0 / DunAtk::s_WorldToPixel, 1.0 / DunAtk::s_WorldToPixel);
+      Vector2f m_Size = Vector2f(1.0 / EngineCommon::s_WorldToPixel, 1.0 / EngineCommon::s_WorldToPixel);
       Vector2f m_Offset = Vector2f(0.0, 0.0);
       float m_AnimSpeed = 1.0;
       uint8_t m_Layer = 0;

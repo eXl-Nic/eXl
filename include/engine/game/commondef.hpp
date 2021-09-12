@@ -22,7 +22,7 @@ namespace eXl
 {
   class ComponentManifest;
 
-  namespace DunAtk
+  namespace EngineCommon
   {
     EXL_ENGINE_API ComponentManifest const& GetComponents();
     EXL_ENGINE_API PropertiesManifest GetBaseProperties();
@@ -152,16 +152,16 @@ namespace eXl
     GameDataView<Vector3f>* GetVelocities(World& iWorld);
   }
 
-  EXL_REFLECT_ENUM(DunAtk::PhysicsType, eXl__DunAtk__PhysicsType, EXL_ENGINE_API);
-  EXL_REFLECT_ENUM(DunAtk::PhysicsShapeType, eXl__DunAtk__PhysicsShapeType, EXL_ENGINE_API);
-  EXL_REFLECT_ENUM(DunAtk::PhysicsCollisionCategory, eXl__DunAtk__PhysicsCollisionCategory, EXL_ENGINE_API);
+  EXL_REFLECT_ENUM(EngineCommon::PhysicsType, eXl__EngineCommon__PhysicsType, EXL_ENGINE_API);
+  EXL_REFLECT_ENUM(EngineCommon::PhysicsShapeType, eXl__EngineCommon__PhysicsShapeType, EXL_ENGINE_API);
+  EXL_REFLECT_ENUM(EngineCommon::PhysicsCollisionCategory, eXl__EngineCommon__PhysicsCollisionCategory, EXL_ENGINE_API);
 }
 
 #include <engine/physics/physicsdef.hpp>
 
 namespace eXl
 {
-  namespace DunAtk
+  namespace EngineCommon
   {
     constexpr uint32_t s_BasePhFlags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation;
     //constexpr uint32_t s_BasePhFlags = 1<<4 | 1<<13 | 1<<14;

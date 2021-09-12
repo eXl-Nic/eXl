@@ -120,7 +120,7 @@ namespace eXl
 	struct TilesetEditor::Impl
 	{
 		Impl()
-      : m_World(DunAtk::GetComponents())
+      : m_World(EngineCommon::GetComponents())
 		{
 			m_Transforms = m_World.AddSystem(std::make_unique<Transforms>());
 			m_Gfx = m_World.AddSystem(std::make_unique<GfxSystem>(*m_Transforms));
@@ -487,8 +487,8 @@ namespace eXl
       comp->SetTileName(*name);
 
       float aspectRatio = float(tile->m_Size.Y()) / tile->m_Size.X();
-      float maxDim = Mathf::Max(tile->m_Size.X() * tile->m_Scale.X() / DunAtk::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.X())
-        , tile->m_Size.Y() * tile->m_Scale.Y() / DunAtk::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.Y()));
+      float maxDim = Mathf::Max(tile->m_Size.X() * tile->m_Scale.X() / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.X())
+        , tile->m_Size.Y() * tile->m_Scale.Y() / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.Y()));
 
       GfxSystem::ViewInfo& view = m_TilePreview->GetViewInfo();
       view.displayedSize = maxDim * 1.2;

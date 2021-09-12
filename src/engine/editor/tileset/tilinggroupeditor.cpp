@@ -109,7 +109,7 @@ namespace eXl
 	struct TilingGroupEditor::Impl
 	{
 		Impl()
-      : m_World(DunAtk::GetComponents())
+      : m_World(EngineCommon::GetComponents())
 		{
 			m_Transforms = m_World.AddSystem(std::make_unique<Transforms>());
 			m_Gfx = m_World.AddSystem(std::make_unique<GfxSystem>(*m_Transforms));

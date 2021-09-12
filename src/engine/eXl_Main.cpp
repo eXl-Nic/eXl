@@ -592,7 +592,7 @@ int eXl_Main::Start(int argc, char* argv[])
 #endif
 
   Path appPath(GetAppPath().begin(), GetAppPath().end());
-  PropertiesManifest appManifest = DunAtk::GetBaseProperties();
+  PropertiesManifest appManifest = EngineCommon::GetBaseProperties();
   app.m_Manifest = &appManifest;
 
   if (!projectPath.empty())
@@ -613,7 +613,7 @@ int eXl_Main::Start(int argc, char* argv[])
     Project::ProjectTypes types;
     project->FillProperties(types, appManifest);
 
-    ResourceManager::AddManifest(DunAtk::GetComponents());
+    ResourceManager::AddManifest(EngineCommon::GetComponents());
     ResourceManager::AddManifest(appManifest);
   }
 

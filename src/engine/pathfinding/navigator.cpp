@@ -141,7 +141,7 @@ namespace eXl
 
     void Step(PhysicsSystem* iSys, float iTime) override
     {
-      GameDataView<Vector3f>* velocities = DunAtk::GetVelocities(m_Nav.GetWorld());
+      GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(m_Nav.GetWorld());
       m_Nav.Tick(iTime, iSys->GetNeighborhoodExtraction());
       m_Nav.GetAgents().Iterate([&](Agent& agent, Agents::Handle)
       {
@@ -783,7 +783,7 @@ namespace eXl
           }
         }
 
-        GameDataView<Vector3f>* velocities = DunAtk::GetVelocities(GetWorld());
+        GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
         Vector3f agentLinVel = velocities->GetOrCreate(agentObs.m_Object);
         if (foundNeighEntry != iNeigh.GetObjects().end())
         {

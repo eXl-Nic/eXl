@@ -137,7 +137,7 @@ namespace eXl
 
       PhysicInitData wallPh;
       wallPh.SetFlags(PhysicFlags::Static);
-      wallPh.SetCategory(DunAtk::s_WallCategory, DunAtk::s_WallMask);
+      wallPh.SetCategory(EngineCommon::s_WallCategory, EngineCommon::s_WallMask);
 
       for (auto const& wall : walls)
       {
@@ -149,10 +149,10 @@ namespace eXl
           Vector2i origi(wallBoxes[j].m_Data[0] + wallBoxes[j].m_Data[1]);
           Vector2i sizei(wallBoxes[j].m_Data[1] - wallBoxes[j].m_Data[0]);
           Vector3f orig(origi.X() / 2.0, origi.Y() / 2.0, 0.0);
-          //orig *= DunAtk::s_WorldToPixel;
+          //orig *= EngineCommon::s_WorldToPixel;
           orig *= 2;
           Vector3f size(sizei.X(), sizei.Y(), 20.0);
-          //size *= DunAtk::s_WorldToPixel;
+          //size *= EngineCommon::s_WorldToPixel;
           size *= 2;
           wallPh.AddBox(size, orig);
         }

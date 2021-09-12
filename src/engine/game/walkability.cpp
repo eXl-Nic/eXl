@@ -20,9 +20,9 @@ namespace eXl
     : AbilityDescT<WalkAbilityState>(Name())
   {
     m_RequireTarget = false;
-    m_ApplyUserTags.insert(DunAtk::WalkingTag());
-    m_BlockedByTags.insert(DunAtk::AnimLocked());
-    m_WatchedTags.insert(DunAtk::AnimLocked());
+    m_ApplyUserTags.insert(EngineCommon::WalkingTag());
+    m_BlockedByTags.insert(EngineCommon::AnimLocked());
+    m_WatchedTags.insert(EngineCommon::AnimLocked());
     m_WatchedTags.insert(XLocked());
     m_WatchedTags.insert(YLocked());
   }
@@ -96,7 +96,7 @@ namespace eXl
       state.m_YLocked = false;
     }
 
-    if (m_System->HasTag(state.m_User, DunAtk::AnimLocked()))
+    if (m_System->HasTag(state.m_User, EngineCommon::AnimLocked()))
     {
       state.m_AnimLocked = true;
     }
@@ -146,7 +146,7 @@ namespace eXl
     auto& state = Get(iId);
     if (iChange.m_Change == TagChange::Added)
     {
-      if (iChange.m_Object == DunAtk::AnimLocked())
+      if (iChange.m_Object == EngineCommon::AnimLocked())
       {
         state.m_AnimLocked = true;
         UpdateController(state);
@@ -167,7 +167,7 @@ namespace eXl
     }
     if (iChange.m_Change == TagChange::Removed)
     {
-      if (iChange.m_Object == DunAtk::AnimLocked())
+      if (iChange.m_Object == EngineCommon::AnimLocked())
       {
         state.m_AnimLocked = false;
         UpdateController(state);

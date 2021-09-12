@@ -178,7 +178,7 @@ namespace eXl
     }
     if (compImpl->m_Sensor)
     {
-      m_Impl->m_dynamicsWorld->addCollisionObject(compImpl->m_Sensor, iInit.GetCategory(), DunAtk::s_MovementSensorMask);
+      m_Impl->m_dynamicsWorld->addCollisionObject(compImpl->m_Sensor, iInit.GetCategory(), EngineCommon::s_MovementSensorMask);
     }
 
     while(m_Components.size() <= iObject.GetId())

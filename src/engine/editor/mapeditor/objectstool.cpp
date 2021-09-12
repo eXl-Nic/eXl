@@ -39,14 +39,14 @@ namespace eXl
   Vector2i GetSizeFromArchetype(Archetype const* iArchetype)
   {
     auto const& components = iArchetype->GetComponents();
-    auto iterGfx = components.find(DunAtk::GfxSpriteComponentName());
+    auto iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
     if (iterGfx != components.end())
     {
       auto const* gfxDesc = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
 
       Vector2i tileSize = SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
-      tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * DunAtk::s_WorldToPixel));
-      tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * DunAtk::s_WorldToPixel));
+      tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
+      tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * EngineCommon::s_WorldToPixel));
       return tileSize;
     }
 
@@ -59,12 +59,12 @@ namespace eXl
 
     Archetype const* archetype = iObject.m_Archetype.GetOrLoad();
     auto const& components = archetype->GetComponents();
-    auto const iterGfx = components.find(DunAtk::GfxSpriteComponentName());
+    auto const iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
     if (iterGfx != components.end())
     {
       DynObject customizedData;
       GfxSpriteComponent::Desc const* spriteData;
-      auto iterCusto = iObject.m_CustoData.m_ComponentCustomization.find(DunAtk::GfxSpriteComponentName());
+      auto iterCusto = iObject.m_CustoData.m_ComponentCustomization.find(EngineCommon::GfxSpriteComponentName());
       if (iterCusto == iObject.m_CustoData.m_ComponentCustomization.end())
       {
         spriteData = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
@@ -77,8 +77,8 @@ namespace eXl
       }
 
       Vector2i tileSize = SafeGetTileSize(spriteData->m_Tileset, spriteData->m_TileName);
-      tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * spriteData->m_Size.X() * DunAtk::s_WorldToPixel));
-      tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * spriteData->m_Size.Y() * DunAtk::s_WorldToPixel));
+      tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * spriteData->m_Size.X() * EngineCommon::s_WorldToPixel));
+      tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * spriteData->m_Size.Y() * EngineCommon::s_WorldToPixel));
       
       iObject.m_BoxCache = AABB2Di(iObject.m_Position - tileSize / 2, tileSize);
 
@@ -96,7 +96,7 @@ namespace eXl
 
     Transforms& trans = *m_World.GetSystem<Transforms>();
     Matrix4f mat = trans.GetLocalTransform(iHandle);
-    MathTools::GetPosition2D(mat) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / DunAtk::s_WorldToPixel;
+    MathTools::GetPosition2D(mat) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / EngineCommon::s_WorldToPixel;
 
     trans.UpdateTransform(iHandle, mat);
 
@@ -234,7 +234,7 @@ namespace eXl
 		{
       ObjectHandle newObjectHandle = m_World.CreateObject();
 			PlacedObject& newObject = m_ObjectsView.GetOrCreate(newObjectHandle);
-			newObject.m_Position = MathTools::ToIVec(MathTools::As2DVec(object.m_Header.m_Position)) *  DunAtk::s_WorldToPixel;
+			newObject.m_Position = MathTools::ToIVec(MathTools::As2DVec(object.m_Header.m_Position)) *  EngineCommon::s_WorldToPixel;
 			newObject.m_UUID = object.m_Header.m_ObjectId;
       newObject.m_Archetype = object.m_Header.m_Archetype;
       newObject.m_CustoData = object.m_Data;
@@ -274,8 +274,8 @@ namespace eXl
 
         m_Tools.m_Pen->SetPenObject(penObj);
         Vector2i tileSize = SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
-        tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * DunAtk::s_WorldToPixel));
-        tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * DunAtk::s_WorldToPixel));
+        tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
+        tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * EngineCommon::s_WorldToPixel));
         m_Tools.m_Pen->SetSnapSize(tileSize);
       }
     }
@@ -405,9 +405,9 @@ namespace eXl
 			Vector3f worldPos;
 			Vector3f viewDir;
 			gfxSys.ScreenToWorld(iSelBox.m_Data[0], worldPos, viewDir);
-			queryBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * DunAtk::s_WorldToPixel;
+			queryBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 			gfxSys.ScreenToWorld(iSelBox.m_Data[1], worldPos, viewDir);
-			queryBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * DunAtk::s_WorldToPixel;
+			queryBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 
 			// World and Screen space have opposite Y directions
 			std::swap(queryBox.m_Data[0].Y(), queryBox.m_Data[1].Y());
@@ -522,11 +522,11 @@ namespace eXl
 
 		Matrix4f worldTrans;
 		worldTrans.MakeIdentity();
-		MathTools::GetPosition2D(worldTrans) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / DunAtk::s_WorldToPixel;
+		MathTools::GetPosition2D(worldTrans) = Vector2f(iObject.m_Position.X(), iObject.m_Position.Y()) / EngineCommon::s_WorldToPixel;
 		trans.AddTransform(iHandle, &worldTrans);
 
     auto const& components = iObject.m_Archetype.GetOrLoad()->GetComponents();
-    auto iterGfx = components.find(DunAtk::GfxSpriteComponentName());
+    auto iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
     if (iterGfx != components.end())
     {
       AddTileToWorld(iHandle, iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>());

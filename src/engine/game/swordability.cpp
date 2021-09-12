@@ -25,9 +25,9 @@ namespace eXl
     : AbilityDescT<SwordAbilityState>(Name())
   {
     m_RequireTarget = false;
-    m_ApplyUserTags.insert(DunAtk::AnimLocked());
-    m_ApplyUserTags.insert(DunAtk::ActionLock());
-    m_BlockedByTags.insert(DunAtk::ActionLock());
+    m_ApplyUserTags.insert(EngineCommon::AnimLocked());
+    m_ApplyUserTags.insert(EngineCommon::ActionLock());
+    m_BlockedByTags.insert(EngineCommon::ActionLock());
   }
 
   AbilityStateHandle SwordAbility::AddTo(ObjectHandle iUser)

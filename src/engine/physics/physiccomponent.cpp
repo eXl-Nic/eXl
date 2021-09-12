@@ -35,7 +35,7 @@ namespace eXl
   GameDataView<PhysicInitData>* GetPhysicsInitDataView(World& iWorld)
   {
     GameDatabase& database = *iWorld.GetSystem<GameDatabase>();
-    return database.GetView<PhysicInitData>(DunAtk::PhysicsInitDataName());
+    return database.GetView<PhysicInitData>(EngineCommon::PhysicsInitDataName());
   }
 
   KinematicController::KinematicController()

@@ -491,7 +491,7 @@ namespace eXl
         { 0.5,  0.5, 0.0, 1.0, 0.0},
       };
 
-      const float worldScaling = defaultTileSize.X() / DunAtk::s_WorldToPixel;
+      const float worldScaling = defaultTileSize.X() / EngineCommon::s_WorldToPixel;
 
       Vector<std::pair<uint32_t, uint32_t>> completeTiles(spaceDims.X() * spaceDims.Y(), std::make_pair(-1, 0));
       Map<Vector2i, Vector<std::pair<uint32_t, uint32_t>>> bigCompleteTiles;

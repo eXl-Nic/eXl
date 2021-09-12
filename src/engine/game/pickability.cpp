@@ -26,7 +26,7 @@ namespace eXl
     m_RequireTarget = true;
     m_RequireTargetTags.insert(GrabbedEffect::GrabbedTagName());
     m_RequireTargetTags.insert(PickableTagName());
-    m_ApplyUserTags.insert(DunAtk::ActionLock());
+    m_ApplyUserTags.insert(EngineCommon::ActionLock());
   }
 
   ObjectHandle PickAbility::GetCarriedObject(AbilitySystem* iSys, ObjectHandle iObj)
@@ -96,13 +96,13 @@ namespace eXl
 
     auto& animMgr = *world.GetSystem<TransformAnimManager>();
 
-    state.m_AnimHandle = animMgr.Start(state.m_PickedObject, GetLiftAnimation(), DunAtk::GetProjectionMatrix() * DunAtk::GetRotationMatrix(grabDirection));
+    state.m_AnimHandle = animMgr.Start(state.m_PickedObject, GetLiftAnimation(), EngineCommon::GetProjectionMatrix() * EngineCommon::GetRotationMatrix(grabDirection));
 
     state.m_LiftingTimer = world.AddTimer(0.60, false, [this, iId](World&)
     {
       LiftingDone(iId);
     });
-    m_System->AddTag(state.m_User, DunAtk::AnimLocked());
+    m_System->AddTag(state.m_User, EngineCommon::AnimLocked());
     m_System->StartCue(state.m_User, LiftingCue());
 
     return AbilityUseState::Using;
@@ -132,7 +132,7 @@ namespace eXl
     auto& animMgr = *m_System->GetWorld().GetSystem<TransformAnimManager>();
     animMgr.Stop(iState.m_AnimHandle);
     iState.m_LiftingTimer = TimerHandle();
-    m_System->RemoveTag(iState.m_User, DunAtk::AnimLocked());
+    m_System->RemoveTag(iState.m_User, EngineCommon::AnimLocked());
     m_System->EndCue(iState.m_User, LiftingCue());
   }
 

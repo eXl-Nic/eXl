@@ -85,7 +85,7 @@ namespace eXl
     eXl_ASSERT(m_Image->GetFormat() == Image::Char);
     eXl_ASSERT(m_Image->GetComponents() == Image::RGBA || m_Image->GetComponents() == Image::BGRA);
 
-    DunAtk_Application& appl = static_cast<DunAtk_Application&>(Application::GetAppl());
+    EngineCommon_Application& appl = static_cast<EngineCommon_Application&>(Application::GetAppl());
 
     appl.GetMenuManager().AddMenu("ResampleImage")
       .AddOpenPanelCommand("LearnColorParams", [this] { return new LearingParamsPanel(*this); })

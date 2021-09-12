@@ -380,9 +380,9 @@ namespace eXl
       Vector3f worldPos;
       Vector3f viewDir;
       gfxSys.ScreenToWorld(iSelBox.m_Data[0], worldPos, viewDir);
-      queryBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * DunAtk::s_WorldToPixel;
+      queryBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
       gfxSys.ScreenToWorld(iSelBox.m_Data[1], worldPos, viewDir);
-      queryBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * DunAtk::s_WorldToPixel;
+      queryBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 
       // World and Screen space have opposite Y directions
       std::swap(queryBox.m_Data[0].Y(), queryBox.m_Data[1].Y());
@@ -502,7 +502,7 @@ namespace eXl
 
     Matrix4f worldTrans;
     worldTrans.MakeIdentity();
-    MathTools::GetPosition2D(worldTrans) = Vector2f(iTile.m_Position.X(), iTile.m_Position.Y()) / DunAtk::s_WorldToPixel;
+    MathTools::GetPosition2D(worldTrans) = Vector2f(iTile.m_Position.X(), iTile.m_Position.Y()) / EngineCommon::s_WorldToPixel;
     trans.AddTransform(iHandle, &worldTrans);
 
     GfxSpriteComponent& gfxComp = gfx.CreateSpriteComponent(iHandle);
@@ -539,7 +539,7 @@ namespace eXl
         {
           Transforms& trans = *iWorld.GetSystem<Transforms>();
           Matrix4f mat = trans.GetLocalTransform(iHandle);
-          MathTools::GetPosition2D(mat) = Vector2f(iTile.m_Position.X(), iTile.m_Position.Y()) / DunAtk::s_WorldToPixel;
+          MathTools::GetPosition2D(mat) = Vector2f(iTile.m_Position.X(), iTile.m_Position.Y()) / EngineCommon::s_WorldToPixel;
           trans.UpdateTransform(iHandle, mat);
           trans.GetWorldTransform(iHandle);
         }

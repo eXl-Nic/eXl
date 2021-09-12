@@ -176,7 +176,7 @@ namespace eXl
     uint32_t numAttempts = maxDeprojAttempts;
     while (numAttempts > 0
       && iCurPos != ioNextPos
-      && SweepTest(iPhComp, iCurPos, ioNextPos, collision, iIgnore, DunAtk::s_MovementSensorMask))
+      && SweepTest(iPhComp, iCurPos, ioNextPos, collision, iIgnore, EngineCommon::s_MovementSensorMask))
     {
       if (collision.normal1To2 != Vector3f::ZERO)
       {

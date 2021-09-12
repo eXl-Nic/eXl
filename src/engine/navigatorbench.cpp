@@ -389,7 +389,7 @@ namespace eXl
 
         GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(obstacleHandle);
         gfxComp.SetSize((Vector2f::ONE * size16 * 0.5) / 32);
-        gfxComp.SetOffset(((Vector2f::UNIT_Y * size16 * 0.5) / DunAtk::s_WorldToPixel));
+        gfxComp.SetOffset(((Vector2f::UNIT_Y * size16 * 0.5) / EngineCommon::s_WorldToPixel));
         gfxComp.SetTileset(crateTileset);
         gfxComp.SetTileName(TileName("Crate"));
         
@@ -415,7 +415,7 @@ namespace eXl
 
         GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(obstacleHandle);
         gfxComp.SetSize((Vector2f::ONE * size16 * 0.5) / 32);
-        gfxComp.SetOffset(((Vector2f::UNIT_Y * size16 * 0.5) / DunAtk::s_WorldToPixel));
+        gfxComp.SetOffset(((Vector2f::UNIT_Y * size16 * 0.5) / EngineCommon::s_WorldToPixel));
         gfxComp.SetTileset(crateTileset);
         gfxComp.SetTileName(TileName("Crate"));
 
@@ -466,7 +466,7 @@ namespace eXl
     for(auto agent : autonomousAgents)
     {
       GfxSpriteComponent& spriteComp = gfxSys.CreateSpriteComponent(agent);
-      spriteComp.SetSize(Vector2f::ONE / DunAtk::s_WorldToPixel);
+      spriteComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
       spriteComp.SetOffset(Vector2f::UNIT_Y * 0.5);
       spriteComp.SetTileset(charSet);  
       charSys.AddCharacter(agent, charDesc);
@@ -507,8 +507,8 @@ namespace eXl
     ObjectHandle fireball = ProjectileSystem::Build(iWorld, iPos, fireballDesc);
     {
       GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(fireball);
-      gfxComp.SetSize((Vector2f::ONE) / DunAtk::s_WorldToPixel);
-      gfxComp.SetOffset(((-Vector2f::UNIT_X) / DunAtk::s_WorldToPixel));
+      gfxComp.SetSize((Vector2f::ONE) / EngineCommon::s_WorldToPixel);
+      gfxComp.SetOffset(((-Vector2f::UNIT_X) / EngineCommon::s_WorldToPixel));
       gfxComp.SetTileset(m_FireballTileset);
       gfxComp.SetTileName(TileName("Right"));
       gfxComp.SetRotateSprite(true);
