@@ -7,9 +7,12 @@
 #include <editor/gamewidgetselection.hpp>
 #include <editor/aspectratiowidget.hpp>
 #include <editor/tileset/tileselectionwidget.hpp>
+#include <editor/editoricons.hpp>
 
 #include <core/input.hpp>
 #include <core/resource/resourcemanager.hpp>
+#include <core/process.hpp>
+#include <core/corelib.hpp>
 
 #include "tilestool.hpp"
 #include "terraintool.hpp"
@@ -43,6 +46,7 @@
 #include <QListWidget>
 #include <QSpinBox>
 #include <QMouseEvent>
+#include <QTimer>
 
 namespace eXl
 {
@@ -68,6 +72,7 @@ namespace eXl
 	struct MapEditor::Impl
 	{
 		Impl(MapEditor* iEditor)
+      : m_Player((Path(GetAppPath().data()).parent_path() / "eXl_Player.exe").string().c_str())
 		{
       PropertiesManifest mapEditorManifest = EditorState::GetProjectProperties();
       mapEditorManifest.RegisterPropertySheet<TileItemData>(TilesTool::ToolDataName(), false);
@@ -171,6 +176,43 @@ namespace eXl
       rootSplitter->addWidget(mapTool);
 
       QVBoxLayout* mapToolLayout = new QVBoxLayout(iEditor);
+
+      QToolBar* mapDisplayTools = new QToolBar(iEditor);
+      mapToolLayout->addWidget(mapDisplayTools);
+
+
+      m_PollClosePlayerTimer = new QTimer(iEditor);
+      m_PlayAction = mapDisplayTools->addAction(EditorIcons::GetPlayIcon(), "Play", [&]
+        {
+          if (!m_Player.IsRunning())
+          {
+            Path projectPath = ResourceManager::GetPath(EditorState::GetCurrentProject()->GetResource()->GetHeader().m_ResourceId);
+            Path projectDir = projectPath.parent_path();
+            m_Player.AddArgument("--project");
+            m_Player.AddArgument(projectPath.string().c_str());
+            Path mapPath = ResourceManager::GetPath(m_Map->GetHeader().m_ResourceId);
+            Path localMapPath = Filesystem::relative(mapPath, projectDir);
+            m_Player.AddArgument("--map");
+            m_Player.AddArgument(localMapPath.string().c_str());
+
+            if (m_Player.Start())
+            {
+              m_PlayAction->setDisabled(true);
+              QObject::connect(m_PollClosePlayerTimer, &QTimer::timeout, [&]
+                {
+                  if (!m_Player.WaitForEnd(0))
+                  {
+                    return;
+                  }
+                  m_PollClosePlayerTimer->stop();
+                  m_Player.Clear();
+                  m_PlayAction->setDisabled(false);
+                });
+              m_PollClosePlayerTimer->start(1000);
+            }
+          }
+        });
+
       mapTool->setLayout(mapToolLayout);
       {
         m_GameWidget = new GameWidget(iEditor);
@@ -234,6 +276,10 @@ namespace eXl
 
     MapEditor* m_Editor;
     MapResource* m_Map;
+
+    Process m_Player;
+    QAction* m_PlayAction;
+    QTimer* m_PollClosePlayerTimer;
 	};
 
   void MapEditor::Cleanup()

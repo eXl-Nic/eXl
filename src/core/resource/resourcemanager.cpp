@@ -753,7 +753,7 @@ namespace eXl
 
           err.clear();
           Filesystem::rename(tempPath, path, err);
-          if (!err)
+          if (err)
           {
             LOG_ERROR << "Error while trying to replace resource at : " << ToString(path) << ":" << err.message() << "\n";
             return Err::Failure;

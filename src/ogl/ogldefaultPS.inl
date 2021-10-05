@@ -32,7 +32,7 @@ char const* defaultPS =
 "void main()\n"
 "{\n"
 "  vec2 finalTc = fract((texCoord - tcOffset) / texSize) * texSize + tcOffset;\n"
-#ifndef __ANDROID__
+#if !defined(__ANDROID__)
 "  vec2 tcDx = dFdx(texCoord);\n"
 "  vec2 tcDy = dFdy(texCoord);\n"
 "  vec4 tempFragColor = texture2DGrad(iDiffuseTexture, finalTc, tcDx, tcDy);\n"

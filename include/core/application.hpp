@@ -26,7 +26,7 @@ namespace eXl
 
     virtual ~Application();
     
-    inline void SetArgs(int iArgc, char** iArgv)
+    inline void SetArgs(int iArgc, char const* const* iArgv)
     {
       m_Argc = iArgc;
       m_ArgV = iArgv;
@@ -86,7 +86,7 @@ namespace eXl
   protected:
     
     int m_Argc;
-    char** m_ArgV;
+    char const* const* m_ArgV;
 
     bool running;
 #ifdef EXL_RSC_HAS_FILESYSTEM

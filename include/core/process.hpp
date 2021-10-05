@@ -31,6 +31,8 @@ namespace eXl
 
     Err Succeeded();
 
+    bool IsRunning();
+
     Vector<char> const& GetStdOut();
     Vector<char> const& GetStdErr();
 

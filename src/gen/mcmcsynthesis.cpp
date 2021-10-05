@@ -942,7 +942,7 @@ namespace eXl
       unsigned int elemIdx;
       PlacedElemList::iterator elemIter;
       PlacedElementAndBox currentElement;
-      unsigned int operation = 0;       
+      unsigned int operation = 0;
       if(/*iMaxElements != nullptr ||*/ orderedPlaced.empty())
       {
         operation = 0;

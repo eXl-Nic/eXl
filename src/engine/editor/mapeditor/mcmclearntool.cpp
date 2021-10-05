@@ -38,6 +38,8 @@ namespace eXl
   const uint32_t s_DefaultShapeShrink = 2;
   const float s_DefaultInteractionRadius = 64.0;
 
+  MCMCLearnTool::~MCMCLearnTool() = default;
+
   MCMCLearnTool::MCMCLearnTool(QWidget* iParent, World& iWorld, MapEditor* iEditor)
     : EditorTool(iParent, iWorld)
     , m_World(iWorld)
@@ -308,6 +310,8 @@ namespace eXl
           newElement.m_RelDensity = 1.0;
           AABB2Di shapeBox(element.second.size / -2, element.second.size);
           newElement.m_Shapes.push_back(Polygoni(shapeBox));
+          newElement.m_GridX = element.second.size.X();
+          newElement.m_GridY = element.second.size.Y();
         }
         else
         {
@@ -397,9 +401,9 @@ namespace eXl
     params.m_MaxDist_ = m_InteractionRadius->value() * dimScale;
     params.m_Toroidal = false;
 
-    params.m_Resample = true;
+    params.m_Resample = false;
     params.m_Oversampling = elements.size() * 4;
-    params.m_Dispersion = 0.05;
+    params.m_Dispersion = 2.0 / m_InteractionRadius->value();
 
     MCMC2D::SVMLearner learner(elements, params);
     //MCMC2D::DiskLearner learner(elements, params);
@@ -660,9 +664,12 @@ namespace eXl
 
     m_MCMCData.Clear();
 
-    std::unique_ptr<Random> randGen(Random::CreateDefaultRNG(0));
+    if (m_Rand == nullptr || cleanRun)
+    {
+      m_Rand.reset(Random::CreateDefaultRNG(0));
+    }
 
-    MCMC2D::Run(*randGen, params, model->m_Model.get());
+    MCMC2D::Run(*m_Rand, params, model->m_Model.get());
 
     for (auto const& placed : params.m_Placed)
     {

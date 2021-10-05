@@ -26,7 +26,7 @@ namespace eXl
   {
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
 
-    m_Appl = new QApplication(m_Argc, m_ArgV);
+    m_Appl = new QApplication(m_Argc, (char**)m_ArgV);
 
     const char* styleSheet = R"(
       QSplitter::handle {

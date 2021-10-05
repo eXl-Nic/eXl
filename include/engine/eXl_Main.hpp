@@ -26,7 +26,11 @@
 #define EXL_MAIN_API
 #endif
 
+#ifndef BINDGEN_PARSING
+
 #include <engine/common/app.hpp>
+
+#endif
 
 class EXL_MAIN_API eXl_Main
 {
@@ -34,7 +38,7 @@ public:
 
   eXl_Main();
 
-  int Start(int argc, char* argv[]);
+  int Start(int argc, char const* const argv[]);
 };
 
 #define EXL_MAIN_WITH_SCENARIO(Scenario) \

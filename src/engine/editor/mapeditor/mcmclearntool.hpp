@@ -30,6 +30,7 @@ namespace eXl
   public:
     
     MCMCLearnTool(QWidget* iParent, World& iWorld, MapEditor* iEditor);
+    ~MCMCLearnTool();
 
     void EnableTool() override;
     void DisableTool() override;
@@ -65,5 +66,7 @@ namespace eXl
     QSpinBox* m_RunIter;
     QCheckBox* m_CleanRun;
     QListWidget* m_RunSpaceList;
+
+    std::unique_ptr<Random> m_Rand;
   };
 }

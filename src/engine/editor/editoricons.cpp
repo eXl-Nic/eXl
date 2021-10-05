@@ -28,8 +28,12 @@ namespace eXl
             QPoint moveToolPos(1, 3);
             QPoint eraseToolPos(2, 1);
             QPoint mapToolPos(0, 4);
+            QPoint playToolPos(5, 1);
 
             QPixmap zone;
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(playToolPos * standardSize)));
+            m_PlayIcon.addPixmap(zone);
 
             zone.convertFromImage(m_IconAtlas.copy(rect.translated(selectionPos * standardSize)));
             m_SelectionIcon.addPixmap(zone);
@@ -57,6 +61,7 @@ namespace eXl
             moveToolPos += translation;
             eraseToolPos += translation;
             mapToolPos += translation;
+            playToolPos += translation;
 
             zone.convertFromImage(m_IconAtlas.copy(rect.translated(selectionPos * standardSize)));
             m_SelectionIcon.addPixmap(zone, QIcon::Active);
@@ -88,9 +93,43 @@ namespace eXl
             m_MapToolIcon.addPixmap(zone, QIcon::Selected);
             m_HMapToolIcon.addPixmap(zone);
 
+            translation = QPoint(-8, 8);
+
+            selectionPos += translation;
+            drawToolPos += translation;
+            fillToolPos += translation;
+            moveToolPos += translation;
+            eraseToolPos += translation;
+            mapToolPos += translation;
+            playToolPos += translation;
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(playToolPos * standardSize)));
+            m_PlayIcon.addPixmap(zone, QIcon::Disabled);
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(selectionPos * standardSize)));
+            m_SelectionIcon.addPixmap(zone, QIcon::Disabled);
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(drawToolPos * standardSize)));
+            m_DrawToolIcon.addPixmap(zone, QIcon::Disabled);
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(fillToolPos * standardSize)));
+            m_FillToolIcon.addPixmap(zone, QIcon::Disabled);
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(moveToolPos * standardSize)));
+            m_MoveToolIcon.addPixmap(zone, QIcon::Disabled);
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(eraseToolPos * standardSize)));
+            m_EraseToolIcon.addPixmap(zone, QIcon::Disabled);
+
+            zone.convertFromImage(m_IconAtlas.copy(rect.translated(mapToolPos * standardSize)));
+            m_MapToolIcon.addPixmap(zone, QIcon::Disabled);
+
           }
         }
         QImage m_IconAtlas;
+
+        QIcon m_PlayIcon;
+
         QIcon m_SelectionIcon;
         QIcon m_DrawToolIcon;
         QIcon m_FillToolIcon;
@@ -171,6 +210,11 @@ namespace eXl
     QIcon GetHighlightedMapToolIcon()
     {
       return GetStore().m_MapToolIcon;
+    }
+
+    QIcon GetPlayIcon()
+    {
+      return GetStore().m_PlayIcon;
     }
   }
 }

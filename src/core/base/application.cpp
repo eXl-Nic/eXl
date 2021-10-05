@@ -89,7 +89,7 @@ namespace eXl
 
   void Application::DefaultLoop()
   {
-    float const maxFrameTime = 1.0 / 60.0;
+    float const minFrameTime = 1.0 / 120.0;
     Clock clock;
     while (IsRunning())
     {
@@ -97,7 +97,7 @@ namespace eXl
       float delta = clock.GetTime();
       Tick(delta);
       uint64_t afterTickTimestamp = Clock::GetTimestamp();
-      uint64_t nextTimestamp = curTimestamp + maxFrameTime * Clock::GetTicksPerSecond();
+      uint64_t nextTimestamp = curTimestamp + minFrameTime * Clock::GetTicksPerSecond();
       if (nextTimestamp > afterTickTimestamp)
       {
         uint64_t sleepTimeInTicks = nextTimestamp - afterTickTimestamp;

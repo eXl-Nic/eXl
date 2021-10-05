@@ -519,7 +519,7 @@ namespace eXl
       m_RotatingBase = m_RotatingBase * rot10;
     });
 
-    //CreateCrate(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * - 4.0));
+    CreateCrate(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * - 4.0));
     CreateVase(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * -8.0));
 
     StartLocal(world);

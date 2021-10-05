@@ -493,7 +493,7 @@ namespace eXl
       {
         if (auto path = m_NavMesh->FindPath(curPos2D, Vector2f(agent.m_Dest.X(), agent.m_Dest.Y())))
         {
-          LOG_WARNING << "Replanned actor " << agentObs.m_Object.GetId() << "'s path" << "\n";
+          //LOG_WARNING << "Replanned actor " << agentObs.m_Object.GetId() << "'s path" << "\n";
 
           agent.m_CurrentPath = std::move(*path);
           agent.m_CurPathStep = agent.m_CurrentPath.m_Edges.size() - 1;

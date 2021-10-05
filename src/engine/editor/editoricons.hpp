@@ -6,6 +6,8 @@ namespace eXl
 {
   namespace EditorIcons
   {
+    QIcon GetPlayIcon();
+
     QIcon GetSelectionIcon();
     QIcon GetDrawToolIcon();
     QIcon GetFillToolIcon();

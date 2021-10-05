@@ -18,7 +18,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-
   class Process::Impl
   {
   public:
@@ -171,6 +170,7 @@ namespace eXl
       delete m_Impl;
       m_Impl = nullptr;
     }
+    m_Arguments.clear();
   }
   
   Err Process::WaitForEnd(uint32_t iTimeOut)
@@ -223,6 +223,11 @@ namespace eXl
       return m_Impl->stdErr;
     }
     return s_dummy;
+  }
+
+  bool Process::IsRunning()
+  {
+    return m_Impl != nullptr;
   }
 }
 

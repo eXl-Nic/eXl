@@ -29,7 +29,7 @@
 #include <engine/map/tilinggroup.hpp>
 
 #define FULLSCALE_TEST
-//#define COMPLEX_ROOM
+#define COMPLEX_ROOM
 
 namespace eXl
 {

@@ -256,7 +256,10 @@ namespace eXl
         LOG_ERROR << "Failed to create OGL context" << "\n";
       }
 
-      SDL_GL_SetSwapInterval(0);
+      if (SDL_GL_SetSwapInterval(-1) != 0)
+      {
+        SDL_GL_SetSwapInterval(1);
+      }
 
       SDL_GL_MakeCurrent(win, context);
 
@@ -556,7 +559,7 @@ eXl_Main::eXl_Main()
   GetApp();
 }
 
-int eXl_Main::Start(int argc, char* argv[])
+int eXl_Main::Start(int argc, char const* const argv[])
 {
   SDL_Application& app = GetApp();
   InitConsoleLog();
