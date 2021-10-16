@@ -22,3 +22,9 @@
 [submodule "modules/cxxopts"]
 	path = modules/cxxopts
 	url = https://github.com/jarro2783/cxxopts/
+[submodule "modules/freetype"]
+	path = modules/freetype
+	url = https://github.com/freetype/freetype.git
+[submodule "modules/layout"]
+	path = modules/layout
+	url = https://github.com/randrew/layout.git

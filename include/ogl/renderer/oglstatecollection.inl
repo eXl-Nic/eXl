@@ -1,18 +1,5 @@
 namespace eXl
 {
-  
-  template <typename Command, typename... Commands>
-  struct GetListSize
-  {
-    static const unsigned int result = GetListSize<Commands...>::result + 1;
-  };
-
-  template <typename Command>
-  struct GetListSize<Command>
-  {
-    static const unsigned int result = 1;
-  };
-
   template <typename CommandToLookFor, typename Command, typename... Commands>
   struct GetRank
   {
@@ -26,158 +13,102 @@ namespace eXl
   };
 
   template<template<class> class Handler, typename Current, typename... List>
-  struct ForEach1 
+  struct ForEachItem
   {
-    typedef typename Handler<int>::value_type1 value_type1;
-
-    static void Do(value_type1 const& val1) 
+    template <typename... Args>
+    static void Do(Args&&... iArgs)
     {
-      Handler<Current>::Do(val1);
-      ForEach1<Handler, List...>::Do(val1);
+      Handler<Current>::Do(std::forward<Args>(iArgs)...);
+      ForEachItem<Handler, List...>::Do(std::forward<Args>(iArgs)...);
     }
   };
 
   template<template<class> class Handler, typename Current>
-  struct ForEach1<Handler, Current>
+  struct ForEachItem<Handler, Current>
   {
-    typedef typename Handler<int>::value_type1 value_type1;
-
-    static void Do(value_type1 const& val1) 
+    template <typename... Args>
+    static void Do(Args&&... iArgs)
     {
-      Handler<Current>::Do(val1);
+      Handler<Current>::Do(std::forward<Args>(iArgs)...);
     }
   };
+
+  template<template<class> class Handler, typename... List>
+  struct ForEachUnwrapper;
 
   template<template<class> class Handler, typename Current, typename... List>
-  struct ForEach2 
+  struct ForEachUnwrapper<Handler, Current, List...>
   {
-    typedef typename Handler<int>::value_type1 value_type1;
-    typedef typename Handler<int>::value_type2 value_type2;
-
-    static void Do(value_type1 val1, value_type2 val2) 
+    template <template <typename> class Wrapper, typename... Args>
+    static void Do(ListWrapper<Wrapper, Current, List...>& iWrapped, Args&&... iArgs)
     {
-      Handler<Current>::Do(val1, val2);
-      ForEach2<Handler, List...>::Do(val1, val2);
+      Handler<Current>::Do(static_cast<Wrapper<Current>&>(iWrapped), std::forward<Args>(iArgs)...);
+      ForEachItem<Handler, List...>::Do(static_cast<ListWrapper<Wrapper, List...>&>(iWrapped), std::forward<Args>(iArgs)...);
     }
   };
-
+  
   template<template<class> class Handler, typename Current>
-  struct ForEach2<Handler, Current>
+  struct ForEachUnwrapper<Handler, Current>
   {
-    typedef typename Handler<int>::value_type1 value_type1;
-    typedef typename Handler<int>::value_type2 value_type2;
-
-    static void Do(value_type1 val1, value_type2 val2) 
+    template <template <typename> class Wrapper, typename... Args>
+    static void Do(ListWrapper<Wrapper, Current>& iWrapped, Args&&... iArgs)
     {
-      Handler<Current>::Do(val1, val2);
+      Handler<Current>::Do(static_cast<Wrapper<Current>&>(iWrapped), std::forward<Args>(iArgs)...);
     }
   };
-
-  template<template<class> class Handler, typename Current, typename... List>
-  struct ForEach3 
-  {
-    typedef typename Handler<int>::value_type1 value_type1;
-    typedef typename Handler<int>::value_type2 value_type2;
-    typedef typename Handler<int>::value_type3 value_type3;
-
-    static void Do(value_type1 val1, value_type2 val2, value_type3 val3) 
-    {
-      Handler<Current>::Do(val1, val2, val3);
-      ForEach3<Handler, List...>::Do(val1, val2, val3);
-    }
-  };
-
-  template<template<class> class Handler, typename Current>
-  struct ForEach3<Handler, Current>
-  {
-    typedef typename Handler<int>::value_type1 value_type1;
-    typedef typename Handler<int>::value_type2 value_type2;
-    typedef typename Handler<int>::value_type3 value_type3;
-
-    static void Do(value_type1 val1, value_type2 val2, value_type3 val3) 
-    {
-      Handler<Current>::Do(val1, val2, val3);
-    }
-  };
-
-  template <typename... Commands>
-  struct GetStateColSize;
-
-  template <typename Command>
-  struct GetStateColSize<Command>{static size_t const size = sizeof(Command);};
-
-  template <typename Command, typename... Commands>
-  struct GetStateColSize<Command, Commands...>{static size_t const size = sizeof(Command) + GetStateColSize<Commands...>::size;};
 
   template <class StateCommand>
-  struct ComputeStateColSize
+  uint16_t StateCommandHandler<StateCommand>::GetCommandId(StateCommand const& iCmd)
   {
-    typedef unsigned int& value_type1;
-    typedef unsigned int value_type2;
-    typedef size_t& value_type3;
-    inline static void Do(unsigned int& iCounter, unsigned int iFlags, size_t& oSize)
+    auto iter = m_CommandsId.find(iCmd);
+    if (iter != m_CommandsId.end())
     {
-      if(1<<iCounter & iFlags)
-        oSize += sizeof(StateCommand);
-
-      ++iCounter;
+      return iter->second;
     }
-  };
 
-  template <typename... Commands>
-  template <class StateCommand>
-  inline void OGLStateCollection<Commands...>::InitHandler<StateCommand>::Do(OGLStateCollection* iCol, void*& oCmd)
-  {
-    iCol->StateCommandHandler<StateCommand>::SetCurrentCommand(iCol->GetDefaultCommand<StateCommand>());
-    *((StateCommand*)oCmd) = iCol->GetDefaultCommand<StateCommand>();
-    oCmd = ((unsigned char*)oCmd) + sizeof(StateCommand);
+    uint16_t newId = m_Commands.size();
+
+    m_CommandsId.insert(std::make_pair(iCmd, newId));
+    m_Commands.push_back(iCmd);
+
+    return newId;
   }
 
-  template <typename... Commands>
-  template <class StateCommand>
-  inline void OGLStateCollection<Commands...>::MakeCommand<StateCommand>::Do(OGLStateCollection* iCol, unsigned int iSetCmd, void*& oCmd)
-  {
-    if(iSetCmd & 1<<GetRank<StateCommand, Commands...>::result)
-    {
-      *((StateCommand*)oCmd) = iCol->GetCommand<StateCommand>();
-      oCmd = ((unsigned char*)oCmd) + sizeof(StateCommand);
-    }
-  }
+  //template <typename... Commands>
+  //template <class StateCommand>
+  //inline StateCommand const& OGLStateCollection<Commands...>::GetDefaultCommand()
+  //{
+  //  return StateCommandHandler<StateCommand>::GetDefaultCommand();
+  //}
   
   template <typename... Commands>
   template <class StateCommand>
-  inline StateCommand const& OGLStateCollection<Commands...>::GetDefaultCommand()
+  inline StateCommand const& OGLStateCollection<Commands...>::GetCurrentSetCommand()
   {
-    return StateCommandHandler<StateCommand>::GetDefaultCommand();
+    uint16_t cmdRank = GetRank<StateCommand, Commands...>::result;
+    uint16_t curCmdId = m_NextCommand.m_Commands[cmdRank];
+    return StateCommandHandler<StateCommand>::m_Commands[curCmdId];
   }
-  
-  template <typename... Commands>
-  template <class StateCommand>
-  inline StateCommand const& OGLStateCollection<Commands...>::GetCommand()
-  {
-    return StateCommandHandler<StateCommand>::GetCurrentCommand();
-  }
-
 
   template <typename... Commands>
   template <class StateCommand>
   inline void OGLStateCollection<Commands...>::SetDefaultCommand(StateCommand const& iCmd)
   {
-    StateCommandHandler<StateCommand>::SetDefaultCommand_Init(iCmd);
+    uint16_t cmdRank = GetRank<StateCommand, Commands...>::result;
+    uint16_t nextCmdId = StateCommandHandler<StateCommand>::GetCommandId(iCmd);
+    m_NextCommand.m_Commands[cmdRank] = nextCmdId;
+    m_CurStateUpToDate = false;
   }
 
   template <typename... Commands>
   template <class StateCommand>
   inline void OGLStateCollection<Commands...>::SetCommand(StateCommand const& iCmd)
   {
-    if(GetCommand<StateCommand>() != iCmd)
+    if(GetCurrentSetCommand<StateCommand>() != iCmd)
     {
-      StateCommandHandler<StateCommand>::SetCurrentCommand(iCmd);
-      if(GetDefaultCommand<StateCommand>() != iCmd)
-        m_CurrentSetCommands |= 1 << GetRank<StateCommand, Commands...>::result;
-      else
-        m_CurrentSetCommands &= ~(1 << GetRank<StateCommand, Commands...>::result);
-
+      uint16_t cmdRank = GetRank<StateCommand, Commands...>::result;
+      uint16_t nextCmdId = StateCommandHandler<StateCommand>::GetCommandId(iCmd);
+      m_NextCommand.m_Commands[cmdRank] = nextCmdId;
       m_CurStateUpToDate = false;
     }
   }
@@ -185,152 +116,121 @@ namespace eXl
   template <typename... Commands>
   inline void OGLStateCollection<Commands...>::InitForPush()
   {
-    for(unsigned int i = 0; i<m_StateGroups.size(); ++i)
-    {
-      //Faire alloc dummy par la suite.
-      free(m_StateGroups[i]);
-    }
-    m_StateGroups.clear();
-    void* defaultCommand = malloc(sizeof(unsigned int) + GetStateColSize<Commands...>::size);
-    *(unsigned int*)defaultCommand = 0;
-    void* commandIter = (unsigned char*)defaultCommand + sizeof(unsigned int);
-
-    ForEach2<InitHandler, Commands...>::Do(this,commandIter);
-
-    m_StateGroups.push_back(defaultCommand);
-    m_CurrentSetCommands = 0;
-    m_CurrentState = 0;
-    m_CurStateUpToDate = true;
+    
   }
 
   template <typename... Commands>
   inline void OGLStateCollection<Commands...>::InitForRender()
   {
-    m_CurrentSetCommands = (1<<(GetListSize<Commands...>::result + 1)) - 1;
-    m_CurrentState = 255;
-    ApplyCommand(0);
+    if (!m_StateIds.empty())
+    {
+      StateIds dummyState;
+      memset(dummyState.m_Commands, 0xFF, sizeof(dummyState.m_Commands));
+
+      ApplyCommandCtx ctx;
+      ctx.prevState = dummyState.m_Commands;
+      ctx.nextState = m_StateIds[0].m_Commands;
+      ctx.curIdx = 0;
+
+      ForEachUnwrapper<ApplyCommandHandler, Commands...>::Do(m_States[0], ctx);
+      m_CurrentState = 0;
+    }
   }
 
   struct ApplyCommandCtx
   {
     int curIdx = 0;
-    void const*  defaultCommand;
-    void const*  currentCommand;
-    unsigned int prevCmdStates;
-    unsigned int curCmdStates;
+    uint16_t const* prevState;
+    uint16_t const* nextState;
   };
 
   template <class StateCommand>
   struct ApplyCommandHandler
   {
     typedef ApplyCommandCtx& value_type1;
-    inline static void Do(ApplyCommandCtx& iCtx)
+    inline static void Do(CommandStorage<StateCommand>& iCmd, ApplyCommandCtx& iCtx)
     {
-      if(iCtx.curCmdStates & 1<<iCtx.curIdx)
+      if (*iCtx.prevState != *iCtx.nextState)
       {
-        //Besoin de garder la commande courante si je veux pouvoir comparer.
-        ((StateCommand*)iCtx.currentCommand)->Apply();
-        iCtx.currentCommand = (StateCommand*)iCtx.currentCommand+1;
+        iCmd.m_Command.Apply();
       }
-      else
-      {
-        if(iCtx.prevCmdStates & 1<<iCtx.curIdx)
-        {
-          ((StateCommand*)iCtx.defaultCommand)->Apply();
-        }
-      }
-      iCtx.defaultCommand = (StateCommand*)iCtx.defaultCommand+1;
+
       ++iCtx.curIdx;
+      ++iCtx.prevState;
+      ++iCtx.nextState;
     }
   };
 
   template <typename... Commands>
-  inline void OGLStateCollection<Commands...>::ApplyCommand(unsigned char iCmdId)
+  inline void OGLStateCollection<Commands...>::ApplyCommand(uint16_t iCmdId)
   {
     if(iCmdId != m_CurrentState)
     {
-      ApplyCommandCtx ctx;
-      ctx.currentCommand = (unsigned int*)m_StateGroups[iCmdId] + 1;
-      ctx.defaultCommand = (unsigned int*)m_StateGroups[0] + 1;
-      ctx.prevCmdStates = m_CurrentSetCommands;
-      ctx.curCmdStates = *(unsigned int*)m_StateGroups[iCmdId];
+      eXl_ASSERT_REPAIR_RET(iCmdId < m_States.size(), );
 
-      ForEach1<ApplyCommandHandler, Commands...>::Do(ctx);
+      ApplyCommandCtx ctx;
+      ctx.prevState = m_StateIds[m_CurrentState].m_Commands;
+      ctx.nextState = m_StateIds[iCmdId].m_Commands;
+      ctx.curIdx = 0;
+      
+      ForEachUnwrapper<ApplyCommandHandler, Commands...>::Do(m_States[iCmdId], ctx);
 
       m_CurrentState = iCmdId;
-      m_CurrentSetCommands = ctx.curCmdStates;
     }
   }
 
-  template <class StateCommand>
-  struct CompareCommands
+  template <typename... Commands>
+  struct GatherCommandsCtx
   {
-    typedef void const*& value_type1;
-    typedef void const*& value_type2;
-    typedef bool& value_type3;
-    inline static void Do(void const*& iCmd1, void const*& iCmd2, bool& oRes)
-    {
-      if(!oRes)
-        return;
+    GatherCommandsCtx(OGLStateCollection<Commands...>& iCollection)
+      : collection(iCollection)
+    {}
 
-      if(*(StateCommand*)iCmd1 != *(StateCommand*)iCmd2)
-        oRes = false;
-      else
-      {
-        iCmd1 = (StateCommand*)iCmd1 + 1;
-        iCmd2 = (StateCommand*)iCmd2 + 1;
-      }
+    OGLStateCollection<Commands...>& collection;
+  };
+
+  template <class StateCommand>
+  struct GatherCommandsHandler
+  {
+    template <typename... Commands>
+    inline static void Do(CommandStorage<StateCommand>& iCmd, GatherCommandsCtx<Commands...>& iCtx)
+    {
+      iCmd.m_Command = iCtx.collection.GetCurrentSetCommand<StateCommand>();
     }
   };
 
   template <typename... Commands>
   inline uint16_t OGLStateCollection<Commands...>::GetStateId()
   {
-    if(m_CurStateUpToDate)
+    if (m_CurStateUpToDate)
+    {
       return m_CurrentState;
+    }
     else
     {
-      if(m_CurrentSetCommands == 0)
+      auto iter = m_StateAssoc.find(m_NextCommand);
+      if (iter != m_StateAssoc.end())
       {
-        m_CurrentState = 0;
         m_CurStateUpToDate = true;
-        return 0;
+        return iter->second;
       }
-      else
-      {
-        unsigned char tempCommand[sizeof(unsigned int) + GetStateColSize<Commands...>::size];
-        size_t commandSize = 0;
-        unsigned int counter = 0;
-        ForEach3<ComputeStateColSize, Commands...>::Do(counter, m_CurrentSetCommands,commandSize);
-        //void* newCommand = malloc(sizeof(unsigned int) + commandSize);
 
+      uint16_t newId = m_StateIds.size();
 
-        *(unsigned int*)tempCommand = m_CurrentSetCommands;
-        void* commandIter = tempCommand + sizeof(unsigned int);
-        ForEach3<MakeCommand, Commands...>::Do(this,m_CurrentSetCommands,commandIter);
+      m_StateIds.push_back(StateIds());
+      m_States.push_back(StateStorage());
 
-        for(unsigned int i = 0; i<m_StateGroups.size(); ++i)
-        {
-          if(*(unsigned int*)m_StateGroups[i] == m_CurrentSetCommands)
-          {
-            bool res = true;
-            void const* iter1 = (unsigned int*)m_StateGroups[i] + 1;
-            void const* iter2 = tempCommand + sizeof(unsigned int) + 1;
-            ForEach3<CompareCommands, Commands...>::Do(iter1, iter2, res);
-            if(res)
-            {
-              m_CurrentState = i;
-              m_CurStateUpToDate = true;
-              return i;
-            }
-          }
-        }
+      StateIds& nextIds = m_StateIds.back();
+      StateStorage& nextStates = m_States.back();
+      GatherCommandsCtx ctx(*this);
+      nextIds = m_NextCommand;
+      ForEachUnwrapper<GatherCommandsHandler, Commands...>::Do(nextStates, ctx);
 
-        void* newCommand = eXl_ALLOC(sizeof(unsigned int) + commandSize);
-        memcpy(newCommand,tempCommand,sizeof(unsigned int) + commandSize);
-        m_StateGroups.push_back(newCommand);
-        return m_StateGroups.size() - 1;
-      }
+      m_StateAssoc.insert(std::make_pair(m_NextCommand, newId));
+      m_CurrentState = newId;
+      m_CurStateUpToDate = true;
+
+      return newId;
     }
   }
 }

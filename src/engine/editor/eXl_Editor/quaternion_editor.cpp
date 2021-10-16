@@ -38,15 +38,8 @@ void Quaternion_Editor::UpdateView()
 {
   eXl::Quaternionf tempQuat = *m_Obj.CastBuffer<eXl::Quaternionf>();
   QString text("%f");
-  text.arg(tempQuat.W());
-  ui->w_Edit->setText(text);
-  text = "%f";
-  text.arg(tempQuat.X());
-  ui->x_Edit->setText(text);
-  text = "%f";
-  text.arg(tempQuat.Y());
-  ui->y_Edit->setText(text);
-  text = "%f";
-  text.arg(tempQuat.Z());
-  ui->z_Edit->setText(text);
+  ui->w_Edit->setText(text.arg(tempQuat.W()));
+  ui->x_Edit->setText(text.arg(tempQuat.X()));
+  ui->y_Edit->setText(text.arg(tempQuat.Y()));  
+  ui->z_Edit->setText(text.arg(tempQuat.Z()));
 }

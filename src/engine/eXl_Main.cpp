@@ -595,6 +595,8 @@ int eXl_Main::Start(int argc, char const* const argv[])
 #endif
 
   Path appPath(GetAppPath().begin(), GetAppPath().end());
+
+  Project::ProjectTypes types;
   PropertiesManifest appManifest = EngineCommon::GetBaseProperties();
   app.m_Manifest = &appManifest;
 
@@ -613,7 +615,6 @@ int eXl_Main::Start(int argc, char const* const argv[])
       return -1;
     }
 
-    Project::ProjectTypes types;
     project->FillProperties(types, appManifest);
 
     ResourceManager::AddManifest(EngineCommon::GetComponents());

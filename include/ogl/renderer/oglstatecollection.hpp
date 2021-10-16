@@ -10,37 +10,53 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  template <typename... Commands>
+  struct GetListSize;
+
+  template <typename Command, typename... Commands>
+  struct GetListSize<Command, Commands...>
+  {
+    static const unsigned int result = GetListSize<Commands...>::result + 1;
+  };
+
+  template <typename Command>
+  struct GetListSize<Command>
+  {
+    static const unsigned int result = 1;
+  };
+
   template <class StateCommand>
   class StateCommandHandler
   {
   public:
-
-    inline StateCommand const& GetCurrentCommand() const{return m_CurrentCmd;}
-    inline StateCommand const& GetDefaultCommand() const{return m_DefaultCmd;}
-
-    inline void SetCurrentCommand(StateCommand const& iCmd){m_CurrentCmd = iCmd;}
-    inline void SetDefaultCommand_Init(StateCommand const& iCmd){m_DefaultCmd = iCmd;}
-
+    uint16_t GetCommandId(StateCommand const& iCmd);
+    StateCommand const& GetCommand(uint16_t iId) { return m_Commands[iId]; }
   protected:
-    StateCommand m_DefaultCmd;
-    StateCommand m_CurrentCmd;
+    UnorderedMap<StateCommand, uint16_t> m_CommandsId;
+    Vector<StateCommand> m_Commands;
   };
 
-  template <typename... Commands>
-  class StateCommandUnwrapper;
+  template <template <typename> class Handler, typename... List>
+  class ListWrapper;
 
-  template <typename Command, typename... Commands>
-  class StateCommandUnwrapper<Command, Commands...> : public StateCommandHandler<Command>, public StateCommandUnwrapper<Commands...>
+  template <template <typename> class Handler, typename Item, typename... List>
+  class ListWrapper<Handler, Item, List...> : public Handler<Item>, public ListWrapper<Handler, List...>
   {
   };
   
-  template <typename Command>
-  class StateCommandUnwrapper<Command> : public StateCommandHandler<Command>
+  template <template <typename> class Handler, typename Item>
+  class ListWrapper<Handler, Item> : public Handler<Item>
   {
   };
 
+  template <typename Command>
+  struct CommandStorage
+  {
+    Command m_Command;
+  };
+
   template <typename... Commands>
-  class OGLStateCollection : public StateCommandUnwrapper<Commands...>
+  class OGLStateCollection : public ListWrapper<StateCommandHandler, Commands...>
   {
   public:
 
@@ -54,44 +70,57 @@ namespace eXl
 
     inline void InitForRender();
 
-    inline void ApplyCommand(unsigned char iCmdId);
+    inline void ApplyCommand(uint16_t iCmdId);
 
     inline uint16_t GetStateId();
 
     inline uint16_t GetCurState() const {return m_CurrentState;}
 
-  protected:
+    template <class StateCommand>
+    inline StateCommand const& GetCurrentSetCommand();
 
-    template <class StateCommand>
-    inline StateCommand const& GetDefaultCommand();
-    
-    template <class StateCommand>
-    inline StateCommand const& GetCommand();
+  protected:
 
     template <class StateCommand>
     struct InitHandler
     {
-      typedef OGLStateCollection* value_type1;
-      typedef void*& value_type2;
       inline static void Do(OGLStateCollection* iCol, void*& oCmd);
     };
 
     template <class StateCommand>
     struct MakeCommand
     {
-      typedef OGLStateCollection* value_type1;
-      typedef unsigned int value_type2;
-      typedef void*& value_type3;
       inline static void Do(OGLStateCollection* iCol, unsigned int iSetCmd, void*& oCmd);
     };
 
-    unsigned int m_CurrentSetCommands;
-    uint16_t m_CurrentState;
-    bool m_CurStateUpToDate;
+    struct StateStorage : ListWrapper<CommandStorage, Commands...>
+    {};
 
-    std::vector<unsigned char> m_StateAlloc;
-    
-    //Hashtable ?
-    std::vector<void*> m_StateGroups;
+    uint16_t m_CurrentState;
+    bool m_CurStateUpToDate = false;
+
+    struct StateIds
+    {
+      bool operator ==(StateIds const& iOther) const
+      {
+        return memcmp(m_Commands, iOther.m_Commands, sizeof(m_Commands)) == 0;
+      }
+
+      uint16_t m_Commands[GetListSize<Commands...>::result];
+    };
+
+    StateIds m_NextCommand;
+
+    struct StateIdHasher
+    {
+      std::size_t operator()(StateIds const& val) const
+      {
+        return boost::hash<decltype(val.m_Commands)>()(val.m_Commands);
+      }
+    };
+
+    UnorderedMap<StateIds, uint16_t, StateIdHasher, std::equal_to<StateIds>> m_StateAssoc;
+    Vector<StateStorage> m_States;
+    Vector<StateIds> m_StateIds;
   };
 }

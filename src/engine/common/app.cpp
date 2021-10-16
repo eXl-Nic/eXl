@@ -114,12 +114,12 @@ namespace eXl
       if (!Filesystem::exists(projectPathCandidate))
       {
         Path appDir = m_AppPath.parent_path();
-        projectPathCandidate = m_AppPath / projectPathInput;
+        projectPathCandidate = appDir / projectPathInput;
       }
       if (!Filesystem::exists(projectPathCandidate))
       {
         Path appDirParentDir = m_AppPath.parent_path().parent_path();
-        projectPathCandidate = m_AppPath / projectPathInput;
+        projectPathCandidate = appDirParentDir / projectPathInput;
       }
       if (!Filesystem::exists(projectPathCandidate))
       {
