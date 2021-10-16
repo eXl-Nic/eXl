@@ -97,7 +97,7 @@ namespace eXl
     {};
 
     uint16_t m_CurrentState;
-    bool m_CurStateUpToDate;
+    bool m_CurStateUpToDate = false;
 
     struct StateIds
     {

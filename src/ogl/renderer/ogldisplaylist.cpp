@@ -410,16 +410,16 @@ namespace eXl
         {
         case OGLRenderCommand::DrawCommand:
           {
-            if(curCmd[1] != m_States.GetCurState())
-            {
-              m_States.ApplyCommand(curCmd[1]);
-            }
             switch((*curCmd & OGLDraw::MaskDraw) /*>> OGLDraw::ShiftDraw*/)
             {
             case OGLDraw::Draw:
               {
-                //GLenum topo = topology[(*curCmd & OGLDraw::MaskTopo) >> OGLDraw::ShiftTopo];
                 OGLDraw const* drawCmd = (OGLDraw const*)curCmd;
+                if (drawCmd->m_StateId != m_States.GetCurState())
+                {
+                  m_States.ApplyCommand(drawCmd->m_StateId);
+                }
+
                 OGLConnectivity topo = topology[drawCmd->m_Topo];
             
                 if(drawCmd->m_Prog != m_CurTechnique)
@@ -497,6 +497,10 @@ namespace eXl
             case OGLDraw::Clear:
               {
                 OGLClear const* clearCmd = (OGLClear const*)curCmd;
+                if (clearCmd->m_StateId != m_States.GetCurState())
+                {
+                  m_States.ApplyCommand(clearCmd->m_StateId);
+                }
                 if (clearCmd->m_Flags & OGLClear::Color)
                 {
                   glClearColor(clearCmd->m_ClearColor.X(), clearCmd->m_ClearColor.Y(), clearCmd->m_ClearColor.Z(), clearCmd->m_ClearColor.W());

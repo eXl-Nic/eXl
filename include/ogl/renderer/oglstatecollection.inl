@@ -124,8 +124,16 @@ namespace eXl
   {
     if (!m_StateIds.empty())
     {
+      StateIds dummyState;
+      memset(dummyState.m_Commands, 0xFF, sizeof(dummyState.m_Commands));
+
+      ApplyCommandCtx ctx;
+      ctx.prevState = dummyState.m_Commands;
+      ctx.nextState = m_StateIds[0].m_Commands;
+      ctx.curIdx = 0;
+
+      ForEachUnwrapper<ApplyCommandHandler, Commands...>::Do(m_States[0], ctx);
       m_CurrentState = 0;
-      ApplyCommand(0);
     }
   }
 
@@ -219,6 +227,7 @@ namespace eXl
       ForEachUnwrapper<GatherCommandsHandler, Commands...>::Do(nextStates, ctx);
 
       m_StateAssoc.insert(std::make_pair(m_NextCommand, newId));
+      m_CurrentState = newId;
       m_CurStateUpToDate = true;
 
       return newId;
