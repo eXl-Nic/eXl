@@ -100,6 +100,15 @@ namespace eXl
 
 namespace eXl
 {
+  template <typename Real>
+  size_t hash_value(Vector2<Real> const& iVal)
+  {
+    size_t hash = 0;
+    boost::hash_combine(hash, iVal.X());
+    boost::hash_combine(hash, iVal.Y());
+    return hash;
+  }
+
   #include "vector2.inl"
 }
 

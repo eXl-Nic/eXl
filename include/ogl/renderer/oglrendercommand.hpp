@@ -70,10 +70,9 @@ namespace eXl
     inline bool operator == (OGLScissorCommand const& iOther) const {return ! operator!=(iOther);}
 
     void Apply();
-    void Hash(size_t& ioHash);
 
-    uint16_t m_Flag;
-    uint16_t m_Padding;
+    uint16_t m_Flag = 0;
+    uint16_t m_Padding = 0;
     unsigned int  m_ScissorCoord[4];
 
   };
@@ -93,10 +92,9 @@ namespace eXl
     inline bool operator == (OGLDepthCommand const& iOther) const {return ! operator!=(iOther);}
 
     void Apply();
-    void Hash(size_t& ioHash);
 
-    uint16_t m_Flag;
-    uint16_t m_Padding;
+    uint16_t m_Flag = 0;
+    uint16_t m_Padding = 0;
   };
 
   
@@ -109,8 +107,8 @@ namespace eXl
     inline bool operator == (OGLViewportCommand const& iOther) const {return ! operator!=(iOther);}
 
     void Apply();
-    uint16_t m_Flag;
-    uint16_t m_Padding;
+    uint16_t m_Flag = 0;
+    uint16_t m_Padding = 0;
     Vector2i m_Orig;
     Vector2i m_Size;
   };
@@ -133,15 +131,47 @@ namespace eXl
     inline bool operator == (OGLBlendCommand const& iOther) const { return !operator!=(iOther); }
 
     void Apply();
-    void Hash(size_t& ioHash);
 
-    uint16_t m_Flag;
-    uint16_t m_Padding;
+    uint16_t m_Flag = 0;
+    uint16_t m_Padding = 0;
     OGLBlend srcRGB;
     OGLBlend dstRGB;
     OGLBlend srcAlpha;
     OGLBlend dstAlpha;
   };
+
+  inline size_t hash_value(OGLScissorCommand const& iCmd)
+  {
+    size_t seed = iCmd.m_Flag;
+    boost::hash_combine(seed, iCmd.m_ScissorCoord);
+
+    return seed;
+  }
+
+  inline size_t hash_value(OGLDepthCommand const& iCmd)
+  {
+    size_t seed = iCmd.m_Flag;
+
+    return seed;
+  }
+
+  inline size_t hash_value(OGLViewportCommand const& iCmd)
+  {
+    size_t seed = iCmd.m_Flag;
+    boost::hash_combine(seed, iCmd.m_Orig);
+    boost::hash_combine(seed, iCmd.m_Size);
+    return seed;
+  }
+
+  inline size_t hash_value(OGLBlendCommand const& iCmd)
+  {
+    size_t seed = iCmd.m_Flag;
+    boost::hash_combine(seed, (uint32_t)iCmd.srcRGB);
+    boost::hash_combine(seed, (uint32_t)iCmd.dstRGB);
+    boost::hash_combine(seed, (uint32_t)iCmd.srcAlpha);
+    boost::hash_combine(seed, (uint32_t)iCmd.dstAlpha);
+    return seed;
+  }
 
   struct OGLVAssembly
   {
