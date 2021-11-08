@@ -28,3 +28,6 @@
 [submodule "modules/layout"]
 	path = modules/layout
 	url = https://github.com/randrew/layout.git
+[submodule "modules/yojimbo"]
+	path = modules/yojimbo
+	url = https://github.com/networkprotocol/yojimbo.git
