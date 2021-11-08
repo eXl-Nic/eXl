@@ -34,6 +34,6 @@
 [submodule "modules/utf8"]
 	path = modules/utf8
 	url = https://github.com/nemtrif/utfcpp
-[submodule "modules/glew"]
-	path = modules/glew
-	url = https://github.com/nigels-com/glew.git
+[submodule "modules/yojimbo"]
+	path = modules/yojimbo
+	url = https://github.com/networkprotocol/yojimbo.git
