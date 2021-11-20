@@ -1,9 +1,9 @@
 
 #include <gtest/gtest.h>
 
-#include <dunatk/gfx/tileset.hpp>
-#include <core/base/corelib.hpp>
-#include <core/base/plugin.hpp>
+#include <engine/gfx/tileset.hpp>
+#include <core/corelib.hpp>
+#include <core/plugin.hpp>
 
 #include <core/resource/resourcemanager.hpp>
 
@@ -11,9 +11,6 @@ using namespace eXl;
 
 TEST(DunAtk, Tileset)
 {
-  StartCoreLib();
-  Plugin::LoadLib("eXl_Math");
-  Tileset::Init();
   Tileset* newSet = Tileset::Create("D:\\TestDir", "Cloud_Strife");
   boost::optional<ImageName> img = newSet->ImageNameFromImagePath("D:\\TestDir\\Cloud_Strife.png");
 

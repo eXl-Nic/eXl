@@ -24,17 +24,17 @@ namespace eXl
 {
   IMPLEMENT_RTTI(CharacterSystem);
 
-  ObjectHandle CharacterSystem::Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc)
+  void CharacterSystem::Build(World& iWorld, ObjectHandle iObject, Vector3f const& iPosition, Desc const& iDesc)
   {
+    eXl_ASSERT_REPAIR_RET(iWorld.IsObjectValid(iObject), void());
+
     Transforms* transforms = iWorld.GetSystem<Transforms>();
     PhysicsSystem* phSys = iWorld.GetSystem<PhysicsSystem>();
     NavigatorSystem* navSys = iWorld.GetSystem<NavigatorSystem>();
 
-    ObjectHandle newObject = iWorld.CreateObject();
-
     Matrix4f navTrans = Matrix4f::IDENTITY;
     MathTools::GetPosition2D(navTrans) = MathTools::As2DVec(iPosition);
-    transforms->AddTransform(newObject, &navTrans);
+    transforms->AddTransform(iObject, &navTrans);
 
     PhysicInitData desc;
     uint32_t flags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity | PhysicFlags::AddSensor;
@@ -61,22 +61,20 @@ namespace eXl
     desc.AddSphere(iDesc.size);
     desc.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
 
-    phSys->CreateComponent(newObject, desc);
+    phSys->CreateComponent(iObject, desc);
     
     if (navSys)
     {
-      phSys->GetNeighborhoodExtraction().AddObject(newObject, iDesc.size, true);
+      phSys->GetNeighborhoodExtraction().AddObject(iObject, iDesc.size, true);
       if (iDesc.controlKind == ControlKind::Navigation)
       {
-        navSys->AddNavigator(newObject, iDesc.size, iDesc.maxSpeed);
+        navSys->AddNavigator(iObject, iDesc.size, iDesc.maxSpeed);
       }
       else
       {
-        navSys->AddObstacle(newObject, iDesc.size);
+        navSys->AddObstacle(iObject, iDesc.size);
       }
     }
-
-    return newObject;
   }
 
   uint32_t CharacterSystem::GetStateFromDir(Vector3f const& iDir, bool iMoving)
@@ -257,7 +255,7 @@ namespace eXl
         {
           if (entry.m_Animation)
           {
-            entry.m_Animation->OnWalkingStateChange(entry.m_Handle, entry.m_CurState);
+            entry.m_Animation->OnWalkingStateChange(entry.m_Handle, iState);
           }
           entry.m_CurState = iState;
         }

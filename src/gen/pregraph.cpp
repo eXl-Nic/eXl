@@ -18,6 +18,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <math/mathtools.hpp>
 
+//#define DEBUG_PRINT_PREGRAPH
+
 namespace eXl
 {
   IMPLEMENT_RTTI(ES_RuleSystem::NodeData);
@@ -1384,6 +1386,10 @@ namespace eXl
 
   void ES_RuleSystem::PrintPreGraph(std::ostream& oStream, Graph const& iGraph, PreGraph const& iPg, Vector<Vector<VertexMatching>> const& iMatches) const
   {
+#ifndef DEBUG_PRINT_PREGRAPH
+    return;
+#endif
+
     TIndexMap<Graph> origGraphMap;
     TIndexMap<Graph> pgMap;
     for (auto vtx : iPg.vtxMap)

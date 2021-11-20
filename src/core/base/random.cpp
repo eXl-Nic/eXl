@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/string.hpp>
 #include <boost/random.hpp>
+#include <boost/uuid/random_generator.hpp>
 #include <sstream>
 
 namespace eXl
@@ -47,5 +48,23 @@ namespace eXl
   Random* Random::CreateDefaultRNG(unsigned int iSeed)
   {
     return new BoostRNG(iSeed);
+  }
+
+  uint64_t Random::AllocateUUID()
+  {
+    static boost::uuids::random_generator s_UUIDGen;
+    boost::uuids::uuid newuuid = s_UUIDGen();
+    uint32_t* dwords = reinterpret_cast<uint32_t*>(newuuid.data);
+
+    static_assert (sizeof(size_t) == sizeof(uint64_t), "");
+    {
+      uint64_t objId[2] = { dwords[0], dwords[2] };
+      objId[0] <<= 32;
+      objId[0] |= dwords[1];
+      objId[1] <<= 32;
+      objId[1] |= dwords[3];
+      boost::hash_combine(objId[0], objId[1]);
+      return objId[0];
+    }
   }
 }

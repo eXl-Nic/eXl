@@ -30,4 +30,7 @@
 	url = https://github.com/randrew/layout.git
 [submodule "modules/yojimbo"]
 	path = modules/yojimbo
-	url = https://github.com/networkprotocol/yojimbo.git
+	url = https://github.com/eXl-Nic/yojimbo.git
+[submodule "modules/gtest"]
+	path = modules/gtest
+	url = https://github.com/google/googletest.git

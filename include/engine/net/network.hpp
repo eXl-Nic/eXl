@@ -27,6 +27,42 @@ namespace eXl
       Client
     };
 
+    struct ClientId 
+    { 
+      uint64_t id;
+      inline bool operator == (ClientId const& iOther) const
+      {
+        return id == iOther.id;
+      }
+      inline bool operator != (ClientId const& iOther) const
+      {
+        return !(*this == iOther);
+      }
+    };
+
+    struct ObjectId
+    {
+      uint64_t id;
+      inline bool operator == (ObjectId const& iOther) const
+      {
+        return id == iOther.id;
+      }
+      inline bool operator != (ObjectId const& iOther) const
+      {
+        return !(*this == iOther);
+      }
+    };
+
+    inline size_t hash_value(ClientId const& iId)
+    {
+      return static_cast<size_t>(iId.id);
+    }
+
+    inline size_t hash_value(ObjectId const& iId)
+    {
+      return static_cast<size_t>(iId.id);
+    }
+
     struct ClientInputData
     {
       bool m_Moving = false;
@@ -40,28 +76,135 @@ namespace eXl
       Vector3f m_Pos;
     };
 
-    EXL_ENGINE_API Err Connect(NetRole iRole, String const& iURL, uint16_t iPort);
-
-    EXL_ENGINE_API void Tick(float iDelta);
-
     struct MovedObject
     {
-      ObjectHandle object;
+      ObjectId object;
       ClientData data;
     };
 
-    EXL_ENGINE_API Vector<MovedObject> const& GetMovedObjects();
-
-    EXL_ENGINE_API void SetClientInput(ObjectHandle iChar, ClientInputData const& iInput);
-
-    EXL_ENGINE_API void UpdateObjects(Vector<MovedObject> const&);
+    class Client_Impl;
+    class Server_Impl;
     
-    // Client
-    extern EXL_ENGINE_API std::function<ObjectHandle(ClientData const&)> OnNewObjectReceived;
-    extern EXL_ENGINE_API std::function<void(ObjectHandle)> OnPlayerAssigned;
+    enum class ClientState
+    {
+      Connecting,
+      Connected,
+      Disconnected,
+      Unknown
+    };
 
-    // Server
-    extern EXL_ENGINE_API std::function<ObjectHandle(void)> OnNewPlayer;
-    extern EXL_ENGINE_API std::function<void(ObjectHandle, ClientInputData const&)> OnClientCommand;
-  };
+    struct ClientEvents
+    {
+      virtual void OnNewObject(uint32_t, ObjectId, ClientData const&) = 0;
+      virtual void OnObjectDeleted(uint32_t, ObjectId) = 0;
+      virtual void OnObjectUpdated(uint32_t, ObjectId, ClientData const&) = 0;
+
+      virtual void OnAssignPlayer(uint32_t, ObjectId) = 0;
+
+      //virtual void OnServerCommand() = 0;
+    };
+
+    struct ServerEvents
+    {
+      virtual void OnClientConnected(ClientId) = 0;
+      virtual void OnClientDisconnected(ClientId) = 0;
+
+      virtual void OnClientCommand(ClientId, ClientInputData const&) = 0;
+    };
+
+    class Server;
+    class Client;
+
+    struct NetCtx
+    {
+      NetCtx(uint16_t iServerPort) 
+        : m_ServerPort(iServerPort)
+      {}
+
+      uint16_t const m_ServerPort;
+
+      ClientEvents* m_ClientEvents = nullptr;
+      ServerEvents* m_ServerEvents = nullptr;
+
+      std::unique_ptr<Server> m_Server;
+      Vector<std::unique_ptr<Client>> m_Clients;
+    };
+
+    class EXL_ENGINE_API Client : public HeapObject
+    {
+    public:
+
+      static boost::optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL);
+      static boost::optional<uint32_t> ConnectLoopback(NetCtx& iCtx);
+
+      ClientState GetState();
+
+      ~Client();
+      void Tick();
+      void Flush();
+
+      void SetClientInput(ClientInputData const& iInput);
+
+      uint32_t GetLocalIndex() const;
+      Client_Impl& GetImpl() { return *m_Impl; }
+
+    protected:
+      friend Client_Impl;
+      Client(NetCtx&, std::unique_ptr<Client_Impl>);
+      
+      NetCtx& m_Ctx;
+      std::unique_ptr<Client_Impl> m_Impl;
+    };
+
+    using ClientObjectMap = UnorderedMap<Network::ClientId, Network::ObjectId>;
+
+    class EXL_ENGINE_API ServerDispatcher
+    {
+    public:
+      
+      void CreateObject(ObjectId, ClientData const& iData);
+      void UpdateObject(ObjectId, ClientData const& iData);
+      void DeleteObject(ObjectId);
+
+      void AddClient(ClientId, ObjectId);
+
+      void Flush(Server& iServer);
+
+      UnorderedMap<ObjectId, ClientData> const& GetObjects() { return m_Objects; }
+      ClientObjectMap const& GetClients() { return m_ConnectedClients; }
+
+    protected:
+      UnorderedMap<ObjectId, ClientData> m_PendingUpdates;
+      UnorderedMap<ObjectId, ClientData> m_Objects;
+      UnorderedSet<ObjectId> m_DeletedObjects;
+      UnorderedMap<ClientId, ObjectId> m_ConnectedClients;
+      UnorderedMap<ClientId, ObjectId> m_NewClients;
+    };
+
+    class EXL_ENGINE_API Server : public HeapObject
+    {
+    public:
+      static Server* Start(NetCtx& iCtx, String const& iURL);
+
+      ~Server();
+      void Tick();
+      void Flush();
+
+      void CreateObject(ClientId, ObjectId, ClientData const& iData);
+      void UpdateObject(ClientId, ObjectId, ClientData const& iData);
+
+      void AssignPlayer(ClientId, ObjectId);
+
+      Server_Impl& GetImpl() { return *m_Impl; }
+      ServerDispatcher& GetDispatcher() { return m_Dispatcher; }
+
+    protected:
+      friend Server_Impl;
+      Server(NetCtx&, std::unique_ptr<Server_Impl>);
+      
+      NetCtx& m_Ctx;
+      std::unique_ptr<Server_Impl> m_Impl;
+      ServerDispatcher m_Dispatcher;
+    };
+  }
 }

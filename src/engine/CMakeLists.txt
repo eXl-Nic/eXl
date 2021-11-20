@@ -21,7 +21,7 @@ if(NOT ${BUILD_EXL_SHARED})
 add_definitions(-DIMGUI_API=)
 endif()
 
-include_directories(${BULLET_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${LIBB64_INCLUDE_DIR})
+include_directories(${BULLET_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${LIBB64_INCLUDE_DIR} ${YOJIMBO_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
 
 link_directories(${OGL_LIBRARY_DIR} ${OPENCV_LIBRARY_DIR})
@@ -115,10 +115,12 @@ map/map.cpp
 map/map_instantiate.cpp
 map/mcmcmodelrsc.cpp
 
-#net/network.cpp
+net/network_yojimbo.cpp
+net/dispatcher.cpp
 
-net/spatial/spatialos_world.hpp
-net/spatial/spatialos_world.cpp
+#net/spatial/network_spatial.cpp
+#net/spatial/spatialos_world.hpp
+#net/spatial/spatialos_world.cpp
 
 engineplugin.cpp
 
@@ -148,6 +150,7 @@ set( PREREQS_PRIV
   BulletCollision
   BulletDynamics
   libb64
+  yojimbo
 )
 
 if(${WIN32})
@@ -208,3 +211,6 @@ add_executable(Abilities_Sample main_abilities.cpp abilityroom.cpp abilityroom.h
 SETUP_EXL_TARGET(Abilities_Sample DEPENDENCIES eXl_Main)
 target_link_libraries(Abilities_Sample PRIVATE imgui)
 
+if(${BUILD_EXL_TESTS})
+add_subdirectory(test)
+endif()

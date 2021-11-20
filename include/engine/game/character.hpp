@@ -49,7 +49,7 @@ namespace eXl
       PhysicKind kind;
     };
 
-    static ObjectHandle Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc);
+    static void Build(World& iWorld, ObjectHandle iObject, Vector3f const& iPosition, Desc const& iDesc);
 
 		void AddCharacter(ObjectHandle iObj, Desc const& iDesc);
     void DeleteComponent(ObjectHandle iObj) override;

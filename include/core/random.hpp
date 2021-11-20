@@ -21,7 +21,11 @@ namespace eXl
     virtual ~Random()
     {}
 
+    // Create a deterministic RNG
     static Random* CreateDefaultRNG(unsigned int iSeed);
+
+    // Allocate a random uint64 from a UUID source
+    static uint64_t AllocateUUID();
 
     virtual unsigned int Generate() = 0;
 

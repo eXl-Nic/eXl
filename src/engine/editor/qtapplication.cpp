@@ -11,6 +11,8 @@
 
 namespace eXl
 {
+  void Register_EDITOR_Types();
+
   QTApplication::QTApplication()
     :m_Appl(NULL)
   {
@@ -47,6 +49,7 @@ stop:0.6 rgba(255, 255, 255, 0));
     });
     
     Engine_Application::Start();
+    Register_EDITOR_Types();
     InitConsoleLog();
     InitFileLog("EngineCommonEditor.log");
     MainWindow* mainWindow = new MainWindow;

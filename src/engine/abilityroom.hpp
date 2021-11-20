@@ -18,22 +18,31 @@ namespace eXl
   class Tileset;
   class LuaScriptBehaviour;
 
-  class AbilityRoom : public Scenario
+  class AbilityRoom : public Scenario, public Network::ClientEvents, public Network::ServerEvents
   {
   public:
     AbilityRoom();
 
     void Init(World& iWorld) override;
 
-    void Step(World& iWorld, float iDelta);
+    void Step(float iDelta);
 
-    void StartServer(World& iWorld);
+    void StartServer(String const& iURL);
 
-    void StartClient(World& iWorld, String const& iURL);
+    void StartClient(String const& iURL);
 
-    void StartLocal(World& iWorld);
+    void StartLocal();
 
   protected:
+
+    void OnNewObject(uint32_t, Network::ObjectId, Network::ClientData const&) override;
+    void OnObjectDeleted(uint32_t, Network::ObjectId) override;
+    void OnObjectUpdated(uint32_t, Network::ObjectId, Network::ClientData const&) override;
+    void OnAssignPlayer(uint32_t, Network::ObjectId) override;
+
+    void OnClientConnected(Network::ClientId) override;
+    void OnClientDisconnected(Network::ClientId) override;
+    void OnClientCommand(Network::ClientId, Network::ClientInputData const&) override;
 
     static NavMesh BuildDefaultMap(World& iWorld, ObjectHandle iMapHandle);
 
@@ -41,7 +50,7 @@ namespace eXl
 
     ObjectHandle m_MapHandle;
     ObjectHandle m_MainChar;
-    ObjectHandle SpawnCharacter(World& iWorld, Network::NetRole iRole);
+    ObjectHandle SpawnCharacter(World& iWorld, Network::NetRole iRole, Vector3f const& iPos, uint64_t iId = ObjectCreationInfo::s_AutoNamedFlag);
     ObjectHandle CreateFireball(World& iWorld, Vector3f const& iPos, Vector3f const& iDir);
     void CreateTrigger(World& iWorld, Vector3f const& iPos, Vector3f const& iEmitterPos, Vector3f const& iDir);
     ObjectHandle CreateCrate(World& iWorld, Vector3f const& iPos);
@@ -66,6 +75,7 @@ namespace eXl
 
     LuaScriptBehaviour* m_TriggerB;
 
+    Network::NetCtx m_Net;
     Network::NetRole m_CurMode = Network::NetRole::None;
 
     uint32_t dirMask = 0;

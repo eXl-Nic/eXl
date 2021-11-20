@@ -1,8 +1,8 @@
 
 #include <gtest/gtest.h>
 
-#include <dunatk/common/object.hpp>
-#include <dunatk/gfx/tileset.hpp>
+#include <engine/common/object.hpp>
+#include <engine/gfx/tileset.hpp>
 #include <math/matrix4.hpp>
 
 

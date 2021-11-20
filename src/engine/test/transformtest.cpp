@@ -1,8 +1,8 @@
 
 #include <gtest/gtest.h>
 
-#include <dunatk/common/world.hpp>
-#include <dunatk/common/transforms.hpp>
+#include <engine/common/world.hpp>
+#include <engine/common/transforms.hpp>
 #include <math/mathtools.hpp>
 
 using namespace eXl;
@@ -15,7 +15,7 @@ void PrintPos(Matrix4f const& iMat, ObjectHandle iHandle)
 
 void CheckExpected(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Matrix4f const& iMat, ObjectHandle iHandle)
 {
-  PrintPos(iMat, iHandle);
+  //PrintPos(iMat, iHandle);
   auto iter = iExpected.find(iHandle);
   ASSERT_TRUE(iter != iExpected.end());
   ASSERT_TRUE(iter->second == MathTools::GetPosition(iMat));
@@ -24,7 +24,7 @@ void CheckExpected(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Matrix4f con
 
 void DoCheck(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Transforms& transforms)
 {
-  printf("-------------------\n\n");
+  //printf("-------------------\n\n");
   auto checkFunctor = [&iExpected](Matrix4f const& iMat, ObjectHandle iHandle)
   {
     CheckExpected(iExpected, iMat, iHandle);
@@ -36,7 +36,8 @@ void DoCheck(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Transforms& transf
 
 TEST(DunAtk, TransformsTest)
 {
-  World world;
+  eXl::ComponentManifest dummy;
+  World world(dummy);
 
   Transforms* transforms;
 

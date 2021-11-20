@@ -294,8 +294,8 @@ namespace eXl
 
   void AssertionError(const Char* iMsg,const char* file, unsigned int line,bool repair)
   {
-    RAW_LOG_ERROR << file << line << iMsg;
-    return;
+    //RAW_LOG_ERROR << file << line << iMsg;
+    //return;
 
     if(!(repair && (errorFlags & ALLOW_ASSERT_REPAIR)))
     {

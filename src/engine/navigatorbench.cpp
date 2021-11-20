@@ -206,10 +206,12 @@ namespace eXl
       Vector3f curPos(Mathf::Cos(i * increment) * radius + center.X(), Mathf::Sin(i * increment) * radius + center.Y(), 0.0);
       Vector3f destPos(Mathf::Cos(i * increment + Mathf::PI) * radius + center.X(), Mathf::Sin(i * increment + Mathf::PI) * radius + center.Y(), 0.0);
 
-      ObjectHandle truc = CharacterSystem::Build(iWorld, curPos, ioBaseDesc);
+      ObjectHandle truc = iWorld.CreateObject();
+      CharacterSystem::Build(iWorld, truc, curPos, ioBaseDesc);
       navigator.SetDestination(truc, destPos);
 
-      ObjectHandle truc2 = CharacterSystem::Build(iWorld, destPos, ioBaseDesc);
+      ObjectHandle truc2 = iWorld.CreateObject();
+      CharacterSystem::Build(iWorld, truc, destPos, ioBaseDesc);
       navigator.SetDestination(truc2, curPos);
 
       autonomousAgents.push_back(truc);
@@ -269,7 +271,8 @@ namespace eXl
 
       auto destPos = PickRandomDest(curPos, iNavMesh, iComponent, iRand, ioProbaTable);
       
-      ObjectHandle truc = CharacterSystem::Build(iWorld, curPos, ioBaseDesc);
+      ObjectHandle truc = iWorld.CreateObject();
+      CharacterSystem::Build(iWorld, truc, curPos, ioBaseDesc);
       navigator.SetDestination(truc, destPos);
 
       //ObjectHandle sword = world.CreateObject();

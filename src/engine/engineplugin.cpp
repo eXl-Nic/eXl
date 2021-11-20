@@ -38,7 +38,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/script/luascriptsystem.hpp>
 #endif
 
-//#include <SWI-Prolog.h>
+#include <yojimbo.h>
 
 namespace eXl
 {
@@ -387,10 +387,13 @@ namespace eXl
 
       LuaScriptSystem::AddBehaviourDesc(desc);
 #endif
+
+      InitializeYojimbo();
     }
 
     void _Unload()
     {
+      ShutdownYojimbo();
       Script_StaticDestroy();
       CharacterAnimation_StaticDestroy();
       s_NameRegistry.reset();
