@@ -43,9 +43,16 @@ namespace eXl
     m_TextureData.AddData(OGLSpriteAlgo::GetSpriteColorUniform(), &m_SpriteInfo);
   }
 
+  uint32_t SpriteMaterialInfo::Push(OGLDisplayList& iList)
+  {
+    iList.PushData(&m_TextureData);
+    return 1;
+  }
+
   GfxComponent::GfxComponent()
   {
     m_Transform.MakeIdentity();
+    m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), &m_Transform);
   }
 
   void GfxComponent::SetTransform(Matrix4f const& iTransform)
@@ -59,7 +66,7 @@ namespace eXl
     m_Geometry = iGeometry;
   }
 
-  void GfxComponent::AddDraw(SpriteMaterialInfo* iMaterial, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer)
+  void GfxComponent::AddDraw(MaterialInfo* iMaterial, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer)
   {
     if(iMaterial)
     {
@@ -79,21 +86,23 @@ namespace eXl
     {
       if (m_PositionData.GetDataPtr(OGLBaseAlgo::GetWorldMatUniform()) == nullptr)
       {
-        m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), &m_Transform);
+        
       }
-      iList.PushData(&m_PositionData);
       iList.SetVAssembly(&m_Geometry->m_Assembly);
       for(auto& draw : m_Draws)
       {
-        if(draw.m_Material != nullptr)
+        uint32_t const toPop = 1 + (draw.m_Material != nullptr 
+          ? draw.m_Material->Push(iList)
+          : 0);
+
+        iList.PushData(&m_PositionData);
+        iList.PushDraw(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset);
+
+        for (uint32_t i = 0; i < toPop; ++i)
         {
-          iList.PushData(&draw.m_Material->m_TextureData);
+          iList.PopData();
         }
-      
-        iList.PushDraw(0x0100, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset);
-        iList.PopData();
       }
-      iList.PopData();
     }
   }
 
@@ -127,11 +136,17 @@ namespace eXl
 		vtxLocData[4] = vtxLocData[9] =  1.0;
 		vtxLocData[14] = vtxLocData[19] = 0.0;
 
-		return OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, sizeof(vtxLocData), vtxLocData);
+		return IntrusivePtr<OGLBuffer>(OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, sizeof(vtxLocData), vtxLocData));
 		
 		//m_SpriteInfo.color = Vector4f::ONE;
 		//m_SpriteInfo.alphaMult = 1.0;
 	};
+
+  IntrusivePtr<OGLBuffer> GfxSpriteData::MakeSpriteIdxBuffer()
+  {
+    unsigned int indexData[] = { 0, 1, 2, 2, 1, 3 };
+    return IntrusivePtr<OGLBuffer>(OGLBuffer::CreateBuffer(OGLBufferUsage::ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData));
+  }
 
 	void GfxSpriteData::Push(OGLDisplayList& iList)
 	{

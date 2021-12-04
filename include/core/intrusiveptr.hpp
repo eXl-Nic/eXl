@@ -31,9 +31,17 @@ namespace eXl
     {
     }
 
-    IntrusivePtr( T * p, bool add_ref = true ): m_Ptr( p )
+    IntrusivePtr(nullptr_t) : m_Ptr(0)
     {
-        if( m_Ptr != 0 && add_ref ) IntrusivePtrAddRef( m_Ptr );
+    }
+
+    explicit IntrusivePtr( T * p, bool add_ref = true )
+      : m_Ptr( p )
+    {
+      if (m_Ptr != nullptr && add_ref)
+      {
+        IntrusivePtrAddRef(m_Ptr);
+      }
     }
 
     template <class U>
@@ -47,7 +55,6 @@ namespace eXl
         IntrusivePtrAddRef( m_Ptr );
       }
     }
-
 
     IntrusivePtr(IntrusivePtr const & iOther): m_Ptr( iOther.m_Ptr )
     {
@@ -155,6 +162,13 @@ private:
 
     T * m_Ptr;
   };
+
+  template <typename T, typename... Args>
+  IntrusivePtr<T> MakeRefCounted(Args&&... iArgs)
+  {
+    return IntrusivePtr<T>(eXl_NEW T(std::forward<Args>(iArgs)...));
+  }
+
 
   template <typename T>
   inline size_t hash_value(IntrusivePtr<T> const& iPtr)

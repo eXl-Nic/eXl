@@ -16,12 +16,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/dynobject.hpp>
 #include <ogl/renderer/oglsemanticmanager.hpp>
 #include <ogl/renderer/ogltexture.hpp>
+#include <ogl/renderer/oglbuffer.hpp>
 #include <vector>
 
 namespace eXl
 {
-  class OGLTexture;
-
   class EXL_OGL_API OGLShaderData : public HeapObject
   {
   public:
@@ -29,8 +28,13 @@ namespace eXl
     struct ShaderData
     {
       void const*  m_Data;
-      unsigned int m_DataSlot;
-      unsigned int m_DataFlags;
+      uint32_t m_DataSlot;
+    };
+
+    struct UBOData
+    {
+      IntrusivePtr<OGLBuffer const> m_DataBuffer;
+      uint32_t m_Slot;
     };
 
     class TextureData
@@ -38,23 +42,29 @@ namespace eXl
     public:
       ~TextureData();
       IntrusivePtr<OGLTexture const> m_Texture;
-      unsigned int      m_TextureSlot;
+      uint32_t      m_TextureSlot;
     };
 
     ~OGLShaderData();
 
-    void AddData(unsigned int iSlot, void const* iData, unsigned int iFlags = 0);
+    void AddData(uint32_t iSlot, void const* iData);
 
-    void AddTexture(unsigned int iSlot, OGLTexture const* iTexture);
-    void AddTexture(unsigned int iSlot, IntrusivePtr<OGLTexture const> const& iTexture) { AddTexture(iSlot, iTexture.get()); }
-    void AddTexture(unsigned int iSlot, IntrusivePtr<OGLTexture> const& iTexture) { AddTexture(iSlot, iTexture.get()); }
+    void SetDataBuffer(uint32_t iSlot, OGLBuffer const* iBuffer);
+    void SetDataBuffer(uint32_t iSlot, IntrusivePtr<OGLBuffer const> const& iBuffer) { SetDataBuffer(iSlot, iBuffer.get()); }
+    void SetDataBuffer(uint32_t iSlot, IntrusivePtr<OGLBuffer> const& iBuffer) { SetDataBuffer(iSlot, iBuffer.get()); }
 
-    inline unsigned int GetNumData() const{return m_Data.size();}
-    ShaderData const* GetDataDescPtr() const{return &m_Data[0];}
+    void AddTexture(uint32_t iSlot, OGLTexture const* iTexture);
+    void AddTexture(uint32_t iSlot, IntrusivePtr<OGLTexture const> const& iTexture) { AddTexture(iSlot, iTexture.get()); }
+    void AddTexture(uint32_t iSlot, IntrusivePtr<OGLTexture> const& iTexture) { AddTexture(iSlot, iTexture.get()); }
 
-    inline void const* GetDataPtr(unsigned int iSlot)
+    inline uint32_t GetNumData() const { return m_Data.size(); }
+    inline uint32_t GetNumUBO() const { return m_UBOData.size(); }
+    ShaderData const* GetDataDescPtr() const { return &m_Data[0]; }
+    UBOData const* GetUBODescPtr() const { return &m_UBOData[0]; }
+
+    inline void const* GetDataPtr(uint32_t iSlot) const
     {
-      for(unsigned int i = 0; i<m_Data.size(); ++i)
+      for(uint32_t i = 0; i<m_Data.size(); ++i)
       {
         if(m_Data[i].m_DataSlot == iSlot)
         {
@@ -64,10 +74,22 @@ namespace eXl
       return nullptr;
     }
 
-    template <class T>
-    inline T const* CastBuffer(unsigned int iSlot) const
+    inline OGLBuffer const* GetUBO(uint32_t iSlot) const
     {
-      for(unsigned int i = 0; i<m_Data.size(); ++i)
+      for (auto const& ubo : m_UBOData)
+      {
+        if (ubo.m_Slot == iSlot)
+        {
+          return ubo.m_DataBuffer.get();
+        }
+      }
+      return nullptr;
+    }
+
+    template <class T>
+    inline T const* CastBuffer(uint32_t iSlot) const
+    {
+      for(uint32_t i = 0; i<m_Data.size(); ++i)
       {
         if(m_Data[i].m_DataSlot == iSlot)
         {
@@ -79,11 +101,12 @@ namespace eXl
       return nullptr;
     }
 
-    inline unsigned int GetNumTexture() const{return m_TexData.size();}
+    inline uint32_t GetNumTexture() const{return m_TexData.size();}
     TextureData const* GetTexturePtr() const{return &m_TexData[0];}
 
   protected:
-    std::vector<ShaderData>  m_Data;
-    std::vector<TextureData> m_TexData;
+    SmallVector<ShaderData, 2>  m_Data;
+    SmallVector<UBOData, 2>  m_UBOData;
+    SmallVector<TextureData, 2> m_TexData;
   };
 }

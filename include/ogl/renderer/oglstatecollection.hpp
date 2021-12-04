@@ -16,13 +16,13 @@ namespace eXl
   template <typename Command, typename... Commands>
   struct GetListSize<Command, Commands...>
   {
-    static const unsigned int result = GetListSize<Commands...>::result + 1;
+    static const uint32_t result = GetListSize<Commands...>::result + 1;
   };
 
   template <typename Command>
   struct GetListSize<Command>
   {
-    static const unsigned int result = 1;
+    static const uint32_t result = 1;
   };
 
   template <class StateCommand>
@@ -90,7 +90,7 @@ namespace eXl
     template <class StateCommand>
     struct MakeCommand
     {
-      inline static void Do(OGLStateCollection* iCol, unsigned int iSetCmd, void*& oCmd);
+      inline static void Do(OGLStateCollection* iCol, uint32_t iSetCmd, void*& oCmd);
     };
 
     struct StateStorage : ListWrapper<CommandStorage, Commands...>

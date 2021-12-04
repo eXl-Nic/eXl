@@ -183,7 +183,7 @@ namespace eXl
 
     while(m_Components.size() <= iObject.GetId())
     {
-      m_Components.push_back(nullptr);
+      m_Components.push_back(IntrusivePtr<PhysicComponent_Impl>());
     }
 
     m_Components[iObject.GetId()] = compImpl;

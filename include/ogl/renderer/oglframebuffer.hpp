@@ -30,7 +30,7 @@ namespace eXl
     void AddDepthStencilAttachement(OGLTexture* iTexture);
 
     inline Vector2<uint32_t> const& GetSize() const {return m_Size;}
-    inline unsigned int GetId() const{return m_Id;}
+    inline uint32_t GetId() const{return m_Id;}
 
   protected:
 
@@ -40,7 +40,7 @@ namespace eXl
       union
       {
         OGLTexture*  m_Texture;
-        unsigned int m_RenderBuffer;
+        uint32_t m_RenderBuffer;
       };
       bool m_IsTexture;
     };
@@ -48,7 +48,7 @@ namespace eXl
     std::vector<Attachement> m_ColorAttachements;
     Attachement              m_DepthStencilAttachement;
     Vector2<uint32_t>        m_Size;
-    unsigned int             m_Id;
+    uint32_t                 m_Id;
   };
 }
 

@@ -25,7 +25,7 @@ namespace eXl
 
   EXL_CORE_API std::string_view GetAppPath();
   
-  void EXL_CORE_API StartCoreLib(IntrusivePtr<Log_Manager::LogOutput> iInitStream);
+  void EXL_CORE_API StartCoreLib(IntrusivePtr<Log_Manager::LogOutput> iInitStream = IntrusivePtr<Log_Manager::LogOutput>());
 
   void EXL_CORE_API StopCoreLib();
 

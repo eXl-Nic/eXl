@@ -23,6 +23,9 @@ namespace eXl
     case OGLBufferUsage::ELEMENT_ARRAY_BUFFER:
       return GL_ELEMENT_ARRAY_BUFFER;
       break;
+    case OGLBufferUsage::UNIFORM_BUFFER:
+      return GL_UNIFORM_BUFFER;
+      break;
     default:
       eXl_ASSERT_MSG(false, "Unsupported buffer usage");
       return GL_ARRAY_BUFFER;

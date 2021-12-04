@@ -564,7 +564,7 @@ namespace eXl
       Vector2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
       float aspectRatio = float(imageSize.Y()) / imageSize.X();
 
-      IntrusivePtr<GeometryInfo> geom = eXl_NEW GeometryInfo;
+      IntrusivePtr<GeometryInfo> geom(eXl_NEW GeometryInfo);
       geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(Vector2f(1.0 / aspectRatio, 1.0), true);
 
       unsigned int indexData[] = { 0, 1, 2, 2, 1, 3 };
@@ -572,11 +572,12 @@ namespace eXl
       geom->SetupAssembly(true);
       geom->m_Command = OGLDraw::TriangleList;
 
-      IntrusivePtr<SpriteMaterialInfo> matInfo = eXl_NEW SpriteMaterialInfo;
+      IntrusivePtr<SpriteMaterialInfo> matInfo(eXl_NEW SpriteMaterialInfo);
       matInfo->m_Texture = m_Tileset->GetTexture(*m_CurrentDisplayedImage);
       matInfo->m_SpriteInfo.tint = Vector4f::ONE;
       matInfo->m_SpriteInfo.alphaMult = 1.0;
       matInfo->m_SpriteInfo.tcScaling = Vector2f::ONE;
+      matInfo->m_SpriteInfo.imageSize = MathTools::ToFVec(imageSize);
       matInfo->SetupData();
 
       gfxComp->SetGeometry(geom.get());

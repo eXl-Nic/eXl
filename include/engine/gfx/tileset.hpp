@@ -115,4 +115,6 @@ namespace eXl
     UnorderedMap<ImageName, IntrusivePtr<OGLTexture>> m_Textures;
 #endif
   };
+
+  EXL_REFLECT_ENUM(AnimationType, eXl__AnimationType, EXL_ENGINE_API)
 }

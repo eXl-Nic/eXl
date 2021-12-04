@@ -14,7 +14,8 @@ namespace eXl
   enum class OGLBufferUsage
   {
     ARRAY_BUFFER,
-    ELEMENT_ARRAY_BUFFER
+    ELEMENT_ARRAY_BUFFER,
+    UNIFORM_BUFFER
   };
 
   enum class OGLBufferAccess

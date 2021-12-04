@@ -23,12 +23,12 @@ namespace eXl
       TupleType const* m_Type;
     };
 
-    std::vector<OGLUniformData> s_Uniforms;
-    std::vector<OGLSamplerDesc> s_SamplerDesc;
-    std::vector<OGLAttribDesc>  s_Attribs;
+    Vector<OGLUniformData> s_Uniforms;
+    Vector<OGLSamplerDesc> s_SamplerDesc;
+    Vector<OGLAttribDesc>  s_Attribs;
   }
 
-  unsigned int OGLSemanticManager::RegisterAttribute(AString const& iName, OGLType iAttribType, unsigned int iMult)
+  uint32_t OGLSemanticManager::RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult)
   {
     eXl_ASSERT_MSG(iName.size() > 0, "Empty Name");
 
@@ -44,7 +44,7 @@ namespace eXl
 
     eXl_ASSERT_MSG(iMult >= 1 || iMult <= 4, "Wrong multiplicity");
 
-    unsigned int attribName = s_Attribs.size();
+    uint32_t attribName = s_Attribs.size();
     s_Attribs.push_back(OGLAttribDesc());
     s_Attribs.back().m_Mult = iMult;
     s_Attribs.back().m_Name = iName;
@@ -53,12 +53,12 @@ namespace eXl
     return attribName;
   }
 
-  unsigned int OGLSemanticManager::RegisterUniformData(AString const& iName, TupleType const* iDataType)
+  uint32_t OGLSemanticManager::RegisterUniformData(AString const& iName, TupleType const* iDataType)
   {
     eXl_ASSERT_MSG(iName.size() > 0, "Empty Name");
     eXl_ASSERT_MSG(iDataType != NULL,"");
 
-    unsigned int uniformName = s_Uniforms.size();
+    uint32_t uniformName = s_Uniforms.size();
     s_Uniforms.push_back(OGLUniformData());
     s_Uniforms.back().m_Name = iName;
     s_Uniforms.back().m_Type = iDataType;
@@ -66,7 +66,7 @@ namespace eXl
     return uniformName;
   }
 
-  OGLAttribDesc const& OGLSemanticManager::GetAttrib(unsigned int iName)
+  OGLAttribDesc const& OGLSemanticManager::GetAttrib(uint32_t iName)
   {
     static OGLAttribDesc s_EmtpyAttrib;
     if(iName < s_Attribs.size())
@@ -76,7 +76,16 @@ namespace eXl
     return s_EmtpyAttrib;
   }
 
-  TupleType const* OGLSemanticManager::GetData(unsigned int iName)
+  AString const* OGLSemanticManager::GetDataName(uint32_t iName)
+  {
+    if (iName < s_Uniforms.size())
+    {
+      return &s_Uniforms[iName].m_Name;
+    }
+    return NULL;
+  }
+
+  TupleType const* OGLSemanticManager::GetDataType(uint32_t iName)
   {
     if(iName < s_Uniforms.size())
     {
@@ -85,11 +94,11 @@ namespace eXl
     return NULL;
   }
 
-  unsigned int OGLSemanticManager::RegisterTexture(AString const& iTexName, OGLSamplerDesc const& iSampler)
+  uint32_t OGLSemanticManager::RegisterTexture(AString const& iTexName, OGLSamplerDesc const& iSampler)
   {
     eXl_ASSERT_MSG(iTexName.size() > 0, "Empty Name");
 
-    unsigned int textureName = s_SamplerDesc.size();
+    uint32_t textureName = s_SamplerDesc.size();
     s_SamplerDesc.push_back(OGLSamplerDesc());
     s_SamplerDesc.back().name = iTexName;
     s_SamplerDesc.back().maxFilter = iSampler.maxFilter;
@@ -100,7 +109,7 @@ namespace eXl
     return textureName;
   }
 
-  OGLSamplerDesc const& OGLSemanticManager::GetSampler(unsigned int iName)
+  OGLSamplerDesc const& OGLSemanticManager::GetSampler(uint32_t iName)
   {
     static OGLSamplerDesc defaultSampler;
     if(iName < s_SamplerDesc.size())
@@ -110,17 +119,17 @@ namespace eXl
     return defaultSampler;
   }
 
-  unsigned int OGLSemanticManager::GetNumAttribs()
+  uint32_t OGLSemanticManager::GetNumAttribs()
   {
     return s_Attribs.size();
   }
 
-  unsigned int OGLSemanticManager::GetNumUniforms()
+  uint32_t OGLSemanticManager::GetNumUniforms()
   {
     return s_Uniforms.size();
   }
 
-  unsigned int OGLSemanticManager::GetNumTextures()
+  uint32_t OGLSemanticManager::GetNumTextures()
   {
     return s_SamplerDesc.size();
   }

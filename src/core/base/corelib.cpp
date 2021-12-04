@@ -124,12 +124,30 @@ namespace eXl
 
   static bool s_CorelibStarted = false;
 
+  union ConvStructU32
+  {
+    uint32_t u32;
+    uint8_t bytes[4];
+  };
+
+  bool CheckEndianess()
+  {
+    ConvStructU32 testStruct;
+    testStruct.u32 = 0x00FF0001;
+
+    return testStruct.bytes[0] == 1
+      && testStruct.bytes[1] == 0
+      && testStruct.bytes[2] == 255
+      && testStruct.bytes[3] == 0;
+  }
+
   void StartCoreLib(IntrusivePtr<Log_Manager::LogOutput> iInitialisationLog)
   {
     if (s_CorelibStarted)
     {
       return;
     }
+
     s_CorelibStarted = true;
 
     Log_Manager::AddStream(INFO_STREAM, "Info", "Info : ");
@@ -149,6 +167,13 @@ namespace eXl
       Log_Manager::AddOutput(iInitialisationLog.get(), -1);
     }
 
+    bool const rightEndianness = CheckEndianess();
+    eXl_ASSERT_MSG(rightEndianness, "Wrong endianness, eXl can only work on little endian machines.");
+    if (!rightEndianness)
+    {
+      return;
+    }
+    
     LOG_INFO << "Start eXl initialization";
 
 #ifdef EXL_TYPE_ENABLED

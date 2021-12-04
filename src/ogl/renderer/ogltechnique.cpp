@@ -26,55 +26,55 @@ namespace eXl
 {
   namespace
   {
-    void SetV1F(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV1F(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       //LOG_INFO << "Set float at " << iLoc << ", " << ((float*)iData)[0];
       glUniform1fv(iLoc,iCount,(GLfloat const*)iData);
     }
 
-    void SetV2F(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV2F(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       float* fltData = ((float*)iData);
       //LOG_INFO << "Set vec2 at " << iLoc << ", " << fltData[0] << ", " << fltData[1];
       glUniform2fv(iLoc,iCount,(GLfloat const*)iData);
     }
 
-    void SetV3F(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV3F(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       float* fltData = ((float*)iData);
       //LOG_INFO << "Set vec3 at " << iLoc << ", " << fltData[0] << ", " << fltData[1] << ", " << fltData[2];
       glUniform3fv(iLoc,iCount,(GLfloat const*)iData);
     }
 
-    void SetV4F(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV4F(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       float* fltData = ((float*)iData);
       //LOG_INFO << "Set vec4 at " << iLoc << ", " << fltData[0] << ", " << fltData[1] << ", " << fltData[2] << ", " << fltData[3];
       glUniform4fv(iLoc,iCount,(GLfloat const*)iData);
     }
 
-    void SetV1I(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV1I(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       //LOG_INFO << "Set int at " << iLoc << ", " << ((int*)iData)[0];
       glUniform1iv(iLoc,iCount,(GLint const*)iData);
     }
 
-    void SetV2I(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV2I(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       glUniform2iv(iLoc,iCount,(GLint const*)iData);
     }
 
-    void SetV3I(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV3I(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       glUniform3iv(iLoc,iCount,(GLint const*)iData);
     }
 
-    void SetV4I(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetV4I(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       glUniform4iv(iLoc,iCount,(GLint const*)iData);
     }
 
-    void SetM4F(unsigned int iLoc, unsigned int iCount, void const* iData)
+    void SetM4F(uint32_t iLoc, uint32_t iCount, void const* iData)
     {
       glUniformMatrix4fv(iLoc,iCount,GL_FALSE,(GLfloat const*)iData);
     }
@@ -105,7 +105,7 @@ namespace eXl
       //{
       //  inline FieldType(GLenum iType):type(iType){}
       //  GLenum type;
-      //  //unsigned int num;
+      //  //uint32_t num;
       //};
 
       void Init()
@@ -151,9 +151,11 @@ namespace eXl
       OGLDataHandlerProgData::SetValuefptr FindSetter(GLenum iType)
       {
         boost::container::flat_map<GLenum, OGLDataHandlerProgData::SetValuefptr>:: iterator iter = m_Map.find(iType);
-        if(iter != m_Map.end())
+        if (iter != m_Map.end())
+        {
           return iter->second;
-        return NULL;
+        }
+        return nullptr;
       }
 
       boost::container::flat_map<GLenum, OGLDataHandlerProgData::SetValuefptr> m_Map;
@@ -167,27 +169,26 @@ namespace eXl
     {
       TypeFieldName m_Name;
       Type const* m_Type;
-      unsigned int m_Offset;
-      unsigned int m_Multi;
+      uint32_t m_Offset;
+      uint32_t m_Multi;
     };
 
     void ListLeavesField(TupleType const* iType, std::vector<FieldsList>& oList)
     {
       size_t numFields = iType->GetNumField();
-      for(unsigned int i = 0; i<numFields; ++i)
+      for(uint32_t i = 0; i<numFields; ++i)
       {
         TypeFieldName name;
         Type const* fieldType = iType->GetFieldDetails(i,name);
-        if(fieldType != NULL)
+        if(fieldType != nullptr)
         {
-          unsigned int oOffset;
+          uint32_t oOffset;
           Err err = iType->ResolveFieldPath(name,oOffset,fieldType);
           if(fieldType->IsTuple() && !s_Exception.IsException(fieldType))
           {
-            
             FixedLengthArray const* arrayType = FixedLengthArray::DynamicCast(fieldType);
 
-            if(arrayType != NULL)
+            if(arrayType != nullptr)
             {
               Type const* fieldType = arrayType->GetArrayType();
               if(s_Exception.IsException(fieldType))
@@ -200,11 +201,15 @@ namespace eXl
                 //Next field
                 continue;
               }
+              else
+              {
+
+              }
             }
 
-            unsigned int curPos = oList.size();
+            uint32_t curPos = oList.size();
             ListLeavesField(fieldType->IsTuple(),oList);
-            for(unsigned int j = curPos;j<oList.size();++j)
+            for(uint32_t j = curPos;j<oList.size();++j)
             {
               oList[j].m_Name = name + "." + oList[j].m_Name;
               oList[j].m_Offset += oOffset;
@@ -229,34 +234,34 @@ namespace eXl
     s_TypeMap.Init();
   }
 
-  OGLTechnique::OGLTechnique():m_Override(NULL)
+  OGLTechnique::OGLTechnique()
   {
 
   }
 
-  void OGLTechnique::AddAttrib(unsigned int iAttribName)
+  void OGLTechnique::AddAttrib(uint32_t iAttribName)
   {
     m_AttribNames.push_back(iAttribName);
   }
 
-  void OGLTechnique::AddUniform(unsigned int iDataName)
+  void OGLTechnique::AddUniform(uint32_t iDataName)
   {
     m_UnifNames.push_back(iDataName);
   }
 
-  void OGLTechnique::AddTexture(unsigned int iTexName)
+  void OGLTechnique::AddTexture(uint32_t iTexName)
   {
     m_Textures.push_back(iTexName);
   }
   
   OGLCompiledTechnique* OGLTechnique::Compile(OGLProgram const* iProg)
   { 
-    if(iProg == NULL)
-      return NULL;
+    if(iProg == nullptr)
+      return nullptr;
 
     OGLCompiledTechnique tempTech;
 
-    for(unsigned int i = 0; i<m_AttribNames.size(); ++i)
+    for(uint32_t i = 0; i<m_AttribNames.size(); ++i)
     {
       OGLAttribDesc const& attrib = OGLSemanticManager::GetAttrib(m_AttribNames[i]);
       eXl_ASSERT_MSG(!attrib.m_Name.empty(),"Wrong attrib name");
@@ -265,7 +270,7 @@ namespace eXl
         if(loc > -1)
         {
           OGLType oType;
-          unsigned int oNum;
+          uint32_t oNum;
           iProg->GetAttribDescription(attrib.m_Name,oType,oNum);
                                             //Pas nécessaire selon OGL
           //eXl_ASSERT_MSG(oType == attrib.m_Type /*&& oNum == attrib.m_Mult*/,"Incompatible layout");
@@ -279,34 +284,39 @@ namespace eXl
       }
     }
 
-    OGLDataHandlerProgData* progData = NULL;
-
-    if(m_Override != NULL)
-    {
-      progData = m_Override->CreateData();
-    }
+    OGLDataHandlerProgData* progData = nullptr;
 
     std::vector<FieldsList> oList;
 
-    for(unsigned int i = 0; i<m_UnifNames.size(); ++i)
+    for(uint32_t i = 0; i<m_UnifNames.size(); ++i)
     {
       oList.clear();
 
-      TupleType const* dataType = OGLSemanticManager::GetData(m_UnifNames[i]);
-      eXl_ASSERT_MSG(dataType != NULL,"Wrong data name");
+      TupleType const* dataType = OGLSemanticManager::GetDataType(m_UnifNames[i]);
+      eXl_ASSERT_MSG(dataType != nullptr,"Wrong data name");
 
-      unsigned int currentSlot = tempTech.m_MaxUnif;
+      AString const* dataName = OGLSemanticManager::GetDataName(m_UnifNames[i]);
+      eXl_ASSERT(dataName != nullptr);
 
-      if(m_Override && m_Override->DataOverriden(m_UnifNames[i],iProg,progData))
+      uint32_t unifSize;
+      if (iProg->GetUniformBlockDescription(*dataName, unifSize))
       {
-        tempTech.m_UnifSlot[currentSlot] = m_UnifNames[i];
-        tempTech.m_MaxUnif++;
+        uint32_t currentSlot = tempTech.m_MaxUnifBlock;
+        eXl_ASSERT(unifSize == dataType->GetSize());
+
+        tempTech.m_TechData.m_BlockHandler[currentSlot] = std::make_pair(iProg->GetUniformBlockLocation(*dataName), unifSize);
+
+        tempTech.m_UnifBlockSlot[currentSlot] = m_UnifNames[i];
+        ++tempTech.m_MaxUnifBlock;
+        continue;
       }
-      else if(tempTech.m_MaxUnif < 16)
+      
+      uint32_t currentSlot = tempTech.m_MaxUnif;
+      if(tempTech.m_MaxUnif < 16)
       {
-        ListLeavesField(dataType,oList);
+        ListLeavesField(dataType, oList);
 
-        for(unsigned int j = 0; j < oList.size(); ++j)
+        for(uint32_t j = 0; j < oList.size(); ++j)
         {
           AString unifName = StringUtil::ToASCII(oList[j].m_Name);
           int loc = iProg->GetUniformLocation(unifName);
@@ -315,7 +325,7 @@ namespace eXl
           if(loc != -1)
           {
             OGLType progType;
-            unsigned int progNum;
+            uint32_t progNum;
             iProg->GetUniformDescription(unifName,progType,progNum);
             GLenum oType;
             s_TypeMap.GetType(oList[j].m_Type,oType);
@@ -340,17 +350,11 @@ namespace eXl
       }
     }
 
-    for(unsigned int i = 0; i<m_Textures.size(); ++i)
+    for(uint32_t i = 0; i<m_Textures.size(); ++i)
     {
-      if(m_Override && m_Override->TextureOverriden(m_Textures[i],iProg,progData))
+      if(tempTech.m_MaxTexture < 16)
       {
-        tempTech.m_TechData.m_Samplers[tempTech.m_MaxTexture].first = -1;
-        tempTech.m_TexSlot[tempTech.m_MaxTexture] = m_Textures[i];
-        tempTech.m_MaxTexture++;
-      }
-      else if(tempTech.m_MaxTexture < 16)
-      {
-        unsigned int currentTexSlot = tempTech.m_MaxTexture;
+        uint32_t currentTexSlot = tempTech.m_MaxTexture;
         OGLSamplerDesc const& sampler = OGLSemanticManager::GetSampler(m_Textures[i]);
         if(!sampler.name.empty())
         {
@@ -358,7 +362,7 @@ namespace eXl
           if(texLoc > 0)
           {
             OGLType oType;
-            unsigned int oNum;
+            uint32_t oNum;
             iProg->GetUniformDescription(sampler.name,oType,oNum);
 
             if(oType == OGLType::SAMPLER_2D || oType == OGLType::SAMPLER_CUBE)
@@ -383,18 +387,17 @@ namespace eXl
     OGLCompiledTechnique* newTech = eXl_NEW OGLCompiledTechnique;
 
     newTech->m_Program = iProg;
-    newTech->m_Override = m_Override;
-    newTech->m_OverrideData = progData;
 
     newTech->m_MaxAttrib = tempTech.m_MaxAttrib;
     newTech->m_MaxUnif = tempTech.m_MaxUnif;
+    newTech->m_MaxUnifBlock = tempTech.m_MaxUnifBlock;
     newTech->m_MaxTexture = tempTech.m_MaxTexture;
     
-    memcpy(&newTech->m_AttribDesc,&tempTech.m_AttribDesc,tempTech.m_MaxAttrib*sizeof(std::pair<unsigned int, GLenum>));
-    memcpy(&newTech->m_AttribSlot,&tempTech.m_AttribSlot,tempTech.m_MaxAttrib*sizeof(unsigned int));
+    memcpy(&newTech->m_AttribDesc,&tempTech.m_AttribDesc,tempTech.m_MaxAttrib*sizeof(std::pair<uint32_t, GLenum>));
+    memcpy(&newTech->m_AttribSlot,&tempTech.m_AttribSlot,tempTech.m_MaxAttrib*sizeof(uint32_t));
 
-    memcpy(&newTech->m_TexSlot,&tempTech.m_TexSlot,tempTech.m_MaxTexture*sizeof(unsigned int));
-    for(unsigned int i = 0; i<tempTech.m_MaxTexture; ++i)
+    memcpy(&newTech->m_TexSlot,&tempTech.m_TexSlot,tempTech.m_MaxTexture*sizeof(uint32_t));
+    for(uint32_t i = 0; i<tempTech.m_MaxTexture; ++i)
     {
       newTech->m_TechData.m_Samplers[i].first = tempTech.m_TechData.m_Samplers[i].first;
       newTech->m_TechData.m_Samplers[i].second.maxFilter = tempTech.m_TechData.m_Samplers[i].second.maxFilter;
@@ -404,78 +407,73 @@ namespace eXl
     }
     //memcpy(&newTech->m_TechData.m_Samplers,&tempTech.m_TechData.m_Samplers,tempTech.m_MaxTexture*sizeof(std::pair<int, OGLSamplerDesc>));
 
-    memcpy(&newTech->m_UnifSlot,&tempTech.m_UnifSlot,tempTech.m_MaxUnif*sizeof(unsigned int));
+    memcpy(&newTech->m_UnifSlot,&tempTech.m_UnifSlot,tempTech.m_MaxUnif*sizeof(uint32_t));
     
-    for(unsigned int i = 0; i < tempTech.m_MaxUnif; ++i)
+    for(uint32_t i = 0; i < tempTech.m_MaxUnif; ++i)
     {
       newTech->m_TechData.m_UnifHandler[i].swap(tempTech.m_TechData.m_UnifHandler[i]);
+    }
+
+    memcpy(&newTech->m_UnifBlockSlot, &tempTech.m_UnifBlockSlot, tempTech.m_MaxUnifBlock * sizeof(uint32_t));
+
+    for (uint32_t i = 0; i < tempTech.m_MaxUnifBlock; ++i)
+    {
+      newTech->m_TechData.m_BlockHandler[i] = tempTech.m_TechData.m_BlockHandler[i];
     }
 
     return newTech;
   }
 
-  OGLCompiledTechnique::OGLCompiledTechnique():m_MaxAttrib(0),m_MaxUnif(0),m_MaxTexture(0),m_Override(NULL)
+  OGLCompiledTechnique::OGLCompiledTechnique()
   {
-
   }
 
-  void OGLCompiledTechnique::HandleAttribute(unsigned int iAttribSlot, unsigned int iNum, size_t iStride, size_t iOffset)const
+  void OGLCompiledTechnique::HandleAttribute(uint32_t iAttribSlot, uint32_t iNum, size_t iStride, size_t iOffset)const
   {
     glVertexAttribPointer(m_AttribDesc[iAttribSlot].first,iNum, GetGLType(m_AttribDesc[iAttribSlot].second),false,iStride,(void*)iOffset);
   }
 
-  void OGLCompiledTechnique::HandleTexture(unsigned int iTexSlot, OGLTexture const* iTexture)const
+  void OGLCompiledTechnique::HandleTexture(uint32_t iTexSlot, OGLTexture const* iTexture)const
   {
-    if(m_TechData.m_Samplers[iTexSlot].first == -1)
+    glActiveTexture(GL_TEXTURE0 + iTexSlot);
+
+    GLenum textureTarget = iTexture->IsCubeMap() ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
+
+    glBindTexture(textureTarget,iTexture->GetId());
+    //LOG_INFO << "Set texture at " << iTexSlot << ", " << iTexture;
+    glUniform1i(m_TechData.m_Samplers[iTexSlot].first,iTexSlot);
+
+    glTexParameteri(textureTarget,GL_TEXTURE_MIN_FILTER, GetGLMinFilter(m_TechData.m_Samplers[iTexSlot].second.minFilter));
+    glTexParameteri(textureTarget,GL_TEXTURE_MAG_FILTER, GetGLMagFilter(m_TechData.m_Samplers[iTexSlot].second.maxFilter));
+    glTexParameteri(textureTarget,GL_TEXTURE_WRAP_S,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapX));
+    glTexParameteri(textureTarget,GL_TEXTURE_WRAP_T,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapY));
+  }
+
+  void OGLCompiledTechnique::HandleUniform(uint32_t iSlot, void const* iData) const
+  {
+    uint32_t numFields = m_TechData.m_UnifHandler[iSlot].size();
+    uint8_t const* iterData = reinterpret_cast<uint8_t const*>(iData);
+    OGLDataHandlerProgData::DataSetter const* setter = &m_TechData.m_UnifHandler[iSlot][0];
+    for(uint32_t i = 0; i< numFields; ++i)
     {
-      m_Override->HandleTexture(m_TexSlot[iTexSlot],iTexSlot,m_OverrideData,iTexture);
-    }
-    else
-    {
-      glActiveTexture(GL_TEXTURE0 + iTexSlot);
-
-      GLenum textureTarget = iTexture->IsCubeMap() ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
-
-      glBindTexture(textureTarget,iTexture->GetId());
-      //LOG_INFO << "Set texture at " << iTexSlot << ", " << iTexture;
-      glUniform1i(m_TechData.m_Samplers[iTexSlot].first,iTexSlot);
-
-      glTexParameteri(textureTarget,GL_TEXTURE_MIN_FILTER, GetGLMinFilter(m_TechData.m_Samplers[iTexSlot].second.minFilter));
-      glTexParameteri(textureTarget,GL_TEXTURE_MAG_FILTER, GetGLMagFilter(m_TechData.m_Samplers[iTexSlot].second.maxFilter));
-      glTexParameteri(textureTarget,GL_TEXTURE_WRAP_S,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapX));
-      glTexParameteri(textureTarget,GL_TEXTURE_WRAP_T,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapY));
+      setter->setter(setter->location, setter->count, iterData + setter->offset);
+      setter++;
     }
   }
 
-  void OGLCompiledTechnique::HandleUniform(unsigned int iSlot, void const* iData)const
+  void OGLCompiledTechnique::HandleUniformBlock(uint32_t iSlot, uint32_t iBuffer) const
   {
-    if(m_TechData.m_UnifHandler[iSlot].empty())
-    {
-      m_Override->HandleUniform(m_UnifSlot[iSlot],iSlot,m_OverrideData,iData);
-    }
-    else
-    {
-      unsigned int numFields = m_TechData.m_UnifHandler[iSlot].size();
-      unsigned char const* iterData = reinterpret_cast<unsigned char const*>(iData);
-      OGLDataHandlerProgData::DataSetter const* setter = &m_TechData.m_UnifHandler[iSlot][0];
-      for(unsigned int i = 0; i< numFields; ++i)
-      {
-        setter->setter(setter->location,setter->count,iterData + setter->offset);
-        setter++;
-      }
-    }
+    //glBindBufferRange(GL_UNIFORM_BUFFER, m_TechData.m_BlockHandler[iSlot].first, iBuffer, 0, m_TechData.m_BlockHandler[iSlot].second);
+    glBindBufferBase(GL_UNIFORM_BUFFER, m_TechData.m_BlockHandler[iSlot].first, iBuffer);
   }
 
-  unsigned int OGLCompiledTechnique::GetAttribLocation(unsigned int iAttribSlot)const
+  uint32_t OGLCompiledTechnique::GetAttribLocation(uint32_t iAttribSlot) const
   {
     return m_AttribDesc[iAttribSlot].first;
   }
 
   void OGLCompiledTechnique::Setup()const
   {
-    if(m_Override != NULL)
-    {
-      m_Override->OnSetup(m_OverrideData);
-    }
+    
   }
 }

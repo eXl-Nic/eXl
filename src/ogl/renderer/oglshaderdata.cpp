@@ -13,6 +13,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/renderer/ogltexture.hpp>
 #include <core/type/tupletype.hpp>
 
+#include <ogl/renderer/oglinclude.hpp>
+
 namespace eXl
 {
 
@@ -22,7 +24,7 @@ namespace eXl
 
   OGLShaderData::~OGLShaderData()
   {
-    //for(unsigned int i = 0; i<m_Data.size(); ++i)
+    //for(uint32_t i = 0; i<m_Data.size(); ++i)
     //{
     //  ShaderData& data = m_Data[i];
     //
@@ -31,17 +33,16 @@ namespace eXl
     //}
   }
 
-  void OGLShaderData::AddData(unsigned int iSlot, void const* iData, unsigned int iFlags)
+  void OGLShaderData::AddData(uint32_t iSlot, void const* iData)
   {
-    TupleType const* iDataType = OGLSemanticManager::GetData(iSlot);
+    TupleType const* iDataType = OGLSemanticManager::GetDataType(iSlot);
 
     eXl_ASSERT_REPAIR_RET(iDataType != nullptr, );
 
-    for(unsigned int i = 0; i<m_Data.size(); ++i)
+    for(uint32_t i = 0; i<m_Data.size(); ++i)
     {
       if(m_Data[i].m_DataSlot == iSlot)
       {
-        m_Data[i].m_DataFlags = iFlags;
         //void* dest = m_Data[i].m_Data;
         //iDataType->Copy(iData,dest);
         m_Data[i].m_Data = iData;
@@ -51,15 +52,25 @@ namespace eXl
 
     m_Data.push_back(ShaderData());
     m_Data.back().m_DataSlot = iSlot;
-    m_Data.back().m_DataFlags = iFlags;
     m_Data.back().m_Data = iData;
 
     //iDataType->Copy(iData,m_Data.back().m_Data);
   }
 
-  void OGLShaderData::AddTexture(unsigned int iSlot, OGLTexture const* iTexture)
+  void OGLShaderData::SetDataBuffer(uint32_t iSlot, OGLBuffer const* iBuffer)
   {
-    for(unsigned int i = 0; i<m_TexData.size(); ++i)
+    TupleType const* iDataType = OGLSemanticManager::GetDataType(iSlot);
+
+    eXl_ASSERT_REPAIR_RET(iDataType != nullptr, void());
+
+    m_UBOData.push_back(UBOData());
+    m_UBOData.back().m_Slot = iSlot;
+    m_UBOData.back().m_DataBuffer = iBuffer;
+  }
+
+  void OGLShaderData::AddTexture(uint32_t iSlot, OGLTexture const* iTexture)
+  {
+    for(uint32_t i = 0; i<m_TexData.size(); ++i)
     {
       if(m_TexData[i].m_TextureSlot == iSlot)
       {

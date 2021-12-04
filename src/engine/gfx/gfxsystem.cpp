@@ -117,8 +117,7 @@ namespace eXl
 			{
 				if (m_DefaultSpriteIdxBuffer == nullptr)
 				{
-					unsigned int indexData[] = { 0, 1, 2, 2, 1, 3 };
-					m_DefaultSpriteIdxBuffer = OGLBuffer::CreateBuffer(OGLBufferUsage::ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData);
+					m_DefaultSpriteIdxBuffer = GfxSpriteData::MakeSpriteIdxBuffer();
 				}
 
 				if (!comp->m_SpriteData.IsAssigned())
@@ -184,7 +183,7 @@ namespace eXl
 					{
 						tileOffset = tile->m_Frames[0];
 						float frameTime = tile->m_FrameDuration / comp->m_Desc->m_AnimSpeed;
-						if (tile->m_Frames.size() > 2 && frameTime > 0 && frameTime < Mathf::MAX_REAL)
+						if (tile->m_Frames.size() > 1 && frameTime > 0 && frameTime < Mathf::MAX_REAL)
 						{
 							data.m_CurrentFrame = 0;
 							data.m_Forward = true;
@@ -231,7 +230,7 @@ namespace eXl
 				auto cacheIter = m_SpriteGeomCache.find(cacheKey);
 				if (cacheIter == m_SpriteGeomCache.end())
 				{
-					IntrusivePtr<GeometryInfo> geom = eXl_NEW GeometryInfo;
+					IntrusivePtr<GeometryInfo> geom(eXl_NEW GeometryInfo);
 					geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(comp->m_Desc->m_Size, comp->m_Desc->m_Flat);
 					geom->m_Indices = m_DefaultSpriteIdxBuffer;
 					geom->SetupAssembly(true);
@@ -248,7 +247,7 @@ namespace eXl
         VALIDATE_FLOAT(texStep.Y());
 				data.m_SpriteInfo.tcOffset = Vector2f(tileOffset.X() * texStep.X(), tileOffset.Y() * texStep.Y());
 				data.m_SpriteInfo.tcScaling = Vector2f(tileSize.X() * texStep.X(), tileSize.Y() * texStep.Y());
-
+        data.m_SpriteInfo.imageSize = MathTools::ToFVec(imageSize);
 			}
 			m_DirtyComponents.clear();
 
@@ -278,6 +277,8 @@ namespace eXl
     CameraMatrix m_Camera;
     OGLTextureLoader m_TexLoader;
     GfxDebugDrawer m_DebugDrawer;
+
+    IntrusivePtr<OGLBuffer> m_CameraBuffer;
 
     Transforms& m_Transforms;
 
@@ -384,7 +385,6 @@ namespace eXl
   GfxSystem::GfxSystem(Transforms& iTransforms)
     : m_Impl(new Impl(iTransforms))
   {
-    
   }
 
   DebugTool::Drawer* GfxSystem::GetDebugDrawer()
@@ -610,6 +610,11 @@ namespace eXl
 
   void GfxSystem::RenderFrame(float iDelta)
   {
+    if (!m_Impl->m_CameraBuffer)
+    {
+      m_Impl->m_CameraBuffer = OGLBuffer::CreateBuffer(OGLBufferUsage::UNIFORM_BUFFER, CameraMatrix::GetType()->GetSize(), nullptr);
+    }
+
     OGLDisplayList list;
 
     list.SetDefaultViewport(Vector2i::ZERO, m_Impl->m_ViewportSize);
@@ -622,7 +627,9 @@ namespace eXl
     list.Clear(0,true,true, m_Impl->m_ClearColor);
 
     OGLShaderData camData;
-    camData.AddData(OGLBaseAlgo::GetCameraUniform(), &m_Impl->m_Camera);
+    //camData.AddData(OGLBaseAlgo::GetCameraUniform(), &m_Impl->m_Camera);
+    m_Impl->m_CameraBuffer->SetData(0, sizeof(m_Impl->m_Camera), &m_Impl->m_Camera);
+    camData.SetDataBuffer(OGLBaseAlgo::GetCameraUniform(), m_Impl->m_CameraBuffer);
 
     list.SetTechnique(OGLSpriteAlgo::GetSpriteTechnique(false));
 

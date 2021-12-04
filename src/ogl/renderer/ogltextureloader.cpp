@@ -144,14 +144,14 @@ namespace eXl
     return res;
   }
 
-  template <class T, unsigned int iNumCol>
-  void SwapRB(Vector2<uint32_t> const& iSize, void* iData, unsigned int iRowStride)
+  template <class T, uint32_t iNumCol>
+  void SwapRB(Vector2<uint32_t> const& iSize, void* iData, uint32_t iRowStride)
   {
-    unsigned char* dataPtr = reinterpret_cast<unsigned char*>(iData);
-    for(unsigned int i = 0; i < iSize.Y(); ++i)
+    uint8_t* dataPtr = reinterpret_cast<uint8_t*>(iData);
+    for(uint32_t i = 0; i < iSize.Y(); ++i)
     {
       T* curRow = (T*)dataPtr;
-      for(unsigned int j = 0; j<iSize.X(); ++j)
+      for(uint32_t j = 0; j<iSize.X(); ++j)
       {
         std::swap(curRow[0], curRow[2]);
         curRow += iNumCol;
@@ -255,7 +255,7 @@ namespace eXl
 
     Image::Size const& imgSize = iImage[0]->GetSize();
 
-    for(unsigned int i = 1; i<6; ++i)
+    for(uint32_t i = 1; i<6; ++i)
     {
       if(iImage[i] == NULL)
         return NULL;
@@ -281,7 +281,7 @@ namespace eXl
     GLuint texId;
     glGenTextures(1, &texId);
 
-    for(unsigned int i = 0; i<6; ++i)
+    for(uint32_t i = 0; i<6; ++i)
     {
       UpdateFromImage(*iImage[i], texId, false, i);
     }
@@ -324,7 +324,7 @@ namespace eXl
       {
       case Image::Char:   
         replImage = eXl_NEW Image(iImage);
-        SwapRB<unsigned char, 3>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
+        SwapRB<uint8_t, 3>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
         break;
       case Image::Short:  
         replImage = eXl_NEW Image(iImage);
@@ -332,7 +332,7 @@ namespace eXl
         break;
       case Image::Int:    
         replImage = eXl_NEW Image(iImage);
-         SwapRB<unsigned int, 3>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
+         SwapRB<uint32_t, 3>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
         break;
       }
     }
@@ -344,7 +344,7 @@ namespace eXl
       {
       case Image::Char:   
         replImage = eXl_NEW Image(iImage);
-        SwapRB<unsigned char, 4>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
+        SwapRB<uint8_t, 4>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
         break;
       case Image::Short:  
         replImage = eXl_NEW Image(iImage);
@@ -352,17 +352,17 @@ namespace eXl
         break;
       case Image::Int:    
         replImage = eXl_NEW Image(iImage);
-        SwapRB<unsigned int, 4>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
+        SwapRB<uint32_t, 4>(replImage->GetSize(), replImage->GetImageData(), replImage->GetRowStride());
         break;
       }
     }
 #endif 
 
-    unsigned char* texCopy = nullptr;
+    uint8_t* texCopy = nullptr;
 
     Image::Size const& imgSize = iImage.GetSize();
 
-    unsigned char const* pixelsData = reinterpret_cast<unsigned char const*>(replImage != nullptr ? replImage->GetImageData() : iImage.GetImageData());
+    uint8_t const* pixelsData = reinterpret_cast<uint8_t const*>(replImage != nullptr ? replImage->GetImageData() : iImage.GetImageData());
 
     if(iImage.GetRowStride() % 8 == 0)
       glPixelStorei(GL_UNPACK_ALIGNMENT,8);
@@ -374,10 +374,10 @@ namespace eXl
       glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
     glTexImage2D(textureFaceUpdate, 0, internalFormat, imgSize.X(), imgSize.Y(), 0, dataComponents, dataType, nullptr);
-    for(unsigned int i = 0; i < imgSize.Y(); ++i)
+    for(uint32_t i = 0; i < imgSize.Y(); ++i)
     {
-      //unsigned char const* pixelsDataRev = pixelsData + ((imgSize.Y() - 1) - i) * iImage->GetRowStride();
-      unsigned char const* pixelRow = pixelsData + i * iImage.GetRowStride();
+      //uint8_t const* pixelsDataRev = pixelsData + ((imgSize.Y() - 1) - i) * iImage->GetRowStride();
+      uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
       glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.X(), 1, dataComponents, dataType, pixelRow);
     }
 
@@ -507,7 +507,7 @@ namespace eXl
 
         oImage = eXl_NEW Image(NULL, iTexture->GetSize(), comps, fmt, 4);
       }
-      unsigned int align = oImage->GetRowStride() - oImage->GetSize().X();
+      uint32_t align = oImage->GetRowStride() - oImage->GetSize().X();
 
       if(align > 4)
         glPixelStorei(GL_PACK_ALIGNMENT,8);

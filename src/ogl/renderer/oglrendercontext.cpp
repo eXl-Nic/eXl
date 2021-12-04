@@ -18,7 +18,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/renderer/ogltypesconv.hpp>
 #include <core/type/tupletype.hpp>
 
-
 namespace eXl
 {
   class OGLRenderContextImpl : public HeapObject
@@ -30,25 +29,25 @@ namespace eXl
       m_CurrentDataSlot.resize(OGLSemanticManager::GetNumUniforms(),-1);
       m_CurrentAttribSlot.resize(OGLSemanticManager::GetNumAttribs(),-1);
       m_CurrentTextureSlot.resize(OGLSemanticManager::GetNumTextures(),-1);
-      //m_BackupDataSlot.resize(OGLSemanticManager::GetNumUniforms(),-1);
-      //m_BackupAttribSlot.resize(OGLSemanticManager::GetNumAttribs(),-1);
+      m_CurrentUBOSlot.resize(OGLSemanticManager::GetNumUniforms(), -1);
 
       m_BufferBindings.resize(OGLSemanticManager::GetNumAttribs());
 
-      m_TextureCache.resize(OGLSemanticManager::GetNumTextures(),NULL);
+      m_TextureCache.resize(OGLSemanticManager::GetNumTextures(),nullptr);
 
-      //for(unsigned int i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
+      //for(uint32_t i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
       //{
       //  m_DataCache.push_back(OGLSemanticManager::GetData(i)->Build());
       //}
-      m_DataCache.resize(OGLSemanticManager::GetNumUniforms(),NULL);
+      m_DataCache.resize(OGLSemanticManager::GetNumUniforms(),nullptr);
+      m_UBOCache.resize(OGLSemanticManager::GetNumUniforms(), nullptr);
 
       Clear();
     }
 
     ~OGLRenderContextImpl()
     {
-      //for(unsigned int i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
+      //for(uint32_t i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
       //{
       //  OGLSemanticManager::GetData(i)->Destroy(m_DataCache[i]);
       //}
@@ -56,27 +55,28 @@ namespace eXl
 
     void Clear()
     {
-      m_CurrentTechnique = NULL;
-      m_CurrentArrayBuffer = NULL;
-      m_CurrentIndexBuffer = NULL;
+      m_CurrentTechnique = nullptr;
+      m_CurrentArrayBuffer = nullptr;
+      m_CurrentIndexBuffer = nullptr;
       m_MaxAttrib = 0;
       m_MaxData = 0;
+      m_MaxUBO = 0;
       m_MaxTexture = 0;
-      for(unsigned int i = 0; i < m_BufferBindings.size() ; ++i)
+      for(uint32_t i = 0; i < m_BufferBindings.size() ; ++i)
       {
-        m_BufferBindings[i].buffer = NULL;
+        m_BufferBindings[i].buffer = nullptr;
       }
-      for(unsigned int i = 0; i < m_TextureCache.size(); ++i)
+      for(uint32_t i = 0; i < m_TextureCache.size(); ++i)
       {
-        m_TextureCache[i] = NULL;
+        m_TextureCache[i] = nullptr;
       }
-      //for(unsigned int i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
+      //for(uint32_t i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
       //{
       //  Type const* type = OGLSemanticManager::GetData(i);
       //  type->Destruct(m_DataCache[i]);
       //  type->Construct(m_DataCache[i]);
       //}
-      m_CurFramebuffer = NULL;
+      m_CurFramebuffer = nullptr;
     }
 
     inline void SetFramebuffer(OGLFramebuffer* iFBO)
@@ -86,7 +86,7 @@ namespace eXl
         glBindFramebuffer(GL_FRAMEBUFFER, iFBO->GetId());
         eXl_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
       }
-      else if(iFBO == NULL && m_CurFramebuffer != NULL)
+      else if(iFBO == nullptr && m_CurFramebuffer != nullptr)
       {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
       }
@@ -100,7 +100,7 @@ namespace eXl
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
       }
 
-      for (unsigned int i = 0; i < 16; ++i)
+      for (uint32_t i = 0; i < 16; ++i)
       {
         if ((m_SetAttribs & 1 << i) != 0)
         {
@@ -111,7 +111,12 @@ namespace eXl
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      for (unsigned int i = 0; i < m_MaxTexture; ++i)
+      for (uint32_t i = 0; i < 16; ++i)
+      {
+        glBindBufferBase(GL_UNIFORM_BUFFER, i, 0);
+      }
+
+      for (uint32_t i = 0; i < m_MaxTexture; ++i)
       {
 
       }
@@ -123,13 +128,12 @@ namespace eXl
 
     inline void SetTechnique(OGLCompiledTechnique const* iTechnique)
     {
-      //m_BackupAttribSlot.swap(m_CurrentAttribSlot);
-      //m_BackupDataSlot.swap(m_CurrentDataSlot);
-
-      if(iTechnique == m_CurrentTechnique)
+      if (iTechnique == m_CurrentTechnique)
+      {
         return;
+      }
 
-      if(iTechnique == NULL)
+      if(iTechnique == nullptr)
       {
         Clear();
         return;
@@ -138,27 +142,26 @@ namespace eXl
       m_CurrentTechnique = iTechnique;
       iTechnique->Setup();
 
-      //Mettre tout ce qui suit dans setup?
-
-      unsigned int oldAttribCount = m_MaxAttrib;
-      unsigned int oldDataCount = m_MaxData;
+      uint32_t oldAttribCount = m_MaxAttrib;
+      uint32_t oldDataCount = m_MaxData;
 
       std::fill(m_CurrentAttribSlot.begin(),m_CurrentAttribSlot.end(),-1);
       std::fill(m_CurrentDataSlot.begin(),m_CurrentDataSlot.end(),-1);
+      std::fill(m_CurrentUBOSlot.begin(), m_CurrentUBOSlot.end(), -1);
       std::fill(m_CurrentTextureSlot.begin(),m_CurrentTextureSlot.end(),-1);
 
-      unsigned int const* slotPtr = iTechnique->GetAttribSlots();
-      unsigned int enabledAttribs = 0;
-      for(unsigned int i = 0; i < iTechnique->GetMaxAttrib(); ++i)
+      uint32_t const* slotPtr = iTechnique->GetAttribSlots();
+      uint32_t enabledAttribs = 0;
+      for(uint32_t i = 0; i < iTechnique->GetMaxAttrib(); ++i)
       {
         m_CurrentAttribSlot[slotPtr[i]] = i;
-        m_BufferBindings[i].buffer = NULL;
-        unsigned int attribLoc = iTechnique->GetAttribLocation(i);
+        m_BufferBindings[i].buffer = nullptr;
+        uint32_t attribLoc = iTechnique->GetAttribLocation(i);
         //glEnableVertexAttribArray(attribLoc);
         enabledAttribs |= 1<<attribLoc;
       }
 
-      for(unsigned int i = 0; i < 16; ++i)
+      for(uint32_t i = 0; i < 16; ++i)
       {
         if((m_SetAttribs & 1<<i) != 0)
         {
@@ -171,7 +174,7 @@ namespace eXl
       m_AttribFlags = (1 << m_MaxAttrib) - 1;
 
       slotPtr = iTechnique->GetUniformSlots();
-      for(unsigned int i = 0; i < iTechnique->GetMaxUniform(); ++i)
+      for(uint32_t i = 0; i < iTechnique->GetMaxUniform(); ++i)
       {
         m_CurrentDataSlot[slotPtr[i]] = i;
         //m_CurrentData[i] = m_DataCache[slotPtr[i]];
@@ -180,8 +183,17 @@ namespace eXl
       m_MaxData = iTechnique->GetMaxUniform();
       m_DataFlags = (1 << m_MaxData) - 1;
 
+      slotPtr = iTechnique->GetUniformBlockSlots();
+      for (uint32_t i = 0; i < iTechnique->GetMaxUniformBlocks(); ++i)
+      {
+        m_CurrentUBOSlot[slotPtr[i]] = i;
+        m_CurrentUBO[i] = &m_UBOCache[slotPtr[i]];
+      }
+      m_MaxUBO = iTechnique->GetMaxUniformBlocks();
+      m_UBOFlags = (1 << m_MaxUBO) - 1;
+
       slotPtr = iTechnique->GetTextureSlots();
-      for(unsigned int i = 0; i < iTechnique->GetMaxTexture(); ++i)
+      for(uint32_t i = 0; i < iTechnique->GetMaxTexture(); ++i)
       {
         m_CurrentTextureSlot[slotPtr[i]] = i;
         m_CurrentTexture[i] = &m_TextureCache[slotPtr[i]];
@@ -192,18 +204,18 @@ namespace eXl
       glUseProgram(iTechnique->GetProgram()->GetProgName());
     }
 
-    inline void SetVertexAttrib(unsigned int iAttribName, OGLBuffer const* iBuffer, unsigned int iNum, size_t iStride, size_t iOffset)
+    inline void SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)
     {
       int currentSlot;
       if(iAttribName < m_CurrentAttribSlot.size() && (currentSlot = m_CurrentAttribSlot[iAttribName]) != -1)
       {
-        if(iBuffer == NULL || iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
+        if(iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
         {
           if(iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
           {
             LOG_WARNING<<"Invalid buffer for attrib"<<"\n";
           }
-          m_BufferBindings[iAttribName].buffer = NULL;
+          m_BufferBindings[iAttribName].buffer = nullptr;
           
         }
         else
@@ -220,7 +232,7 @@ namespace eXl
       }
     }
 
-    inline void SetUniformData(unsigned int iDataName, void const* iData)
+    inline void SetUniformData(uint32_t iDataName, void const* iData)
     {
       //OGLSemanticManager::GetData(iDataName)->Copy(iData, m_DataCache[iDataName]);
       m_DataCache[iDataName] = iData;
@@ -232,7 +244,18 @@ namespace eXl
       }
     }
 
-    inline void SetTexture(unsigned int iTexName, OGLTexture const* iTex)
+    inline void SetUniformBuffer(uint32_t iDataName, OGLBuffer const* iBuffer)
+    {
+      m_UBOCache[iDataName] = iBuffer;
+
+      int currentSlot;
+      if (iDataName < m_CurrentUBOSlot.size() && (currentSlot = m_CurrentUBOSlot[iDataName]) != -1)
+      {
+        m_UBOFlags |= 1 << currentSlot;
+      }
+    }
+
+    inline void SetTexture(uint32_t iTexName, OGLTexture const* iTex)
     {
       m_TextureCache[iTexName] = iTex;
 
@@ -245,7 +268,7 @@ namespace eXl
 
     inline void CheckCache()
     {
-      if(m_AttribFlags != 0 || m_DataFlags != 0 || m_TexFlags != 0)
+      if((m_AttribFlags | m_DataFlags | m_TexFlags | m_UBOFlags) != 0)
       {
         CommitCache();
       }
@@ -253,56 +276,67 @@ namespace eXl
 
     void CommitCache()
     {
-      for(unsigned int i = 0; i<m_CurrentAttribSlot.size(); ++i)
+      while(m_AttribFlags != 0)
       {
-        int slot = m_CurrentAttribSlot[i];
-        if(slot >= 0 && m_AttribFlags & 1<<slot)
+        uint32_t attrib = _tzcnt_u32(m_AttribFlags);
+        m_AttribFlags &= ~(1 << attrib);
+        int slot = m_CurrentAttribSlot[attrib];
+        eXl_ASSERT(slot >= 0);
+        BufferBinding& binding = m_BufferBindings[attrib];
+        if(binding.buffer != nullptr)
         {
-          BufferBinding& binding = m_BufferBindings[i];
-          if(binding.buffer != NULL)
+          if((m_SetAttribs & 1<<attrib) == 0)
           {
-            if((m_SetAttribs & 1<<slot) == 0)
-            {
-              glEnableVertexAttribArray(slot);
-              m_SetAttribs |= 1<<slot;
-            }
-            if(binding.buffer != m_CurrentArrayBuffer)
-            {
-              glBindBuffer(GL_ARRAY_BUFFER,binding.buffer->GetBufferId());
-              m_CurrentArrayBuffer = binding.buffer;
-            }
-            m_CurrentTechnique->HandleAttribute(slot,binding.num,binding.stride,binding.offset);
+            glEnableVertexAttribArray(attrib);
+            m_SetAttribs |= 1<< attrib;
           }
-          else
+          if(binding.buffer != m_CurrentArrayBuffer)
           {
-            if(m_SetAttribs & 1<<slot)
-            {
-              glDisableVertexAttribArray(slot);
-              m_SetAttribs &= ~1<<slot;
-            }
+            glBindBuffer(GL_ARRAY_BUFFER,binding.buffer->GetBufferId());
+            m_CurrentArrayBuffer = binding.buffer;
           }
+          m_CurrentTechnique->HandleAttribute(attrib, binding.num, binding.stride, binding.offset);
         }
-      }
-      for(unsigned int i = 0; i<m_MaxData; ++i)
-      {
-        void const* curData;
-        if(m_DataFlags & 1<<i && (curData = *m_CurrentData[i]) != NULL)
+        else
         {
-          m_CurrentTechnique->HandleUniform(i,curData);
-        }
-      }
-      for(unsigned int i = 0; i<m_MaxTexture; ++i)
-      {
-        OGLTexture const* curTexture;
-        if(m_TexFlags & 1<<i && (curTexture = *m_CurrentTexture[i]) != NULL)
-        {
-          m_CurrentTechnique->HandleTexture(i,curTexture);
+          if(m_SetAttribs & 1<< attrib)
+          {
+            glDisableVertexAttribArray(attrib);
+            m_SetAttribs &= (~1u)<< attrib;
+          }
         }
       }
 
-      m_AttribFlags = 0;
-      m_DataFlags = 0;
-      m_TexFlags = 0;
+      while(m_DataFlags != 0)
+      {
+        uint32_t dataSlot = _tzcnt_u32(m_DataFlags);
+        m_DataFlags &= ~(1 << dataSlot);
+        
+        if(void const* curData = *m_CurrentData[dataSlot])
+        {
+          m_CurrentTechnique->HandleUniform(dataSlot, curData);
+        }
+      }
+
+      while(m_UBOFlags != 0)
+      {
+        uint32_t dataSlot = _tzcnt_u32(m_UBOFlags);
+        m_UBOFlags &= ~(1 << dataSlot);
+        if (OGLBuffer const* curBuffer = *m_CurrentUBO[dataSlot])
+        {
+          m_CurrentTechnique->HandleUniformBlock(dataSlot, curBuffer->GetBufferId());
+        }
+      }
+
+      while (m_TexFlags != 0)
+      {
+        uint32_t texSlot = _tzcnt_u32(m_TexFlags);
+        m_TexFlags &= ~(1 << texSlot);
+        if (OGLTexture const* curTexture = *m_CurrentTexture[texSlot])
+        {
+          m_CurrentTechnique->HandleTexture(texSlot, curTexture);
+        }
+      }
     }
 
     OGLCompiledTechnique const* m_CurrentTechnique;
@@ -313,40 +347,43 @@ namespace eXl
     struct BufferBinding
     {
       OGLBuffer const* buffer;
-      unsigned int attribName;
-      unsigned int num;
+      uint32_t attribName;
+      uint32_t num;
       size_t stride;
       size_t offset;
     };
 
     std::vector<int> m_CurrentAttribSlot;
     std::vector<int> m_CurrentDataSlot;
+    std::vector<int> m_CurrentUBOSlot;
     std::vector<int> m_CurrentTextureSlot;
     
-    //std::vector<int> m_BackupDataSlot;
-    //std::vector<int> m_BackupAttribSlot;
     std::vector<BufferBinding>       m_BufferBindings;
     //std::vector<void*>               m_DataCache;
     std::vector<void const*>         m_DataCache;
+    std::vector<OGLBuffer const*>    m_UBOCache;
     std::vector<OGLTexture const*>   m_TextureCache;
     
     OGLTexture const**   m_CurrentTexture[8];
     void const**         m_CurrentData[16];
+    OGLBuffer const**    m_CurrentUBO[16];
 
     OGLFramebuffer*      m_CurFramebuffer;
     
     //Type const* m_DataType[16];
     //void const* m_Data[16];
 
-    unsigned int m_MaxData = 0;
-    unsigned int m_MaxAttrib = 0;
-    unsigned int m_MaxTexture = 0;
+    uint32_t m_MaxData = 0;
+    uint32_t m_MaxUBO = 0;
+    uint32_t m_MaxAttrib = 0;
+    uint32_t m_MaxTexture = 0;
 
-    unsigned int m_AttribFlags = 0;
-    unsigned int m_NeededAttribs = 0;
-    unsigned int m_SetAttribs = 0;
-    unsigned int m_DataFlags = 0;
-    unsigned int m_TexFlags = 0;
+    uint32_t m_AttribFlags = 0;
+    uint32_t m_NeededAttribs = 0;
+    uint32_t m_SetAttribs = 0;
+    uint32_t m_DataFlags = 0;
+    uint32_t m_UBOFlags = 0;
+    uint32_t m_TexFlags = 0;
 
     //std::vector<Type const*> m_Types;
   };
@@ -375,36 +412,41 @@ namespace eXl
     m_Impl->SetTechnique(iTechnique);
   }
 
-  void OGLRenderContext::SetVertexAttrib(unsigned int iAttribName, OGLBuffer const* iBuffer, unsigned int iNum, size_t iStride, size_t iOffset)
+  void OGLRenderContext::SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)
   {
     m_Impl->SetVertexAttrib(iAttribName,iBuffer,iNum,iStride,iOffset);
   }
 
-  void OGLRenderContext::SetUniformData(unsigned int iDataName, void const* iData)
+  void OGLRenderContext::SetUniformData(uint32_t iDataName, void const* iData)
   {
     m_Impl->SetUniformData(iDataName,iData);
   }
 
-  void OGLRenderContext::SetTexture(unsigned int iTexName, OGLTexture const* iTex)
+  void OGLRenderContext::SetUniformBuffer(uint32_t iDataName, OGLBuffer const* iBuffer)
+  {
+    m_Impl->SetUniformBuffer(iDataName, iBuffer);
+  }
+
+  void OGLRenderContext::SetTexture(uint32_t iTexName, OGLTexture const* iTex)
   {
     m_Impl->SetTexture(iTexName,iTex);
   }
 
-  void OGLRenderContext::Draw(OGLConnectivity iTopo, unsigned int iFirstVertex, unsigned int iNumVertices)
+  void OGLRenderContext::Draw(OGLConnectivity iTopo, uint32_t iFirstVertex, uint32_t iNumVertices)
   {
     m_Impl->CheckCache();
-    if(m_Impl->m_CurrentIndexBuffer != NULL)
+    if(m_Impl->m_CurrentIndexBuffer != nullptr)
     {
-      m_Impl->m_CurrentIndexBuffer = NULL;
+      m_Impl->m_CurrentIndexBuffer = nullptr;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     }
 
     glDrawArrays(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices);
   }
 
-  void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer,OGLConnectivity iTopo, unsigned int iOffset, unsigned int iNumIndices)
+  void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer,OGLConnectivity iTopo, uint32_t iOffset, uint32_t iNumIndices)
   {
-    if(iBuffer == NULL ||iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
+    if(iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
     {
       LOG_WARNING<<"Invalid buffer for DrawIndexed"<<"\n";
       return;
@@ -415,7 +457,7 @@ namespace eXl
       m_Impl->m_CurrentIndexBuffer = iBuffer;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,iBuffer->GetBufferId());
     }
-    glDrawElements(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, (void*)iOffset);
-  }
 
+    glDrawElements(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset);
+  }
 }

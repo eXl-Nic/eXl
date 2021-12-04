@@ -27,7 +27,7 @@ namespace eXl
     friend class OGLTextureLoader;
     DECLARE_RefC;
   public:
-    OGLTexture(Image::Size const& iSize, unsigned int iType);
+    OGLTexture(Image::Size const& iSize, uint32_t iType);
 
     ~OGLTexture();
 
@@ -35,12 +35,12 @@ namespace eXl
 
     //void DropTextureData();
 
-    void Update(AABB2Di iBox, void const* iData, unsigned int iMip = 0, unsigned int iFace = 0);
+    void Update(AABB2Di iBox, void const* iData, uint32_t iMip = 0, uint32_t iFace = 0);
 
-    inline unsigned int    GetId()      const {return m_TexId;}
+    inline uint32_t    GetId()      const {return m_TexId;}
     inline Image::Size const& GetSize() const {return m_Size;}
-    inline unsigned int    GetType()    const {return m_TextureType;}
-    inline unsigned int    GetFormat()  const {return m_TextureFormat;}
+    inline uint32_t    GetType()    const {return m_TextureType;}
+    inline uint32_t    GetFormat()  const {return m_TextureFormat;}
 
     inline bool IsCubeMap() const {return m_CubeMap;}
 
@@ -51,7 +51,7 @@ namespace eXl
     OGLTextureLoader* m_Loader;
 
     Image::Size    m_Size;
-    unsigned int   m_TexId;
+    uint32_t   m_TexId;
     unsigned short m_TextureType;   //GL_UNSIGNED_CHAR,GL_UNSIGNED_SHORT,GL_UNSIGNED_INT
     unsigned short m_TextureFormat; //GL_R,GL_RG,GL_RGB,GL_RGBA
     bool           m_CubeMap;

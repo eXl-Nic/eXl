@@ -62,7 +62,7 @@ namespace eXl
       {
         if (iStreamFlags & 1 << i && (m_Streams[i].streamNum < 32))
         {
-          m_Outputs[i].insert(iOut);
+          m_Outputs[i].insert(IntrusivePtr<LogOutput>(iOut));
         }
       }
 
@@ -83,7 +83,7 @@ namespace eXl
       {
         if (iStreamFlags & 1 << i && (m_Streams[i].streamNum < 32))
         {
-          m_Outputs[i].erase(iOut);
+          m_Outputs[i].erase(IntrusivePtr<LogOutput>(iOut));
         }
       }
 

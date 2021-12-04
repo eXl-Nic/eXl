@@ -74,6 +74,12 @@ namespace eXl
     }
   }
 
+  OGLDisplayList::OGLDisplayList()
+  {
+    m_DataSetSeek.reserve(1024);
+    m_DataSetStore.reserve(1024);
+  }
+
   void OGLDisplayList::InitForPush()
   {
     m_CurDataSet = -1;
@@ -181,7 +187,8 @@ namespace eXl
   void OGLDisplayList::PushData(OGLShaderData const* iData)
   {
     //FlushDraws();
-    OGLShaderDataSet curSet(iData, m_CurDataSet, static_cast<uint32_t>(m_DataSetStore.size()));
+    OGLShaderDataSet const* prevSet = m_CurDataSet != -1 ? &m_DataSetStore[m_CurDataSet] : nullptr;
+    OGLShaderDataSet curSet(iData, prevSet, static_cast<uint32_t>(m_DataSetStore.size()));
     auto iter = m_DataSetSeek.find(curSet);
     if(iter == m_DataSetSeek.end())
     {
@@ -197,21 +204,21 @@ namespace eXl
     //FlushDraws();
     if(m_CurDataSet != -1)
     {
-      m_CurDataSet = m_DataSetStore[m_CurDataSet].prevSet;
+      m_CurDataSet = m_DataSetStore[m_CurDataSet].m_PrevSet;
     }
   }
 
   void OGLDisplayList::FlushDraws()
   {
-    if(m_PendingDraws.size() == 1)
+    if (m_PendingDraws.size() == 1)
     {
       uint16_t curState = m_States.GetStateId();
       CommandKey newKey;
       newKey.m_Offset = m_Commands.size();
-      newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_PendingDraws[0].data);
+      newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_DataSetStore[m_PendingDraws[0].data].m_RenderHash);
 
       m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(OGLGeometry));
-      OGLDraw* draw = (OGLDraw*)((unsigned char*)&m_Commands[0] + newKey.m_Offset);
+      OGLDraw* draw = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
       draw->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::Draw /*| m_PendingDraws[0].topo*/;
       draw->m_Prog = m_CurTechnique;
       draw->m_StateId = curState;
@@ -229,27 +236,27 @@ namespace eXl
     }
     else if(m_PendingDraws.size() > 1)
     {
-      unsigned char curState = m_States.GetStateId();
+      uint8_t curState = m_States.GetStateId();
 
       CommandKey newKey;
       newKey.m_Offset = m_Commands.size();
-      newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_PendingDraws[0].data);
+      newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_DataSetStore[m_PendingDraws[0].data].m_RenderHash);
       
-      m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(unsigned int) + m_PendingDraws.size()*sizeof(OGLGeometry));
+      m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(uint32_t) + m_PendingDraws.size()*sizeof(OGLGeometry));
 
-      OGLDraw* drawGroup = (OGLDraw*)((unsigned char*)&m_Commands[0] + newKey.m_Offset);
+      OGLDraw* drawGroup = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
       drawGroup->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::DrawGroup /*| m_PendingDraws[0].topo*/;
       drawGroup->m_Prog = m_CurTechnique;
       drawGroup->m_StateId = curState;
       drawGroup->m_VDecl = m_CurAssembly;
       drawGroup->m_Topo = m_PendingDraws[0].topo;
 
-      unsigned int* numDraws = (unsigned int*)(drawGroup+1);
+      uint32_t* numDraws = (uint32_t*)(drawGroup+1);
       *numDraws = m_PendingDraws.size();
 
       OGLGeometry* geom = (OGLGeometry*)(numDraws + 1);
 
-      for(unsigned int i = 0; i<m_PendingDraws.size(); ++i)
+      for(uint32_t i = 0; i<m_PendingDraws.size(); ++i)
       {
         geom->m_Mat = m_PendingDraws[i].data;
         geom->m_Num = m_PendingDraws[i].num;
@@ -265,13 +272,13 @@ namespace eXl
 
   void OGLDisplayList::Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vector4f const& iColor, float iDepth)
   {
-    unsigned char curState = m_States.GetStateId();
+    uint8_t curState = m_States.GetStateId();
     CommandKey newKey;
     newKey.m_Offset = m_Commands.size();
     newKey.m_Key = iKey;
 
     m_Commands.resize(m_Commands.size() + sizeof(OGLClear));
-    OGLClear* clearCmd = (OGLClear*)((unsigned char*)&m_Commands[0] + newKey.m_Offset);
+    OGLClear* clearCmd = (OGLClear*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
 
     clearCmd->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::Clear | (iClearColor ? OGLClear::Color : 0) | (iClearDepth ? OGLClear::Depth : 0);
     clearCmd->m_StateId = curState;
@@ -281,9 +288,8 @@ namespace eXl
     m_Keys.push_back(newKey);
   }
 
-  void OGLDisplayList::PushDraw(uint16_t iKey, unsigned char iTopo, unsigned int iNum, unsigned int iOffset)
+  void OGLDisplayList::PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset)
   {
-
     switch(iTopo)
     {
     case OGLDraw::Point:
@@ -313,7 +319,7 @@ namespace eXl
 
   void OGLVAssembly::Apply(OGLRenderContext* iCtx)const
   {
-    for(unsigned int i = 0; i<m_Attribs.size(); ++i)
+    for(uint32_t i = 0; i<m_Attribs.size(); ++i)
     {
       VtxAttrib const& curAttr = m_Attribs[i];
       iCtx->SetVertexAttrib(curAttr.m_AttribId, curAttr.m_VBuffer, curAttr.m_Num, curAttr.m_Stride, curAttr.m_Offset);
@@ -337,11 +343,11 @@ namespace eXl
     m_Timestamp++;
     while(iSet != nullptr)
     {
-      unsigned int numData = iSet->additionalData->GetNumData();
+      uint32_t numData = iSet->m_AdditionalData->GetNumData();
       if(numData > 0)
       {
-        OGLShaderData::ShaderData const* dataPtr = iSet->additionalData->GetDataDescPtr();
-        for(unsigned int i = 0; i<numData; ++i)
+        OGLShaderData::ShaderData const* dataPtr = iSet->m_AdditionalData->GetDataDescPtr();
+        for(uint32_t i = 0; i<numData; ++i)
         {
           if(m_CurrentSetupData[dataPtr->m_DataSlot].dataSet != iSet && m_CurrentSetupData[dataPtr->m_DataSlot].timestamp < m_Timestamp)
           {
@@ -352,11 +358,28 @@ namespace eXl
           ++dataPtr;
         }
       }
-      unsigned int numTex = iSet->additionalData->GetNumTexture();
+
+      uint32_t numUBO = iSet->m_AdditionalData->GetNumUBO();
+      if (numUBO > 0)
+      {
+        OGLShaderData::UBOData const* dataPtr = iSet->m_AdditionalData->GetUBODescPtr();
+        for (uint32_t i = 0; i < numUBO; ++i)
+        {
+          if (m_CurrentSetupUBO[dataPtr->m_Slot].dataSet != iSet && m_CurrentSetupUBO[dataPtr->m_Slot].timestamp < m_Timestamp)
+          {
+            iCtx->SetUniformBuffer(dataPtr->m_Slot, dataPtr->m_DataBuffer.get());
+            m_CurrentSetupUBO[dataPtr->m_Slot].dataSet = iSet;
+          }
+          m_CurrentSetupUBO[dataPtr->m_Slot].timestamp = m_Timestamp;
+          ++dataPtr;
+        }
+      }
+
+      uint32_t numTex = iSet->m_AdditionalData->GetNumTexture();
       if(numTex > 0)
       {
-        OGLShaderData::TextureData const* texPtr = iSet->additionalData->GetTexturePtr();
-        for(unsigned int i = 0; i<numTex; ++i)
+        OGLShaderData::TextureData const* texPtr = iSet->m_AdditionalData->GetTexturePtr();
+        for(uint32_t i = 0; i<numTex; ++i)
         {
           if(m_CurrentSetupTexture[texPtr->m_TextureSlot].dataSet != iSet && m_CurrentSetupTexture[texPtr->m_TextureSlot].timestamp < m_Timestamp)
           {
@@ -367,13 +390,13 @@ namespace eXl
           ++texPtr;
         }
       }
-      if (iSet->prevSet == -1)
+      if (iSet->m_PrevSet == -1)
       {
         return;
       }
       else
       {
-        iSet = &m_DataSetStore[iSet->prevSet];
+        iSet = &m_DataSetStore[iSet->m_PrevSet];
       }
     }
   }
@@ -386,6 +409,8 @@ namespace eXl
 
     m_CurrentSetupData.clear();
     m_CurrentSetupData.resize(OGLSemanticManager::GetNumUniforms(),DataSetup());
+    m_CurrentSetupUBO.clear();
+    m_CurrentSetupUBO.resize(OGLSemanticManager::GetNumUniforms(), DataSetup());
     m_CurrentSetupTexture.clear();
     m_CurrentSetupTexture.resize(OGLSemanticManager::GetNumTextures(),DataSetup());
 
@@ -400,12 +425,12 @@ namespace eXl
     if(!m_Commands.empty() && !m_Keys.empty())
     {
       CommandKey* curKey = &m_Keys[0];
-      unsigned char const* baseCommand = &m_Commands[0];
+      uint8_t const* baseCommand = &m_Commands[0];
 
-      unsigned int numCommands = m_Keys.size();
-      for(unsigned int i = 0; i<numCommands; ++i, ++curKey)
+      uint32_t numCommands = m_Keys.size();
+      for(uint32_t i = 0; i<numCommands; ++i, ++curKey)
       {
-        unsigned char const* curCmd = baseCommand + curKey->m_Offset;
+        uint8_t const* curCmd = baseCommand + curKey->m_Offset;
         switch((*curCmd & OGLRenderCommand::Mask) >>OGLRenderCommand::Shift)
         {
         case OGLRenderCommand::DrawCommand:
@@ -434,7 +459,7 @@ namespace eXl
                 }
 
                 OGLBuffer const* idxBuff = drawCmd->m_VDecl->m_IBuffer;
-                unsigned int idxOffset = drawCmd->m_VDecl->m_IOffset;
+                uint32_t idxOffset = drawCmd->m_VDecl->m_IOffset;
                 if(!(drawCmd->m_Flags & OGLDraw::DrawGroup))
                 {
                   OGLGeometry const* geom = (OGLGeometry const*)(drawCmd + 1);
@@ -448,7 +473,7 @@ namespace eXl
                   }
                   if(idxBuff)
                   {
-                    iCtx->DrawIndexed(idxBuff,topo,idxOffset + geom->m_Offset * sizeof(unsigned int),geom->m_Num);
+                    iCtx->DrawIndexed(idxBuff,topo,idxOffset + geom->m_Offset * sizeof(uint32_t),geom->m_Num);
                   }
                   else
                   {
@@ -457,11 +482,11 @@ namespace eXl
                 }
                 else
                 {
-                  unsigned int numDraws = *(unsigned int*)(drawCmd + 1);
-                  OGLGeometry const* geom = (OGLGeometry const*)((unsigned int*)(drawCmd + 1) + 1);
+                  uint32_t numDraws = *(uint32_t*)(drawCmd + 1);
+                  OGLGeometry const* geom = (OGLGeometry const*)((uint32_t*)(drawCmd + 1) + 1);
                   if(idxBuff)
                   {
-                    for(unsigned int draws = 0; draws < numDraws; ++draws)
+                    for(uint32_t draws = 0; draws < numDraws; ++draws)
                     {
                       if(m_CurDataSet != geom->m_Mat)
                       {
@@ -471,13 +496,13 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
-                      iCtx->DrawIndexed(idxBuff,topo,idxOffset + geom->m_Offset * sizeof(unsigned int),geom->m_Num);
+                      iCtx->DrawIndexed(idxBuff,topo,idxOffset + geom->m_Offset * sizeof(uint32_t),geom->m_Num);
                       geom++;
                     }
                   }
                   else
                   {
-                    for(unsigned int draws = 0; draws < numDraws; ++draws)
+                    for(uint32_t draws = 0; draws < numDraws; ++draws)
                     {
                       if(m_CurDataSet != geom->m_Mat)
                       {

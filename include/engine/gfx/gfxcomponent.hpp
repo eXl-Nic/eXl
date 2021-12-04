@@ -50,11 +50,20 @@ namespace eXl
     OGLDraw::Command m_Command;
   };
 
-  class EXL_ENGINE_API SpriteMaterialInfo : public GfxResource
+  class EXL_ENGINE_API MaterialInfo : public GfxResource
+  {
+  public:
+
+    virtual uint32_t Push(OGLDisplayList& iList) = 0;
+  };
+
+  class EXL_ENGINE_API SpriteMaterialInfo : public MaterialInfo
   {
   public:
 
     void SetupData();
+
+    uint32_t Push(OGLDisplayList& iList) override;
 
     IntrusivePtr<OGLTexture const> m_Texture;
     SpriteColor m_SpriteInfo;
@@ -71,8 +80,9 @@ namespace eXl
     void SetTransform(Matrix4f const& iTransform);
 
     void SetGeometry(GeometryInfo* iGeom);
+    inline void SetGeometry(IntrusivePtr<GeometryInfo> const& iGeom) { SetGeometry(iGeom.get()); }
 
-    void AddDraw(SpriteMaterialInfo* iMat, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
+    void AddDraw(MaterialInfo* iMat, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
 
     void ClearDraws()
     {
@@ -91,7 +101,7 @@ namespace eXl
 
     struct Draw
     {
-      IntrusivePtr<SpriteMaterialInfo> m_Material;
+      IntrusivePtr<MaterialInfo> m_Material;
 
       uint32_t m_NumElements;
       uint32_t m_Offset;
@@ -129,6 +139,7 @@ namespace eXl
     bool m_Billboard = false;
 
 		static IntrusivePtr<OGLBuffer> MakeSpriteGeometry(Vector2f iSize, bool iFlat);
+    static IntrusivePtr<OGLBuffer> MakeSpriteIdxBuffer();
 
 		void Push(OGLDisplayList& iList);
 	};

@@ -22,8 +22,6 @@ namespace eXl
     CharacterSystem::StateFlags m_CurDir;
     boost::optional<GameCueName> m_CurrentActionCue;
     bool m_Walking;
-
-    
   };
 
   using CharacterAnimTable = ObjectTable<CharacterAnimEntry>;

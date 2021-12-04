@@ -22,15 +22,17 @@ namespace eXl
   class EXL_OGL_API OGLProgram : public HeapObject
   {
   public:
-    OGLProgram(unsigned int iProgramName);
+    OGLProgram(uint32_t iProgramName);
 
-    int GetAttribLocation(AString const& iName)const;
-    int GetUniformLocation(AString const& iName)const;
+    int32_t GetAttribLocation(AString const& iName)const;
+    int32_t GetUniformLocation(AString const& iName)const;
+    int32_t GetUniformBlockLocation(AString const& iName)const;
 
-    Err GetAttribDescription(AString const& iName, OGLType& oType, unsigned int& oNum)const;
-    Err GetUniformDescription(AString const& iName, OGLType& oType, unsigned int& oNum)const;
+    Err GetAttribDescription(AString const& iName, OGLType& oType, uint32_t& oNum)const;
+    Err GetUniformDescription(AString const& iName, OGLType& oType, uint32_t& oNum)const;
+    Err GetUniformBlockDescription(AString const& iName, uint32_t& oSize)const;
 
-    inline unsigned int GetProgName()const {return m_ProgramName;}
+    inline uint32_t GetProgName()const {return m_ProgramName;}
 
   protected:
     
@@ -48,12 +50,20 @@ namespace eXl
       uint32_t num;
     };
 
+    struct OGLUniformBlockDesc
+    {
+      uint32_t location;
+      uint32_t size;
+    };
+
     typedef boost::container::flat_map<AString,OGLAttribDesc> AttribDescMap;
     typedef boost::container::flat_map<AString,OGLUniformDesc> UniformDescMap;
+    typedef boost::container::flat_map<AString, OGLUniformBlockDesc> UniformBlockDescMap;
 
     UniformDescMap m_UniformsMap;
     AttribDescMap m_AttribsMap;
-    unsigned int m_ProgramName;
+    UniformBlockDescMap m_BlocksMap;
+    uint32_t m_ProgramName;
   };
 }
 

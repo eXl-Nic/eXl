@@ -21,7 +21,7 @@ namespace eXl
   struct OGLAttribDesc
   {
     AString m_Name;
-    unsigned int m_Mult;
+    uint32_t m_Mult;
     OGLType m_Type;
   };
 
@@ -37,23 +37,24 @@ namespace eXl
   class EXL_OGL_API OGLSemanticManager
   {
   public:
-    static unsigned int RegisterAttribute(AString const& iName, OGLType iAttribType, unsigned int iMult);
+    static uint32_t RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult);
 
-    static unsigned int RegisterUniformData(AString const& iName, TupleType const* iDataType);
+    static uint32_t RegisterUniformData(AString const& iName, TupleType const* iDataType);
 
-    static unsigned int RegisterTexture(AString const& iTexName, OGLSamplerDesc const& iSampler);
+    static uint32_t RegisterTexture(AString const& iTexName, OGLSamplerDesc const& iSampler);
 
-    static OGLAttribDesc const& GetAttrib(unsigned int iName);
+    static OGLAttribDesc const& GetAttrib(uint32_t iName);
 
-    static TupleType const* GetData(unsigned int iName);
+    static AString const* GetDataName(uint32_t iName);
+    static TupleType const* GetDataType(uint32_t iName);
 
-    static OGLSamplerDesc const& GetSampler(unsigned int iName);
+    static OGLSamplerDesc const& GetSampler(uint32_t iName);
 
-    static unsigned int GetNumAttribs();
+    static uint32_t GetNumAttribs();
 
-    static unsigned int GetNumUniforms();
+    static uint32_t GetNumUniforms();
 
-    static unsigned int GetNumTextures();
+    static uint32_t GetNumTextures();
   };
 }
 

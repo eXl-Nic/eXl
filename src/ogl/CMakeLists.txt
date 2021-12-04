@@ -12,6 +12,7 @@ ${EXL_OGL_HEADER_FILES}
 oglspritealgo.cpp
 oglutils.cpp
 oglplugin.cpp
+ogltexturecache.cpp
 
 renderer/oglrendercommand.cpp
 renderer/ogltechnique.cpp

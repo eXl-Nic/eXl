@@ -29,8 +29,8 @@ namespace eXl
   struct EXL_OGL_API Bitmap : public HeapObject
   {
     bool TestBox(AABB2Df const& iPickBox, AABB2Df const& iBoxPos, AABB2Df const& iBoxTex) const;
-    unsigned int m_Width;
-    unsigned int m_Height;
+    uint32_t m_Width;
+    uint32_t m_Height;
     Vector<bool> m_Pixels;
   };
 
@@ -88,7 +88,7 @@ namespace eXl
       PreloadTexture = 1<<2
     };
 
-    void Preload(unsigned int iPreloadFlags) const;
+    void Preload(uint32_t iPreloadFlags) const;
 
     OGLTexture const* GetTexture() const;
 
@@ -134,7 +134,7 @@ namespace eXl
       void* pickId;
       IntrusivePtr<SpriteDesc const> texHandle;// texture handle
       float alpha;
-      unsigned int offsetInBuffer;
+      uint32_t offsetInBuffer;
       unsigned short layer;
       unsigned short orient;
     };
@@ -144,8 +144,8 @@ namespace eXl
       void Empty();
       IntrusivePtr<SpriteDesc const> spriteDesc;
       OGLShaderData const* data;
-      unsigned int vertexCount;
-      unsigned int m_Layer;
+      uint32_t vertexCount;
+      uint32_t m_Layer;
     };
 
     struct SpriteArray
@@ -170,41 +170,41 @@ namespace eXl
 
     void SetAlphaCoeff(float iAlpha);
 
-    unsigned int AddSprite(void* iData, SpriteDesc const* iSprite, float alpha,unsigned int layer, unsigned int iOrient, AABB2Df const& destRect , AABB2Df const& spriteRect = FULL_SPRITE);
+    uint32_t AddSprite(void* iData, SpriteDesc const* iSprite, float alpha,uint32_t layer, uint32_t iOrient, AABB2Df const& destRect , AABB2Df const& spriteRect = FULL_SPRITE);
 
-    void UpdateSprite(unsigned int iId, AABB2Df const& destRect);
+    void UpdateSprite(uint32_t iId, AABB2Df const& destRect);
 
-    void UpdateSprite(unsigned int iId, AABB2Df const& destRect, unsigned int iOrient, AABB2Df const& spriteRect);
+    void UpdateSprite(uint32_t iId, AABB2Df const& destRect, uint32_t iOrient, AABB2Df const& spriteRect);
 
-    void RemoveSprite(unsigned int iId);
+    void RemoveSprite(uint32_t iId);
 
-    unsigned int CreateSpriteCollec(void* iData, unsigned int layer, unsigned int alpha, unsigned iNum, SpriteDesc const* const* iSprite, AABB2Df const* destRect, AABB2Df const* spriteRect, unsigned char const* iOrient);
+    uint32_t CreateSpriteCollec(void* iData, uint32_t layer, uint32_t alpha, unsigned iNum, SpriteDesc const* const* iSprite, AABB2Df const* destRect, AABB2Df const* spriteRect, uint8_t const* iOrient);
 
-    void EraseSpriteCollec(unsigned int iId);
+    void EraseSpriteCollec(uint32_t iId);
 
-    //unsigned int CreateText(String const& iFont, String const& iText, unsigned int iLayer, unsigned int iColor, Vector2f const& iPos, Vector2f const& iScale, FontManager::Anchor iAnchor);
+    //uint32_t CreateText(String const& iFont, String const& iText, uint32_t iLayer, uint32_t iColor, Vector2f const& iPos, Vector2f const& iScale, FontManager::Anchor iAnchor);
 
-    //void EraseText(unsigned int iId);
+    //void EraseText(uint32_t iId);
 
-    void Hide(unsigned int iId);
+    void Hide(uint32_t iId);
 
-    void Unhide(unsigned int iId, void* iData);
+    void Unhide(uint32_t iId, void* iData);
 
-    //void Pick(Vector3f const& iPos, Vector3f const& iRay, float iRadius, unsigned int iMaxElem, std::vector<PickedElement>& oList, void* iUnpickable);
+    //void Pick(Vector3f const& iPos, Vector3f const& iRay, float iRadius, uint32_t iMaxElem, std::vector<PickedElement>& oList, void* iUnpickable);
 
-    Bitmap const* GetBitmap(unsigned int iElem);
+    Bitmap const* GetBitmap(uint32_t iElem);
 
     void Update();
 
-    void BatchRender(OGLDisplayList& iList, unsigned char iPrefix);
+    void BatchRender(OGLDisplayList& iList, uint8_t iPrefix);
 
     //void ShutdownAPI(GfxSys* iSys);
 
     //void RestoreAPI(GfxSys* iSys);
 
-    SpriteElement const* GetElement(unsigned int iId);
+    SpriteElement const* GetElement(uint32_t iId);
 
-    SpriteArray const* GetArray(unsigned int iId);
+    SpriteArray const* GetArray(uint32_t iId);
 
     inline OGLVAssembly const* GetDefaultAssembly() const{return &m_DefaultAssembly;}
     //inline OGLTextureLoader* GetTextureLoader() const{return m_Loader;}

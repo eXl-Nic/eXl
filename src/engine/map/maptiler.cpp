@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/map/tilinggroup.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
 #include <engine/gfx/gfxsystem.hpp>
+#include <math/mathtools.hpp>
 #include <numeric>
 #include <bitset>
 
@@ -107,6 +108,7 @@ namespace eXl
           mat->m_SpriteInfo.tcOffset = group.m_VtxOffset;
           mat->m_SpriteInfo.tcScaling = group.m_VtxScaling;
           mat->m_SpriteInfo.texSize = group.m_Tiling;
+          mat->m_SpriteInfo.imageSize = MathTools::ToFVec(tex->GetSize());
           mat->m_Texture = tex;
           mat->SetupData();
 

@@ -14,13 +14,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 
 #include "FreeImage.h"
-//#if WIN32
-//#include <cstdint>
-//#else
-//#define UINT8_MAX 255
-//#define UINT16_MAX 65535
-//#define UINT32_MAX 4294967295
-//#endif
 
 namespace eXl
 {

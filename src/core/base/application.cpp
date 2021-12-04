@@ -35,7 +35,7 @@ namespace eXl
     : m_Width(1024)
     , m_Height(768)
   { 
-    eXl::StartCoreLib(nullptr);
+    eXl::StartCoreLib();
     {
       LOG_INFO<<"Started Core lib"<<"\n";
     }

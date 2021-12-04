@@ -89,8 +89,6 @@ namespace eXl
     const unsigned int line;
   };
 
-  class RttiObjectRefC;
-
   struct Err
   {
     enum Code
@@ -145,7 +143,6 @@ namespace eXl
   const CompRes CompDifferent = 1;
   const CompRes CompLesser    = 2;
   const CompRes CompGreater   = 4;
-  
 }
 
 

@@ -31,6 +31,8 @@ namespace eXl
   {
   public:
 
+    OGLDisplayList();
+
     void InitForPush();
 
     void InitForRender();
@@ -59,7 +61,7 @@ namespace eXl
 
     void PopData();
 
-    void PushDraw(uint16_t iKey, unsigned char iTopo, unsigned int iNum, unsigned int iOffset);
+    void PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset);
 
     void Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vector4f const& iColor = Vector4f::ZERO, float iDepth = 1.0);
 
@@ -98,24 +100,25 @@ namespace eXl
     {
       inline bool operator<(CommandKey const& iOther)const
       {
-        return memcmp(this, &iOther, sizeof(CommandKey)) < 0;
+        return m_Key < iOther.m_Key;
       }
       //High level + Low level
       uint64_t m_Key;
       size_t   m_Offset;
     };
-    std::vector<CommandKey>    m_Keys;
-    std::vector<unsigned char> m_Commands;
+    std::vector<CommandKey> m_Keys;
+    std::vector<uint8_t> m_Commands;
 
-    unsigned int m_Timestamp;
+    uint32_t m_Timestamp;
     //Data set for each slot.
     struct DataSetup
     {
       inline DataSetup():dataSet(NULL),timestamp(0){}
       OGLShaderDataSet const* dataSet;
-      unsigned int timestamp;
+      uint32_t timestamp;
     };
     std::vector<DataSetup> m_CurrentSetupData;
+    std::vector<DataSetup> m_CurrentSetupUBO;
     std::vector<DataSetup> m_CurrentSetupTexture;
   };
 }

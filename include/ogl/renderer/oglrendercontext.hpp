@@ -38,15 +38,17 @@ namespace eXl
 
     //void BindBuffer(OGLBuffer* iBuffer);
 
-    void SetVertexAttrib(unsigned int iAttribName, OGLBuffer const* iBuffer, unsigned int iNum, size_t iStride, size_t iOffset);
+    void SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset);
 
-    void SetUniformData(unsigned int iDataName, void const* iData);
+    void SetUniformData(uint32_t iDataName, void const* iData);
 
-    void SetTexture(unsigned int iTexName, OGLTexture const* iTex);
+    void SetUniformBuffer(uint32_t iDataName, OGLBuffer const* iBuffer);
 
-    void Draw(OGLConnectivity iTopo, unsigned int iFirstVertex, unsigned int iNumVertices);
+    void SetTexture(uint32_t iTexName, OGLTexture const* iTex);
 
-    void DrawIndexed(OGLBuffer const* iBuffer, OGLConnectivity iTopo, unsigned int iOffset, unsigned int iNumIndices);
+    void Draw(OGLConnectivity iTopo, uint32_t iFirstVertex, uint32_t iNumVertices);
+
+    void DrawIndexed(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iOffset, uint32_t iNumIndices);
 
   protected:
     OGLRenderContextImpl* m_Impl;

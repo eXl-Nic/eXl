@@ -19,7 +19,7 @@ namespace eXl
   class OGLProgram;
   class OGLCompiledTechnique;
 
-  struct CameraMatrix
+  struct EXL_OGL_API CameraMatrix
   {
     EXL_REFLECT;
 
@@ -34,15 +34,15 @@ namespace eXl
 
     static void Init();
 
-    static unsigned int GetPosAttrib();
+    static uint32_t GetPosAttrib();
 
-    static unsigned int GetTexCoordAttrib();
+    static uint32_t GetTexCoordAttrib();
 
-    static unsigned int GetWorldMatUniform();
+    static uint32_t GetWorldMatUniform();
 
-    static unsigned int GetCameraUniform();
+    static uint32_t GetCameraUniform();
 
-    static unsigned int GetDiffuseTexture();
+    static uint32_t GetDiffuseTexture();
   };
 
   class EXL_OGL_API OGLLineAlgo
@@ -53,10 +53,10 @@ namespace eXl
 
     static OGLCompiledTechnique const* GetTechnique();
 
-    static unsigned int GetColor();
+    static uint32_t GetColor();
   };
 
-  struct SpriteColor
+  struct EXL_OGL_API SpriteColor
   {
     EXL_REFLECT;
 
@@ -64,6 +64,7 @@ namespace eXl
 		Vector2f tcOffset = Vector2f::ZERO;
 		Vector2f tcScaling = Vector2f::ONE;
     Vector2f texSize = Vector2f::ONE;
+    Vector2f imageSize;
     float alphaMult = 1.0;
   };
 
@@ -79,9 +80,9 @@ namespace eXl
 
     static OGLCompiledTechnique const* GetFontTechnique();
 
-    static unsigned int GetSpriteColorUniform();
+    static uint32_t GetSpriteColorUniform();
 
-    static unsigned int GetUnfilteredTexture();
+    static uint32_t GetUnfilteredTexture();
   };
 
 
@@ -92,7 +93,7 @@ namespace eXl
     Vector3f m_Color;
   };
 
-  struct MaterialInfo
+  struct MeshMaterialInfo
   {
     Vector4f m_BRDFParameters;
     Vector3f m_DiffuseColor;
@@ -106,20 +107,20 @@ namespace eXl
 
     static void ShutdownAPI();
 
-    static unsigned int GetNormalAttrib();
+    static uint32_t GetNormalAttrib();
 
     static OGLCompiledTechnique const* GetMeshTechnique();
     static OGLCompiledTechnique const* GetMeshNormalTechnique();
 
-    static unsigned int GetLightInfo();
+    static uint32_t GetLightInfo();
 
-    static unsigned int GetSpecularMap();
+    static uint32_t GetSpecularMap();
 
-    static unsigned int GetEnvBrdfLUT();
+    static uint32_t GetEnvBrdfLUT();
 
-    static unsigned int GetIrradianceMap();
+    static uint32_t GetIrradianceMap();
 
-    static unsigned int GetMaterialInfo();
+    static uint32_t GetMaterialInfo();
 
   };
 
@@ -131,7 +132,7 @@ namespace eXl
 
     static void ShutdownAPI();
 
-    static unsigned int GetSkyTexture();
+    static uint32_t GetSkyTexture();
 
     static OGLCompiledTechnique const* GetSkyTechnique();
 
@@ -159,7 +160,7 @@ namespace eXl
 
     static void ShutdownAPI();
 
-    static unsigned int GetAlgoInfo();
+    static uint32_t GetAlgoInfo();
 
     static OGLCompiledTechnique const* GetIrradianceMapTechnique();
     static OGLCompiledTechnique const* GetSpecularMapTechnique();

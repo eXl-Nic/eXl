@@ -66,16 +66,17 @@ namespace eXl
     {
       static TupleType const* s_Type = []
       {
-        Type const* animEnum = TypeManager::BeginEnumTypeRegistration("AnimationType")
-          .AddValue("None")
-          .AddValue("Loop")
-          .AddValue("Pingpong")
-          .EndRegistration();
+        //Type const* animEnum = TypeManager::BeginEnumTypeRegistration("AnimationType")
+        //  .AddValue("None")
+        //  .AddValue("Loop")
+        //  .AddValue("Pingpong")
+        //  .EndRegistration();
         return TypeManager::BeginNativeTypeRegistration<Tile>("Tile")
           .AddField("ImageName", &Tile::m_ImageName)
           .AddField("FrameDuration", &Tile::m_FrameDuration)
           .AddField("Size", &Tile::m_Size)
-          .AddCustomField("AnimationType", &Tile::m_AnimType, animEnum)
+          //.AddCustomField("AnimationType", &Tile::m_AnimType, animEnum)
+          .AddField("AnimationType", &Tile::m_AnimType)
           .AddCustomField("Frames", &Tile::m_Frames, TypeManager::GetArrayType<Vector2i>())
           .AddField("Offset", &Tile::m_Offset)
           .AddField("Scale", &Tile::m_Scale)
@@ -317,7 +318,7 @@ namespace eXl
 			Image const* img = GetImage(iImage);
       if (img == nullptr)
       {
-        return nullptr;
+        return IntrusivePtr<OGLTexture>();
       }
 
       //Image dummy = DummySprites::BitmapToImage(DummySprites::dummyChar, img->GetSize());

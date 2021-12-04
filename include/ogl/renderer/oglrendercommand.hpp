@@ -73,7 +73,7 @@ namespace eXl
 
     uint16_t m_Flag = 0;
     uint16_t m_Padding = 0;
-    unsigned int  m_ScissorCoord[4];
+    uint32_t  m_ScissorCoord[4];
 
   };
 
@@ -185,48 +185,52 @@ namespace eXl
     };
     std::vector<VtxAttrib> m_Attribs;
 
-    void AddAttrib(OGLBuffer const* iBuffer, unsigned int iAttribId, unsigned int iNum, unsigned int iStride, unsigned int iOffset)
+    void AddAttrib(OGLBuffer const* iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     {
       VtxAttrib newAttrib = {iBuffer,iAttribId,iNum,iStride,iOffset};
       m_Attribs.push_back(newAttrib);
     }
 
-    void AddAttrib(IntrusivePtr<OGLBuffer const> const& iBuffer, unsigned int iAttribId, unsigned int iNum, unsigned int iStride, unsigned int iOffset)
+    void AddAttrib(IntrusivePtr<OGLBuffer const> const& iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     { AddAttrib(iBuffer.get(), iAttribId, iNum, iStride, iOffset); }
 
-    void AddAttrib(IntrusivePtr<OGLBuffer> const& iBuffer, unsigned int iAttribId, unsigned int iNum, unsigned int iStride, unsigned int iOffset)
+    void AddAttrib(IntrusivePtr<OGLBuffer> const& iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     { AddAttrib(iBuffer.get(), iAttribId, iNum, iStride, iOffset); }
 
     OGLBuffer const* m_IBuffer;
-    unsigned int m_IOffset;
+    uint32_t m_IOffset;
 
     void Apply(OGLRenderContext* ) const;
   };
 
   struct OGLShaderDataSet
   {
-    OGLShaderDataSet(OGLShaderData const* iAdditionalData, uint32_t iPrevSet, uint32_t iId)
-      : additionalData(iAdditionalData)
-      , prevSet(iPrevSet)
+    OGLShaderDataSet(OGLShaderData const* iAdditionalData, OGLShaderDataSet const* iPrevSet, uint32_t iId)
+      : m_AdditionalData(iAdditionalData)
+      , m_PrevSet(iPrevSet ? iPrevSet->m_Id : -1)
       , m_Id(iId)
-    {}
+    {
+      m_RenderHash = (iPrevSet ? iPrevSet->m_RenderHash << 8 : 0)
+        | (((ptrdiff_t)(m_AdditionalData) >> 4) & 0xFF);
+    }
 
     inline bool operator ==(OGLShaderDataSet const& iOther) const
     {
-      return prevSet == iOther.prevSet && additionalData == iOther.additionalData;
+      return m_PrevSet == iOther.m_PrevSet && m_AdditionalData == iOther.m_AdditionalData;
     }
 
-    OGLShaderData const* additionalData;
-    uint32_t prevSet = -1;
+    OGLShaderData const* m_AdditionalData;
+    uint32_t m_PrevSet = -1;
     uint32_t m_Id = 0;
+    uint32_t m_RenderHash = 0;
   };
 
   inline size_t hash_value(OGLShaderDataSet const& Set)
   {
-    size_t value = (ptrdiff_t)Set.additionalData;
-    if (Set.prevSet)
+    size_t value = (ptrdiff_t)Set.m_AdditionalData;
+    if (Set.m_PrevSet)
     {
-      boost::hash_combine(value, Set.prevSet);
+      boost::hash_combine(value, Set.m_PrevSet);
     }
     return value;
   }

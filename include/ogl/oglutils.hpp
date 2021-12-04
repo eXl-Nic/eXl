@@ -25,8 +25,8 @@ namespace eXl
     //static void MakeOGLMatrix(float (&oMatrix) [16], Quaternionf const& iOrient, Vector3f const& iPos);
     static void MakeOGLMatrix(float* oMatrix, Quaternionf const& iOrient, Vector3f const& iPos);
 
-    static unsigned int CompileShader(unsigned int iType,char const* iSource);
+    static uint32_t CompileShader(uint32_t iType,char const* iSource);
 
-    static unsigned int LinkProgram(unsigned int iVS, unsigned int iPS);
+    static uint32_t LinkProgram(uint32_t iVS, uint32_t iPS);
   };
 }

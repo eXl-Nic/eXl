@@ -17,6 +17,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "ogldefaultVS.inl"
 #include "ogldefaultPS.inl"
+#include "oglhq2x.inl"
+#include "oglhq4x.inl"
 #include "ogllinePS.inl"
 
 #include "oglmeshVS.inl"
@@ -42,14 +44,14 @@ namespace eXl
 {
   namespace
   {
-    unsigned int s_PosAttrib      = 1<<31;
-    unsigned int s_TexAttrib      = 1<<31;
-    unsigned int s_WorldMatUnif   = 1<<31;
-    unsigned int s_CameraUnif     = 1<<31;
-    unsigned int s_DiffuseTexture = 1<<31;
-    unsigned int s_UnfilteredTexture = 1<<31;
-    unsigned int s_SpriteColor    = 1<<31;
-    unsigned int s_LineColor      = 1<<31;
+    uint32_t s_PosAttrib      = 1<<31;
+    uint32_t s_TexAttrib      = 1<<31;
+    uint32_t s_WorldMatUnif   = 1<<31;
+    uint32_t s_CameraUnif     = 1<<31;
+    uint32_t s_DiffuseTexture = 1<<31;
+    uint32_t s_UnfilteredTexture = 1<<31;
+    uint32_t s_SpriteColor    = 1<<31;
+    uint32_t s_LineColor      = 1<<31;
 
     OGLCompiledTechnique const* s_SpriteTech = NULL;
     OGLCompiledTechnique const* s_USpriteTech = NULL;
@@ -66,11 +68,12 @@ namespace eXl
   void OGLBaseAlgo::Init()
   {
     if(s_PosAttrib == 1<<31)
-		{
-
+    {
 #ifndef __ANDROID__
-			glewInit();
+      glewInit();
 #endif
+
+      //LOG_INFO << "GL version : " << (char*)glGetString(GL_VERSION) << "\n";
 
       s_PosAttrib = OGLSemanticManager::RegisterAttribute("iPosition",OGLType::FLOAT32,3);
       s_TexAttrib = OGLSemanticManager::RegisterAttribute("iTexCoord",OGLType::FLOAT32,2);
@@ -95,27 +98,27 @@ namespace eXl
     }
   }
 
-  unsigned int OGLBaseAlgo::GetPosAttrib()
+  uint32_t OGLBaseAlgo::GetPosAttrib()
   {
     return s_PosAttrib;
   }
 
-  unsigned int OGLBaseAlgo::GetTexCoordAttrib()
+  uint32_t OGLBaseAlgo::GetTexCoordAttrib()
   {
     return s_TexAttrib;
   }
 
-  unsigned int OGLBaseAlgo::GetWorldMatUniform()
+  uint32_t OGLBaseAlgo::GetWorldMatUniform()
   {
     return s_WorldMatUnif;
   }
 
-  unsigned int OGLBaseAlgo::GetCameraUniform()
+  uint32_t OGLBaseAlgo::GetCameraUniform()
   {
     return s_CameraUnif;
   }
 
-  unsigned int OGLBaseAlgo::GetDiffuseTexture()
+  uint32_t OGLBaseAlgo::GetDiffuseTexture()
   {
     return s_DiffuseTexture;
   }
@@ -134,12 +137,12 @@ namespace eXl
     return s_FontTech;
   }
 
-  unsigned int OGLSpriteAlgo::GetSpriteColorUniform()
+  uint32_t OGLSpriteAlgo::GetSpriteColorUniform()
   {
     return s_SpriteColor;
   }
 
-  unsigned int OGLSpriteAlgo::GetUnfilteredTexture()
+  uint32_t OGLSpriteAlgo::GetUnfilteredTexture()
   {
     return s_UnfilteredTexture;
   }
@@ -162,13 +165,14 @@ namespace eXl
     }
     if(s_SpriteTech == NULL)
     {
-      GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER,defaultVS);
-      GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER,defaultPS);
-      GLuint unfilteredFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER,defaultUPS);
+      GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
+      GLuint hq4xVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, hq4xVS);
+      GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, defaultPS);
+      GLuint unfilteredFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, hq4xPS);
       GLuint fontFShader    = OGLUtils::CompileShader(GL_FRAGMENT_SHADER,fontPS);
 
       GLuint defaultProgramId = OGLUtils::LinkProgram(defaultVShader,defaultFShader);
-      GLuint unfilteredProgramId = OGLUtils::LinkProgram(defaultVShader,unfilteredFShader);
+      GLuint unfilteredProgramId = OGLUtils::LinkProgram(hq4xVShader,unfilteredFShader);
 
       GLuint fontProgramId    = OGLUtils::LinkProgram(defaultVShader,fontFShader);
 
@@ -271,7 +275,7 @@ namespace eXl
     return s_LineTech;
   }
 
-  unsigned int OGLLineAlgo::GetColor()
+  uint32_t OGLLineAlgo::GetColor()
   {
     return s_LineColor;
   }
@@ -313,12 +317,12 @@ namespace eXl
     }
   }
 
-  unsigned int s_LightInfo      = 1<<31;
-  unsigned int s_MaterialInfo   = 1<<31;
-  unsigned int s_NormalAttrib   = 1<<31;
-  unsigned int s_IrradianceMap  = 1<<31;
-  unsigned int s_SpecularEnvMap = 1<<31;
-  unsigned int s_EnvBrdfLut     = 1<<31;
+  uint32_t s_LightInfo      = 1<<31;
+  uint32_t s_MaterialInfo   = 1<<31;
+  uint32_t s_NormalAttrib   = 1<<31;
+  uint32_t s_IrradianceMap  = 1<<31;
+  uint32_t s_SpecularEnvMap = 1<<31;
+  uint32_t s_EnvBrdfLut     = 1<<31;
 
   OGLCompiledTechnique const* s_MeshTech = NULL;
   OGLCompiledTechnique const* s_MeshNormalTech = NULL;
@@ -375,8 +379,8 @@ namespace eXl
 
       fieldList.clear();
 
-      fieldList.push_back(FieldDesc::MakeField(TypeFieldName("iDiffuseColor"),&MaterialInfo::m_DiffuseColor));
-      fieldList.push_back(FieldDesc::MakeField(TypeFieldName("iBRDFParameters"),&MaterialInfo::m_BRDFParameters));
+      fieldList.push_back(FieldDesc::MakeField(TypeFieldName("iDiffuseColor"),&MeshMaterialInfo::m_DiffuseColor));
+      fieldList.push_back(FieldDesc::MakeField(TypeFieldName("iBRDFParameters"),&MeshMaterialInfo::m_BRDFParameters));
 
       type = TupleTypeStruct::Create(fieldList);
 
@@ -417,22 +421,22 @@ namespace eXl
     }
   }
 
-  unsigned int OGLMeshAlgo::GetIrradianceMap()
+  uint32_t OGLMeshAlgo::GetIrradianceMap()
   {
     return s_IrradianceMap;
   }
 
-  unsigned int OGLMeshAlgo::GetSpecularMap()
+  uint32_t OGLMeshAlgo::GetSpecularMap()
   {
     return s_SpecularEnvMap;
   }
 
-  unsigned int OGLMeshAlgo::GetEnvBrdfLUT()
+  uint32_t OGLMeshAlgo::GetEnvBrdfLUT()
   {
     return s_EnvBrdfLut;
   }
 
-  unsigned int OGLMeshAlgo::GetNormalAttrib()
+  uint32_t OGLMeshAlgo::GetNormalAttrib()
   {
     return s_NormalAttrib;
   }
@@ -447,17 +451,17 @@ namespace eXl
     return s_MeshNormalTech;
   }
 
-  unsigned int OGLMeshAlgo::GetLightInfo()
+  uint32_t OGLMeshAlgo::GetLightInfo()
   {
     return s_LightInfo;
   }
 
-  unsigned int OGLMeshAlgo::GetMaterialInfo()
+  uint32_t OGLMeshAlgo::GetMaterialInfo()
   {
     return s_MaterialInfo;
   }
 
-  unsigned int s_SkyTexture    = 1<<31;
+  uint32_t s_SkyTexture    = 1<<31;
   
   OGLCompiledTechnique const* s_SkyTech = NULL;
 
@@ -497,7 +501,7 @@ namespace eXl
     }
   }
 
-  unsigned int OGLSkyAlgo::GetSkyTexture()
+  uint32_t OGLSkyAlgo::GetSkyTexture()
   {
     return s_SkyTexture;
   }
@@ -507,7 +511,7 @@ namespace eXl
     return s_SkyTech;
   }
 
-  unsigned int s_IrradianceAlgoInfo = 1<<31;
+  uint32_t s_IrradianceAlgoInfo = 1<<31;
 
   OGLCompiledTechnique const* s_IrradianceMapTech = NULL;
   OGLCompiledTechnique const* s_SpecularMapTech = NULL;
@@ -557,7 +561,7 @@ namespace eXl
     }
   }
 
-  unsigned int OGLIrradianceMapAlgo::GetAlgoInfo()
+  uint32_t OGLIrradianceMapAlgo::GetAlgoInfo()
   {
     return s_IrradianceAlgoInfo;
   }

@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/renderer/oglprogram.hpp>
 #include <core/log.hpp>
 #include <core/coredef.hpp>
+#include <math/math.hpp>
 
 #include <ogl/renderer/oglinclude.hpp>
 #include <ogl/renderer/ogltypesconv.hpp>
@@ -20,7 +21,7 @@ namespace eXl
 {
   namespace
   {
-    void SplitAttrib(OGLType iType, OGLType& oType, unsigned int& oNum)
+    void SplitAttrib(OGLType iType, OGLType& oType, uint32_t& oNum)
     {
       switch(iType)
       {
@@ -55,19 +56,25 @@ namespace eXl
     }
   }
 
-  OGLProgram::OGLProgram(GLuint iProgramName):m_ProgramName(iProgramName)
+  OGLProgram::OGLProgram(GLuint iProgramName)
+    : m_ProgramName(iProgramName)
   {
     if(iProgramName != 0)
     {
       GLint numUnif;
       GLint numAttribs;
+      GLint numBlocks;
       GLint nameLength;
       GLint attribNameLength;
-      glGetProgramiv(m_ProgramName,GL_ACTIVE_ATTRIBUTES,&numAttribs);
-      glGetProgramiv(m_ProgramName,GL_ACTIVE_UNIFORMS,&numUnif);
-      glGetProgramiv(m_ProgramName,GL_ACTIVE_UNIFORM_MAX_LENGTH,&nameLength);
-      glGetProgramiv(m_ProgramName,GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,&attribNameLength);
-      nameLength = nameLength > attribNameLength ? nameLength : attribNameLength;
+      GLint blockNameLength;
+      
+      glGetProgramiv(m_ProgramName, GL_ACTIVE_ATTRIBUTES,&numAttribs);
+      glGetProgramiv(m_ProgramName, GL_ACTIVE_UNIFORMS,&numUnif);
+      glGetProgramiv(m_ProgramName, GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
+      glGetProgramiv(m_ProgramName, GL_ACTIVE_UNIFORM_MAX_LENGTH,&nameLength);
+      glGetProgramiv(m_ProgramName, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,&attribNameLength);
+      glGetProgramiv(m_ProgramName, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &blockNameLength);
+      nameLength = Mathi::Max(Mathi::Max(nameLength, attribNameLength), blockNameLength);
       
       std::vector<char> nameBuff(nameLength);
 
@@ -79,7 +86,7 @@ namespace eXl
           GLint oNameLength;
           GLenum oType;
           GLint  oSize;
-          glGetActiveAttrib(m_ProgramName,i,nameLength,&oNameLength,&oSize,&oType,&nameBuff[0]);
+          glGetActiveAttrib(m_ProgramName,i,nameLength,&oNameLength,&oSize,&oType,nameBuff.data());
           GLint loc = glGetAttribLocation(m_ProgramName,&nameBuff[0]);
           //eXl_ASSERT_MSG(loc != -1, "Problem with attrib location");
          
@@ -92,6 +99,7 @@ namespace eXl
          
         }
       }
+
       if(numUnif > 0 && nameLength > 0)
       {
         m_UniformsMap.reserve(numUnif);
@@ -100,15 +108,38 @@ namespace eXl
           GLint oNameLength;
           GLenum oType;
           GLint  oSize;
-          glGetActiveUniform(m_ProgramName,i,nameLength,&oNameLength,&oSize,&oType,&nameBuff[0]);
-          GLint loc = glGetUniformLocation(m_ProgramName,&nameBuff[0]);
-          eXl_ASSERT_MSG(loc != -1, "Problem with uniform location");
+          glGetActiveUniform(m_ProgramName, i, nameLength, &oNameLength, &oSize, &oType, nameBuff.data());
+          GLint loc = glGetUniformLocation(m_ProgramName, &nameBuff[0]);
+          if (loc == -1)
+          {
+            continue;
+          }
           OGLUniformDesc newDesc;
           newDesc.location = loc;
           newDesc.num = oSize;
           newDesc.type = ConvertGLType(oType);
           //LOG_INFO<<"Inserted uniform"<<String(nameBuff.begin(),nameBuff.begin() + oNameLength)<<"\n";
           m_UniformsMap.insert(std::make_pair(AString(nameBuff.begin(),nameBuff.begin() + oNameLength),newDesc));
+        }
+      }
+
+      if (numBlocks > 0 && nameLength > 0)
+      {
+        m_BlocksMap.reserve(numBlocks);
+        for (int i = 0; i < numBlocks; ++i)
+        {
+          GLint oNameLength;
+          GLint oBindingPoint;
+          GLint oBlockSize;
+          glGetActiveUniformBlockName(m_ProgramName, i, nameLength, &oNameLength, nameBuff.data());
+          glGetActiveUniformBlockiv(m_ProgramName, i, GL_UNIFORM_BLOCK_BINDING, &oBindingPoint);
+          glGetActiveUniformBlockiv(m_ProgramName, i, GL_UNIFORM_BLOCK_DATA_SIZE, &oBlockSize);
+          
+          OGLUniformBlockDesc newDesc;
+          newDesc.location = oBindingPoint;
+          newDesc.size = oBlockSize;
+
+          m_BlocksMap.insert(std::make_pair(AString(nameBuff.begin(), nameBuff.begin() + oNameLength), newDesc));
         }
       }
     }
@@ -134,7 +165,17 @@ namespace eXl
     return -1;
   }
 
-  Err OGLProgram::GetAttribDescription(AString const& iName, OGLType& oType, unsigned int& oNum)const
+  GLint OGLProgram::GetUniformBlockLocation(AString const& iName)const
+  {
+    UniformBlockDescMap::const_iterator iter = m_BlocksMap.find(iName);
+    if (iter != m_BlocksMap.end())
+    {
+      return iter->second.location;
+    }
+    return -1;
+  }
+
+  Err OGLProgram::GetAttribDescription(AString const& iName, OGLType& oType, uint32_t& oNum) const
   {
     AttribDescMap::const_iterator iter = m_AttribsMap.find(iName);
     if(iter != m_AttribsMap.end())
@@ -146,7 +187,7 @@ namespace eXl
     RETURN_FAILURE;
   }
 
-  Err OGLProgram::GetUniformDescription(AString const& iName, OGLType& oType, unsigned int& oNum)const
+  Err OGLProgram::GetUniformDescription(AString const& iName, OGLType& oType, uint32_t& oNum) const
   {
     UniformDescMap::const_iterator iter = m_UniformsMap.find(iName);
     if(iter != m_UniformsMap.end())
@@ -156,5 +197,17 @@ namespace eXl
       RETURN_SUCCESS;
     }
     RETURN_FAILURE;
+  }
+
+  Err OGLProgram::GetUniformBlockDescription(AString const& iName, uint32_t& oSize) const
+  {
+    UniformBlockDescMap::const_iterator iter = m_BlocksMap.find(iName);
+    if (iter == m_BlocksMap.end())
+    {
+      return Err::Failure;
+    }
+
+    oSize = iter->second.size;
+    return Err::Success;
   }
 }

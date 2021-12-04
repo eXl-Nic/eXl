@@ -16,7 +16,7 @@ namespace eXl
 {
   IMPLEMENT_RefC(OGLTexture);
 
-  OGLTexture::OGLTexture(Image::Size const& iSize, unsigned int iType)
+  OGLTexture::OGLTexture(Image::Size const& iSize, uint32_t iType)
     : m_Size(iSize)
     , m_TextureType(iType)
     , m_TexId(0)
@@ -57,7 +57,7 @@ namespace eXl
   //  }
   //}
 
-  void OGLTexture::Update(AABB2Di iBox, void const* iData, unsigned int iMip, unsigned int iFace)
+  void OGLTexture::Update(AABB2Di iBox, void const* iData, uint32_t iMip, uint32_t iFace)
   {
     if(m_TexId != 0 && iData != NULL && iFace < 6)
     {

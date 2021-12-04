@@ -3,13 +3,13 @@ namespace eXl
   template <typename CommandToLookFor, typename Command, typename... Commands>
   struct GetRank
   {
-    static const unsigned int result = GetRank<CommandToLookFor, Commands...>::result + 1;
+    static const uint32_t result = GetRank<CommandToLookFor, Commands...>::result + 1;
   };
 
   template <typename CommandToLookFor, typename... Commands>
   struct GetRank<CommandToLookFor, CommandToLookFor, Commands...>
   {
-    static const unsigned int result = 0;
+    static const uint32_t result = 0;
   };
 
   template<template<class> class Handler, typename Current, typename... List>
@@ -124,11 +124,11 @@ namespace eXl
   {
     if (!m_StateIds.empty())
     {
-      StateIds dummyState;
-      memset(dummyState.m_Commands, 0xFF, sizeof(dummyState.m_Commands));
+      StateIds dummy;
+      std::fill(dummy.m_Commands, dummy.m_Commands + GetListSize<Commands...>::result, 0xFFFF);
 
       ApplyCommandCtx ctx;
-      ctx.prevState = dummyState.m_Commands;
+      ctx.prevState = dummy.m_Commands;
       ctx.nextState = m_StateIds[0].m_Commands;
       ctx.curIdx = 0;
 

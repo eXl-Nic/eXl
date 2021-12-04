@@ -29,12 +29,10 @@ namespace eXl
   static Type const* s_UCharId     = TypeManager::GetType<unsigned char>();
   static Type const* s_FloatId     = TypeManager::GetType<float>();
   static Type const* s_StringId    = TypeManager::GetType<String>();
-  //static size_t const s_ResHandleId = TypeTraits::GetID<Handle<Resource const> >();
 
   ObjectDelegate::ObjectDelegate(QWidget* iParent)
     :QStyledItemDelegate(iParent)
   {
-    //setItemEditorFactory(QItemEditorFactory::defaultFactory());
   }
 
   void ObjectDelegate::RegisterType(ObjectHandler* iHandler, Type const* iType)
@@ -98,8 +96,6 @@ namespace eXl
           streamer.End();
 
           painter->drawText(QPoint(0, 0), QString::fromUtf8(sstream.str().c_str()));
-
-          //return QString(sstream.str().c_str());
         }
       }
     }
@@ -239,14 +235,19 @@ namespace eXl
     {
       editorData.swap(data);
     }
+
     if(editorData.isValid())
     {
-      return QStyledItemDelegate::setEditorData(editor,index);
+      QByteArray n = editor->metaObject()->userProperty().name();
+      if (!n.isEmpty()) 
+      {
+        editor->setProperty(n, editorData);
+      }
     }
     else
     {
       //DynObject objCopy(obj);
-      editor->setProperty("eXlObject",qVariantFromValue(obj));
+      editor->setProperty("eXlObject", qVariantFromValue(obj));
     }
   }
 
