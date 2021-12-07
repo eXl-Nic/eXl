@@ -21,7 +21,7 @@ namespace eXl
 {
   class OGLBuffer;
   class OGLShaderData;
-  class OGLCompiledTechnique;
+  class OGLCompiledProgram;
   class OGLRenderContext;
 
   struct OGLRenderCommand
@@ -262,7 +262,7 @@ namespace eXl
     uint8_t m_Topo;
     //1 char avail (5 in x64)
     OGLVAssembly const* m_VDecl;
-    OGLCompiledTechnique const* m_Prog;
+    OGLCompiledProgram const* m_Prog;
   };
 
   struct OGLGeometry

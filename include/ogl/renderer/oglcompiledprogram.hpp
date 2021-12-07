@@ -18,7 +18,7 @@ namespace eXl
 {
   class OGLTexture;
   class OGLProgram;
-  class OGLCompiledTechnique;
+  class OGLCompiledProgram;
 
   class OGLDataHandlerProgData : public HeapObject
   {
@@ -37,11 +37,11 @@ namespace eXl
     std::pair<int, OGLSamplerDesc>  m_Samplers[4];
   };
 
-  class EXL_OGL_API OGLTechnique : public HeapObject
+  class EXL_OGL_API OGLProgramInterface : public HeapObject
   {
   public:
 
-    OGLTechnique();
+    OGLProgramInterface();
 
     static void InitStaticData();
 
@@ -49,7 +49,7 @@ namespace eXl
     void AddUniform(uint32_t iDataName);
     void AddTexture(uint32_t iTexName);
 
-    OGLCompiledTechnique* Compile (OGLProgram const* iProg);
+    OGLCompiledProgram* Compile (OGLProgram const* iProg);
 
   protected:
    
@@ -58,9 +58,9 @@ namespace eXl
     std::vector<uint32_t>     m_Textures;
   };
 
-  class OGLCompiledTechnique : public HeapObject
+  class OGLCompiledProgram : public HeapObject
   {
-    friend OGLTechnique;
+    friend OGLProgramInterface;
   public:
 
     void Setup() const;
@@ -91,7 +91,7 @@ namespace eXl
 
   protected:
 
-    OGLCompiledTechnique();
+    OGLCompiledProgram();
 
     OGLProgram const*             m_Program;
     OGLDataHandlerProgData        m_TechData;

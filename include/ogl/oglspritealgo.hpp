@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   class OGLProgram;
-  class OGLCompiledTechnique;
+  class OGLCompiledProgram;
 
   struct EXL_OGL_API CameraMatrix
   {
@@ -51,7 +51,7 @@ namespace eXl
 
     static void Init();
 
-    static OGLCompiledTechnique const* GetTechnique();
+    static OGLCompiledProgram const* GetProgram();
 
     static uint32_t GetColor();
   };
@@ -76,9 +76,9 @@ namespace eXl
 
     static void ShutdownAPI();
 
-    static OGLCompiledTechnique const* GetSpriteTechnique(bool iFiltered = true);
+    static OGLCompiledProgram const* GetSpriteProgram(bool iFiltered = true);
 
-    static OGLCompiledTechnique const* GetFontTechnique();
+    static OGLCompiledProgram const* GetFontProgram();
 
     static uint32_t GetSpriteColorUniform();
 
@@ -109,8 +109,8 @@ namespace eXl
 
     static uint32_t GetNormalAttrib();
 
-    static OGLCompiledTechnique const* GetMeshTechnique();
-    static OGLCompiledTechnique const* GetMeshNormalTechnique();
+    static OGLCompiledProgram const* GetMeshProgram();
+    static OGLCompiledProgram const* GetMeshNormalProgram();
 
     static uint32_t GetLightInfo();
 
@@ -134,7 +134,7 @@ namespace eXl
 
     static uint32_t GetSkyTexture();
 
-    static OGLCompiledTechnique const* GetSkyTechnique();
+    static OGLCompiledProgram const* GetSkyProgram();
 
   };
 
@@ -162,9 +162,9 @@ namespace eXl
 
     static uint32_t GetAlgoInfo();
 
-    static OGLCompiledTechnique const* GetIrradianceMapTechnique();
-    static OGLCompiledTechnique const* GetSpecularMapTechnique();
-    static OGLCompiledTechnique const* GetEnvBrdfTechnique();
+    static OGLCompiledProgram const* GetIrradianceMapProgram();
+    static OGLCompiledProgram const* GetSpecularMapProgram();
+    static OGLCompiledProgram const* GetEnvBrdfProgram();
 
   };
 }

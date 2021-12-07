@@ -11,8 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/oglspritealgo.hpp>
 #include <ogl/renderer/oglprogram.hpp>
 #include <ogl/renderer/oglsemanticmanager.hpp>
-#include <ogl/renderer/ogltechnique.hpp>
-#include <ogl/renderer/oglprogram.hpp>
+#include <ogl/renderer/oglcompiledprogram.hpp>
 #include <ogl/oglutils.hpp>
 
 #include "ogldefaultVS.inl"
@@ -53,11 +52,11 @@ namespace eXl
     uint32_t s_SpriteColor    = 1<<31;
     uint32_t s_LineColor      = 1<<31;
 
-    OGLCompiledTechnique const* s_SpriteTech = NULL;
-    OGLCompiledTechnique const* s_USpriteTech = NULL;
-    OGLCompiledTechnique const* s_FontTech = NULL;
+    OGLCompiledProgram const* s_SpriteTech = NULL;
+    OGLCompiledProgram const* s_USpriteTech = NULL;
+    OGLCompiledProgram const* s_FontTech = NULL;
 
-    OGLCompiledTechnique const* s_LineTech = NULL;
+    OGLCompiledProgram const* s_LineTech = NULL;
   }
 
   struct dummyStruct
@@ -123,7 +122,7 @@ namespace eXl
     return s_DiffuseTexture;
   }
 
-  OGLCompiledTechnique const* OGLSpriteAlgo::GetSpriteTechnique(bool iFiltered)
+  OGLCompiledProgram const* OGLSpriteAlgo::GetSpriteProgram(bool iFiltered)
   {
     if(iFiltered)
       return s_SpriteTech;
@@ -132,7 +131,7 @@ namespace eXl
   }
 
 
-  OGLCompiledTechnique const* OGLSpriteAlgo::GetFontTechnique()
+  OGLCompiledProgram const* OGLSpriteAlgo::GetFontProgram()
   {
     return s_FontTech;
   }
@@ -185,7 +184,7 @@ namespace eXl
       OGLProgram* fontProgram    = eXl_NEW OGLProgram(fontProgramId);
 
       {
-        OGLTechnique sprTechDesc;
+        OGLProgramInterface sprTechDesc;
         sprTechDesc.AddAttrib(s_PosAttrib);
         sprTechDesc.AddAttrib(s_TexAttrib);
         sprTechDesc.AddTexture(s_DiffuseTexture);
@@ -197,7 +196,7 @@ namespace eXl
       }
 
       {
-        OGLTechnique uSprTechDesc;
+        OGLProgramInterface uSprTechDesc;
         uSprTechDesc.AddAttrib(s_PosAttrib);
         uSprTechDesc.AddAttrib(s_TexAttrib);
         uSprTechDesc.AddTexture(s_UnfilteredTexture);
@@ -209,7 +208,7 @@ namespace eXl
       }
 
       {
-        OGLTechnique fontTechDesc;
+        OGLProgramInterface fontTechDesc;
         fontTechDesc.AddAttrib(s_PosAttrib);
         fontTechDesc.AddAttrib(s_TexAttrib);
         fontTechDesc.AddTexture(s_UnfilteredTexture);
@@ -270,7 +269,7 @@ namespace eXl
     Vector4f m_Color;
   };
 
-  OGLCompiledTechnique const* OGLLineAlgo::GetTechnique()
+  OGLCompiledProgram const* OGLLineAlgo::GetProgram()
   {
     return s_LineTech;
   }
@@ -305,7 +304,7 @@ namespace eXl
 
       OGLProgram* defaultProgram = eXl_NEW OGLProgram(defaultProgramId);
 
-      OGLTechnique sprTechDesc;
+      OGLProgramInterface sprTechDesc;
       sprTechDesc.AddAttrib(s_PosAttrib);
       sprTechDesc.AddTexture(s_DiffuseTexture);
       sprTechDesc.AddUniform(s_CameraUnif);
@@ -324,8 +323,8 @@ namespace eXl
   uint32_t s_SpecularEnvMap = 1<<31;
   uint32_t s_EnvBrdfLut     = 1<<31;
 
-  OGLCompiledTechnique const* s_MeshTech = NULL;
-  OGLCompiledTechnique const* s_MeshNormalTech = NULL;
+  OGLCompiledProgram const* s_MeshTech = NULL;
+  OGLCompiledProgram const* s_MeshNormalTech = NULL;
 
   void OGLMeshAlgo::Init()
   {
@@ -403,7 +402,7 @@ namespace eXl
       OGLProgram* defaultProgram = eXl_NEW OGLProgram(defaultProgramId);
       OGLProgram* normalProgram = eXl_NEW OGLProgram(normalProgramId);
 
-      OGLTechnique meshTechDesc;
+      OGLProgramInterface meshTechDesc;
       meshTechDesc.AddAttrib(s_PosAttrib);
       meshTechDesc.AddAttrib(s_NormalAttrib);
       meshTechDesc.AddAttrib(s_TexAttrib);
@@ -441,12 +440,12 @@ namespace eXl
     return s_NormalAttrib;
   }
 
-  OGLCompiledTechnique const* OGLMeshAlgo::GetMeshTechnique()
+  OGLCompiledProgram const* OGLMeshAlgo::GetMeshProgram()
   {
     return s_MeshTech;
   }
 
-  OGLCompiledTechnique const* OGLMeshAlgo::GetMeshNormalTechnique()
+  OGLCompiledProgram const* OGLMeshAlgo::GetMeshNormalProgram()
   {
     return s_MeshNormalTech;
   }
@@ -463,7 +462,7 @@ namespace eXl
 
   uint32_t s_SkyTexture    = 1<<31;
   
-  OGLCompiledTechnique const* s_SkyTech = NULL;
+  OGLCompiledProgram const* s_SkyTech = NULL;
 
   void OGLSkyAlgo::Init()
   {
@@ -491,7 +490,7 @@ namespace eXl
 
       OGLProgram* defaultProgram = eXl_NEW OGLProgram(defaultProgramId);
 
-      OGLTechnique skyTechDesc;
+      OGLProgramInterface skyTechDesc;
       skyTechDesc.AddAttrib(s_PosAttrib);
       skyTechDesc.AddAttrib(s_NormalAttrib);
       skyTechDesc.AddTexture(s_SkyTexture);
@@ -506,16 +505,16 @@ namespace eXl
     return s_SkyTexture;
   }
 
-  OGLCompiledTechnique const* OGLSkyAlgo::GetSkyTechnique()
+  OGLCompiledProgram const* OGLSkyAlgo::GetSkyProgram()
   {
     return s_SkyTech;
   }
 
   uint32_t s_IrradianceAlgoInfo = 1<<31;
 
-  OGLCompiledTechnique const* s_IrradianceMapTech = NULL;
-  OGLCompiledTechnique const* s_SpecularMapTech = NULL;
-  OGLCompiledTechnique const* s_EnvBrdfTech = NULL;
+  OGLCompiledProgram const* s_IrradianceMapTech = NULL;
+  OGLCompiledProgram const* s_SpecularMapTech = NULL;
+  OGLCompiledProgram const* s_EnvBrdfTech = NULL;
 
   void OGLIrradianceMapAlgo::Init()
   {
@@ -551,7 +550,7 @@ namespace eXl
       OGLProgram* specularProgram = eXl_NEW OGLProgram(specularProgramId);
       OGLProgram* envBProgram = eXl_NEW OGLProgram(envBProgramId);
 
-      OGLTechnique irradianceTechDesc;
+      OGLProgramInterface irradianceTechDesc;
       irradianceTechDesc.AddTexture(s_SkyTexture);
       irradianceTechDesc.AddUniform(s_IrradianceAlgoInfo);
 
@@ -571,17 +570,17 @@ namespace eXl
 
   }
 
-  OGLCompiledTechnique const* OGLIrradianceMapAlgo::GetIrradianceMapTechnique()
+  OGLCompiledProgram const* OGLIrradianceMapAlgo::GetIrradianceMapProgram()
   {
     return s_IrradianceMapTech;
   }
 
-  OGLCompiledTechnique const* OGLIrradianceMapAlgo::GetSpecularMapTechnique()
+  OGLCompiledProgram const* OGLIrradianceMapAlgo::GetSpecularMapProgram()
   {
     return s_SpecularMapTech;
   }
 
-  OGLCompiledTechnique const* OGLIrradianceMapAlgo::GetEnvBrdfTechnique()
+  OGLCompiledProgram const* OGLIrradianceMapAlgo::GetEnvBrdfProgram()
   {
     return s_EnvBrdfTech;
   }

@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <ogl/renderer/oglrendercontext.hpp>
 #include <ogl/renderer/oglsemanticmanager.hpp>
-#include <ogl/renderer/ogltechnique.hpp>
+#include <ogl/renderer/oglcompiledprogram.hpp>
 #include <ogl/renderer/oglbuffer.hpp>
 #include <ogl/renderer/oglprogram.hpp>
 #include <ogl/renderer/oglframebuffer.hpp>
@@ -55,7 +55,7 @@ namespace eXl
 
     void Clear()
     {
-      m_CurrentTechnique = nullptr;
+      m_CurrentProgram = nullptr;
       m_CurrentArrayBuffer = nullptr;
       m_CurrentIndexBuffer = nullptr;
       m_MaxAttrib = 0;
@@ -126,21 +126,21 @@ namespace eXl
       Clear();
     }
 
-    inline void SetTechnique(OGLCompiledTechnique const* iTechnique)
+    inline void SetProgram(OGLCompiledProgram const* iProgram)
     {
-      if (iTechnique == m_CurrentTechnique)
+      if (iProgram == m_CurrentProgram)
       {
         return;
       }
 
-      if(iTechnique == nullptr)
+      if(iProgram == nullptr)
       {
         Clear();
         return;
       }
 
-      m_CurrentTechnique = iTechnique;
-      iTechnique->Setup();
+      m_CurrentProgram = iProgram;
+      iProgram->Setup();
 
       uint32_t oldAttribCount = m_MaxAttrib;
       uint32_t oldDataCount = m_MaxData;
@@ -150,13 +150,13 @@ namespace eXl
       std::fill(m_CurrentUBOSlot.begin(), m_CurrentUBOSlot.end(), -1);
       std::fill(m_CurrentTextureSlot.begin(),m_CurrentTextureSlot.end(),-1);
 
-      uint32_t const* slotPtr = iTechnique->GetAttribSlots();
+      uint32_t const* slotPtr = iProgram->GetAttribSlots();
       uint32_t enabledAttribs = 0;
-      for(uint32_t i = 0; i < iTechnique->GetMaxAttrib(); ++i)
+      for(uint32_t i = 0; i < iProgram->GetMaxAttrib(); ++i)
       {
         m_CurrentAttribSlot[slotPtr[i]] = i;
         m_BufferBindings[i].buffer = nullptr;
-        uint32_t attribLoc = iTechnique->GetAttribLocation(i);
+        uint32_t attribLoc = iProgram->GetAttribLocation(i);
         //glEnableVertexAttribArray(attribLoc);
         enabledAttribs |= 1<<attribLoc;
       }
@@ -168,40 +168,40 @@ namespace eXl
           glDisableVertexAttribArray(i);
         }
       }
-      m_MaxAttrib = iTechnique->GetMaxAttrib();
+      m_MaxAttrib = iProgram->GetMaxAttrib();
       m_NeededAttribs = enabledAttribs;
       m_SetAttribs = 0;
       m_AttribFlags = (1 << m_MaxAttrib) - 1;
 
-      slotPtr = iTechnique->GetUniformSlots();
-      for(uint32_t i = 0; i < iTechnique->GetMaxUniform(); ++i)
+      slotPtr = iProgram->GetUniformSlots();
+      for(uint32_t i = 0; i < iProgram->GetMaxUniform(); ++i)
       {
         m_CurrentDataSlot[slotPtr[i]] = i;
         //m_CurrentData[i] = m_DataCache[slotPtr[i]];
         m_CurrentData[i] = &m_DataCache[slotPtr[i]];
       }
-      m_MaxData = iTechnique->GetMaxUniform();
+      m_MaxData = iProgram->GetMaxUniform();
       m_DataFlags = (1 << m_MaxData) - 1;
 
-      slotPtr = iTechnique->GetUniformBlockSlots();
-      for (uint32_t i = 0; i < iTechnique->GetMaxUniformBlocks(); ++i)
+      slotPtr = iProgram->GetUniformBlockSlots();
+      for (uint32_t i = 0; i < iProgram->GetMaxUniformBlocks(); ++i)
       {
         m_CurrentUBOSlot[slotPtr[i]] = i;
         m_CurrentUBO[i] = &m_UBOCache[slotPtr[i]];
       }
-      m_MaxUBO = iTechnique->GetMaxUniformBlocks();
+      m_MaxUBO = iProgram->GetMaxUniformBlocks();
       m_UBOFlags = (1 << m_MaxUBO) - 1;
 
-      slotPtr = iTechnique->GetTextureSlots();
-      for(uint32_t i = 0; i < iTechnique->GetMaxTexture(); ++i)
+      slotPtr = iProgram->GetTextureSlots();
+      for(uint32_t i = 0; i < iProgram->GetMaxTexture(); ++i)
       {
         m_CurrentTextureSlot[slotPtr[i]] = i;
         m_CurrentTexture[i] = &m_TextureCache[slotPtr[i]];
       }
-      m_MaxTexture = iTechnique->GetMaxTexture();
+      m_MaxTexture = iProgram->GetMaxTexture();
       m_TexFlags = (1 << m_MaxTexture) - 1;
 
-      glUseProgram(iTechnique->GetProgram()->GetProgName());
+      glUseProgram(iProgram->GetProgram()->GetProgName());
     }
 
     inline void SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)
@@ -295,7 +295,7 @@ namespace eXl
             glBindBuffer(GL_ARRAY_BUFFER,binding.buffer->GetBufferId());
             m_CurrentArrayBuffer = binding.buffer;
           }
-          m_CurrentTechnique->HandleAttribute(attrib, binding.num, binding.stride, binding.offset);
+          m_CurrentProgram->HandleAttribute(attrib, binding.num, binding.stride, binding.offset);
         }
         else
         {
@@ -314,7 +314,7 @@ namespace eXl
         
         if(void const* curData = *m_CurrentData[dataSlot])
         {
-          m_CurrentTechnique->HandleUniform(dataSlot, curData);
+          m_CurrentProgram->HandleUniform(dataSlot, curData);
         }
       }
 
@@ -324,7 +324,7 @@ namespace eXl
         m_UBOFlags &= ~(1 << dataSlot);
         if (OGLBuffer const* curBuffer = *m_CurrentUBO[dataSlot])
         {
-          m_CurrentTechnique->HandleUniformBlock(dataSlot, curBuffer->GetBufferId());
+          m_CurrentProgram->HandleUniformBlock(dataSlot, curBuffer->GetBufferId());
         }
       }
 
@@ -334,12 +334,12 @@ namespace eXl
         m_TexFlags &= ~(1 << texSlot);
         if (OGLTexture const* curTexture = *m_CurrentTexture[texSlot])
         {
-          m_CurrentTechnique->HandleTexture(texSlot, curTexture);
+          m_CurrentProgram->HandleTexture(texSlot, curTexture);
         }
       }
     }
 
-    OGLCompiledTechnique const* m_CurrentTechnique;
+    OGLCompiledProgram const* m_CurrentProgram;
 
     OGLBuffer const* m_CurrentArrayBuffer;
     OGLBuffer const* m_CurrentIndexBuffer;
@@ -407,9 +407,9 @@ namespace eXl
     m_Impl->CleanupState();
   }
 
-  void OGLRenderContext::SetTechnique(OGLCompiledTechnique const* iTechnique)
+  void OGLRenderContext::SetProgram(OGLCompiledProgram const* iProgram)
   {
-    m_Impl->SetTechnique(iTechnique);
+    m_Impl->SetProgram(iProgram);
   }
 
   void OGLRenderContext::SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)

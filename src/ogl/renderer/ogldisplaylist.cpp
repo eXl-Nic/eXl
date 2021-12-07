@@ -84,7 +84,7 @@ namespace eXl
   {
     m_CurDataSet = -1;
     m_CurAssembly = nullptr;
-    m_CurTechnique = nullptr;
+    m_CurProgram = nullptr;
     m_DataSetSeek.clear();
     m_DataSetStore.clear();
     m_Commands.clear();
@@ -172,10 +172,10 @@ namespace eXl
     m_States.SetCommand(defCommand);
   }
 
-  void OGLDisplayList::SetTechnique(OGLCompiledTechnique const* iTechnique)
+  void OGLDisplayList::SetProgram(OGLCompiledProgram const* iProgram)
   {
     FlushDraws();
-    m_CurTechnique = iTechnique;
+    m_CurProgram = iProgram;
   }
 
   void OGLDisplayList::SetVAssembly(OGLVAssembly const* iAssembly)
@@ -220,7 +220,7 @@ namespace eXl
       m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(OGLGeometry));
       OGLDraw* draw = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
       draw->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::Draw /*| m_PendingDraws[0].topo*/;
-      draw->m_Prog = m_CurTechnique;
+      draw->m_Prog = m_CurProgram;
       draw->m_StateId = curState;
       draw->m_VDecl = m_CurAssembly;
       draw->m_Topo = m_PendingDraws[0].topo;
@@ -246,7 +246,7 @@ namespace eXl
 
       OGLDraw* drawGroup = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
       drawGroup->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::DrawGroup /*| m_PendingDraws[0].topo*/;
-      drawGroup->m_Prog = m_CurTechnique;
+      drawGroup->m_Prog = m_CurProgram;
       drawGroup->m_StateId = curState;
       drawGroup->m_VDecl = m_CurAssembly;
       drawGroup->m_Topo = m_PendingDraws[0].topo;
@@ -303,7 +303,7 @@ namespace eXl
       return;
     }
 
-    eXl_ASSERT_MSG(m_CurTechnique != NULL,"Technique missing");
+    eXl_ASSERT_MSG(m_CurProgram != NULL,"Program missing");
     eXl_ASSERT_MSG(m_CurAssembly != NULL,"Vertex assembly missing");
 
     if(m_PendingDraws.size() != 0
@@ -415,7 +415,7 @@ namespace eXl
     m_CurrentSetupTexture.clear();
     m_CurrentSetupTexture.resize(OGLSemanticManager::GetNumTextures(),DataSetup());
 
-    m_CurTechnique = NULL;
+    m_CurProgram = NULL;
     m_CurAssembly = NULL;
     m_CurDataSet = NULL;
 
@@ -448,10 +448,10 @@ namespace eXl
 
                 OGLConnectivity topo = topology[drawCmd->m_Topo];
             
-                if(drawCmd->m_Prog != m_CurTechnique)
+                if(drawCmd->m_Prog != m_CurProgram)
                 {
-                  iCtx->SetTechnique(drawCmd->m_Prog);
-                  m_CurTechnique = drawCmd->m_Prog;
+                  iCtx->SetProgram(drawCmd->m_Prog);
+                  m_CurProgram = drawCmd->m_Prog;
                 }
                 if(drawCmd->m_VDecl != m_CurAssembly)
                 {

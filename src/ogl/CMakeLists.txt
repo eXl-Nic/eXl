@@ -15,7 +15,7 @@ oglplugin.cpp
 ogltexturecache.cpp
 
 renderer/oglrendercommand.cpp
-renderer/ogltechnique.cpp
+renderer/oglcompiledprogram.cpp
 renderer/oglrendercontext.cpp
 renderer/oglframebuffer.cpp
 renderer/ogltexture.cpp

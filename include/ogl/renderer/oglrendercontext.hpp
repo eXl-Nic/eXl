@@ -19,7 +19,7 @@ namespace eXl
   class OGLBuffer;
   class OGLTexture;
   class OGLFramebuffer;
-  class OGLCompiledTechnique;
+  class OGLCompiledProgram;
   class OGLRenderContextImpl;
 
   class EXL_OGL_API OGLRenderContext
@@ -34,7 +34,7 @@ namespace eXl
 
     void SetFramebuffer(OGLFramebuffer* iFBO);
 
-    void SetTechnique(OGLCompiledTechnique const* iTechnique);
+    void SetProgram(OGLCompiledProgram const* iProgram);
 
     //void BindBuffer(OGLBuffer* iBuffer);
 
@@ -52,6 +52,5 @@ namespace eXl
 
   protected:
     OGLRenderContextImpl* m_Impl;
-    //OGLTechnique* m_CurTechnique;
   };
 }

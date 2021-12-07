@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <ogl/renderer/ogltechnique.hpp>
+#include <ogl/renderer/oglcompiledprogram.hpp>
 #include <ogl/renderer/oglprogram.hpp>
 #include <ogl/renderer/ogltexture.hpp>
 #include <ogl/renderer/oglsemanticmanager.hpp>
@@ -228,38 +228,38 @@ namespace eXl
     }
   }
 
-  void OGLTechnique::InitStaticData()
+  void OGLProgramInterface::InitStaticData()
   {
     s_Exception.Init();
     s_TypeMap.Init();
   }
 
-  OGLTechnique::OGLTechnique()
+  OGLProgramInterface::OGLProgramInterface()
   {
 
   }
 
-  void OGLTechnique::AddAttrib(uint32_t iAttribName)
+  void OGLProgramInterface::AddAttrib(uint32_t iAttribName)
   {
     m_AttribNames.push_back(iAttribName);
   }
 
-  void OGLTechnique::AddUniform(uint32_t iDataName)
+  void OGLProgramInterface::AddUniform(uint32_t iDataName)
   {
     m_UnifNames.push_back(iDataName);
   }
 
-  void OGLTechnique::AddTexture(uint32_t iTexName)
+  void OGLProgramInterface::AddTexture(uint32_t iTexName)
   {
     m_Textures.push_back(iTexName);
   }
   
-  OGLCompiledTechnique* OGLTechnique::Compile(OGLProgram const* iProg)
+  OGLCompiledProgram* OGLProgramInterface::Compile(OGLProgram const* iProg)
   { 
     if(iProg == nullptr)
       return nullptr;
 
-    OGLCompiledTechnique tempTech;
+    OGLCompiledProgram tempTech;
 
     for(uint32_t i = 0; i<m_AttribNames.size(); ++i)
     {
@@ -384,7 +384,7 @@ namespace eXl
       }
     }
 
-    OGLCompiledTechnique* newTech = eXl_NEW OGLCompiledTechnique;
+    OGLCompiledProgram* newTech = eXl_NEW OGLCompiledProgram;
 
     newTech->m_Program = iProg;
 
@@ -424,16 +424,16 @@ namespace eXl
     return newTech;
   }
 
-  OGLCompiledTechnique::OGLCompiledTechnique()
+  OGLCompiledProgram::OGLCompiledProgram()
   {
   }
 
-  void OGLCompiledTechnique::HandleAttribute(uint32_t iAttribSlot, uint32_t iNum, size_t iStride, size_t iOffset)const
+  void OGLCompiledProgram::HandleAttribute(uint32_t iAttribSlot, uint32_t iNum, size_t iStride, size_t iOffset)const
   {
     glVertexAttribPointer(m_AttribDesc[iAttribSlot].first,iNum, GetGLType(m_AttribDesc[iAttribSlot].second),false,iStride,(void*)iOffset);
   }
 
-  void OGLCompiledTechnique::HandleTexture(uint32_t iTexSlot, OGLTexture const* iTexture)const
+  void OGLCompiledProgram::HandleTexture(uint32_t iTexSlot, OGLTexture const* iTexture)const
   {
     glActiveTexture(GL_TEXTURE0 + iTexSlot);
 
@@ -449,7 +449,7 @@ namespace eXl
     glTexParameteri(textureTarget,GL_TEXTURE_WRAP_T,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapY));
   }
 
-  void OGLCompiledTechnique::HandleUniform(uint32_t iSlot, void const* iData) const
+  void OGLCompiledProgram::HandleUniform(uint32_t iSlot, void const* iData) const
   {
     uint32_t numFields = m_TechData.m_UnifHandler[iSlot].size();
     uint8_t const* iterData = reinterpret_cast<uint8_t const*>(iData);
@@ -461,18 +461,18 @@ namespace eXl
     }
   }
 
-  void OGLCompiledTechnique::HandleUniformBlock(uint32_t iSlot, uint32_t iBuffer) const
+  void OGLCompiledProgram::HandleUniformBlock(uint32_t iSlot, uint32_t iBuffer) const
   {
     //glBindBufferRange(GL_UNIFORM_BUFFER, m_TechData.m_BlockHandler[iSlot].first, iBuffer, 0, m_TechData.m_BlockHandler[iSlot].second);
     glBindBufferBase(GL_UNIFORM_BUFFER, m_TechData.m_BlockHandler[iSlot].first, iBuffer);
   }
 
-  uint32_t OGLCompiledTechnique::GetAttribLocation(uint32_t iAttribSlot) const
+  uint32_t OGLCompiledProgram::GetAttribLocation(uint32_t iAttribSlot) const
   {
     return m_AttribDesc[iAttribSlot].first;
   }
 
-  void OGLCompiledTechnique::Setup()const
+  void OGLCompiledProgram::Setup()const
   {
     
   }

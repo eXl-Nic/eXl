@@ -24,6 +24,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  class OGLCompiledProgram;
   class OGLRenderContext;
   class OGLFramebuffer;
   
@@ -53,7 +54,7 @@ namespace eXl
 
     void SetBlend(bool iEnabled, OGLBlend iSrc, OGLBlend iDst);
 
-    void SetTechnique(OGLCompiledTechnique const* iTechnique);
+    void SetProgram(OGLCompiledProgram const* iProgram);
 
     void SetVAssembly(OGLVAssembly const* iAssembly);
 
@@ -87,7 +88,7 @@ namespace eXl
 
     OGLStateCollection<OGLDepthCommand, OGLScissorCommand, OGLViewportCommand, OGLBlendCommand> m_States;
     
-    OGLCompiledTechnique const* m_CurTechnique;
+    OGLCompiledProgram const* m_CurProgram;
     OGLVAssembly const* m_CurAssembly;
     //OGLShaderDataSet const* m_CurDataSet;
     uint32_t m_CurDataSet = -1;

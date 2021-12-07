@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <ogl/renderer/oglrendercontext.hpp>
 #include <ogl/renderer/ogldisplaylist.hpp>
-#include <ogl/renderer/ogltechnique.hpp>
+#include <ogl/renderer/oglcompiledprogram.hpp>
 #include <ogl/renderer/ogltextureloader.hpp>
 #include <engine/common/debugtool.hpp>
 #include <engine/common/transforms.hpp>
@@ -357,7 +357,7 @@ namespace eXl
     static bool s_StaticInitDone = false;
     if (!s_StaticInitDone)
     {
-      OGLTechnique::InitStaticData();
+      OGLProgramInterface::InitStaticData();
 
       OGLBaseAlgo::Init();
       OGLSpriteAlgo::Init();
@@ -631,7 +631,7 @@ namespace eXl
     m_Impl->m_CameraBuffer->SetData(0, sizeof(m_Impl->m_Camera), &m_Impl->m_Camera);
     camData.SetDataBuffer(OGLBaseAlgo::GetCameraUniform(), m_Impl->m_CameraBuffer);
 
-    list.SetTechnique(OGLSpriteAlgo::GetSpriteTechnique(false));
+    list.SetProgram(OGLSpriteAlgo::GetSpriteProgram(false));
 
     list.PushData(&camData);
 
@@ -777,7 +777,7 @@ namespace eXl
 
     if(!debugDrawer.m_Lines.empty())
     {
-      list.SetTechnique(OGLLineAlgo::GetTechnique());
+      list.SetProgram(OGLLineAlgo::GetProgram());
 
       debugGeomLines = OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, totNumLines * sizeof(Vector3f), nullptr);
 
@@ -813,7 +813,7 @@ namespace eXl
     if (!debugDrawer.m_Boxes.empty()
       || !debugDrawer.m_Convex.empty())
     {
-      list.SetTechnique(OGLSpriteAlgo::GetSpriteTechnique());
+      list.SetProgram(OGLSpriteAlgo::GetSpriteProgram());
 
       Vector<Vector3f> triangles;
       triangles.resize(totNumBoxes * 6 + totNumConvexPt);
