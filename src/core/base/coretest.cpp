@@ -292,10 +292,28 @@ namespace eXl
 #endif
   }
 
-  void AssertionError(const Char* iMsg,const char* file, unsigned int line,bool repair)
+  void AssertionError(const Char* iExpression, const Char* iMsg, const char* file, unsigned int line,bool repair)
   {
-    RAW_LOG_ERROR << file << line << iMsg;
-    return;
+    String msg;
+    if (iExpression != nullptr)
+    {
+      if (iMsg != nullptr)
+      {
+        msg = String("Test : ") + iExpression + " -> " + iMsg;
+      }
+      else
+      {
+        msg = String("Test : ") + iExpression + " failed";
+      }
+    }
+    else if (iMsg != nullptr)
+    {
+      msg = String(iMsg);
+    }
+    else
+    {
+      msg = "<unknown failure>";
+    }
 
     if(!(repair && (errorFlags & ALLOW_ASSERT_REPAIR)))
     {
@@ -303,13 +321,6 @@ namespace eXl
       if(!(errorFlags & NOASK_ASSERT))
       {
         int res =0;
-
-        //Task* currentTask = ThreadPool::GetCurrentTask();
-        //if(currentTask!=nullptr)
-        //ThreadPool::Stop()
-        String msg;
-        if(iMsg!=nullptr)
-          msg=String(iMsg);
       
 #ifdef _DEBUG
         String errStr = "Assertion error in " + StringUtil::FromASCII(file)+ " at " + StringUtil::FromInt(line) + " : \n " + msg;

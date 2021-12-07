@@ -125,15 +125,15 @@ namespace eXl
   };
  
   EXL_CORE_API void InstallThreadHandler();
-  EXL_CORE_API void AssertionError(const Char* msg,const char* file, unsigned int line,bool repair);
+  EXL_CORE_API void AssertionError(const Char* expression, const Char* msg,const char* file, unsigned int line,bool repair);
   EXL_CORE_API void Unexpected(const Char* msg,const char* file, unsigned int line,bool hardware);
   EXL_CORE_API void Undefined(const Char* msg,const char* file, unsigned int line);
 
-  inline bool TestAssertion(bool iExp, const Char* msg,const char* file, unsigned int line,bool repair)
+  inline bool TestAssertion(bool iExp, const Char* exp, const Char* msg, const char* file, unsigned int line, bool repair)
   {
     if(!iExp)
     {
-      AssertionError(msg, file, line, repair);
+      AssertionError(exp, msg, file, line, repair);
     }
     return iExp;
   }
@@ -153,13 +153,13 @@ namespace eXl
 #define RETURN_ERROR do{return ::eXl::Err::Error;}while(false)
 
 #define RETURN_ERROR_MSG(msg)                                           \
-  do{::eXl::AssertionError(msg,__FILE__,__LINE__,true);return ::eXl::Err::Error;}while(false)
+  do{::eXl::AssertionError(nullptr, msg, __FILE__, __LINE__, true);return ::eXl::Err::Error;}while(false)
 
 #define RETURN_FATAL_ERROR_MSG(msg)                                     \
-  do{::eXl::AssertionError(msg,__FILE__,__LINE__,false);return ::eXl::Err::Error;}while(false)
+  do{::eXl::AssertionError(nullptr, msg, __FILE__, __LINE__, false);return ::eXl::Err::Error;}while(false)
 
 #define RETURN_UNEXPECTED(msg)                                          \
-  do{::eXl::Unexpected(msg,__FILE__,__LINE__);return ::eXl::Err::Unexpected; }while(false)
+  do{::eXl::Unexpected(nullptr, msg, __FILE__, __LINE__);return ::eXl::Err::Unexpected; }while(false)
 
 /*#define RETURN_UNDEFINED_MSG(msg)					\
 do{eXl::Undefined(msg,__FILE__,__LINE__);return RC_Undefined; }while(false)
@@ -190,33 +190,44 @@ do{eXl::Undefined(nullptr,__FILE__,__LINE__);return RC_Undefined; }while(false)*
 
 #define eXl_ASSERT(exp)                                                 \
   do{                                                                   \
-    ::eXl::TestAssertion(exp, (::eXl::String(#exp)).c_str(),__FILE__,__LINE__,false); \
+    if(!(exp)) ::eXl::AssertionError(#exp, nullptr,__FILE__,__LINE__,false); \
   }while(false)
 
-#define eXl_ASSERT_MSG(exp,msg)                                         \
+#define eXl_FAIL_MSG(msg) \
+do \
+{ \
+  ::eXl::AssertionError(nullptr , msg, __FILE__, __LINE__, false); \
+}while(false) \
+
+#define eXl_FAIL_MSG_RET(msg, retval) \
+do \
+{ \
+  ::eXl::AssertionError(nullptr , msg, __FILE__, __LINE__, false); \
+  return retval; \
+}while(false) \
+
+#define eXl_ASSERT_MSG(exp, msg)                                         \
   do{                                                                   \
-    ::eXl::TestAssertion(exp, (::eXl::String(#exp)+","+::eXl::StringUtil::FromASCII(msg)).c_str(),__FILE__,__LINE__,false); \
+    if(!(exp))::eXl::AssertionError(#exp, msg, __FILE__, __LINE__, false); \
   }while(false)
 
 #define eXl_ASSERT_REPAIR_BEGIN(exp)                                    \
-  if(!::eXl::TestAssertion(exp, (::eXl::String(#exp)).c_str(),__FILE__,__LINE__,true))
+  if(!::eXl::TestAssertion(exp, #exp, "Assertion failed", __FILE__, __LINE__, true))
 
 #define eXl_ASSERT_REPAIR_RET(exp, ret)                                 \
-  if(!::eXl::TestAssertion(exp, (::eXl::String(#exp)).c_str(),__FILE__,__LINE__,true)) \
+  if(!::eXl::TestAssertion(exp, #exp, "Assertion failed", __FILE__, __LINE__, true)) \
   {                                                                     \
     return ret; \
-  } \
-  else
+  }
 
 #define eXl_ASSERT_MSG_REPAIR_RET(exp, msg, ret)                                 \
-  if(!::eXl::TestAssertion(exp, (::eXl::String(#exp) + ","+::eXl::StringUtil::FromASCII(msg)).c_str(),__FILE__,__LINE__,true)) \
+  if(!::eXl::TestAssertion(exp, #exp, msg, __FILE__, __LINE__, true)) \
   {                                                                     \
     return ret; \
-  } \
-  else
+  }
 
 #define eXl_ASSERT_MSG_REPAIR_BEGIN(exp,msg)                            \
-  if(!::eXl::TestAssertion(exp, (::eXl::String(#exp)+","+::eXl::StringUtil::FromASCII(msg)).c_str(),__FILE__,__LINE__,true))                                              
+  if(!::eXl::TestAssertion(exp, #exp, msg,__FILE__,__LINE__,true))                                              
 
 #ifdef MSVC_COMPILER
 #define FUN_STR __FUNCTION__

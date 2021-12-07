@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <ogl/oglexp.hpp>
+#include <ogl/renderer/ogltypes.hpp>
 
 #include <math/vector2.hpp>
 #include <math/aabb2d.hpp>
@@ -27,7 +28,8 @@ namespace eXl
     friend class OGLTextureLoader;
     DECLARE_RefC;
   public:
-    OGLTexture(Image::Size const& iSize, uint32_t iType);
+
+    OGLTexture(Image::Size const& iSize, OGLTextureType iTextureType, OGLInternalTextureFormat iFormat, uint32_t iNumSlices = 0);
 
     ~OGLTexture();
 
@@ -35,14 +37,17 @@ namespace eXl
 
     //void DropTextureData();
 
-    void Update(AABB2Di iBox, void const* iData, uint32_t iMip = 0, uint32_t iFace = 0);
+    void Update(AABB2Di iBox, OGLTextureElementType iType, OGLTextureFormat iFormat, void const* iData, uint32_t iMip = 0, uint32_t iSlice = 0);
 
-    inline uint32_t    GetId()      const {return m_TexId;}
-    inline Image::Size const& GetSize() const {return m_Size;}
-    inline uint32_t    GetType()    const {return m_TextureType;}
-    inline uint32_t    GetFormat()  const {return m_TextureFormat;}
+    uint32_t           GetId() const { return m_TexId; }
+    Image::Size const& GetSize() const { return m_Size; }
+    uint32_t           GetNumSlices() const { return m_NumSlices; }
+    OGLTextureElementType GetElementType() const;
+    OGLTextureFormat GetElementFormat() const;
+    uint32_t GetGLElementType() const;
+    uint32_t GetGLElementFormat() const;
 
-    inline bool IsCubeMap() const {return m_CubeMap;}
+    inline bool IsCubeMap() const {return m_TextureType == OGLTextureType::TEXTURE_CUBE_MAP;}
 
     uint32_t GetAPIHandle() const { return m_TexId; }
 
@@ -50,13 +55,10 @@ namespace eXl
 
     OGLTextureLoader* m_Loader;
 
-    Image::Size    m_Size;
-    uint32_t   m_TexId;
-    unsigned short m_TextureType;   //GL_UNSIGNED_CHAR,GL_UNSIGNED_SHORT,GL_UNSIGNED_INT
-    unsigned short m_TextureFormat; //GL_R,GL_RG,GL_RGB,GL_RGBA
-    bool           m_CubeMap;
-    //void*          m_TextureData;
+    Image::Size              m_Size;
+    uint32_t                 m_NumSlices;
+    uint32_t                 m_TexId;
+    OGLTextureType           m_TextureType;
+    OGLInternalTextureFormat m_InternalFormat;
   };
-
-  //FUNC_RefC(OGLTexture)
 }

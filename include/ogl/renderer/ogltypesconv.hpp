@@ -24,4 +24,8 @@ namespace eXl
   GLenum GetGLMagFilter(OGLMagFilter iMagFilter);
   GLenum GetGLWrapMode(OGLWrapMode iMode);
   GLenum GetGLBlend(OGLBlend iMode);
+  GLenum GetGLTextureType(OGLTextureType iTex);
+  GLenum GetGLInternalTextureFormat(OGLInternalTextureFormat iFOrmat);
+  GLenum GetGLTextureElementType(OGLTextureElementType iType);
+  GLenum GetGLTextureFormat(OGLTextureFormat iTex);
 }

@@ -300,6 +300,7 @@ namespace eXl
       break;
     default:
       eXl_ASSERT_MSG(false,"Incorrect topology");
+      return;
     }
 
     eXl_ASSERT_MSG(m_CurTechnique != NULL,"Technique missing");

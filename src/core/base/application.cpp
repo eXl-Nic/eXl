@@ -41,7 +41,7 @@ namespace eXl
     }
     SetAppPath(Path(::eXl::GetAppPath()));
     running = false;
-    eXl_ASSERT_MSG(s_Instance == nullptr, "Nope");
+    eXl_ASSERT(s_Instance == nullptr);
     s_Instance = this;
 
   }

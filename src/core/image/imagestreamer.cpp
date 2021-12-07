@@ -370,8 +370,6 @@ namespace eXl
           break;
       };
 
-      LOG_INFO << format <<"\n";
-
       if(colType == FIC_RGB || colType == FIC_RGBALPHA)
       {
         unsigned int rowStride = FreeImage_GetPitch(iBmp);

@@ -312,4 +312,183 @@ namespace eXl
       break;
     }
   };
+
+  GLenum GetGLTextureType(OGLTextureType iTex)
+  {
+    switch (iTex)
+    {
+    case OGLTextureType::TEXTURE_1D:
+      return GL_TEXTURE_1D;
+      break;
+    case OGLTextureType::TEXTURE_1D_ARRAY:
+      return GL_TEXTURE_1D_ARRAY;
+      break;
+    case OGLTextureType::TEXTURE_2D:
+      return GL_TEXTURE_2D;
+      break;
+    case OGLTextureType::TEXTURE_2D_ARRAY:
+      return GL_TEXTURE_2D_ARRAY;
+      break;
+    case OGLTextureType::TEXTURE_3D:
+      return GL_TEXTURE_3D;
+      break;
+    case OGLTextureType::TEXTURE_CUBE_MAP:
+      return GL_TEXTURE_CUBE_MAP;
+      break;
+    case OGLTextureType::TEXTURE_BUFFER:
+      return GL_TEXTURE_BUFFER;
+      break;
+    default:
+      eXl_ASSERT_MSG(false, "Unrecognized GL constant");
+      return 0;
+      break;
+    }
+  }
+
+  GLenum GetGLInternalTextureFormat(OGLInternalTextureFormat iFormat)
+  {
+    switch (iFormat)
+    {
+    case OGLInternalTextureFormat::DEPTH_COMPONENT:
+      return GL_DEPTH_COMPONENT;
+      break;
+    case OGLInternalTextureFormat::DEPTH_STENCIL:
+      return GL_DEPTH_STENCIL;
+      break;
+    case OGLInternalTextureFormat::RED:
+      return GL_RED;
+      break;
+    case OGLInternalTextureFormat::RG:
+      return GL_RG;
+      break;
+    case OGLInternalTextureFormat::RGB:
+      return GL_RGB;
+      break;
+    case OGLInternalTextureFormat::RGBA:
+      return GL_RGBA;
+      break;
+    case OGLInternalTextureFormat::R32F:
+      return GL_R32F;
+      break;
+    case OGLInternalTextureFormat::RG32F:
+      return GL_RG32F;
+      break;
+    case OGLInternalTextureFormat::RGB32F:
+      return GL_RGB32F;
+      break;
+    case OGLInternalTextureFormat::RGBA32F:
+      return GL_RGBA32F;
+      break;
+    default:
+      eXl_ASSERT_MSG(false, "Unrecognized GL constant");
+      return 0;
+      break;
+    }
+  }
+
+  GLenum GetGLTextureElementType(OGLTextureElementType iType)
+  {
+    switch (iType)
+    {
+      case OGLTextureElementType::UNSIGNED_BYTE:
+        return GL_UNSIGNED_BYTE;
+        break;
+      case OGLTextureElementType::BYTE:
+        return GL_BYTE;
+        break;
+      case OGLTextureElementType::UNSIGNED_SHORT:
+        return GL_UNSIGNED_SHORT;
+        break;
+      case OGLTextureElementType::SHORT:
+        return GL_SHORT;
+        break;
+      case OGLTextureElementType::UNSIGNED_INT:
+        return GL_UNSIGNED_INT;
+        break;
+      case OGLTextureElementType::INT:
+        return GL_INT;
+        break;
+      case OGLTextureElementType::HALF_FLOAT:
+        return GL_HALF_FLOAT;
+        break;
+      case OGLTextureElementType::FLOAT:
+        return GL_FLOAT;
+        break;
+      case OGLTextureElementType::UNSIGNED_SHORT_5_6_5:
+        return GL_UNSIGNED_SHORT_5_6_5;
+        break;
+      case OGLTextureElementType::UNSIGNED_SHORT_5_6_5_REV:
+        return GL_UNSIGNED_SHORT_5_6_5_REV;
+        break;
+      case OGLTextureElementType::UNSIGNED_SHORT_4_4_4_4:
+        return GL_UNSIGNED_SHORT_4_4_4_4;
+        break;
+      case OGLTextureElementType::UNSIGNED_SHORT_5_5_5_1:
+        return GL_UNSIGNED_SHORT_5_5_5_1;
+        break;
+      case OGLTextureElementType::UNSIGNED_INT_2_10_10_10_REV:
+        return GL_UNSIGNED_INT_2_10_10_10_REV;
+        break;
+      default:
+        eXl_ASSERT_MSG(false, "Unrecognized GL constant");
+        return 0;
+        break;
+    }
+  }
+
+  GLenum GetGLTextureFormat(OGLTextureFormat iFormat)
+  {
+    switch (iFormat)
+    {
+    case OGLTextureFormat::RED:
+      return GL_RED;
+      break;
+    case OGLTextureFormat::RG:
+      return GL_RG;
+      break;
+    case OGLTextureFormat::RGB:
+      return GL_RGB;
+      break;
+    case OGLTextureFormat::BGR:
+      return GL_BGR;
+      break;
+    case OGLTextureFormat::RGBA:
+      return GL_RGBA;
+      break;
+    case OGLTextureFormat::BGRA:
+      return GL_BGRA;
+      break;
+    case OGLTextureFormat::RED_INTEGER:
+      return GL_RED_INTEGER;
+      break;
+    case OGLTextureFormat::RG_INTEGER:
+      return GL_RG_INTEGER;
+      break;
+    case OGLTextureFormat::RGB_INTEGER:
+      return GL_RGB_INTEGER;
+      break;
+    case OGLTextureFormat::BGR_INTEGER:
+      return GL_BGR_INTEGER;
+      break;
+    case OGLTextureFormat::RGBA_INTEGER:
+      return GL_RGBA_INTEGER;
+      break;
+    case OGLTextureFormat::BGRA_INTEGER:
+      return GL_BGRA_INTEGER;
+      break;
+    case OGLTextureFormat::STENCIL_INDEX:
+      return GL_STENCIL_INDEX;
+      break;
+    case OGLTextureFormat::DEPTH_COMPONENT:
+      return GL_DEPTH_COMPONENT;
+      break;
+    case OGLTextureFormat::DEPTH_STENCIL:
+      return GL_DEPTH_STENCIL;
+      break;
+    default:
+      eXl_ASSERT_MSG(false, "Unrecognized GL constant");
+      return 0;
+      break;
+    }
+  }
 }

@@ -80,7 +80,7 @@ Err CoreTupleType<T>::Copy_Uninit(void const* iData, void* oData) const
   if(iData != nullptr && oData != nullptr)
   {
     void* res = TypeTraits::Copy<T>(oData,iData);
-    eXl_ASSERT_MSG(res !=nullptr ,String(GetName() + " cannot be built in place"));
+    eXl_ASSERT_MSG(res !=nullptr , (String(GetName() + " cannot be built in place")).c_str());
   }
   RETURN_SUCCESS;
 }

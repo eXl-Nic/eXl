@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/image/image.hpp>
 #include <core/log.hpp>
 #include <ogl/oglutils.hpp>
+#include <ogl/renderer/ogltypesconv.hpp>
 
 namespace eXl
 {
@@ -52,7 +53,7 @@ namespace eXl
       GLuint texId;
       glGenTextures(1, &texId);
       glBindTexture(GL_TEXTURE_2D,texId);
-      GLuint internalFormat;
+      OGLInternalTextureFormat internalFormat;
       GLuint dataType = GL_UNSIGNED_BYTE;
       GLuint dataComponents;
 #ifdef __ANDROID__
@@ -79,38 +80,38 @@ namespace eXl
       switch(iFormat)
       {
       case R8:
-        internalFormat = GL_RED;
+        internalFormat = OGLInternalTextureFormat::RED;
         dataComponents = GL_RED;
         break;
       case RG8:
-        internalFormat = GL_RG;
+        internalFormat = OGLInternalTextureFormat::RG;
         dataComponents = GL_RG;
         break;
       case RGB8:
-        internalFormat = GL_RGB;
+        internalFormat = OGLInternalTextureFormat::RGB;
         dataComponents = GL_RGB;
         break;
       case RGBA8:
-        internalFormat = GL_RGBA;
+        internalFormat = OGLInternalTextureFormat::RGBA;
         dataComponents = GL_RGBA;
         break;
       case R32F:
-        internalFormat = GL_R32F;
+        internalFormat = OGLInternalTextureFormat::R32F;
         dataComponents = GL_RED;
         dataType = GL_FLOAT;
         break;
       case RG32F:
-        internalFormat = GL_RG32F;
+        internalFormat = OGLInternalTextureFormat::RG32F;
         dataComponents = GL_RG;
         dataType = GL_FLOAT;
         break;
       case RGB32F:
-        internalFormat = GL_RGB32F;
+        internalFormat = OGLInternalTextureFormat::RGB32F;
         dataComponents = GL_RGB;
         dataType = GL_FLOAT;
         break;
       case RGBA32F:
-        internalFormat = GL_RGBA32F;
+        internalFormat = OGLInternalTextureFormat::RGBA32F;
         dataComponents = GL_RGBA;
         dataType = GL_FLOAT;
         break;
@@ -133,12 +134,9 @@ namespace eXl
         glGenerateMipmap(GL_TEXTURE_2D);
       }
 #endif
-      glTexImage2D(GL_TEXTURE_2D,0,internalFormat,iSize.X(),iSize.Y(),0,dataComponents,dataType,iData);
+      glTexImage2D(GL_TEXTURE_2D,0, GetGLInternalTextureFormat(internalFormat), iSize.X(), iSize.Y(), 0, dataComponents, dataType, iData);
 
-      res = eXl_NEW OGLTexture(iSize,dataType);
-      //res->m_TextureData = NULL;
-      res->m_TextureFormat = dataComponents;
-      res->m_TextureType = dataType;
+      res = eXl_NEW OGLTexture(iSize, OGLTextureType::TEXTURE_2D, internalFormat);
       res->m_TexId = texId;
     }
     return res;
@@ -165,14 +163,17 @@ namespace eXl
 #define GL_BGRA 0x80E1
 #endif
 
-  void GetOGLTypes(Image const& iImage, GLuint& oInternalFormat, GLuint& oDataType, GLuint& oDataComponents)
+  void GetOGLTypes(Image const& iImage, 
+    OGLInternalTextureFormat& oInternalFormat, 
+    OGLTextureElementType& oDataType, 
+    OGLTextureFormat& oDataComponents)
   {
     switch(iImage.GetFormat())
     {
-      case Image::Char:   oDataType = GL_UNSIGNED_BYTE;  break;
-      case Image::Short:  oDataType = GL_UNSIGNED_SHORT; break;
-      case Image::Int:    oDataType = GL_UNSIGNED_INT;   break;
-      case Image::Float:  oDataType = GL_FLOAT;          break;
+      case Image::Char:   oDataType = OGLTextureElementType::UNSIGNED_BYTE;  break;
+      case Image::Short:  oDataType = OGLTextureElementType::UNSIGNED_SHORT; break;
+      case Image::Int:    oDataType = OGLTextureElementType::UNSIGNED_INT;   break;
+      case Image::Float:  oDataType = OGLTextureElementType::FLOAT;          break;
     }
 
     switch(iImage.GetComponents())
@@ -195,20 +196,20 @@ namespace eXl
       //        break;
 
     case Image::RGB:
-      oInternalFormat = GL_RGB;
-      oDataComponents = GL_RGB;
+      oInternalFormat = OGLInternalTextureFormat::RGB;
+      oDataComponents = OGLTextureFormat::RGB;
       break;
     case Image::BGR:
-      oInternalFormat = GL_RGB;
-      oDataComponents = GL_BGR;
+      oInternalFormat = OGLInternalTextureFormat::RGB;
+      oDataComponents = OGLTextureFormat::BGR;
       break;
     case Image::RGBA:
-      oInternalFormat = GL_RGBA;
-      oDataComponents = GL_RGBA;
+      oInternalFormat = OGLInternalTextureFormat::RGBA;
+      oDataComponents = OGLTextureFormat::RGBA;
       break;
     case Image::BGRA:
-      oInternalFormat = GL_RGBA;
-      oDataComponents = GL_BGRA;
+      oInternalFormat = OGLInternalTextureFormat::RGBA;
+      oDataComponents = OGLTextureFormat::BGRA;
       break;
     }
 
@@ -222,9 +223,9 @@ namespace eXl
     GLuint texId;
     glGenTextures(1, &texId);
 
-    GLuint internalFormat;
-    GLuint dataType;
-    GLuint dataComponents;
+    OGLInternalTextureFormat internalFormat;
+    OGLTextureElementType dataType;
+    OGLTextureFormat dataComponents;
 
     GetOGLTypes(*iImage, internalFormat, dataType, dataComponents);
     
@@ -232,10 +233,8 @@ namespace eXl
 
     Image::Size const& imgSize = iImage->GetSize();
 
-    OGLTexture* newTex = eXl_NEW OGLTexture(imgSize,dataType);
+    OGLTexture* newTex = eXl_NEW OGLTexture(imgSize, OGLTextureType::TEXTURE_2D, internalFormat);
     //mouais....
-    newTex->m_TextureFormat = internalFormat;
-    newTex->m_TextureType = dataType;
     newTex->m_TexId = texId;
 
     return newTex;
@@ -247,9 +246,9 @@ namespace eXl
     if(iImage[0] == NULL)
       return NULL;
 
-    GLuint internalFormat;
-    GLuint dataType;
-    GLuint dataComponents;
+    OGLInternalTextureFormat internalFormat;
+    OGLTextureElementType dataType;
+    OGLTextureFormat dataComponents;
 
     GetOGLTypes(*iImage[0], internalFormat, dataType, dataComponents);
 
@@ -265,9 +264,9 @@ namespace eXl
       if(testImgSize != imgSize)
         return NULL;
 
-      GLuint testInternalFormat;
-      GLuint testDataType;
-      GLuint testDataComponents;
+      OGLInternalTextureFormat testInternalFormat;
+      OGLTextureElementType testDataType;
+      OGLTextureFormat testDataComponents;
 
       GetOGLTypes(*iImage[i], testInternalFormat, testDataType, testDataComponents);
 
@@ -286,12 +285,9 @@ namespace eXl
       UpdateFromImage(*iImage[i], texId, false, i);
     }
 
-    OGLTexture* newTex = eXl_NEW OGLTexture(imgSize,dataType);
+    OGLTexture* newTex = eXl_NEW OGLTexture(imgSize, OGLTextureType::TEXTURE_CUBE_MAP, internalFormat);
     //mouais....
-    newTex->m_TextureFormat = internalFormat;
-    newTex->m_TextureType = dataType;
     newTex->m_TexId = texId;
-    newTex->m_CubeMap = true;
 
     return newTex;
   }
@@ -308,18 +304,18 @@ namespace eXl
 
     size_t totSize = iImage.GetByteSize();
 
-    GLuint internalFormat;
-    GLuint dataType;
-    GLuint dataComponents;
+    OGLInternalTextureFormat internalFormat;
+    OGLTextureElementType dataType;
+    OGLTextureFormat dataComponents;
 
     GetOGLTypes(iImage, internalFormat, dataType, dataComponents);
 
     Image* replImage = nullptr;
   
 #if defined(__ANDROID__) || 1
-    if(dataComponents == GL_BGR)
+    if(dataComponents == OGLTextureFormat::BGR)
     {
-      dataComponents = GL_RGB;
+      dataComponents = OGLTextureFormat::RGB;
       switch(iImage.GetFormat())
       {
       case Image::Char:   
@@ -337,9 +333,9 @@ namespace eXl
       }
     }
 
-    if(dataComponents == GL_BGRA)
+    if(dataComponents == OGLTextureFormat::BGRA)
     {
-      dataComponents = GL_RGBA;
+      dataComponents = OGLTextureFormat::RGBA;
       switch(iImage.GetFormat())
       {
       case Image::Char:   
@@ -373,12 +369,17 @@ namespace eXl
     else
       glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
-    glTexImage2D(textureFaceUpdate, 0, internalFormat, imgSize.X(), imgSize.Y(), 0, dataComponents, dataType, nullptr);
+    glTexImage2D(textureFaceUpdate, 0, 
+      GetGLInternalTextureFormat(internalFormat), 
+      imgSize.X(), imgSize.Y(), 0, 
+      GetGLTextureFormat(dataComponents), 
+      GetGLTextureElementType(dataType), 
+      nullptr);
     for(uint32_t i = 0; i < imgSize.Y(); ++i)
     {
       //uint8_t const* pixelsDataRev = pixelsData + ((imgSize.Y() - 1) - i) * iImage->GetRowStride();
       uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
-      glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.X(), 1, dataComponents, dataType, pixelRow);
+      glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.X(), 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
     }
 
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
@@ -407,7 +408,6 @@ namespace eXl
 
   Err OGLTextureLoader::ReadTexture(OGLTexture* iTexture, Image*& oImage, int iFace)
   {
-    
 #ifdef __ANDROID__
     return Err::Failure;
 #endif
@@ -430,17 +430,18 @@ namespace eXl
       else
         return Err::Failure;
 
-      GLuint imgInternalFormat;
-      GLuint imgDataType;
-      GLuint imgDataComponents;
+      OGLInternalTextureFormat imgInternalFormat;
+      OGLTextureElementType imgDataType;
+      OGLTextureFormat imgDataComponents;
       Image::Components comps;
       Image::Format fmt;
 
       if(oImage)
       {
         GetOGLTypes(*oImage, imgInternalFormat, imgDataType, imgDataComponents);
-        if(imgInternalFormat != iTexture->m_TextureFormat 
-        || imgDataType != iTexture->m_TextureType
+
+        if(imgInternalFormat != iTexture->m_InternalFormat 
+        || imgDataType != iTexture->GetElementType()
         || oImage->GetSize() != iTexture->GetSize()
         || (oImage->GetRowStride() % 8 != 0 
          && oImage->GetRowStride() % 4 != 0 
@@ -451,9 +452,9 @@ namespace eXl
 
       if(!oImage)
       {
-        imgInternalFormat = iTexture->m_TextureFormat;
-        imgDataType = iTexture->m_TextureType;
-        imgDataComponents = iTexture->m_TextureFormat;
+        imgInternalFormat = iTexture->m_InternalFormat;
+        imgDataType = iTexture->GetElementType();
+        imgDataComponents = iTexture->GetElementFormat();
       
 #ifdef __ANDROID__
         switch(imgInternalFormat)
@@ -474,16 +475,16 @@ namespace eXl
 #else
         switch(imgInternalFormat)
         {
-        case GL_R:
+        case OGLInternalTextureFormat::RED:
           comps = Image::R;
           break;
-        case GL_RG:
+        case OGLInternalTextureFormat::RG:
           comps = Image::RG;
           break;
-        case GL_RGB:
+        case OGLInternalTextureFormat::RGB:
           comps = Image::RGB;
           break;
-        case GL_RGBA:
+        case OGLInternalTextureFormat::RGBA:
           comps = Image::RGBA;
           break;
         }
@@ -491,16 +492,16 @@ namespace eXl
 
         switch(imgDataType)
         {
-        case GL_UNSIGNED_BYTE:
+        case OGLTextureElementType::UNSIGNED_BYTE:
           fmt = Image::Char;
           break;
-        case GL_UNSIGNED_SHORT:
+        case OGLTextureElementType::UNSIGNED_SHORT:
           fmt = Image::Short;
           break;
-        case GL_UNSIGNED_INT:
+        case OGLTextureElementType::UNSIGNED_INT:
           fmt = Image::Int;
           break;
-        case GL_FLOAT:
+        case OGLTextureElementType::FLOAT:
           fmt = Image::Float;
           break;
         }
@@ -520,7 +521,7 @@ namespace eXl
 
       glBindTexture(textureTarget, iTexture->GetId());
 #ifndef __ANDROID__
-      glGetTexImage(textureFaceTarget, 0, imgInternalFormat, imgDataType, oImage->GetPixel(0,0));
+      glGetTexImage(textureFaceTarget, 0, GetGLTextureFormat(imgDataComponents), GetGLTextureElementType(imgDataType), oImage->GetPixel(0,0));
 #endif
 
       //glReadPixels(iBox.m_Data[0].X(), iBox.m_Data[0].Y(), iBox.GetSize().X(), iBox.GetSize().Y(), imgInternalFormat, imgDataType, oImage->GetPixel(0,0));

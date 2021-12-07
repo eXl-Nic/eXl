@@ -43,8 +43,8 @@ namespace eXl
     if(iTexture)
     {
       eXl_ASSERT(iTexture->GetSize() == m_Size 
-              && (iTexture->GetFormat() == GL_RGB
-               || iTexture->GetFormat() == GL_RGBA));
+              && (iTexture->GetGLElementFormat() == GL_RGB
+               || iTexture->GetGLElementFormat() == GL_RGBA));
 
       glBindFramebuffer(GL_FRAMEBUFFER, m_Id);
       glBindTexture(GL_TEXTURE_2D, iTexture->GetId());
@@ -79,7 +79,8 @@ namespace eXl
       if(iTexture)
       {
         eXl_ASSERT(iTexture->GetSize() == m_Size 
-                && (iTexture->GetType() == GL_DEPTH_STENCIL || iTexture->GetType() == GL_DEPTH_COMPONENT));
+                && (iTexture->GetGLElementType() == GL_DEPTH_STENCIL 
+                  || iTexture->GetGLElementType() == GL_DEPTH_COMPONENT));
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_Id);
         glBindTexture(GL_TEXTURE_2D, iTexture->GetId());
