@@ -28,7 +28,7 @@ namespace eXl
     Vector<OGLAttribDesc>  s_Attribs;
   }
 
-  uint32_t OGLSemanticManager::RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult)
+  uint32_t OGLSemanticManager::RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult, uint32_t iDivisor)
   {
     eXl_ASSERT_MSG(iName.size() > 0, "Empty Name");
 
@@ -49,6 +49,7 @@ namespace eXl
     s_Attribs.back().m_Mult = iMult;
     s_Attribs.back().m_Name = iName;
     s_Attribs.back().m_Type = iAttribType;
+    s_Attribs.back().m_Divisor = iDivisor;
 
     return attribName;
   }
@@ -99,12 +100,8 @@ namespace eXl
     eXl_ASSERT_MSG(iTexName.size() > 0, "Empty Name");
 
     uint32_t textureName = s_SamplerDesc.size();
-    s_SamplerDesc.push_back(OGLSamplerDesc());
+    s_SamplerDesc.push_back(iSampler);
     s_SamplerDesc.back().name = iTexName;
-    s_SamplerDesc.back().maxFilter = iSampler.maxFilter;
-    s_SamplerDesc.back().minFilter = iSampler.minFilter;
-    s_SamplerDesc.back().wrapX = iSampler.wrapX;
-    s_SamplerDesc.back().wrapY = iSampler.wrapY;
 
     return textureName;
   }

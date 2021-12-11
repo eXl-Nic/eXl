@@ -112,7 +112,7 @@ namespace eXl
           mat->m_Texture = tex;
           mat->SetupData();
 
-          comp.AddDraw(mat, numVtx[groupEntry.second], offset[groupEntry.second], iLayer);
+          comp.AddDraw(mat).NumElements(numVtx[groupEntry.second]).Offset(offset[groupEntry.second]).Layer(iLayer).End();
         }
       }
 #endif

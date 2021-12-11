@@ -26,6 +26,9 @@ namespace eXl
     case OGLBufferUsage::UNIFORM_BUFFER:
       return GL_UNIFORM_BUFFER;
       break;
+    case OGLBufferUsage::TEXTURE_BUFFER:
+      return GL_TEXTURE_BUFFER;
+      break;
     default:
       eXl_ASSERT_MSG(false, "Unsupported buffer usage");
       return GL_ARRAY_BUFFER;
@@ -139,11 +142,47 @@ namespace eXl
     case GL_FLOAT_MAT4:
       return OGLType::MAT4;
       break;
+    case GL_SAMPLER_1D:
+      return OGLType::SAMPLER_1D;
+      break;
+    case GL_SAMPLER_1D_ARRAY:
+      return OGLType::SAMPLER_1D_ARRAY;
+      break;
     case GL_SAMPLER_2D:
       return OGLType::SAMPLER_2D;
       break;
+    case GL_SAMPLER_2D_ARRAY:
+      return OGLType::SAMPLER_2D_ARRAY;
+      break;
+    case GL_SAMPLER_3D:
+      return OGLType::SAMPLER_3D;
+      break;
     case GL_SAMPLER_CUBE:
       return OGLType::SAMPLER_CUBE;
+      break;
+    case GL_SAMPLER_BUFFER:
+      return OGLType::SAMPLER_BUFFER;
+      break;
+    case GL_INT_SAMPLER_1D:
+      return OGLType::INT_SAMPLER_1D;
+      break;
+    case GL_INT_SAMPLER_1D_ARRAY:
+      return OGLType::INT_SAMPLER_1D_ARRAY;
+      break;
+    case GL_INT_SAMPLER_2D:
+      return OGLType::INT_SAMPLER_2D;
+      break;
+    case GL_INT_SAMPLER_2D_ARRAY:
+      return OGLType::INT_SAMPLER_2D_ARRAY;
+      break;
+    case GL_INT_SAMPLER_3D:
+      return OGLType::INT_SAMPLER_3D;
+      break;
+    case GL_INT_SAMPLER_CUBE:
+      return OGLType::INT_SAMPLER_CUBE;
+      break;
+    case GL_INT_SAMPLER_BUFFER:
+      return OGLType::INT_SAMPLER_BUFFER;
       break;
     default:
       eXl_ASSERT_MSG(false, "Unsupported type");
@@ -367,6 +406,18 @@ namespace eXl
     case OGLInternalTextureFormat::RGBA:
       return GL_RGBA;
       break;
+    case OGLInternalTextureFormat::R8:
+      return GL_R8;
+      break;
+    case OGLInternalTextureFormat::RG8:
+      return GL_RG8;
+      break;
+    case OGLInternalTextureFormat::RGB8:
+      return GL_RGB8;
+      break;
+    case OGLInternalTextureFormat::RGBA8:
+      return GL_RGBA8;
+      break;
     case OGLInternalTextureFormat::R32F:
       return GL_R32F;
       break;
@@ -378,6 +429,18 @@ namespace eXl
       break;
     case OGLInternalTextureFormat::RGBA32F:
       return GL_RGBA32F;
+      break;
+    case OGLInternalTextureFormat::R32I:
+      return GL_R32I;
+      break;
+    case OGLInternalTextureFormat::RG32I:
+      return GL_RG32I;
+      break;
+    case OGLInternalTextureFormat::RGB32I:
+      return GL_RGB32I;
+      break;
+    case OGLInternalTextureFormat::RGBA32I:
+      return GL_RGBA32I;
       break;
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
@@ -488,6 +551,82 @@ namespace eXl
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
       return 0;
+      break;
+    }
+  }
+
+  bool IsSampler(OGLType iType)
+  {
+    switch (iType)
+    {
+    case OGLType::FLOAT32:
+    case OGLType::FLOAT32_2:
+    case OGLType::FLOAT32_3:
+    case OGLType::FLOAT32_4:
+    case OGLType::INT32:
+    case OGLType::INT32_2:
+    case OGLType::INT32_3:
+    case OGLType::INT32_4:
+    case OGLType::MAT3:
+    case OGLType::MAT4:
+      return false;
+      break;
+    case OGLType::SAMPLER_1D:
+    case OGLType::SAMPLER_1D_ARRAY:
+    case OGLType::SAMPLER_2D:
+    case OGLType::SAMPLER_2D_ARRAY:
+    case OGLType::SAMPLER_3D:
+    case OGLType::SAMPLER_CUBE:
+    case OGLType::SAMPLER_BUFFER:
+    case OGLType::INT_SAMPLER_1D:
+    case OGLType::INT_SAMPLER_1D_ARRAY:
+    case OGLType::INT_SAMPLER_2D:
+    case OGLType::INT_SAMPLER_2D_ARRAY:
+    case OGLType::INT_SAMPLER_3D:
+    case OGLType::INT_SAMPLER_CUBE:
+    case OGLType::INT_SAMPLER_BUFFER:
+      return true;
+      break;
+    default:
+      eXl_FAIL_MSG_RET("Invalid type constant", false);
+      break;
+    }
+  }
+
+  OGLTextureType GetSamplerTextureType(OGLType iType)
+  {
+    switch (iType)
+    {
+    case OGLType::SAMPLER_1D:
+    case OGLType::INT_SAMPLER_1D:
+      return OGLTextureType::TEXTURE_1D;
+      break;
+    case OGLType::SAMPLER_1D_ARRAY:
+    case OGLType::INT_SAMPLER_1D_ARRAY:
+      return OGLTextureType::TEXTURE_1D_ARRAY;
+      break;
+    case OGLType::SAMPLER_2D:
+    case OGLType::INT_SAMPLER_2D:
+      return OGLTextureType::TEXTURE_2D;
+      break;
+    case OGLType::SAMPLER_2D_ARRAY:
+    case OGLType::INT_SAMPLER_2D_ARRAY:
+      return OGLTextureType::TEXTURE_2D_ARRAY;
+      break;
+    case OGLType::SAMPLER_3D:
+    case OGLType::INT_SAMPLER_3D:
+      return OGLTextureType::TEXTURE_3D;
+      break;
+    case OGLType::SAMPLER_CUBE:
+    case OGLType::INT_SAMPLER_CUBE:
+      return OGLTextureType::TEXTURE_CUBE_MAP;
+      break;
+    case OGLType::SAMPLER_BUFFER:
+    case OGLType::INT_SAMPLER_BUFFER:
+      return OGLTextureType::TEXTURE_BUFFER;
+      break;
+    default:
+      eXl_FAIL_MSG_RET("Invalid type constant, expected a sampler", OGLTextureType::TEXTURE_1D);
       break;
     }
   }

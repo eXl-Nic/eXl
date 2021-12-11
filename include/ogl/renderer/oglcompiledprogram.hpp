@@ -34,7 +34,7 @@ namespace eXl
 
     std::vector<DataSetter>         m_UnifHandler[16];
     std::pair<uint32_t, uint32_t>   m_BlockHandler[16];
-    std::pair<int, OGLSamplerDesc>  m_Samplers[4];
+    std::pair<int, OGLSamplerDesc>  m_Samplers[8];
   };
 
   class EXL_OGL_API OGLProgramInterface : public HeapObject
@@ -96,12 +96,19 @@ namespace eXl
     OGLProgram const*             m_Program;
     OGLDataHandlerProgData        m_TechData;
 
-    std::pair<uint32_t, OGLType> m_AttribDesc[16];
+    struct AttribDesc
+    {
+      uint32_t attribLoc;
+      OGLType attribType;
+      uint32_t attribDivisor;
+    };
+
+    AttribDesc m_AttribDesc[16];
 
     uint32_t m_AttribSlot[16];
     uint32_t m_UnifSlot[16];
     uint32_t m_UnifBlockSlot[16];
-    uint32_t m_TexSlot[4];
+    uint32_t m_TexSlot[8];
 
     uint32_t m_MaxAttrib = 0;
     uint32_t m_MaxUnif = 0;

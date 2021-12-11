@@ -23,11 +23,13 @@ namespace eXl
     AString m_Name;
     uint32_t m_Mult;
     OGLType m_Type;
+    uint32_t m_Divisor;
   };
 
   struct OGLSamplerDesc
   {
     AString name;
+    OGLTextureType samplerType;
     OGLMinFilter minFilter;
     OGLMagFilter maxFilter;
     OGLWrapMode wrapX;
@@ -37,7 +39,7 @@ namespace eXl
   class EXL_OGL_API OGLSemanticManager
   {
   public:
-    static uint32_t RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult);
+    static uint32_t RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult, uint32_t iDivisor = 0);
 
     static uint32_t RegisterUniformData(AString const& iName, TupleType const* iDataType);
 

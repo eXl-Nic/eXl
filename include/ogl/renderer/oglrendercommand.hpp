@@ -177,17 +177,17 @@ namespace eXl
   {
     struct VtxAttrib
     {
-      OGLBuffer const* m_VBuffer;
+      IntrusivePtr<OGLBuffer const> m_VBuffer;
       uint32_t m_AttribId;
       uint32_t m_Num;
       uint32_t m_Stride;
       uint32_t m_Offset;
     };
-    std::vector<VtxAttrib> m_Attribs;
+    Vector<VtxAttrib> m_Attribs;
 
     void AddAttrib(OGLBuffer const* iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     {
-      VtxAttrib newAttrib = {iBuffer,iAttribId,iNum,iStride,iOffset};
+      VtxAttrib newAttrib = { IntrusivePtr<OGLBuffer const>(iBuffer), iAttribId, iNum, iStride, iOffset};
       m_Attribs.push_back(newAttrib);
     }
 
@@ -197,7 +197,7 @@ namespace eXl
     void AddAttrib(IntrusivePtr<OGLBuffer> const& iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     { AddAttrib(iBuffer.get(), iAttribId, iNum, iStride, iOffset); }
 
-    OGLBuffer const* m_IBuffer;
+    IntrusivePtr<OGLBuffer const> m_IBuffer;
     uint32_t m_IOffset;
 
     void Apply(OGLRenderContext* ) const;
@@ -211,7 +211,7 @@ namespace eXl
       , m_Id(iId)
     {
       m_RenderHash = (iPrevSet ? iPrevSet->m_RenderHash << 8 : 0)
-        | (((ptrdiff_t)(m_AdditionalData) >> 4) & 0xFF);
+        | (((ptrdiff_t)(m_AdditionalData) >> 8) & 0xFF);
     }
 
     inline bool operator ==(OGLShaderDataSet const& iOther) const
@@ -246,6 +246,7 @@ namespace eXl
       ShiftDraw = 3,
 
       DrawGroup = 1<<6,
+      DrawInstanced = 1<<7,
 
       Point =         0/*<<4*/,
       LineList =      1/*<<4*/,
@@ -269,7 +270,14 @@ namespace eXl
   {
     uint32_t m_Mat;
     uint32_t m_Offset;
+    uint32_t m_BaseVertex;
     uint32_t m_Num;
+  };
+
+  struct OGLInstancedGeometry : OGLGeometry
+  {
+    uint32_t m_Instances;
+    uint32_t m_BaseInstance;
   };
 
   struct OGLClear

@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/renderer/ogltextureloader.hpp>
 #include <ogl/renderer/ogltypesconv.hpp>
 #include <ogl/renderer/oglinclude.hpp>
+#include <ogl/renderer/oglbuffer.hpp>
 
 #include <core/log.hpp>
 
@@ -19,17 +20,69 @@ namespace eXl
 {
   IMPLEMENT_RefC(OGLTexture);
 
+  OGLTexture::OGLTexture(OGLBuffer* iBuffer, OGLInternalTextureFormat iFormat)
+    : m_Buffer(iBuffer)
+    , m_InternalFormat(iFormat)
+    , m_TextureType(OGLTextureType::TEXTURE_BUFFER)
+  {
+    
+  }
+
+  OGLTexture::OGLTexture(IntrusivePtr<OGLBuffer> const& iBuffer, OGLInternalTextureFormat iFormat)
+    : OGLTexture(iBuffer.get(), iFormat)
+  {
+
+  }
+
   OGLTexture::OGLTexture(Image::Size const& iSize, OGLTextureType iTextureType, OGLInternalTextureFormat iFormat, uint32_t iNumSlices)
     : m_Size(iSize)
     , m_NumSlices(iNumSlices)
     , m_InternalFormat(iFormat)
     , m_TextureType(iTextureType)
     , m_TexId(0)
-    , m_Loader(NULL)
   {
     eXl_ASSERT((m_TextureType != OGLTextureType::TEXTURE_2D_ARRAY 
       && m_TextureType != OGLTextureType::TEXTURE_3D) || iNumSlices > 0);
+  }
+
+  void OGLTexture::AllocateTexture()
+  {
+    eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER || m_Buffer != nullptr, void());
     
+    if (m_TexId != 0)
+    {
+      glDeleteTextures(1, &m_TexId);
+    }
+    glGenTextures(1, &m_TexId);
+    GLenum textureTarget = GetGLTextureType(m_TextureType);
+    glBindTexture(textureTarget, m_TexId);
+    switch (m_TextureType)
+    {
+    case OGLTextureType::TEXTURE_1D:
+      glTexImage1D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat), 
+        m_Size.X(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+      break;
+    case OGLTextureType::TEXTURE_1D_ARRAY:
+    case OGLTextureType::TEXTURE_2D:
+      glTexImage2D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat),
+        m_Size.X(), m_Size.Y(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+      break;
+    case OGLTextureType::TEXTURE_2D_ARRAY:
+    case OGLTextureType::TEXTURE_3D:
+      glTexImage3D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat),
+        m_Size.X(), m_Size.Y(), m_NumSlices, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+      break;
+    case OGLTextureType::TEXTURE_CUBE_MAP:
+      for (GLenum faceUpdate = GL_TEXTURE_CUBE_MAP_POSITIVE_X; faceUpdate < GL_TEXTURE_CUBE_MAP_POSITIVE_X + 6; ++faceUpdate)
+      {
+        glTexImage2D(faceUpdate, 0, GetGLInternalTextureFormat(m_InternalFormat),
+          m_Size.X(), m_Size.Y(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+      }
+      break;
+    case OGLTextureType::TEXTURE_BUFFER:
+      glTexBuffer(textureTarget, GetGLInternalTextureFormat(m_InternalFormat), m_Buffer->GetBufferId());
+      break;
+    }
   }
 
   OGLTextureElementType OGLTexture::GetElementType() const
@@ -115,10 +168,7 @@ namespace eXl
     {
       glDeleteTextures(1,&m_TexId);
     }
-    if(m_Loader != NULL)
-    {
-      //m_Loader->ForgetTexture(this);
-    }
+    
   }
 
   //void OGLTexture::DropTextureData()
@@ -132,6 +182,7 @@ namespace eXl
 
   void OGLTexture::Update(AABB2Di iBox, OGLTextureElementType iType, OGLTextureFormat iFormat, void const* iData, uint32_t iMip, uint32_t iSlice)
   {
+    eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER, void());
     if(m_TexId != 0 && iData != NULL)
     {
       GLenum textureTarget = GetGLTextureType(m_TextureType);

@@ -44,6 +44,8 @@ namespace eXl
 
     static OGLTexture* CreateFromImage(Image const* iImage, bool iGenMipMap);
 
+    static void SetFromImage(Image const* iImage, OGLTexture* iTexture, uint32_t iFace = -1);
+
     static OGLTexture* CreateCubeMap(Image const* const* iImage, bool iGenMipMap);
 
     static Err ReadTexture(OGLTexture* iTexture, Image*& oImage, int iFace = -1);

@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/gfx/gfxcomponent.hpp>
 #include <engine/gfx/gfxsystem.hpp>
 #include <ogl/renderer/ogldisplaylist.hpp>
+#include <ogl/oglspritealgo.hpp>
 #include <core/type/tagtype.hpp>
 
 namespace eXl
@@ -37,9 +38,11 @@ namespace eXl
   {
     m_TextureData.~OGLShaderData();
     new (&m_TextureData) OGLShaderData;
-
-    m_TextureData.AddTexture(OGLBaseAlgo::GetDiffuseTexture(), m_Texture.get());
-    m_TextureData.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture(), m_Texture.get());
+    if (m_Texture)
+    {
+      m_TextureData.AddTexture(OGLBaseAlgo::GetDiffuseTexture(), m_Texture.get());
+      m_TextureData.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture(), m_Texture.get());
+    }
     m_TextureData.AddData(OGLSpriteAlgo::GetSpriteColorUniform(), &m_SpriteInfo);
   }
 
@@ -51,6 +54,7 @@ namespace eXl
 
   GfxComponent::GfxComponent()
   {
+    m_Program = OGLSpriteAlgo::GetSpriteProgram(false);
     m_Transform.MakeIdentity();
     m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), &m_Transform);
   }
@@ -66,28 +70,13 @@ namespace eXl
     m_Geometry = iGeometry;
   }
 
-  void GfxComponent::AddDraw(MaterialInfo* iMaterial, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer)
-  {
-    if(iMaterial)
-    {
-      Draw newDraw;
-      newDraw.m_Material = iMaterial;
-      newDraw.m_NumElements = iNumElems;
-      newDraw.m_Offset = iOffset;
-      newDraw.m_Layer = iLayer;
-
-      m_Draws.push_back(newDraw);
-    }
-  }
-
   void GfxComponent::Push(OGLDisplayList& iList)
   {
-    if(m_Geometry != nullptr && !m_Draws.empty())
+    if( m_Program != nullptr
+      && m_Geometry != nullptr 
+      && !m_Draws.empty())
     {
-      if (m_PositionData.GetDataPtr(OGLBaseAlgo::GetWorldMatUniform()) == nullptr)
-      {
-        
-      }
+      iList.SetProgram(m_Program);
       iList.SetVAssembly(&m_Geometry->m_Assembly);
       for(auto& draw : m_Draws)
       {
@@ -96,7 +85,14 @@ namespace eXl
           : 0);
 
         iList.PushData(&m_PositionData);
-        iList.PushDraw(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset);
+        if (draw.m_NumInstances == 0)
+        {
+          iList.PushDraw(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0);
+        }
+        else
+        {
+          iList.PushDrawInstanced(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0, draw.m_NumInstances, draw.m_BaseInstance);
+        }
 
         for (uint32_t i = 0; i < toPop; ++i)
         {
@@ -150,10 +146,10 @@ namespace eXl
 
 	void GfxSpriteData::Push(OGLDisplayList& iList)
 	{
+    iList.SetVAssembly(&m_Geometry->m_Assembly);
+    iList.PushData(&m_TextureData);
 		iList.PushData(&m_PositionData);
-		iList.SetVAssembly(&m_Geometry->m_Assembly);
-		iList.PushData(&m_TextureData);
-		iList.PushDraw(0x0100 + m_Layer, OGLDraw::TriangleList, 6, 0);
+		iList.PushDraw(0x0100 + m_Layer, OGLDraw::TriangleList, 6, 0, 0);
 		iList.PopData();
 		iList.PopData();
 	}

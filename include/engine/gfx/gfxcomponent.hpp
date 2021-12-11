@@ -73,16 +73,55 @@ namespace eXl
 
   class EXL_ENGINE_API GfxComponent
   {
+  protected:
+    struct Draw
+    {
+      IntrusivePtr<MaterialInfo> m_Material;
+
+      uint32_t m_NumElements = 0;
+      uint32_t m_Offset = 0;
+      uint32_t m_NumInstances = 0;
+      uint32_t m_BaseInstance = 0;
+      uint8_t m_Layer = 0;
+    };
+
   public:
     
     GfxComponent();
 
+    void SetProgram(OGLCompiledProgram const* iProgram)
+    {
+      m_Program = iProgram;
+    }
     void SetTransform(Matrix4f const& iTransform);
 
     void SetGeometry(GeometryInfo* iGeom);
     inline void SetGeometry(IntrusivePtr<GeometryInfo> const& iGeom) { SetGeometry(iGeom.get()); }
 
-    void AddDraw(MaterialInfo* iMat, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
+    struct [[nodiscard]] DrawBuilder
+    {
+      [[nodiscard]] DrawBuilder& NumElements(uint32_t iElems) { m_Draw.m_NumElements = iElems; return *this; }
+      [[nodiscard]] DrawBuilder& Offset(uint32_t iOffset) { m_Draw.m_Offset = iOffset; return *this; }
+      [[nodiscard]] DrawBuilder& NumInstances(uint32_t iNum) { m_Draw.m_NumInstances = iNum; return *this; }
+      [[nodiscard]] DrawBuilder& BaseInstance(uint32_t iBase) { m_Draw.m_BaseInstance = iBase; return *this; }
+      [[nodiscard]] DrawBuilder& Layer(uint32_t iLayer) { m_Draw.m_Layer = iLayer; return *this; }
+      void End() { m_Component.AddDraw(std::move(m_Draw)); }
+    protected:
+      friend GfxComponent;
+      DrawBuilder(GfxComponent& iComp, MaterialInfo* iMat)
+        : m_Component(iComp)
+      {
+        m_Draw.m_Material = iMat;
+      }
+      GfxComponent& m_Component;
+
+      Draw m_Draw;
+    };
+
+    //void AddDraw(MaterialInfo* iMat, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
+    //void AddDrawIstanced(MaterialInfo* iMat, uint32_t iNumInstances, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
+    DrawBuilder AddDraw(MaterialInfo* iMat) { return DrawBuilder(*this, iMat); }
+    DrawBuilder AddDraw(IntrusivePtr<MaterialInfo> const& iMat) { return AddDraw(iMat.get()); }
 
     void ClearDraws()
     {
@@ -92,6 +131,12 @@ namespace eXl
     void Push(OGLDisplayList& iList);
 
   protected:
+
+    void AddDraw(Draw&& iDraw)
+    {
+      m_Draws.emplace_back(std::move(iDraw));
+    }
+
     friend class GfxSystem;
     
     ObjectHandle m_Object;
@@ -99,17 +144,9 @@ namespace eXl
 
     OGLShaderData m_PositionData;
 
-    struct Draw
-    {
-      IntrusivePtr<MaterialInfo> m_Material;
-
-      uint32_t m_NumElements;
-      uint32_t m_Offset;
-      uint8_t m_Layer;
-    };
-
     Vector<Draw> m_Draws;
     IntrusivePtr<GeometryInfo> m_Geometry;
+    OGLCompiledProgram const* m_Program;
   };
 
   class GfxSpriteComponent;

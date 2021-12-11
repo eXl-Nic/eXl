@@ -225,7 +225,6 @@ namespace eXl
           m_BufferBindings[iAttribName].num = iNum;
           m_BufferBindings[iAttribName].stride = iStride;
           m_BufferBindings[iAttribName].offset = iOffset;
-          
         }
 
         m_AttribFlags |= 1 << currentSlot;
@@ -414,7 +413,7 @@ namespace eXl
 
   void OGLRenderContext::SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)
   {
-    m_Impl->SetVertexAttrib(iAttribName,iBuffer,iNum,iStride,iOffset);
+    m_Impl->SetVertexAttrib(iAttribName, iBuffer, iNum, iStride, iOffset);
   }
 
   void OGLRenderContext::SetUniformData(uint32_t iDataName, void const* iData)
@@ -444,7 +443,7 @@ namespace eXl
     glDrawArrays(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices);
   }
 
-  void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer,OGLConnectivity iTopo, uint32_t iOffset, uint32_t iNumIndices)
+  void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer,OGLConnectivity iTopo, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
   {
     if(iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
     {
@@ -458,6 +457,35 @@ namespace eXl
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,iBuffer->GetBufferId());
     }
 
-    glDrawElements(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset);
+    glDrawElementsBaseVertex(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iBaseVertex);
+  }
+
+  void OGLRenderContext::DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseInstance, uint32_t iFirstVertex, uint32_t iNumVertices)
+  {
+    m_Impl->CheckCache();
+    if (m_Impl->m_CurrentIndexBuffer != nullptr)
+    {
+      m_Impl->m_CurrentIndexBuffer = nullptr;
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    glDrawArraysInstancedBaseInstance(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices, iNumInstances, iBaseInstance);
+  }
+
+  void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseinstance, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
+  {
+    if (iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
+    {
+      LOG_WARNING << "Invalid buffer for DrawIndexed" << "\n";
+      return;
+    }
+    m_Impl->CheckCache();
+    if (m_Impl->m_CurrentIndexBuffer != iBuffer)
+    {
+      m_Impl->m_CurrentIndexBuffer = iBuffer;
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBuffer->GetBufferId());
+    }
+
+    glDrawElementsInstancedBaseVertexBaseInstance(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances, iBaseVertex, iBaseinstance);
   }
 }

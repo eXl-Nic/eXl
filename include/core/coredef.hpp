@@ -284,6 +284,12 @@ namespace eXl
   public:
     void operator()(T* iPtr){eXl_DELETE_DATA(T,iPtr);}
   };
+
+  template<typename T, size_t Size>
+  constexpr size_t ArrayLength(T(&)[Size]) { return Size; }
+
+  template<typename T, size_t Size>
+  constexpr T* ArrayEnd(T(&iArray)[Size]) { return iArray + ArrayLength(iArray); }
 }
 
 #include <core/intrusiveptr.hpp>

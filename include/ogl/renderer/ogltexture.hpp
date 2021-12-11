@@ -21,6 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  class OGLBuffer;
   class OGLTextureLoader;
 
   class EXL_OGL_API OGLTexture : public HeapObject
@@ -29,7 +30,11 @@ namespace eXl
     DECLARE_RefC;
   public:
 
+    OGLTexture(OGLBuffer* iBuffer, OGLInternalTextureFormat iFormat);
+    OGLTexture(IntrusivePtr<OGLBuffer> const& iBuffer, OGLInternalTextureFormat iFormat);
     OGLTexture(Image::Size const& iSize, OGLTextureType iTextureType, OGLInternalTextureFormat iFormat, uint32_t iNumSlices = 0);
+
+    void AllocateTexture();
 
     ~OGLTexture();
 
@@ -42,6 +47,7 @@ namespace eXl
     uint32_t           GetId() const { return m_TexId; }
     Image::Size const& GetSize() const { return m_Size; }
     uint32_t           GetNumSlices() const { return m_NumSlices; }
+    OGLTextureType GetTextureType() const { return m_TextureType; }
     OGLTextureElementType GetElementType() const;
     OGLTextureFormat GetElementFormat() const;
     uint32_t GetGLElementType() const;
@@ -53,11 +59,11 @@ namespace eXl
 
   protected:
 
-    OGLTextureLoader* m_Loader;
+    IntrusivePtr<OGLBuffer> m_Buffer;
 
     Image::Size              m_Size;
-    uint32_t                 m_NumSlices;
-    uint32_t                 m_TexId;
+    uint32_t                 m_NumSlices = 0;
+    uint32_t                 m_TexId = 0;
     OGLTextureType           m_TextureType;
     OGLInternalTextureFormat m_InternalFormat;
   };

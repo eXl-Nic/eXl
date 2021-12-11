@@ -272,12 +272,14 @@ namespace eXl
           OGLType oType;
           uint32_t oNum;
           iProg->GetAttribDescription(attrib.m_Name,oType,oNum);
-                                            //Pas nécessaire selon OGL
+          //Pas nécessaire selon OGL
           //eXl_ASSERT_MSG(oType == attrib.m_Type /*&& oNum == attrib.m_Mult*/,"Incompatible layout");
           if(oType == attrib.m_Type && tempTech.m_MaxAttrib < 16)
           {
             tempTech.m_AttribSlot[tempTech.m_MaxAttrib] = m_AttribNames[i];
-            tempTech.m_AttribDesc[tempTech.m_MaxAttrib] = std::make_pair(loc,oType);
+            tempTech.m_AttribDesc[tempTech.m_MaxAttrib].attribLoc = loc;
+            tempTech.m_AttribDesc[tempTech.m_MaxAttrib].attribType = oType;
+            tempTech.m_AttribDesc[tempTech.m_MaxAttrib].attribDivisor = attrib.m_Divisor;
             tempTech.m_MaxAttrib++;
           }
         }
@@ -293,7 +295,7 @@ namespace eXl
       oList.clear();
 
       TupleType const* dataType = OGLSemanticManager::GetDataType(m_UnifNames[i]);
-      eXl_ASSERT_MSG(dataType != nullptr,"Wrong data name");
+      eXl_ASSERT_MSG(dataType != nullptr, "Wrong data name");
 
       AString const* dataName = OGLSemanticManager::GetDataName(m_UnifNames[i]);
       eXl_ASSERT(dataName != nullptr);
@@ -352,32 +354,34 @@ namespace eXl
 
     for(uint32_t i = 0; i<m_Textures.size(); ++i)
     {
-      if(tempTech.m_MaxTexture < 16)
+      if(tempTech.m_MaxTexture < 8)
       {
         uint32_t currentTexSlot = tempTech.m_MaxTexture;
         OGLSamplerDesc const& sampler = OGLSemanticManager::GetSampler(m_Textures[i]);
         if(!sampler.name.empty())
         {
           int texLoc = iProg->GetUniformLocation(sampler.name);
-          if(texLoc > 0)
+          if(texLoc >= 0)
           {
             OGLType oType;
             uint32_t oNum;
             iProg->GetUniformDescription(sampler.name,oType,oNum);
 
-            if(oType == OGLType::SAMPLER_2D || oType == OGLType::SAMPLER_CUBE)
+            if(IsSampler(oType))
             {
+              if (GetSamplerTextureType(oType) != sampler.samplerType)
+              {
+                LOG_ERROR << "Wrong type for texture." << "\n";
+                continue;
+              }
               tempTech.m_TechData.m_Samplers[currentTexSlot].first = texLoc;
+              tempTech.m_TechData.m_Samplers[currentTexSlot].second.samplerType = sampler.samplerType;
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.maxFilter = sampler.maxFilter;
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.minFilter = sampler.minFilter;
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.wrapX = sampler.wrapX;
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.wrapY = sampler.wrapY;
               tempTech.m_TexSlot[currentTexSlot] = m_Textures[i];
               tempTech.m_MaxTexture++;
-            }
-            else
-            {
-              LOG_WARNING<<"Wrong type for texture."<<"\n";
             }
           }
         }
@@ -387,34 +391,28 @@ namespace eXl
     OGLCompiledProgram* newTech = eXl_NEW OGLCompiledProgram;
 
     newTech->m_Program = iProg;
-
     newTech->m_MaxAttrib = tempTech.m_MaxAttrib;
     newTech->m_MaxUnif = tempTech.m_MaxUnif;
     newTech->m_MaxUnifBlock = tempTech.m_MaxUnifBlock;
     newTech->m_MaxTexture = tempTech.m_MaxTexture;
     
-    memcpy(&newTech->m_AttribDesc,&tempTech.m_AttribDesc,tempTech.m_MaxAttrib*sizeof(std::pair<uint32_t, GLenum>));
-    memcpy(&newTech->m_AttribSlot,&tempTech.m_AttribSlot,tempTech.m_MaxAttrib*sizeof(uint32_t));
+    std::copy(tempTech.m_AttribDesc, tempTech.m_AttribDesc + tempTech.m_MaxAttrib, newTech->m_AttribDesc);
+    std::copy(tempTech.m_AttribSlot, tempTech.m_AttribSlot + tempTech.m_MaxAttrib, newTech->m_AttribSlot);
+    std::copy(tempTech.m_TexSlot, tempTech.m_TexSlot + tempTech.m_MaxTexture, newTech->m_TexSlot);
 
-    memcpy(&newTech->m_TexSlot,&tempTech.m_TexSlot,tempTech.m_MaxTexture*sizeof(uint32_t));
     for(uint32_t i = 0; i<tempTech.m_MaxTexture; ++i)
     {
-      newTech->m_TechData.m_Samplers[i].first = tempTech.m_TechData.m_Samplers[i].first;
-      newTech->m_TechData.m_Samplers[i].second.maxFilter = tempTech.m_TechData.m_Samplers[i].second.maxFilter;
-      newTech->m_TechData.m_Samplers[i].second.minFilter = tempTech.m_TechData.m_Samplers[i].second.minFilter;
-      newTech->m_TechData.m_Samplers[i].second.wrapX = tempTech.m_TechData.m_Samplers[i].second.wrapX;
-      newTech->m_TechData.m_Samplers[i].second.wrapY = tempTech.m_TechData.m_Samplers[i].second.wrapY;
+      newTech->m_TechData.m_Samplers[i] = tempTech.m_TechData.m_Samplers[i];
     }
-    //memcpy(&newTech->m_TechData.m_Samplers,&tempTech.m_TechData.m_Samplers,tempTech.m_MaxTexture*sizeof(std::pair<int, OGLSamplerDesc>));
 
-    memcpy(&newTech->m_UnifSlot,&tempTech.m_UnifSlot,tempTech.m_MaxUnif*sizeof(uint32_t));
+    std::copy(tempTech.m_UnifSlot, tempTech.m_UnifSlot + tempTech.m_MaxUnif, newTech->m_UnifSlot);
     
     for(uint32_t i = 0; i < tempTech.m_MaxUnif; ++i)
     {
-      newTech->m_TechData.m_UnifHandler[i].swap(tempTech.m_TechData.m_UnifHandler[i]);
+      newTech->m_TechData.m_UnifHandler[i] = std::move(tempTech.m_TechData.m_UnifHandler[i]);
     }
 
-    memcpy(&newTech->m_UnifBlockSlot, &tempTech.m_UnifBlockSlot, tempTech.m_MaxUnifBlock * sizeof(uint32_t));
+    std::copy(tempTech.m_UnifBlockSlot, tempTech.m_UnifBlockSlot + tempTech.m_MaxUnifBlock, newTech->m_UnifBlockSlot);
 
     for (uint32_t i = 0; i < tempTech.m_MaxUnifBlock; ++i)
     {
@@ -430,23 +428,45 @@ namespace eXl
 
   void OGLCompiledProgram::HandleAttribute(uint32_t iAttribSlot, uint32_t iNum, size_t iStride, size_t iOffset)const
   {
-    glVertexAttribPointer(m_AttribDesc[iAttribSlot].first,iNum, GetGLType(m_AttribDesc[iAttribSlot].second),false,iStride,(void*)iOffset);
+    switch (m_AttribDesc[iAttribSlot].attribType)
+    {
+    case OGLType::FLOAT32:
+    case OGLType::FLOAT32_2:
+    case OGLType::FLOAT32_3:
+    case OGLType::FLOAT32_4:
+      glVertexAttribPointer(m_AttribDesc[iAttribSlot].attribLoc, iNum, GetGLType(m_AttribDesc[iAttribSlot].attribType), GL_FALSE, iStride, (void*)iOffset);
+      break;
+    case OGLType::INT32:
+    case OGLType::INT32_2:
+    case OGLType::INT32_3:
+    case OGLType::INT32_4:
+      glVertexAttribIPointer(m_AttribDesc[iAttribSlot].attribLoc, iNum, GetGLType(m_AttribDesc[iAttribSlot].attribType), iStride, (void*)iOffset);
+      break;
+    default:
+      eXl_FAIL_MSG_RET("Unsupported attribute type", void());
+      break;
+    }
+    
+    glVertexAttribDivisor(m_AttribDesc[iAttribSlot].attribLoc, m_AttribDesc[iAttribSlot].attribDivisor);
   }
 
   void OGLCompiledProgram::HandleTexture(uint32_t iTexSlot, OGLTexture const* iTexture)const
   {
     glActiveTexture(GL_TEXTURE0 + iTexSlot);
 
-    GLenum textureTarget = iTexture->IsCubeMap() ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
+    GLenum textureTarget = GetGLTextureType(m_TechData.m_Samplers[iTexSlot].second.samplerType);
 
-    glBindTexture(textureTarget,iTexture->GetId());
+    glBindTexture(textureTarget, iTexture->GetId());
     //LOG_INFO << "Set texture at " << iTexSlot << ", " << iTexture;
-    glUniform1i(m_TechData.m_Samplers[iTexSlot].first,iTexSlot);
+    glUniform1i(m_TechData.m_Samplers[iTexSlot].first, iTexSlot);
 
-    glTexParameteri(textureTarget,GL_TEXTURE_MIN_FILTER, GetGLMinFilter(m_TechData.m_Samplers[iTexSlot].second.minFilter));
-    glTexParameteri(textureTarget,GL_TEXTURE_MAG_FILTER, GetGLMagFilter(m_TechData.m_Samplers[iTexSlot].second.maxFilter));
-    glTexParameteri(textureTarget,GL_TEXTURE_WRAP_S,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapX));
-    glTexParameteri(textureTarget,GL_TEXTURE_WRAP_T,     GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapY));
+    if (textureTarget != GL_TEXTURE_BUFFER)
+    {
+      glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GetGLMinFilter(m_TechData.m_Samplers[iTexSlot].second.minFilter));
+      glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GetGLMagFilter(m_TechData.m_Samplers[iTexSlot].second.maxFilter));
+      glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapX));
+      glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapY));
+    }
   }
 
   void OGLCompiledProgram::HandleUniform(uint32_t iSlot, void const* iData) const
@@ -469,7 +489,7 @@ namespace eXl
 
   uint32_t OGLCompiledProgram::GetAttribLocation(uint32_t iAttribSlot) const
   {
-    return m_AttribDesc[iAttribSlot].first;
+    return m_AttribDesc[iAttribSlot].attribLoc;
   }
 
   void OGLCompiledProgram::Setup()const

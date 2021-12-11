@@ -9,13 +9,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
+
+#include <ogl/oglexp.hpp>
+
 namespace eXl
 {
   enum class OGLBufferUsage
   {
     ARRAY_BUFFER,
     ELEMENT_ARRAY_BUFFER,
-    UNIFORM_BUFFER
+    UNIFORM_BUFFER,
+    TEXTURE_BUFFER
   };
 
   enum class OGLBufferAccess
@@ -37,8 +41,20 @@ namespace eXl
     INT32_4,
     MAT3,
     MAT4,
+    SAMPLER_1D,
+    SAMPLER_1D_ARRAY,
     SAMPLER_2D,
-    SAMPLER_CUBE
+    SAMPLER_2D_ARRAY,
+    SAMPLER_3D,
+    SAMPLER_CUBE,
+    SAMPLER_BUFFER,
+    INT_SAMPLER_1D,
+    INT_SAMPLER_1D_ARRAY,
+    INT_SAMPLER_2D,
+    INT_SAMPLER_2D_ARRAY,
+    INT_SAMPLER_3D,
+    INT_SAMPLER_CUBE,
+    INT_SAMPLER_BUFFER,
   };
 
   enum class OGLConnectivity
@@ -115,13 +131,21 @@ namespace eXl
     RGB,
     RGBA,
 
+    R8,
+    RG8,
+    RGB8,
+    RGBA8,
+
     R32F,
     RG32F,
     RGB32F,
     RGBA32F,
 
+    R32I,
+    RG32I,
+    RGB32I,
+    RGBA32I,
 #if 0
-    R8,
     R8_SNORM,
     R16F,
     R8UI,
@@ -129,8 +153,6 @@ namespace eXl
     R16UI,
     R16I,
     R32UI,
-    R32I,
-    RG8,
     RG8_SNORM,
     RG16F,
     RG8UI,
@@ -138,8 +160,6 @@ namespace eXl
     RG16UI,
     RG16I,
     RG32UI,
-    RG32I,
-    RGB8,
     SRGB8,
     RGB565,
     RGB8_SNORM,
@@ -149,8 +169,6 @@ namespace eXl
     RGB16UI,
     RGB16I,
     RGB32UI,
-    RGB32I,
-    RGBA8,
     SRGB8_ALPHA8,
     RGBA8_SNORM,
     RGB5_A1,
@@ -162,7 +180,6 @@ namespace eXl
     RGB10_A2UI,
     RGBA16UI,
     RGBA16I,
-    RGBA32I,
     RGBA32UI,
     
     DEPTH_COMPONENT16,
@@ -209,4 +226,6 @@ namespace eXl
     UNSIGNED_INT_2_10_10_10_REV
   };
 
+  EXL_OGL_API bool IsSampler(OGLType iType);
+  EXL_OGL_API OGLTextureType GetSamplerTextureType(OGLType iType);
 }

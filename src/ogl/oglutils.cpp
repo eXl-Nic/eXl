@@ -40,6 +40,16 @@ namespace eXl
     *((Vector3f*)(oMatrix + 8)) = rotMat[2];
   }
 
+  uint32_t OGLUtils::CompileVertexShader(char const* iSource)
+  {
+    return CompileShader(GL_VERTEX_SHADER, iSource);
+  }
+
+  uint32_t OGLUtils::CompileFragmentShader(char const* iSource)
+  {
+    return CompileShader(GL_FRAGMENT_SHADER, iSource);
+  }
+
   GLuint OGLUtils::CompileShader(GLenum iType,char const* iSource)
   {
     GLuint shaderName = 0;

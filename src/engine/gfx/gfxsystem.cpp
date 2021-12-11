@@ -631,8 +631,6 @@ namespace eXl
     m_Impl->m_CameraBuffer->SetData(0, sizeof(m_Impl->m_Camera), &m_Impl->m_Camera);
     camData.SetDataBuffer(OGLBaseAlgo::GetCameraUniform(), m_Impl->m_CameraBuffer);
 
-    list.SetProgram(OGLSpriteAlgo::GetSpriteProgram(false));
-
     list.PushData(&camData);
 
     List<GfxComponent*> toDelete;
@@ -641,6 +639,8 @@ namespace eXl
     {
       comp.Push(list);
     });
+
+    list.SetProgram(OGLSpriteAlgo::GetSpriteProgram(false));
 
 		m_Impl->PrepareSprites();
 		m_Impl->m_SpriteData.Iterate([this, &list, iDelta](GfxSpriteData& data, SpriteDataTable::Handle)
@@ -803,7 +803,7 @@ namespace eXl
 
           auto const& linesDL = debugDrawer.m_Lines[matEntry.second];
 
-          list.PushDraw(0x0100, OGLDraw::LineList, linesDL.size(), lineNums[matEntry.second]);
+          list.PushDraw(0x0100, OGLDraw::LineList, linesDL.size(), lineNums[matEntry.second], 0);
 
           list.PopData();
         }
@@ -881,11 +881,11 @@ namespace eXl
           if (debugDrawer.m_Boxes.size() > matEntry.second)
           {
             auto const& boxDL = debugDrawer.m_Boxes[matEntry.second];
-            list.PushDraw(0x0100, OGLDraw::TriangleList, boxDL.size() * 6, boxNums[matEntry.second] * 6);
+            list.PushDraw(0x0100, OGLDraw::TriangleList, boxDL.size() * 6, boxNums[matEntry.second] * 6, 0);
           }
           if (debugDrawer.m_Convex.size() > matEntry.second)
           {
-            list.PushDraw(0x0100, OGLDraw::TriangleList, convexNumPts[matEntry.second], convexOffset[matEntry.second]);
+            list.PushDraw(0x0100, OGLDraw::TriangleList, convexNumPts[matEntry.second], convexOffset[matEntry.second], 0);
           }
           list.PopData();
         }

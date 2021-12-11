@@ -174,14 +174,20 @@ namespace eXl
 
   void OGLDisplayList::SetProgram(OGLCompiledProgram const* iProgram)
   {
-    FlushDraws();
-    m_CurProgram = iProgram;
+    if (iProgram != m_CurProgram)
+    {
+      FlushDraws();
+      m_CurProgram = iProgram;
+    }
   }
 
   void OGLDisplayList::SetVAssembly(OGLVAssembly const* iAssembly)
   {
-    FlushDraws();
-    m_CurAssembly = iAssembly;
+    if (iAssembly != m_CurAssembly)
+    {
+      FlushDraws();
+      m_CurAssembly = iAssembly;
+    }
   }
 
   void OGLDisplayList::PushData(OGLShaderData const* iData)
@@ -208,6 +214,32 @@ namespace eXl
     }
   }
 
+  void OGLDisplayList::FillDrawHeader(OGLDraw& iDraw, uint8_t iTopo)
+  {
+    iDraw.m_Prog = m_CurProgram;
+    iDraw.m_StateId = m_States.GetStateId();
+    iDraw.m_VDecl = m_CurAssembly;
+    iDraw.m_Topo = m_PendingDraws[0].topo;
+  }
+
+  void OGLDisplayList::FillGeom(OGLGeometry& iGeom, PendingDraw const& iDraw)
+  {
+    iGeom.m_Mat = iDraw.data;
+    iGeom.m_Num = iDraw.num;
+    iGeom.m_Offset = iDraw.offset;
+    iGeom.m_BaseVertex = iDraw.baseVertex;
+  }
+
+  void OGLDisplayList::FillinstancedGeom(OGLInstancedGeometry& iGeom, PendingDraw const& iDraw)
+  {
+    iGeom.m_Mat = iDraw.data;
+    iGeom.m_Num = iDraw.num;
+    iGeom.m_Offset = iDraw.offset;
+    iGeom.m_BaseVertex = iDraw.baseVertex;
+    iGeom.m_Instances = iDraw.instances;
+    iGeom.m_BaseInstance = iDraw.baseInstance;
+  }
+
   void OGLDisplayList::FlushDraws()
   {
     if (m_PendingDraws.size() == 1)
@@ -217,18 +249,26 @@ namespace eXl
       newKey.m_Offset = m_Commands.size();
       newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_DataSetStore[m_PendingDraws[0].data].m_RenderHash);
 
-      m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(OGLGeometry));
-      OGLDraw* draw = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
-      draw->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::Draw /*| m_PendingDraws[0].topo*/;
-      draw->m_Prog = m_CurProgram;
-      draw->m_StateId = curState;
-      draw->m_VDecl = m_CurAssembly;
-      draw->m_Topo = m_PendingDraws[0].topo;
+      if (m_PendingDraws[0].instances == 0)
+      {
+        m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(OGLGeometry));
+        OGLDraw* draw = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
+        draw->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::Draw;
+        FillDrawHeader(*draw, m_PendingDraws[0].topo);
 
-      OGLGeometry* geom = (OGLGeometry*)(draw+1);
-      geom->m_Mat = m_PendingDraws[0].data;
-      geom->m_Num = m_PendingDraws[0].num;
-      geom->m_Offset = m_PendingDraws[0].offset;
+        OGLGeometry* geom = (OGLGeometry*)(draw + 1);
+        FillGeom(*geom, m_PendingDraws[0]);
+      }
+      else
+      {
+        m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(OGLInstancedGeometry));
+        OGLDraw* draw = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
+        draw->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::Draw | OGLDraw::DrawInstanced;
+        FillDrawHeader(*draw, m_PendingDraws[0].topo);
+
+        OGLInstancedGeometry* geom = (OGLInstancedGeometry*)(draw + 1);
+        FillinstancedGeom(*geom, m_PendingDraws[0]);
+      }
 
       m_Keys.push_back(newKey);
 
@@ -242,26 +282,43 @@ namespace eXl
       newKey.m_Offset = m_Commands.size();
       newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_DataSetStore[m_PendingDraws[0].data].m_RenderHash);
       
-      m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(uint32_t) + m_PendingDraws.size()*sizeof(OGLGeometry));
-
-      OGLDraw* drawGroup = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
-      drawGroup->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::DrawGroup /*| m_PendingDraws[0].topo*/;
-      drawGroup->m_Prog = m_CurProgram;
-      drawGroup->m_StateId = curState;
-      drawGroup->m_VDecl = m_CurAssembly;
-      drawGroup->m_Topo = m_PendingDraws[0].topo;
-
-      uint32_t* numDraws = (uint32_t*)(drawGroup+1);
-      *numDraws = m_PendingDraws.size();
-
-      OGLGeometry* geom = (OGLGeometry*)(numDraws + 1);
-
-      for(uint32_t i = 0; i<m_PendingDraws.size(); ++i)
+      if (m_PendingDraws[0].instances == 0)
       {
-        geom->m_Mat = m_PendingDraws[i].data;
-        geom->m_Num = m_PendingDraws[i].num;
-        geom->m_Offset = m_PendingDraws[i].offset;
-        ++geom;
+        m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(uint32_t) + m_PendingDraws.size() * sizeof(OGLGeometry));
+
+        OGLDraw* drawGroup = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
+        drawGroup->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::DrawGroup;
+        FillDrawHeader(*drawGroup, m_PendingDraws[0].topo);
+
+        uint32_t* numDraws = (uint32_t*)(drawGroup + 1);
+        *numDraws = m_PendingDraws.size();
+
+        OGLGeometry* geom = (OGLGeometry*)(numDraws + 1);
+
+        for (uint32_t i = 0; i < m_PendingDraws.size(); ++i)
+        {
+          FillGeom(*geom, m_PendingDraws[i]);
+          ++geom;
+        }
+      }
+      else
+      {
+        m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(uint32_t) + m_PendingDraws.size() * sizeof(OGLInstancedGeometry));
+
+        OGLDraw* drawGroup = (OGLDraw*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
+        drawGroup->m_Flags = OGLRenderCommand::DrawCommand | OGLDraw::DrawGroup | OGLDraw::DrawInstanced;
+        FillDrawHeader(*drawGroup, m_PendingDraws[0].topo);
+
+        uint32_t* numDraws = (uint32_t*)(drawGroup + 1);
+        *numDraws = m_PendingDraws.size();
+
+        OGLInstancedGeometry* geom = (OGLInstancedGeometry*)(numDraws + 1);
+
+        for (uint32_t i = 0; i < m_PendingDraws.size(); ++i)
+        {
+          FillinstancedGeom(*geom, m_PendingDraws[i]);
+          ++geom;
+        }
       }
 
       m_Keys.push_back(newKey);
@@ -288,7 +345,7 @@ namespace eXl
     m_Keys.push_back(newKey);
   }
 
-  void OGLDisplayList::PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset)
+  void OGLDisplayList::PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex)
   {
     switch(iTopo)
     {
@@ -309,12 +366,48 @@ namespace eXl
     if(m_PendingDraws.size() != 0
        && (m_PendingDraws.back().key != iKey
         || m_PendingDraws.back().topo != iTopo
+        || m_PendingDraws.back().instances != 0
         || m_PendingDraws.back().data != m_CurDataSet))
     {
       FlushDraws();  
     }
+    PendingDraw newDraw = {m_CurDataSet, iNum, iOffset, iBaseVertex, 0, 0, iKey, iTopo};
+    m_PendingDraws.push_back(newDraw);
+  }
 
-    PendingDraw newDraw = {m_CurDataSet, iNum, iOffset, iKey, iTopo};
+  void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance)
+  {
+    if (iNumInstances == 0)
+    {
+      PushDraw(iKey, iTopo, iNum, iOffset, iBaseVertex);
+    }
+
+    switch (iTopo)
+    {
+    case OGLDraw::Point:
+    case OGLDraw::LineList:
+    case OGLDraw::LineStrip:
+    case OGLDraw::TriangleList:
+    case OGLDraw::TriangleStrip:
+      break;
+    default:
+      eXl_ASSERT_MSG(false, "Incorrect topology");
+      return;
+    }
+
+    eXl_ASSERT_MSG(m_CurProgram != NULL, "Program missing");
+    eXl_ASSERT_MSG(m_CurAssembly != NULL, "Vertex assembly missing");
+
+    if (m_PendingDraws.size() != 0
+      && (m_PendingDraws.back().key != iKey
+        || m_PendingDraws.back().topo != iTopo
+        || m_PendingDraws.back().instances == 0
+        || m_PendingDraws.back().data != m_CurDataSet))
+    {
+      FlushDraws();
+    }
+
+    PendingDraw newDraw = { m_CurDataSet, iNum, iOffset, iBaseVertex, iNumInstances, iBaseInstance, iKey, iTopo };
     m_PendingDraws.push_back(newDraw);
   }
 
@@ -323,7 +416,7 @@ namespace eXl
     for(uint32_t i = 0; i<m_Attribs.size(); ++i)
     {
       VtxAttrib const& curAttr = m_Attribs[i];
-      iCtx->SetVertexAttrib(curAttr.m_AttribId, curAttr.m_VBuffer, curAttr.m_Num, curAttr.m_Stride, curAttr.m_Offset);
+      iCtx->SetVertexAttrib(curAttr.m_AttribId, curAttr.m_VBuffer.get(), curAttr.m_Num, curAttr.m_Stride, curAttr.m_Offset);
     }
   }
 
@@ -459,37 +552,78 @@ namespace eXl
                   m_CurAssembly = drawCmd->m_VDecl;
                 }
 
-                OGLBuffer const* idxBuff = drawCmd->m_VDecl->m_IBuffer;
+                OGLBuffer const* idxBuff = drawCmd->m_VDecl->m_IBuffer.get();
                 uint32_t idxOffset = drawCmd->m_VDecl->m_IOffset;
-                if(!(drawCmd->m_Flags & OGLDraw::DrawGroup))
+
+                uint32_t numDraws;
+                if ((drawCmd->m_Flags & OGLDraw::DrawInstanced) == 0)
                 {
-                  OGLGeometry const* geom = (OGLGeometry const*)(drawCmd + 1);
-                  if(m_CurDataSet != geom->m_Mat)
+                  OGLGeometry const* geom;
+
+                  if ((drawCmd->m_Flags & OGLDraw::DrawGroup) == 0)
                   {
-                    if (geom->m_Mat != -1)
-                    {
-                      HandleDataSet(iCtx, &m_DataSetStore[geom->m_Mat]);
-                    }
-                    m_CurDataSet = geom->m_Mat;
-                  }
-                  if(idxBuff)
-                  {
-                    iCtx->DrawIndexed(idxBuff,topo,idxOffset + geom->m_Offset * sizeof(uint32_t),geom->m_Num);
+                    geom = (OGLGeometry const*)(drawCmd + 1);
+                    numDraws = 1;
                   }
                   else
                   {
-                    iCtx->Draw(topo,geom->m_Offset,geom->m_Num);
+                    numDraws = *(uint32_t*)(drawCmd + 1);
+                    geom = (OGLGeometry const*)((uint32_t*)(drawCmd + 1) + 1);
+                  }
+
+                  if (idxBuff)
+                  {
+                    for (uint32_t draws = 0; draws < numDraws; ++draws)
+                    {
+                      if (m_CurDataSet != geom->m_Mat)
+                      {
+                        if (geom->m_Mat != -1)
+                        {
+                          HandleDataSet(iCtx, &m_DataSetStore[geom->m_Mat]);
+                        }
+                        m_CurDataSet = geom->m_Mat;
+                      }
+                      iCtx->DrawIndexed(idxBuff, topo, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
+                      ++geom;
+                    }
+                  }
+                  else
+                  {
+                    for (uint32_t draws = 0; draws < numDraws; ++draws)
+                    {
+                      if (m_CurDataSet != geom->m_Mat)
+                      {
+                        if (geom->m_Mat != -1)
+                        {
+                          HandleDataSet(iCtx, &m_DataSetStore[geom->m_Mat]);
+                        }
+                        m_CurDataSet = geom->m_Mat;
+                      }
+                      iCtx->Draw(topo, geom->m_Offset, geom->m_Num);
+                      geom++;
+                    }
                   }
                 }
                 else
                 {
-                  uint32_t numDraws = *(uint32_t*)(drawCmd + 1);
-                  OGLGeometry const* geom = (OGLGeometry const*)((uint32_t*)(drawCmd + 1) + 1);
-                  if(idxBuff)
+                  OGLInstancedGeometry const* geom;
+
+                  if ((drawCmd->m_Flags & OGLDraw::DrawGroup) == 0)
                   {
-                    for(uint32_t draws = 0; draws < numDraws; ++draws)
+                    geom = (OGLInstancedGeometry const*)(drawCmd + 1);
+                    numDraws = 1;
+                  }
+                  else
+                  {
+                    numDraws = *(uint32_t*)(drawCmd + 1);
+                    geom = (OGLInstancedGeometry const*)((uint32_t*)(drawCmd + 1) + 1);
+                  }
+
+                  if (idxBuff)
+                  {
+                    for (uint32_t draws = 0; draws < numDraws; ++draws)
                     {
-                      if(m_CurDataSet != geom->m_Mat)
+                      if (m_CurDataSet != geom->m_Mat)
                       {
                         if (geom->m_Mat != -1)
                         {
@@ -497,15 +631,15 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
-                      iCtx->DrawIndexed(idxBuff,topo,idxOffset + geom->m_Offset * sizeof(uint32_t),geom->m_Num);
-                      geom++;
+                      iCtx->DrawIndexedInstanced(idxBuff, topo, geom->m_Instances, geom->m_BaseInstance, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
+                      ++geom;
                     }
                   }
                   else
                   {
-                    for(uint32_t draws = 0; draws < numDraws; ++draws)
+                    for (uint32_t draws = 0; draws < numDraws; ++draws)
                     {
-                      if(m_CurDataSet != geom->m_Mat)
+                      if (m_CurDataSet != geom->m_Mat)
                       {
                         if (geom->m_Mat != -1)
                         {
@@ -513,7 +647,7 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
-                      iCtx->Draw(topo,geom->m_Offset,geom->m_Num);
+                      iCtx->DrawInstanced(topo, geom->m_Instances, geom->m_BaseInstance, geom->m_Offset, geom->m_Num);
                       geom++;
                     }
                   }

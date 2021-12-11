@@ -62,7 +62,9 @@ namespace eXl
 
     void PopData();
 
-    void PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset);
+    void PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex);
+
+    void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance);
 
     void Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vector4f const& iColor = Vector4f::ZERO, float iDepth = 1.0);
 
@@ -72,17 +74,24 @@ namespace eXl
 
     void FlushDraws();
 
+    void FillDrawHeader(OGLDraw& iDraw, uint8_t iTopo);
+
     void HandleDataSet(OGLRenderContext* iCtx, OGLShaderDataSet const* iSet);
 
     struct PendingDraw
     {
-      //OGLShaderDataSet const* data;
       uint32_t data;
       uint32_t num;
       uint32_t offset;
+      uint32_t baseVertex;
+      uint32_t instances;
+      uint32_t baseInstance;
       uint16_t key;
       uint8_t topo;
     };
+
+    void FillGeom(OGLGeometry& iGeom, PendingDraw const& iDraw);
+    void FillinstancedGeom(OGLInstancedGeometry& iGeom, PendingDraw const& iDraw);
 
     std::vector<PendingDraw> m_PendingDraws;
 

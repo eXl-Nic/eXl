@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   
-  void UpdateFromImage(Image const& iImage, GLuint iTexId, bool iGenMipMap, int iFace);
+  void UpdateFromImage(Image const& iImage, GLenum iTextureType, GLuint iTexId, bool iGenMipMap, int iFace);
 
   //OGLTextureLoader::OGLTextureLoader(std::list<DataVault*> const& iSource):m_Source(iSource)
   //{
@@ -220,22 +220,16 @@ namespace eXl
     if (iImage == NULL)
       return NULL;
 
-    GLuint texId;
-    glGenTextures(1, &texId);
-
     OGLInternalTextureFormat internalFormat;
     OGLTextureElementType dataType;
     OGLTextureFormat dataComponents;
 
     GetOGLTypes(*iImage, internalFormat, dataType, dataComponents);
-    
-    UpdateFromImage(*iImage, texId, false, -1);
-
     Image::Size const& imgSize = iImage->GetSize();
 
     OGLTexture* newTex = eXl_NEW OGLTexture(imgSize, OGLTextureType::TEXTURE_2D, internalFormat);
-    //mouais....
-    newTex->m_TexId = texId;
+    newTex->AllocateTexture();
+    UpdateFromImage(*iImage, GL_TEXTURE_2D, newTex->GetAPIHandle(), false, -1);
 
     return newTex;
   }
@@ -277,30 +271,44 @@ namespace eXl
       }
     }
 
-    GLuint texId;
-    glGenTextures(1, &texId);
-
+    OGLTexture* newTex = eXl_NEW OGLTexture(imgSize, OGLTextureType::TEXTURE_CUBE_MAP, internalFormat);
+    newTex->AllocateTexture();
     for(uint32_t i = 0; i<6; ++i)
     {
-      UpdateFromImage(*iImage[i], texId, false, i);
+      UpdateFromImage(*iImage[i], GL_TEXTURE_CUBE_MAP, newTex->m_TexId, false, i);
     }
-
-    OGLTexture* newTex = eXl_NEW OGLTexture(imgSize, OGLTextureType::TEXTURE_CUBE_MAP, internalFormat);
-    //mouais....
-    newTex->m_TexId = texId;
 
     return newTex;
   }
 
-  void UpdateFromImage(Image const& iImage, GLuint iTexId, bool iGenMipMap, int iFace)
+  void OGLTextureLoader::SetFromImage(Image const* iImage, OGLTexture* iTexture, uint32_t iFace)
   {
-    if(iTexId == 0)
+    if (iImage == nullptr)
+    {
+      return ;
+    }
+
+    if (iTexture->GetAPIHandle() == 0)
+    {
+      iTexture->AllocateTexture();
+    }
+
+    eXl_ASSERT_REPAIR_RET(iTexture->GetTextureType() != OGLTextureType::TEXTURE_2D_ARRAY
+      && iTexture->GetTextureType() != OGLTextureType::TEXTURE_3D
+      && iTexture->GetTextureType() != OGLTextureType::TEXTURE_CUBE_MAP
+      || (iFace >= 0 && iFace < iTexture->GetNumSlices()), void());
+
+    UpdateFromImage(*iImage, GetGLTextureType(iTexture->GetTextureType()), iTexture->GetAPIHandle(), false, iFace);
+  }
+
+  void UpdateFromImage(Image const& iImage, GLenum iTextureType, GLuint iTexId, bool iGenMipMap, int iFace)
+  {
+    if (iTexId == 0)
+    {
       return;
+    }
 
-    GLenum textureTarget = iFace >= 0 ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
-    GLenum textureFaceUpdate = iFace >= 0 ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + iFace : GL_TEXTURE_2D;
-
-    glBindTexture(textureTarget,iTexId);
+    glBindTexture(iTextureType, iTexId);
 
     size_t totSize = iImage.GetByteSize();
 
@@ -369,17 +377,26 @@ namespace eXl
     else
       glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
-    glTexImage2D(textureFaceUpdate, 0, 
-      GetGLInternalTextureFormat(internalFormat), 
-      imgSize.X(), imgSize.Y(), 0, 
-      GetGLTextureFormat(dataComponents), 
-      GetGLTextureElementType(dataType), 
-      nullptr);
-    for(uint32_t i = 0; i < imgSize.Y(); ++i)
+    if (iTextureType == GL_TEXTURE_1D_ARRAY
+      || iTextureType == GL_TEXTURE_2D
+      || iTextureType == GL_TEXTURE_CUBE_MAP)
     {
-      //uint8_t const* pixelsDataRev = pixelsData + ((imgSize.Y() - 1) - i) * iImage->GetRowStride();
-      uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
-      glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.X(), 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
+      for (uint32_t i = 0; i < imgSize.Y(); ++i)
+      {
+        GLenum textureFaceUpdate = iTextureType == GL_TEXTURE_CUBE_MAP ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + iFace : iTextureType;
+        //uint8_t const* pixelsDataRev = pixelsData + ((imgSize.Y() - 1) - i) * iImage->GetRowStride();
+        uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
+        glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.X(), 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
+      }
+    }
+    else if (iTextureType == GL_TEXTURE_2D_ARRAY
+      || iTextureType == GL_TEXTURE_3D)
+    {
+      for (uint32_t i = 0; i < imgSize.Y(); ++i)
+      {
+        uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
+        glTexSubImage3D(iTextureType, 0, 0, i, iFace, imgSize.X(), 1, 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
+      }
     }
 
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
@@ -390,20 +407,19 @@ namespace eXl
 #ifndef __ANDROID__
     if(!iGenMipMap)
     {
-      glTexParameteri(textureTarget,GL_TEXTURE_BASE_LEVEL,0);
-      glTexParameteri(textureTarget,GL_TEXTURE_MAX_LEVEL,0);
+      glTexParameteri(iTextureType, GL_TEXTURE_BASE_LEVEL,0);
+      glTexParameteri(iTextureType, GL_TEXTURE_MAX_LEVEL,0);
     }
     else
 #endif
     {
-      glGenerateMipmap(textureTarget);
+      glGenerateMipmap(iTextureType);
     }
 
-    
-    //newTex->m_Loader = this;
-
-    if(replImage != NULL)
+    if (replImage != NULL)
+    {
       eXl_DELETE replImage;
+    }
   }
 
   Err OGLTextureLoader::ReadTexture(OGLTexture* iTexture, Image*& oImage, int iFace)

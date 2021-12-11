@@ -88,6 +88,7 @@ namespace eXl
       s_WorldMatUnif = OGLSemanticManager::RegisterUniformData("WorldMatrix",type);
 
       OGLSamplerDesc samplerDesc;
+      samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
       samplerDesc.maxFilter = OGLMagFilter::LINEAR;
       samplerDesc.minFilter = OGLMinFilter::LINEAR;
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
@@ -155,6 +156,7 @@ namespace eXl
       s_SpriteColor = OGLSemanticManager::RegisterUniformData("SpriteColor",type);
 
       OGLSamplerDesc samplerDesc;
+      samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
       samplerDesc.maxFilter = OGLMagFilter::NEAREST;
       samplerDesc.minFilter = OGLMinFilter::NEAREST;
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
@@ -336,6 +338,7 @@ namespace eXl
     if(s_IrradianceMap == 1<<31)
     {
       OGLSamplerDesc samplerDesc;
+      samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
       samplerDesc.maxFilter = OGLMagFilter::LINEAR;
       samplerDesc.minFilter = OGLMinFilter::LINEAR_MIPMAP_LINEAR;
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
@@ -347,6 +350,7 @@ namespace eXl
     if(s_SpecularEnvMap == 1<<31)
     {
       OGLSamplerDesc samplerDesc;
+      samplerDesc.samplerType = OGLTextureType::TEXTURE_CUBE_MAP;
       samplerDesc.maxFilter = OGLMagFilter::LINEAR;
       samplerDesc.minFilter = OGLMinFilter::LINEAR_MIPMAP_LINEAR;
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
@@ -358,6 +362,7 @@ namespace eXl
     if(s_EnvBrdfLut == 1<<31)
     {
       OGLSamplerDesc samplerDesc;
+      samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
       samplerDesc.maxFilter = OGLMagFilter::LINEAR;
       samplerDesc.minFilter = OGLMinFilter::LINEAR;
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
@@ -466,10 +471,10 @@ namespace eXl
 
   void OGLSkyAlgo::Init()
   {
-
     if(s_SkyTexture == 1<<31)
     {
       OGLSamplerDesc samplerDesc;
+      samplerDesc.samplerType = OGLTextureType::TEXTURE_CUBE_MAP;
       samplerDesc.maxFilter = OGLMagFilter::LINEAR;
       samplerDesc.minFilter = OGLMinFilter::LINEAR;
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
