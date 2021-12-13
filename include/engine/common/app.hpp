@@ -38,6 +38,8 @@ namespace eXl
 
     CameraState& GetCamera();
 
+    inline World& GetWorld();
+
   private:
     friend WorldState;
     WorldState* m_WorldState = nullptr;
@@ -155,4 +157,9 @@ namespace eXl
     Path m_ProjectPath;
     Path m_MapPath;
   };
+
+  inline World& Scenario::GetWorld()
+  {
+    return m_WorldState->GetWorld();
+  }
 }

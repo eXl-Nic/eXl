@@ -24,8 +24,10 @@ namespace eXl
 {
   IMPLEMENT_RTTI(CharacterSystem);
 
-  ObjectHandle CharacterSystem::Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc)
+  void CharacterSystem::Build(World& iWorld, ObjectHandle iObject, Vector3f const& iPosition, Desc const& iDesc)
   {
+    eXl_ASSERT_REPAIR_RET(iWorld.IsObjectValid(iObject), void());
+
     Transforms* transforms = iWorld.GetSystem<Transforms>();
     PhysicsSystem* phSys = iWorld.GetSystem<PhysicsSystem>();
     NavigatorSystem* navSys = iWorld.GetSystem<NavigatorSystem>();
@@ -59,22 +61,20 @@ namespace eXl
     desc.AddSphere(iDesc.size);
     desc.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
 
-    phSys->CreateComponent(newObject, desc);
+    phSys->CreateComponent(iObject, desc);
     
     if (navSys)
     {
-      phSys->GetNeighborhoodExtraction().AddObject(newObject, iDesc.size, true);
+      phSys->GetNeighborhoodExtraction().AddObject(iObject, iDesc.size, true);
       if (iDesc.controlKind == ControlKind::Navigation)
       {
-        navSys->AddNavigator(newObject, iDesc.size, iDesc.maxSpeed);
+        navSys->AddNavigator(iObject, iDesc.size, iDesc.maxSpeed);
       }
       else
       {
-        navSys->AddObstacle(newObject, iDesc.size);
+        navSys->AddObstacle(iObject, iDesc.size);
       }
     }
-
-    return newObject;
   }
 
   void CharacterSystem::Register(World& iWorld)
@@ -250,7 +250,7 @@ namespace eXl
         {
           if (entry->m_Animation)
           {
-            entry->m_Animation->OnWalkingStateChange(iObj, entry->m_CurState);
+            entry->m_Animation->OnWalkingStateChange(iObj, iState);
           }
           entry->m_CurState = iState;
         }

@@ -116,10 +116,12 @@ map/map.cpp
 map/map_instantiate.cpp
 map/mcmcmodelrsc.cpp
 
-#net/network.cpp
+net/network_yojimbo.cpp
+net/dispatcher.cpp
 
-net/spatial/spatialos_world.hpp
-net/spatial/spatialos_world.cpp
+#net/spatial/network_spatial.cpp
+#net/spatial/spatialos_world.hpp
+#net/spatial/spatialos_world.cpp
 
 gui/fontresource.cpp
 
@@ -160,6 +162,7 @@ set( PREREQS_PRIV
   LinearMath
   libb64
   freetype
+  yojimbo
 )
 
 if(${EXL_BUILD_OGL})

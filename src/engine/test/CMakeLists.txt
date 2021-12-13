@@ -11,6 +11,7 @@ resourcetest.cpp
 graphtest.cpp
 maptest.cpp
 mphf.cpp
+networktest.cpp
 
 main.cpp
 )

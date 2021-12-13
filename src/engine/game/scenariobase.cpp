@@ -103,7 +103,8 @@ namespace eXl
     defaultDesc.size = 1.0;
     defaultDesc.maxSpeed = 10.0;
 
-    ObjectHandle newChar = CharacterSystem::Build(iWorld, MathTools::To3DVec(m_SpawnPos), defaultDesc);
+    ObjectHandle newChar = iWorld.CreateObject();
+    CharacterSystem::Build(iWorld, newChar, MathTools::To3DVec(m_SpawnPos), defaultDesc);
     {
       if (auto* gfxSys = iWorld.GetSystem<GfxSystem>())
       {

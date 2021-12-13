@@ -29,8 +29,23 @@ namespace eXl
 
   struct ObjectCreationInfo
   {
+    // Object won't be addressable
+    static constexpr uint64_t s_AnonymousFlag = 1llu << 63;
+    // A persistent Id will be created.
+    static constexpr uint64_t s_AutoNamedFlag  = 1llu << 62;
+
     String m_DisplayName;
-    uint64_t m_PersistentId = 1llu << 63;
+    uint64_t m_PersistentId = s_AnonymousFlag;
+
+    static ObjectCreationInfo Anonymous(String const& iDebugName = String())
+    {
+      return ObjectCreationInfo{ iDebugName, s_AnonymousFlag };
+    }
+
+    static ObjectCreationInfo AutoNamed(String const& iDebugName = String())
+    {
+      return ObjectCreationInfo{iDebugName, s_AutoNamedFlag};
+    }
   };
 
   typedef ObjectTable<ObjectInfo> WorldObjects;
@@ -181,8 +196,6 @@ namespace eXl
   class EXL_ENGINE_API World
   {
   public:
-
-    static constexpr uint64_t s_AnonymousFlag = 1llu << 63;
 
     World(ComponentManifest const& iManifest);
     World(World const&) = delete;

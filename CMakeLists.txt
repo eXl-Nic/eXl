@@ -65,6 +65,7 @@ include(config/freetype/freetype.cmake)
 include(config/utf8/utf8.cmake)
 
 SET(LAYOUT_INCLUDE_DIR ${LAYOUT_ROOT})
+SET(YOJIMBO_INCLUDE_DIR ${YOJIMBO_ROOT})
 
 add_subdirectory(src/core ${OUT_DIR}/eXl/core)
 add_subdirectory(src/math ${OUT_DIR}/eXl/math)

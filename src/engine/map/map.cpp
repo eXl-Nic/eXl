@@ -10,10 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/map/map.hpp>
 
+#include <core/random.hpp>
 #include <core/resource/resourceloader.hpp>
 #include <core/resource/resourcemanager.hpp>
 #include <math/mathtools.hpp>
-#include <boost/uuid/random_generator.hpp>
 #include <engine/game/commondef.hpp>
 
 namespace eXl
@@ -60,30 +60,9 @@ namespace eXl
 
   uint64_t MapResource::ObjectHeader::AllocObjectID()
   {
-    static boost::uuids::random_generator s_UUIDGen;
-    boost::uuids::uuid newuuid = s_UUIDGen();
-    uint32_t* dwords = reinterpret_cast<uint32_t*>(newuuid.data);
-
-    static_assert (sizeof(size_t) == sizeof(uint64_t), "");
-    {
-      uint64_t objId[2] = { dwords[0], dwords[2] };
-      objId[0] <<= 32;
-      objId[0] |= dwords[1];
-      objId[1] <<= 32;
-      objId[1] |= dwords[3];
-      boost::hash_combine(objId[0], objId[1]);
-      objId[0] &= ~World::s_AnonymousFlag;
-      return objId[0];
-    }
-    //else
-    //{
-    //  size_t seed = dwords[0];
-    //  boost::hash_combine(seed, dwords[1]);
-    //  boost::hash_combine(seed, dwords[2]);
-    //  boost::hash_combine(seed, dwords[3]);
-    //
-    //  return seed;
-    //}
+    uint64_t objId = Random::AllocateUUID();
+    objId &= ~(ObjectCreationInfo::s_AnonymousFlag | ObjectCreationInfo::s_AutoNamedFlag);
+    return objId;
   }
 
   Err MapResource::Object::Serialize(Serializer iStreamer)

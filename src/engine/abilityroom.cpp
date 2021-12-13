@@ -71,12 +71,12 @@ namespace eXl
 
       if (ImGui::Button("StartServer"))
       {
-        m_Scenario.StartServer(m_World);
+        m_Scenario.StartServer(m_URL);
       }
 
       if (ImGui::Button("StartClient"))
       {
-        m_Scenario.StartClient(m_World, m_URL);
+        m_Scenario.StartClient(m_URL);
       }
     }
     String m_URL = String("127.0.0.1");
@@ -84,134 +84,177 @@ namespace eXl
     AbilityRoom& m_Scenario;
   };
   
-  
   AbilityRoom::AbilityRoom()
+    : m_Net(7777)
   {
+    m_Net.m_ClientEvents = this;
+    m_Net.m_ServerEvents = this;
+
     m_RandGen = Random::CreateDefaultRNG(Application::GetAppl().GetSeed());
   }
 
-  void AbilityRoom::StartServer(World& iWorld)
+  void AbilityRoom::OnNewObject(uint32_t, Network::ObjectId iId, Network::ClientData const& iData)
   {
-#if 0
+    World& world = GetWorld();
+
+    ObjectHandle newObject = SpawnCharacter(world, Network::NetRole::Client, iData.m_Pos, iId.id);
+    OnObjectUpdated(0, iId, iData);
+  }
+
+  void AbilityRoom::OnObjectDeleted(uint32_t, Network::ObjectId iId)
+  {
+
+  }
+
+  void AbilityRoom::OnObjectUpdated(uint32_t, Network::ObjectId iId, Network::ClientData const& iData)
+  {
+    World& world = GetWorld();
+
+    ObjectHandle object = world.GetObjectFromPersistentId(iId.id);
+
+    eXl_ASSERT_REPAIR_RET(object.IsAssigned(), void());
+
+    auto& transforms = *world.GetSystem<Transforms>();
+    auto& charSys = *world.GetSystem<CharacterSystem>();
+
+    Matrix4f newTrans;
+    newTrans.MakeIdentity();
+    MathTools::GetPosition(newTrans) = iData.m_Pos;
+    Vector3f& dirX = *reinterpret_cast<Vector3f*>(newTrans.m_Data + 0);
+    Vector3f& dirY = *reinterpret_cast<Vector3f*>(newTrans.m_Data + 4);
+    Vector3f& dirZ = *reinterpret_cast<Vector3f*>(newTrans.m_Data + 8);
+
+    dirX = iData.m_Dir;
+    dirZ = Vector3f::UNIT_Z;
+    dirY = dirZ.Cross(dirX);
+    dirY.Normalize();
+
+    transforms.UpdateTransform(object, newTrans);
+    charSys.SetState(object, CharacterSystem::GetStateFromDir(iData.m_Dir, iData.m_Moving));
+  }
+
+  void AbilityRoom::OnAssignPlayer(uint32_t, Network::ObjectId iId)
+  {
+    World& world = GetWorld();
+    ObjectHandle playerCharHandle = world.GetObjectFromPersistentId(iId.id);
+
+    m_MainChar = playerCharHandle;
+
+    auto& transforms = *world.GetSystem<Transforms>();
+    transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
+  }
+
+  void AbilityRoom::OnClientConnected(Network::ClientId iId)
+  {
+    ObjectHandle obj = SpawnCharacter(GetWorld(), Network::NetRole::Server, MathTools::To3DVec(m_RoomCenter));
+    Network::ObjectId id{ GetWorld().GetObjectInfo(obj).m_PersistentId };
+
+    Transforms& transforms = *GetWorld().GetSystem<Transforms>();
+
+    Network::ClientData initialData;
+    initialData.m_Moving = false;
+    initialData.m_Pos = MathTools::GetPosition(transforms.GetWorldTransform(obj));
+    m_Net.m_Server->GetDispatcher().CreateObject(id, initialData);
+    m_Net.m_Server->GetDispatcher().AddClient(iId, id);
+  }
+
+  void AbilityRoom::OnClientDisconnected(Network::ClientId)
+  {
+
+  }
+
+  void AbilityRoom::OnClientCommand(Network::ClientId iClient, Network::ClientInputData const& iData)
+  {
+    auto const& connectedClients = m_Net.m_Server->GetDispatcher().GetClients();
+    auto iter = connectedClients.find(iClient);
+
+    eXl_ASSERT_REPAIR_RET(iter != connectedClients.end(), void());
+
+    ObjectHandle clientObject = GetWorld().GetObjectFromPersistentId(iter->second.id);
+
+    auto& transforms = *GetWorld().GetSystem<Transforms>();
+    auto& charSys = *GetWorld().GetSystem<CharacterSystem>();
+
+    Matrix4f const& trans = transforms.GetWorldTransform(clientObject);
+
+    if (iData.m_Moving)
+    {
+      charSys.SetCurDir(clientObject, iData.m_Dir);
+      charSys.SetSpeed(clientObject, 10.0);
+    }
+    else
+    {
+      charSys.SetSpeed(clientObject, 0.0);
+    }
+
+    Network::ClientData update;
+    update.m_Moving = iData.m_Moving;
+    update.m_Pos = MathTools::GetPosition(trans);
+    update.m_Dir = *reinterpret_cast<Vector3f const*>(trans.m_Data);
+
+    m_Net.m_Server->GetDispatcher().UpdateObject(iter->second, update);
+  }
+
+  void AbilityRoom::StartServer(String const& iURL)
+  {
     m_CurMode = Network::NetRole::Server;
-    Network::OnNewPlayer = [this, &iWorld]()
+
+    if (Network::Server::Start(m_Net, iURL))
     {
-      return SpawnCharacter(iWorld, Network::NetRole::Server);
-    };
-
-    Network::OnClientCommand = [this, &iWorld](ObjectHandle iObject, Network::ClientInputData const& iData)
-    {
-      Network::ClientData update;
-
-      auto& transforms = *iWorld.GetSystem<Transforms>();
-      auto& charSys = *iWorld.GetSystem<CharacterSystem>();
-
-      Matrix4f const& trans = transforms.GetWorldTransform(iObject);
-
-      if (iData.m_Moving)
+      GetWorld().AddTick(World::FrameStart, [this](World&, float)
       {
-        charSys.SetCurDir(iObject, iData.m_Dir);
-        charSys.SetSpeed(iObject, 10.0);
-      }
-      else
-      {
-        charSys.SetSpeed(iObject, 0.0);
-      }
-
-      update.m_Moving = iData.m_Moving;
-      update.m_Pos = MathTools::GetPosition(trans);
-      update.m_Dir = *reinterpret_cast<Vector3f const*>(trans.m_Data);
-
-      return update;
-    };
-
-    if (Network::Connect(Network::NetRole::Server, "127.0.0.1", 7777))
-    {
-      iWorld.AddTick(World::FrameStart, [](World& iWorld, float iDelta)
-      {
-        Network::Tick(iDelta);
+        m_Net.m_Server->Tick();
       });
 
-      iWorld.AddTick(World::PostPhysics, [](World& iWorld, float iDelta)
-      {
-        Vector<Network::MovedObject> objectsUpdate;
-        Transforms& trans = *iWorld.GetSystem<Transforms>();
-        auto& charSys = *iWorld.GetSystem<CharacterSystem>();
-        trans.IterateOverDirtyTransforms([&charSys, &objectsUpdate](Matrix4f const& iTrans, ObjectHandle iObject)
+      GetWorld().AddTick(World::PostAbilites, [this](World& iWorld, float)
         {
-          Network::MovedObject update;
-          update.object = iObject;
-          update.data.m_Moving = (charSys.GetCurrentState(iObject) & (uint32_t)CharacterSystem::CharStateFlags::Walking) != 0;
-          update.data.m_Dir = *reinterpret_cast<Vector3f const*>(iTrans.m_Data);
-          update.data.m_Pos = *reinterpret_cast<Vector3f const*>(iTrans.m_Data + 12);
-          objectsUpdate.push_back(update);
+          Transforms& trans = *iWorld.GetSystem<Transforms>();
+          auto& charSys = *iWorld.GetSystem<CharacterSystem>();
+          trans.IterateOverDirtyTransforms([&charSys, this](Matrix4f const& iTrans, ObjectHandle iObject)
+            {
+              Network::ObjectId obj{ GetWorld().GetObjectInfo(iObject).m_PersistentId };
+              if ((obj.id & ObjectCreationInfo::s_AnonymousFlag) != 0)
+              {
+                return;
+              }
 
+              Network::ClientData data;
+              data.m_Moving = (charSys.GetCurrentState(iObject) & (uint32_t)CharacterSystem::CharStateFlags::Walking) != 0;
+              data.m_Dir = *reinterpret_cast<Vector3f const*>(iTrans.m_Data);
+              data.m_Pos = MathTools::GetPosition(iTrans);
+              m_Net.m_Server->GetDispatcher().UpdateObject(obj, data);
+            });
+
+          m_Net.m_Server->Flush();
         });
 
-        Network::UpdateObjects(objectsUpdate);
-      });
     }
-#endif
   }
 
-  void AbilityRoom::StartClient(World& iWorld, String const& iURL)
+  void AbilityRoom::StartClient(String const& iURL)
   {
-#if 0
     m_CurMode = Network::NetRole::Client;
-    Network::OnNewObjectReceived = [this, &iWorld](Network::ClientData const& )
-    {
-      return SpawnCharacter(iWorld, Network::NetRole::Client);
-    };
 
-    Network::OnPlayerAssigned = [this, &iWorld](ObjectHandle iPlayer)
+    if (Network::Client::Connect(m_Net, iURL))
     {
-      m_MainChar = iPlayer;
-
-      auto& transforms = *iWorld.GetSystem<Transforms>();
-      transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
-    };
-
-    if (Network::Connect(Network::NetRole::Client, iURL, 7777))
-    {
-      iWorld.AddTick(World::FrameStart, [](World& iWorld, float iDelta)
+      GetWorld().AddTick(World::FrameStart, [this](World& iWorld, float iDelta)
       {
-        Network::Tick(iDelta);
+        m_Net.m_Clients[0]->Tick();
       });
 
-      iWorld.AddTick(World::PostPhysics, [](World& iWorld, float iDelta)
+      GetWorld().AddTick(World::PostAbilites, [this](World& iWorld, float iDelta)
       {
-        auto& transforms = *iWorld.GetSystem<Transforms>();
-        auto& charSys = *iWorld.GetSystem<CharacterSystem>();
-
-        Vector<Network::MovedObject> const& updates = Network::GetMovedObjects();
-        for (auto const& update : updates)
-        {
-          Matrix4f newTrans;
-          newTrans.MakeIdentity();
-          MathTools::GetPosition(newTrans) = update.data.m_Pos;
-          Vector3f& dirX = *reinterpret_cast<Vector3f*>(newTrans.m_Data + 0);
-          Vector3f& dirY = *reinterpret_cast<Vector3f*>(newTrans.m_Data + 4);
-          Vector3f& dirZ = *reinterpret_cast<Vector3f*>(newTrans.m_Data + 8);
-
-          dirX = update.data.m_Dir;
-          dirZ = Vector3f::UNIT_Z;
-          dirY = dirZ.Cross(dirX);
-          dirY.Normalize();
-
-          transforms.UpdateTransform(update.object, newTrans);
-          charSys.SetState(update.object, CharacterSystem::GetStateFromDir(update.data.m_Dir, update.data.m_Moving));
-        }
+        m_Net.m_Clients[0]->Flush();
       });
     }
-#endif
   }
 
-  void AbilityRoom::StartLocal(World& iWorld)
+  void AbilityRoom::StartLocal()
   {
     m_CurMode = Network::NetRole::None;
-    m_MainChar = SpawnCharacter(iWorld, Network::NetRole::None);
+    m_MainChar = SpawnCharacter(GetWorld(), Network::NetRole::None, ObjectCreationInfo::s_AnonymousFlag);
 
-    auto& transforms = *iWorld.GetSystem<Transforms>();
+    auto& transforms = *GetWorld().GetSystem<Transforms>();
     transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
   }
 
@@ -335,8 +378,6 @@ namespace eXl
     auto& navigator = *world.GetSystem<NavigatorSystem>();
     auto& abilitySys = *world.GetSystem<AbilitySystem>();
 
-    //abilitySys.RegisterAbility(new ContactDamageAbility);
-    //abilitySys.RegisterEffect(new ContactDamageEffect);
     abilitySys.RegisterAbility(new GrabAbility);
     abilitySys.RegisterEffect(new GrabbedEffect);
     abilitySys.RegisterAbility(new WalkAbility);
@@ -484,9 +525,9 @@ namespace eXl
 
     CreateVase(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * -8.0));
 
-    StartLocal(world);
+    //StartLocal(world);
 
-#if 1
+#if 0
 
     CharacterSystem::Desc baseDesc;
     baseDesc.animation = &s_DefaultAnim;
@@ -555,75 +596,6 @@ namespace eXl
     desc.emitter = emitter;
 
     m_PlateBehaviour->m_Entries.insert(std::make_pair(pressurePlate, desc));
-
-#ifdef EXL_RSC_HAS_FILESYSTEM
-
-    LuaScriptSystem* scripts = iWorld.GetSystem<LuaScriptSystem>();
-
-    m_TriggerB = LuaScriptBehaviour::Create(Path("D:/Test"), "TestScript");
-    m_TriggerB->m_BehaviourName = "Trigger";
-    m_TriggerB->m_Script = R"-(
-
-local module TriggerScriptXJKPQJDI = {}
-
-function TriggerScriptXJKPQJDI.Init(object)
-  return { inside = 0, emitter = eXl.ObjectHandle() }
-end
-
-function TriggerScriptXJKPQJDI.Enter(scriptObj, trigger, object) 
-  scriptObj.inside = scriptObj.inside + 1
-  print("EnterTriggered")
-  
-  local world = eXl.GetWorld()
-  local trans = world:GetTransforms()
-
-  local archSys = world:GetArchetypeSys();
-
-  local turretProp = archSys:GetProperty(trigger, eXl.PropertySheetName("Turret"))
-  local posToTest = turretProp.m_FireDir * 12.0;
-  turretProp.m_FireRate = turretProp.m_FireRate * 2
-  local newPos = eXl.Matrix4f.FromPosition(eXl.Vector3f(60.0, 60.0, 0.0))
-  trans:UpdateTransform(trigger, newPos)
-
-  print("Fire rate : ", turretProp.m_FireRate)
-
-  local healthProp = archSys:GetProperty(trigger, eXl.PropertySheetName("Health"))
-  healthProp.currentHealth = healthProp.currentHealth - 1
-
-  print("Current health : ", healthProp.currentHealth)
-
-end
-
-function TriggerScriptXJKPQJDI.Leave(scriptObj, trigger, object) 
-  scriptObj.inside = scriptObj.inside - 1
-  print("LeaveTriggered")
-end
-
-return TriggerScriptXJKPQJDI
-)-";
-
-    Archetype* arch = Archetype::Create("D://TestData", "dummy");
-    EngineCommon::TurretData dummyData;
-    dummyData.m_FireDir = Vector3f::ONE * 4;
-    dummyData.m_FireRate = 1.0;
-     
-    arch->SetProperty(EngineCommon::TurretData::PropertyName(), ConstDynObject(EngineCommon::TurretData::GetType(), &dummyData), false);
-
-    EngineCommon::HealthData health;
-    health.currentHealth = 10;
-    health.maxHealth = 10;
-
-    arch->SetProperty(EngineCommon::HealthData::PropertyName(), ConstDynObject(EngineCommon::HealthData::GetType(), &health), true);
-
-    archSys.InstantiateArchetype(pressurePlate, arch, nullptr);
-
-    scripts->LoadScript(*m_TriggerB);
-
-    scripts->AddBehaviour(pressurePlate, *m_TriggerB);
-    scripts->CallBehaviour<void>(pressurePlate, Name("Trigger"), Name("Enter"), pressurePlate, pressurePlate);
-    scripts->CallBehaviour<void>(pressurePlate, Name("Trigger"), Name("Enter"), pressurePlate, pressurePlate);
-    scripts->CallBehaviour<void>(pressurePlate, Name("Trigger"), Name("Enter"), pressurePlate, pressurePlate);
-#endif
   }
 
   ObjectHandle AbilityRoom::CreateFireball(World& iWorld, Vector3f const& iPos, Vector3f const& iDir)
@@ -757,7 +729,7 @@ return TriggerScriptXJKPQJDI
     return vaseObject;
   }
 
-  ObjectHandle AbilityRoom::SpawnCharacter(World& iWorld, Network::NetRole iRole)
+  ObjectHandle AbilityRoom::SpawnCharacter(World& iWorld, Network::NetRole iRole, Vector3f const& iPos, uint64_t iId)
   {
     auto& gfxSys = *iWorld.GetSystem<GfxSystem>();
     auto& charSys = *iWorld.GetSystem<CharacterSystem>();
@@ -766,6 +738,7 @@ return TriggerScriptXJKPQJDI
     CharacterSystem::Desc defaultDesc;
     defaultDesc.kind = CharacterSystem::PhysicKind::Kinematic;
     defaultDesc.animation = &s_DefaultAnim;
+    
     switch (iRole)
     {
     case Network::NetRole::Client:
@@ -780,21 +753,24 @@ return TriggerScriptXJKPQJDI
     defaultDesc.size = 1.0;
     defaultDesc.maxSpeed = 10.0;
 
-    ObjectHandle newChar = CharacterSystem::Build(iWorld, MathTools::To3DVec(m_RoomCenter), defaultDesc);
+    ObjectCreationInfo info{ String(), iId };
+    ObjectHandle newChar = iWorld.CreateObject(info);
+    CharacterSystem::Build(iWorld, newChar, iPos, defaultDesc);
     {
       GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(newChar);
       gfxComp.SetSize(Vector2f::ONE / EngineCommon::s_WorldToPixel);
       gfxComp.SetTileset(m_CharacterTileset);
-      //gfxComp.SetTint(Vector4f(1.0, 0.0, 0.0, 1.0));
 
       charSys.AddCharacter(newChar, defaultDesc);
-
-      abilitySys.CreateComponent(newChar);
-      abilitySys.AddAbility(newChar, WalkAbility::Name());
-      abilitySys.AddAbility(newChar, GrabAbility::Name());
-      abilitySys.AddAbility(newChar, PickAbility::Name());
-      abilitySys.AddAbility(newChar, ThrowAbility::Name());
-      abilitySys.AddAbility(newChar, SwordAbility::Name());
+      if (iRole == Network::NetRole::Server)
+      {
+        abilitySys.CreateComponent(newChar);
+        abilitySys.AddAbility(newChar, WalkAbility::Name());
+        abilitySys.AddAbility(newChar, GrabAbility::Name());
+        abilitySys.AddAbility(newChar, PickAbility::Name());
+        abilitySys.AddAbility(newChar, ThrowAbility::Name());
+        abilitySys.AddAbility(newChar, SwordAbility::Name());
+      }
     }
 
     return newChar;
@@ -991,15 +967,17 @@ return TriggerScriptXJKPQJDI
         }
       }
 
-      if (m_CurMode == Network::NetRole::Client)
+      if (m_CurMode == Network::NetRole::Client
+         && m_Net.m_Clients.size() > 0
+         && m_Net.m_Clients[0]->GetState() == Network::ClientState::Connected)
       {
         Network::ClientInputData inputData;
         inputData.m_Moving = (dir != Vector3f::ZERO);
         inputData.m_Dir = dir;
         inputData.m_Dir.Normalize();
-#if 0
-        Network::SetClientInput(m_MainChar, inputData);
-#endif
+        
+        m_Net.m_Clients[0]->SetClientInput(inputData);
+
       }
       else
       {

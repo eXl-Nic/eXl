@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/resourcehandletype.hpp>
 #include <core/type/typemanager.hpp>
 #include <core/lua/luascript.hpp>
+#include <core/utils/filetextreader.hpp>
 
 #include <fstream>
 
@@ -61,6 +62,16 @@ namespace eXl
 
     struct Impl
     {
+      Impl()
+      {
+#if defined(WIN32)
+        m_TextFileRead = [](char const* iFilePath)
+          {
+            return std::unique_ptr<TextReader>(FileTextReader::Create(iFilePath));
+          };
+#endif
+      }
+
       UnorderedMap<ResourceLoaderName, ResourceTypeEntry> m_Loaders;
       UnorderedMap<Rtti const*, ResourceLoaderName> m_RttiToLoader;
 

@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/world.hpp>
 #include <core/type/coretype.hpp>
 #include <core/type/tagtype.hpp>
+#include <core/random.hpp>
 
 #include <engine/common/transforms.hpp>
 #include <engine/common/gamedatabase.hpp>
@@ -118,7 +119,7 @@ namespace eXl
   {
     ObjectHandle handle = m_Objects.Alloc();
     ObjectInfo& info = m_Objects.Get(handle);
-    info.m_PersistentId = s_AnonymousFlag | handle.GetGeneration() | handle.GetId();
+    info.m_PersistentId = ObjectCreationInfo::s_AnonymousFlag | handle.GetGeneration() | handle.GetId();
 
     return handle;
   }
@@ -129,9 +130,19 @@ namespace eXl
     ObjectInfo& info = m_Objects.Get(handle);
     info.m_DisplayName = std::move(iInfo.m_DisplayName);
     info.m_PersistentId = iInfo.m_PersistentId;
-    if (info.m_PersistentId & s_AnonymousFlag)
+
+    if (info.m_PersistentId & ObjectCreationInfo::s_AutoNamedFlag)
     {
-      info.m_PersistentId = s_AnonymousFlag | handle.GetGeneration() | handle.GetId();
+      do
+      {
+        info.m_PersistentId = Random::AllocateUUID();
+        info.m_PersistentId &= ~(ObjectCreationInfo::s_AnonymousFlag | ObjectCreationInfo::s_AutoNamedFlag);
+      } while (m_PersistentIdToObjects.count(info.m_PersistentId) != 0);
+    }
+
+    if (info.m_PersistentId & ObjectCreationInfo::s_AnonymousFlag)
+    {
+      info.m_PersistentId = ObjectCreationInfo::s_AnonymousFlag | handle.GetGeneration() | handle.GetId();
     }
     else
     {
@@ -143,7 +154,7 @@ namespace eXl
 
   ObjectHandle World::GetObjectFromPersistentId(uint64_t iId)
   {
-    if (iId & s_AnonymousFlag)
+    if (iId & ObjectCreationInfo::s_AnonymousFlag)
     {
       ObjectHandle dynHandle;
       *reinterpret_cast<uint32_t*>(&dynHandle) = static_cast<uint32_t>(iId);
@@ -215,7 +226,7 @@ namespace eXl
         compBits >>= 1;
         compIdx++;
       }
-      if ((info->m_PersistentId & s_AnonymousFlag) == 0)
+      if ((info->m_PersistentId & ObjectCreationInfo::s_AnonymousFlag) == 0)
       {
         m_PersistentIdToObjects.erase(info->m_PersistentId);
       }

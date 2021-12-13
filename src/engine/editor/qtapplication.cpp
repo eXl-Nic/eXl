@@ -12,6 +12,8 @@
 
 namespace eXl
 {
+  void Register_EDITOR_Types();
+
   QTApplication::QTApplication()
     :m_Appl(NULL)
   {
