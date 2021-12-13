@@ -26,6 +26,8 @@ set(BUILD_EXL_EDITOR ON CACHE BOOL "Build the eXl editor")
 set(BUILD_EXL_WITH_LUA ON CACHE BOOL "Enable eXl lua integration")
 set(BUILD_EXL_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 
+set(BUILD_EXL_TESTS OFF CACHE BOOL "Build eXl tests")
+
 set(BULLET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/modules/bullet/src")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -39,6 +41,7 @@ set(LBFGS_ROOT "${CMAKE_SOURCE_DIR}/modules/lbfgs")
 set(LIBSVM_ROOT "${CMAKE_SOURCE_DIR}/modules/libsvm")
 set(FREETYPE_ROOT "${CMAKE_SOURCE_DIR}/modules/freetype")
 set(LAYOUT_ROOT "${CMAKE_SOURCE_DIR}/modules/layout")
+set(GTEST_ROOT "${CMAKE_SOURCE_DIR}/modules/gtest")
 
 if(${ANDROID})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fno-rtti")
@@ -236,6 +239,37 @@ SET(LAYOUT_INCLUDE_DIR ${LAYOUT_ROOT})
 add_subdirectory(src/core ${OUT_DIR}/eXl/core)
 add_subdirectory(src/math ${OUT_DIR}/eXl/math)
 add_subdirectory(src/gen ${OUT_DIR}/eXl/gen)
+
+if(${BUILD_EXL_TESTS})
+
+SET(BUILD_SHARED_LIBS ON)
+SET(BUILD_GMOCK OFF)
+SET(INSTALL_GTEST OFF)
+SET(gtest_force_shared_crt ON)
+
+add_subdirectory(${GTEST_ROOT} ${OUT_DIR}/modules/gtest)
+set_target_properties(gtest PROPERTIES FOLDER Dependencies)
+set_target_properties(gtest_main PROPERTIES FOLDER Dependencies)
+
+#Override gtest's opinionated folders to have something working out of the box
+set_target_properties(gtest
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${OUT_DIR}
+    ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}
+    PDB_OUTPUT_DIRECTORY ${OUT_DIR})
+	
+set_target_properties(gtest_main
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${OUT_DIR}
+    ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}
+    PDB_OUTPUT_DIRECTORY ${OUT_DIR})
+
+SET(GTEST_INCLUDE_DIR ${GTEST_ROOT}/googletest/include)
+SET(GTEST_LIBRARIES gtest gtest_main)
+
+endif()
 
 if(${BUILD_EXL_OGL})
   add_subdirectory(src/ogl ${OUT_DIR}/eXl/ogl)

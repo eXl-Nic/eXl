@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <core/base/random.hpp>
-#include <dunatk/pathfinding/velocityobstacle.hpp>
+#include <core/random.hpp>
+#include <engine/pathfinding/velocityobstacle.hpp>
 #include <math/polygon_def.hpp>
 #include <math/mathtools.hpp>
 #include <math/halfedge.hpp>

@@ -208,3 +208,6 @@ add_executable(Abilities_Sample main_abilities.cpp abilityroom.cpp abilityroom.h
 SETUP_EXL_TARGET(Abilities_Sample DEPENDENCIES eXl_Main)
 target_link_libraries(Abilities_Sample PRIVATE imgui)
 
+if(${BUILD_EXL_TESTS})
+add_subdirectory(test)
+endif()

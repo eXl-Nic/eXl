@@ -1,6 +1,6 @@
 
 #include <gtest/gtest.h>
-#include <dunatk/pathfinding/navmesh.hpp>
+#include <engine/pathfinding/navmesh.hpp>
 #include <math/mathtools.hpp>
 
 using namespace eXl;
