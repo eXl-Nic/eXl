@@ -56,7 +56,10 @@ resource/resourceloader.cpp
 resource/resourcemanager.cpp
 
 image/image.cpp
+
 utils/filetextreader.cpp
+utils/mphf.cpp
+
 lua/luascript.cpp
 )
 
