@@ -16,6 +16,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <vector>
 
 #include "ogltypes.hpp"
+#include <ogl/renderer/oglsemanticmanager.hpp>
 
 namespace eXl
 {
@@ -178,29 +179,29 @@ namespace eXl
     struct VtxAttrib
     {
       IntrusivePtr<OGLBuffer const> m_VBuffer;
-      uint32_t m_AttribId;
+      AttributeName m_AttribName;
       uint32_t m_Num;
       uint32_t m_Stride;
       uint32_t m_Offset;
     };
     Vector<VtxAttrib> m_Attribs;
 
-    void AddAttrib(OGLBuffer const* iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
+    void AddAttrib(OGLBuffer const* iBuffer, AttributeName iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     {
       VtxAttrib newAttrib = { IntrusivePtr<OGLBuffer const>(iBuffer), iAttribId, iNum, iStride, iOffset};
       m_Attribs.push_back(newAttrib);
     }
 
-    void AddAttrib(IntrusivePtr<OGLBuffer const> const& iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
+    void AddAttrib(IntrusivePtr<OGLBuffer const> const& iBuffer, AttributeName iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     { AddAttrib(iBuffer.get(), iAttribId, iNum, iStride, iOffset); }
 
-    void AddAttrib(IntrusivePtr<OGLBuffer> const& iBuffer, uint32_t iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
+    void AddAttrib(IntrusivePtr<OGLBuffer> const& iBuffer, AttributeName iAttribId, uint32_t iNum, uint32_t iStride, uint32_t iOffset)
     { AddAttrib(iBuffer.get(), iAttribId, iNum, iStride, iOffset); }
 
     IntrusivePtr<OGLBuffer const> m_IBuffer;
     uint32_t m_IOffset;
 
-    void Apply(OGLRenderContext* ) const;
+    void Apply(OGLSemanticManager const& iSemantics, OGLRenderContext* ) const;
   };
 
   struct OGLShaderDataSet

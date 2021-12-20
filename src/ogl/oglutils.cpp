@@ -16,6 +16,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
 
+  void OGLUtils::Init()
+  {
+    static bool s_Initialized = false;
+    if (!s_Initialized)
+    {
+#ifndef __ANDROID__
+      glewInit();
+#endif
+
+      //LOG_INFO << "GL version : " << (char*)glGetString(GL_VERSION) << "\n";
+      s_Initialized = true;
+    }
+  }
+
+
   void OGLUtils::CheckOGLState(char const* iFile, int iLine)
   {
     GLenum error;

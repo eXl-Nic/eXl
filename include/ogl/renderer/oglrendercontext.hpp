@@ -21,12 +21,13 @@ namespace eXl
   class OGLFramebuffer;
   class OGLCompiledProgram;
   class OGLRenderContextImpl;
+  class OGLSemanticManager;
 
   class EXL_OGL_API OGLRenderContext
   {
   public:
 
-    OGLRenderContext();
+    OGLRenderContext(OGLSemanticManager& iSemantics);
 
     ~OGLRenderContext();
 

@@ -43,20 +43,6 @@ namespace eXl
 {
   namespace
   {
-    uint32_t s_PosAttrib      = 1<<31;
-    uint32_t s_TexAttrib      = 1<<31;
-    uint32_t s_WorldMatUnif   = 1<<31;
-    uint32_t s_CameraUnif     = 1<<31;
-    uint32_t s_DiffuseTexture = 1<<31;
-    uint32_t s_UnfilteredTexture = 1<<31;
-    uint32_t s_SpriteColor    = 1<<31;
-    uint32_t s_LineColor      = 1<<31;
-
-    OGLCompiledProgram const* s_SpriteTech = NULL;
-    OGLCompiledProgram const* s_USpriteTech = NULL;
-    OGLCompiledProgram const* s_FontTech = NULL;
-
-    OGLCompiledProgram const* s_LineTech = NULL;
   }
 
   struct dummyStruct
@@ -64,28 +50,22 @@ namespace eXl
     Matrix4f dummyMat;
   };
 
-  void OGLBaseAlgo::Init()
+  void OGLBaseAlgo::Init(OGLSemanticManager& iManager)
   {
-    if(s_PosAttrib == 1<<31)
+    
     {
-#ifndef __ANDROID__
-      glewInit();
-#endif
-
-      //LOG_INFO << "GL version : " << (char*)glGetString(GL_VERSION) << "\n";
-
-      s_PosAttrib = OGLSemanticManager::RegisterAttribute("iPosition",OGLType::FLOAT32,3);
-      s_TexAttrib = OGLSemanticManager::RegisterAttribute("iTexCoord",OGLType::FLOAT32,2);
+      iManager.RegisterAttribute(GetPosAttrib(), OGLType::FLOAT32,3);
+      iManager.RegisterAttribute(GetTexCoordAttrib(), OGLType::FLOAT32,2);
 
       TupleType const* type = TupleType::DynamicCast(CameraMatrix::GetType());;
       
-      s_CameraUnif = OGLSemanticManager::RegisterUniformData("Camera",type);
+      iManager.RegisterUniformData(GetCameraUniform(), type);
 
       List<FieldDesc> fieldList;
       fieldList.push_back(FieldDesc::MakeField(TypeFieldName("worldMatrix"),&dummyStruct::dummyMat));
       type = TupleTypeStruct::Create(fieldList);
 
-      s_WorldMatUnif = OGLSemanticManager::RegisterUniformData("WorldMatrix",type);
+      iManager.RegisterUniformData(GetWorldMatUniform() ,type);
 
       OGLSamplerDesc samplerDesc;
       samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
@@ -94,138 +74,139 @@ namespace eXl
       samplerDesc.wrapX = OGLWrapMode::REPEAT;
       samplerDesc.wrapY = OGLWrapMode::REPEAT;
 
-      s_DiffuseTexture = OGLSemanticManager::RegisterTexture("iDiffuseTexture",samplerDesc);
+      iManager.RegisterTexture(GetDiffuseTexture() ,samplerDesc);
     }
   }
 
-  uint32_t OGLBaseAlgo::GetPosAttrib()
+  AttributeName OGLBaseAlgo::GetPosAttrib()
   {
-    return s_PosAttrib;
+    static AttributeName s_Name("iPosition");
+    return s_Name;
   }
 
-  uint32_t OGLBaseAlgo::GetTexCoordAttrib()
+  AttributeName OGLBaseAlgo::GetTexCoordAttrib()
   {
-    return s_TexAttrib;
+    static AttributeName s_Name("iTexCoord");
+    return s_Name;
   }
 
-  uint32_t OGLBaseAlgo::GetWorldMatUniform()
+  UniformName OGLBaseAlgo::GetWorldMatUniform()
   {
-    return s_WorldMatUnif;
+    static UniformName s_Name("worldMatrix");
+    return s_Name;
   }
 
-  uint32_t OGLBaseAlgo::GetCameraUniform()
+  UniformName OGLBaseAlgo::GetCameraUniform()
   {
-    return s_CameraUnif;
+    static UniformName s_Name("Camera");
+    return s_Name;
   }
 
-  uint32_t OGLBaseAlgo::GetDiffuseTexture()
+  TextureName OGLBaseAlgo::GetDiffuseTexture()
   {
-    return s_DiffuseTexture;
+    static TextureName s_Name("iDiffuseTexture");
+    return s_Name;
   }
 
-  OGLCompiledProgram const* OGLSpriteAlgo::GetSpriteProgram(bool iFiltered)
+  OGLCompiledProgram const* OGLSpriteAlgo::CreateSpriteProgram(OGLSemanticManager& iSemantics, bool iFiltered)
   {
-    if(iFiltered)
-      return s_SpriteTech;
-    else
-      return s_USpriteTech;
-  }
-
-
-  OGLCompiledProgram const* OGLSpriteAlgo::GetFontProgram()
-  {
-    return s_FontTech;
-  }
-
-  uint32_t OGLSpriteAlgo::GetSpriteColorUniform()
-  {
-    return s_SpriteColor;
-  }
-
-  uint32_t OGLSpriteAlgo::GetUnfilteredTexture()
-  {
-    return s_UnfilteredTexture;
-  }
-
-  void OGLSpriteAlgo::Init()
-  {
-    if(s_SpriteColor == 1<<31)
-    {
-      TupleType const* type = TupleType::DynamicCast(SpriteColor::GetType());
-
-      s_SpriteColor = OGLSemanticManager::RegisterUniformData("SpriteColor",type);
-
-      OGLSamplerDesc samplerDesc;
-      samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
-      samplerDesc.maxFilter = OGLMagFilter::NEAREST;
-      samplerDesc.minFilter = OGLMinFilter::NEAREST;
-      samplerDesc.wrapX = OGLWrapMode::REPEAT;
-      samplerDesc.wrapY = OGLWrapMode::REPEAT;
-
-      s_UnfilteredTexture = OGLSemanticManager::RegisterTexture("iUnfilteredTexture",samplerDesc);
-    }
-    if(s_SpriteTech == NULL)
+    if (!iFiltered)
     {
       GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
-      GLuint hq4xVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, hq4xVS);
-      GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, defaultPS);
-      GLuint unfilteredFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, hq4xPS);
-      GLuint fontFShader    = OGLUtils::CompileShader(GL_FRAGMENT_SHADER,fontPS);
+      GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, defaultUPS);
 
-      GLuint defaultProgramId = OGLUtils::LinkProgram(defaultVShader,defaultFShader);
-      GLuint unfilteredProgramId = OGLUtils::LinkProgram(hq4xVShader,unfilteredFShader);
-
-      GLuint fontProgramId    = OGLUtils::LinkProgram(defaultVShader,fontFShader);
+      GLuint defaultProgramId = OGLUtils::LinkProgram(defaultVShader, defaultFShader);
 
       glDeleteShader(defaultVShader);
       glDeleteShader(defaultFShader);
-      glDeleteShader(fontFShader);
 
       OGLProgram* defaultProgram = eXl_NEW OGLProgram(defaultProgramId);
+
+      OGLProgramInterface sprTechDesc;
+      sprTechDesc.AddAttrib(OGLBaseAlgo::GetPosAttrib());
+      sprTechDesc.AddAttrib(OGLBaseAlgo::GetTexCoordAttrib());
+      sprTechDesc.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture());
+      sprTechDesc.AddUniform(OGLBaseAlgo::GetCameraUniform());
+      sprTechDesc.AddUniform(OGLBaseAlgo::GetWorldMatUniform());
+      sprTechDesc.AddUniform(OGLSpriteAlgo::GetSpriteColorUniform());
+
+      return sprTechDesc.Compile(iSemantics, defaultProgram);
+    }
+    else
+    {
+      GLuint hq4xVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, hq4xVS);
+      GLuint unfilteredFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, hq4xPS);
+
+      GLuint unfilteredProgramId = OGLUtils::LinkProgram(hq4xVShader, unfilteredFShader);
+
+      glDeleteShader(hq4xVShader);
+      glDeleteShader(unfilteredFShader);
+
       OGLProgram* unfilteredProgram = eXl_NEW OGLProgram(unfilteredProgramId);
-      OGLProgram* fontProgram    = eXl_NEW OGLProgram(fontProgramId);
 
-      {
-        OGLProgramInterface sprTechDesc;
-        sprTechDesc.AddAttrib(s_PosAttrib);
-        sprTechDesc.AddAttrib(s_TexAttrib);
-        sprTechDesc.AddTexture(s_DiffuseTexture);
-        sprTechDesc.AddUniform(s_CameraUnif);
-        sprTechDesc.AddUniform(s_WorldMatUnif);
-        sprTechDesc.AddUniform(s_SpriteColor);
+      OGLProgramInterface uSprTechDesc;
+      uSprTechDesc.AddAttrib(OGLBaseAlgo::GetPosAttrib());
+      uSprTechDesc.AddAttrib(OGLBaseAlgo::GetTexCoordAttrib());
+      uSprTechDesc.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture());
+      uSprTechDesc.AddUniform(OGLBaseAlgo::GetCameraUniform());
+      uSprTechDesc.AddUniform(OGLBaseAlgo::GetWorldMatUniform());
+      uSprTechDesc.AddUniform(OGLSpriteAlgo::GetSpriteColorUniform());
 
-        s_SpriteTech = sprTechDesc.Compile(defaultProgram);
-      }
-
-      {
-        OGLProgramInterface uSprTechDesc;
-        uSprTechDesc.AddAttrib(s_PosAttrib);
-        uSprTechDesc.AddAttrib(s_TexAttrib);
-        uSprTechDesc.AddTexture(s_UnfilteredTexture);
-        uSprTechDesc.AddUniform(s_CameraUnif);
-        uSprTechDesc.AddUniform(s_WorldMatUnif);
-        uSprTechDesc.AddUniform(s_SpriteColor);
-
-        s_USpriteTech = uSprTechDesc.Compile(unfilteredProgram);
-      }
-
-      {
-        OGLProgramInterface fontTechDesc;
-        fontTechDesc.AddAttrib(s_PosAttrib);
-        fontTechDesc.AddAttrib(s_TexAttrib);
-        fontTechDesc.AddTexture(s_UnfilteredTexture);
-        fontTechDesc.AddUniform(s_CameraUnif);
-        fontTechDesc.AddUniform(s_WorldMatUnif);
-        fontTechDesc.AddUniform(s_SpriteColor);
-
-        s_FontTech = fontTechDesc.Compile(fontProgram);
-      }
-
-      //glUseProgram(m_Impl->defaultProgram->GetProgName());
-
+      return uSprTechDesc.Compile(iSemantics, unfilteredProgram);
     }
   }
 
+  OGLCompiledProgram const* OGLSpriteAlgo::CreateFontProgram(OGLSemanticManager& iSemantics)
+  {
+    GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
+    GLuint fontFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, fontPS);
+    GLuint fontProgramId = OGLUtils::LinkProgram(defaultVShader, fontFShader);
+
+    glDeleteShader(defaultVShader);
+    glDeleteShader(fontFShader);
+
+    OGLProgram* fontProgram = eXl_NEW OGLProgram(fontProgramId);
+
+    OGLProgramInterface fontTechDesc;
+    fontTechDesc.AddAttrib(OGLBaseAlgo::GetPosAttrib());
+    fontTechDesc.AddAttrib(OGLBaseAlgo::GetTexCoordAttrib());
+    fontTechDesc.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture());
+    fontTechDesc.AddUniform(OGLBaseAlgo::GetCameraUniform());
+    fontTechDesc.AddUniform(OGLBaseAlgo::GetWorldMatUniform());
+    fontTechDesc.AddUniform(OGLSpriteAlgo::GetSpriteColorUniform());
+
+    return fontTechDesc.Compile(iSemantics, fontProgram);
+  }
+
+  UniformName OGLSpriteAlgo::GetSpriteColorUniform()
+  {
+    static UniformName s_Name("SpriteColor");
+    return s_Name;
+  }
+
+  TextureName OGLSpriteAlgo::GetUnfilteredTexture()
+  {
+    static TextureName s_Name("iUnfilteredTexture");
+    return s_Name;
+  }
+
+  void OGLSpriteAlgo::Init(OGLSemanticManager& iManager)
+  {
+    TupleType const* type = TupleType::DynamicCast(SpriteColor::GetType());
+
+    iManager.RegisterUniformData(GetSpriteColorUniform(), type);
+
+    OGLSamplerDesc samplerDesc;
+    samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
+    samplerDesc.maxFilter = OGLMagFilter::NEAREST;
+    samplerDesc.minFilter = OGLMinFilter::NEAREST;
+    samplerDesc.wrapX = OGLWrapMode::REPEAT;
+    samplerDesc.wrapY = OGLWrapMode::REPEAT;
+
+    iManager.RegisterTexture(GetUnfilteredTexture(), samplerDesc);
+  }
+
+#if 0
   void OGLSpriteAlgo::ShutdownAPI()
   {
     if(s_SpriteTech)
@@ -265,58 +246,51 @@ namespace eXl
       s_USpriteTech = NULL;
     }
   }
+#endif
 
   struct dummyColor
   {
     Vector4f m_Color;
   };
 
-  OGLCompiledProgram const* OGLLineAlgo::GetProgram()
+  OGLCompiledProgram const* OGLLineAlgo::CreateProgram(OGLSemanticManager& iSemantics)
   {
-    return s_LineTech;
+    GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
+    GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, linePS);
+
+    GLuint defaultProgramId = OGLUtils::LinkProgram(defaultVShader, defaultFShader);
+
+    glDeleteShader(defaultVShader);
+    glDeleteShader(defaultFShader);
+
+    OGLProgram* defaultProgram = eXl_NEW OGLProgram(defaultProgramId);
+
+    OGLProgramInterface lineTechDesc;
+    lineTechDesc.AddAttrib(OGLBaseAlgo::GetPosAttrib());
+    lineTechDesc.AddAttrib(OGLBaseAlgo::GetTexCoordAttrib());
+    lineTechDesc.AddUniform(OGLBaseAlgo::GetCameraUniform());
+    lineTechDesc.AddUniform(OGLBaseAlgo::GetWorldMatUniform());
+    lineTechDesc.AddUniform(OGLLineAlgo::GetColor());
+
+    return lineTechDesc.Compile(iSemantics, defaultProgram);
   }
 
-  uint32_t OGLLineAlgo::GetColor()
+  UniformName OGLLineAlgo::GetColor()
   {
-    return s_LineColor;
+    static UniformName s_Name("LineColor");
+    return s_Name;
   }
 
 
-  void OGLLineAlgo::Init()
+  void OGLLineAlgo::Init(OGLSemanticManager& iManager)
   {
-    if(s_LineColor == 1<<31)
-    {
-      List<FieldDesc> fieldList;
-      fieldList.push_back(FieldDesc::MakeField(TypeFieldName("color"),&dummyColor::m_Color));
-      TupleType const* type = TupleTypeStruct::Create(fieldList);
-      s_LineColor = OGLSemanticManager::RegisterUniformData("LineColor",type);
-    }
-
-
-    if(s_LineTech == NULL)
-    {
-      GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER,defaultVS);
-      GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER,linePS);
-      
-      GLuint defaultProgramId = OGLUtils::LinkProgram(defaultVShader,defaultFShader);
-
-
-      glDeleteShader(defaultVShader);
-      glDeleteShader(defaultFShader);
-
-      OGLProgram* defaultProgram = eXl_NEW OGLProgram(defaultProgramId);
-
-      OGLProgramInterface sprTechDesc;
-      sprTechDesc.AddAttrib(s_PosAttrib);
-      sprTechDesc.AddTexture(s_DiffuseTexture);
-      sprTechDesc.AddUniform(s_CameraUnif);
-      sprTechDesc.AddUniform(s_WorldMatUnif);
-      sprTechDesc.AddUniform(s_LineColor);
-
-      s_LineTech = sprTechDesc.Compile(defaultProgram);
-
-    }
+    List<FieldDesc> fieldList;
+    fieldList.push_back(FieldDesc::MakeField(TypeFieldName("color"),&dummyColor::m_Color));
+    TupleType const* type = TupleTypeStruct::Create(fieldList);
+    iManager.RegisterUniformData(GetColor(), type);
   }
+
+#if 0
 
   uint32_t s_LightInfo      = 1<<31;
   uint32_t s_MaterialInfo   = 1<<31;
@@ -590,4 +564,5 @@ namespace eXl
     return s_EnvBrdfTech;
   }
 
+#endif
 }

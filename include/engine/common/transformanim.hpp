@@ -27,7 +27,7 @@ namespace eXl
     Matrix4f m_PostTransform;
   };
 
-  class EXL_ENGINE_API TransformAnimManager : public WorldSystem, public TimelineManager<TransformAnimation, TransformAnimManager>
+  class EXL_ENGINE_API TransformAnimManager : public TimelineManager<TransformAnimation, TransformAnimManager>
   {
     DECLARE_RTTI(TransformAnimManager, WorldSystem);
     friend TransformAnimation;

@@ -63,6 +63,9 @@ SET(GFX_SRC
 
 gfx/gfxsystem.cpp
 gfx/gfxcomponent.cpp
+gfx/gfxdebugdrawer.cpp
+gfx/gfxcomponentrendernode.cpp
+gfx/gfxspriterendernode.cpp
 )
 
 endif()
@@ -201,13 +204,13 @@ endif()
 add_executable(eXl_Player main_player.cpp)
 SETUP_EXL_TARGET(eXl_Player DEPENDENCIES eXl_Main)
 
+if(${BUILD_EXL_TESTS})
+add_subdirectory(test)
+endif()
+
 add_executable(Navigator_Sample main_navigator.cpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
 SETUP_EXL_TARGET(Navigator_Sample DEPENDENCIES eXl_Main)
 
 add_executable(Abilities_Sample main_abilities.cpp abilityroom.cpp abilityroom.hpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
 SETUP_EXL_TARGET(Abilities_Sample DEPENDENCIES eXl_Main)
 target_link_libraries(Abilities_Sample PRIVATE imgui)
-
-if(${BUILD_EXL_TESTS})
-add_subdirectory(test)
-endif()

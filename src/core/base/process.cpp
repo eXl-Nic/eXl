@@ -53,7 +53,7 @@ namespace eXl
     {
       const uint32_t bufSize = 4096;
       DWORD dwReadOut;
-      DWORD dwReadErr;
+      //DWORD dwReadErr;
       CHAR chBuf[bufSize]; 
       BOOL bSuccess = FALSE;
 

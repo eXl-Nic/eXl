@@ -252,4 +252,21 @@ namespace eXl
     AString ret(strBuff);
     return ret;
   }
+
+  thread_local char s_PrintBuffer[4096];
+
+  String StringUtil::Format(const char* iFormatStr, ...)
+  {
+    va_list args;
+    va_start(args, iFormatStr);
+    int res = vsprintf_s(s_PrintBuffer, iFormatStr, args);
+    va_end(args);
+
+    if (res > 0)
+    {
+      return String(s_PrintBuffer, s_PrintBuffer + res);
+    }
+
+    return String();
+  }
 }

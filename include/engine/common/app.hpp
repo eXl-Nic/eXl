@@ -30,6 +30,8 @@ namespace eXl
   {
   public:
 
+    virtual void PreInit(World& iWorld) {};
+
     virtual void Init(World& iWorld) = 0;
 
     CameraState& GetCamera();
@@ -79,9 +81,9 @@ namespace eXl
 
     WorldState& WithScenario(Scenario* iScenario);
 
-    void Tick(float iDelta);
+    void Tick();
 
-    void Render(GfxSystem::ViewInfo& iView, float iDelta);
+    void Render(GfxSystem::ViewInfo& iView);
 
     ProfilingState const& GetProfilingState();
 

@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 struct NameType : eXl::Name \
 { \
   NameType() {} \
-  NameType(NameType const& iOther) : Name(iOther) {} \
+  NameType(NameType const& iOther) : Name(static_cast<eXl::Name const&>(iOther)) {} \
   NameType(eXl::String const& iStr) : Name(iStr.c_str()) {} \
   NameType(eXl::Char const* iStr) : Name(iStr) {} \
   explicit NameType(eXl::Name const& iOtherName) : Name(iOtherName) {} \

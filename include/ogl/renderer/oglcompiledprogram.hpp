@@ -45,23 +45,25 @@ namespace eXl
 
     static void InitStaticData();
 
-    void AddAttrib(uint32_t iAttribName);
-    void AddUniform(uint32_t iDataName);
-    void AddTexture(uint32_t iTexName);
+    void AddAttrib(AttributeName iAttribName);
+    void AddUniform(UniformName iDataName);
+    void AddTexture(TextureName iTexName);
 
-    OGLCompiledProgram* Compile (OGLProgram const* iProg);
+    OGLCompiledProgram* Compile (OGLSemanticManager& iManager, OGLProgram const* iProg);
 
   protected:
    
-    std::vector<uint32_t>     m_AttribNames;
-    std::vector<uint32_t>     m_UnifNames;
-    std::vector<uint32_t>     m_Textures;
+    Vector<AttributeName> m_AttribNames;
+    Vector<UniformName>   m_UnifNames;
+    Vector<TextureName>   m_Textures;
   };
 
-  class OGLCompiledProgram : public HeapObject
+  class EXL_OGL_API OGLCompiledProgram : public HeapObject
   {
     friend OGLProgramInterface;
   public:
+
+    ~OGLCompiledProgram();
 
     void Setup() const;
 
@@ -93,7 +95,7 @@ namespace eXl
 
     OGLCompiledProgram();
 
-    OGLProgram const*             m_Program;
+    OGLProgram const*             m_Program = nullptr;
     OGLDataHandlerProgData        m_TechData;
 
     struct AttribDesc

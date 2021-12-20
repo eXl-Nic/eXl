@@ -74,7 +74,8 @@ namespace eXl
     }
   }
 
-  OGLDisplayList::OGLDisplayList()
+  OGLDisplayList::OGLDisplayList(OGLSemanticManager& iSemantics)
+    : m_Semantics(iSemantics)
   {
     m_DataSetSeek.reserve(1024);
     m_DataSetStore.reserve(1024);
@@ -411,12 +412,13 @@ namespace eXl
     m_PendingDraws.push_back(newDraw);
   }
 
-  void OGLVAssembly::Apply(OGLRenderContext* iCtx)const
+  void OGLVAssembly::Apply(OGLSemanticManager const& iSemantics, OGLRenderContext* iCtx)const
   {
     for(uint32_t i = 0; i<m_Attribs.size(); ++i)
     {
       VtxAttrib const& curAttr = m_Attribs[i];
-      iCtx->SetVertexAttrib(curAttr.m_AttribId, curAttr.m_VBuffer.get(), curAttr.m_Num, curAttr.m_Stride, curAttr.m_Offset);
+      uint32_t slot = iSemantics.GetSlotForName(curAttr.m_AttribName);
+      iCtx->SetVertexAttrib(slot, curAttr.m_VBuffer.get(), curAttr.m_Num, curAttr.m_Stride, curAttr.m_Offset);
     }
   }
 
@@ -443,12 +445,13 @@ namespace eXl
         OGLShaderData::ShaderData const* dataPtr = iSet->m_AdditionalData->GetDataDescPtr();
         for(uint32_t i = 0; i<numData; ++i)
         {
-          if(m_CurrentSetupData[dataPtr->m_DataSlot].dataSet != iSet && m_CurrentSetupData[dataPtr->m_DataSlot].timestamp < m_Timestamp)
+          uint32_t slot = m_Semantics.GetSlotForName(dataPtr->m_Name);
+          if(m_CurrentSetupData[slot].dataSet != iSet && m_CurrentSetupData[slot].timestamp < m_Timestamp)
           {
-            iCtx->SetUniformData(dataPtr->m_DataSlot,dataPtr->m_Data);
-            m_CurrentSetupData[dataPtr->m_DataSlot].dataSet = iSet;
+            iCtx->SetUniformData(slot, dataPtr->m_Data);
+            m_CurrentSetupData[slot].dataSet = iSet;
           }
-          m_CurrentSetupData[dataPtr->m_DataSlot].timestamp = m_Timestamp;
+          m_CurrentSetupData[slot].timestamp = m_Timestamp;
           ++dataPtr;
         }
       }
@@ -459,12 +462,13 @@ namespace eXl
         OGLShaderData::UBOData const* dataPtr = iSet->m_AdditionalData->GetUBODescPtr();
         for (uint32_t i = 0; i < numUBO; ++i)
         {
-          if (m_CurrentSetupUBO[dataPtr->m_Slot].dataSet != iSet && m_CurrentSetupUBO[dataPtr->m_Slot].timestamp < m_Timestamp)
+          uint32_t slot = m_Semantics.GetSlotForName(dataPtr->m_Name);
+          if (m_CurrentSetupUBO[slot].dataSet != iSet && m_CurrentSetupUBO[slot].timestamp < m_Timestamp)
           {
-            iCtx->SetUniformBuffer(dataPtr->m_Slot, dataPtr->m_DataBuffer.get());
-            m_CurrentSetupUBO[dataPtr->m_Slot].dataSet = iSet;
+            iCtx->SetUniformBuffer(slot, dataPtr->m_DataBuffer.get());
+            m_CurrentSetupUBO[slot].dataSet = iSet;
           }
-          m_CurrentSetupUBO[dataPtr->m_Slot].timestamp = m_Timestamp;
+          m_CurrentSetupUBO[slot].timestamp = m_Timestamp;
           ++dataPtr;
         }
       }
@@ -475,12 +479,13 @@ namespace eXl
         OGLShaderData::TextureData const* texPtr = iSet->m_AdditionalData->GetTexturePtr();
         for(uint32_t i = 0; i<numTex; ++i)
         {
-          if(m_CurrentSetupTexture[texPtr->m_TextureSlot].dataSet != iSet && m_CurrentSetupTexture[texPtr->m_TextureSlot].timestamp < m_Timestamp)
+          uint32_t slot = m_Semantics.GetSlotForName(texPtr->m_Name);
+          if(m_CurrentSetupTexture[slot].dataSet != iSet && m_CurrentSetupTexture[slot].timestamp < m_Timestamp)
           {
-            iCtx->SetTexture(texPtr->m_TextureSlot,texPtr->m_Texture.get());
-            m_CurrentSetupTexture[texPtr->m_TextureSlot].dataSet = iSet;
+            iCtx->SetTexture(slot,texPtr->m_Texture.get());
+            m_CurrentSetupTexture[slot].dataSet = iSet;
           }
-          m_CurrentSetupTexture[texPtr->m_TextureSlot].timestamp = m_Timestamp;
+          m_CurrentSetupTexture[slot].timestamp = m_Timestamp;
           ++texPtr;
         }
       }
@@ -502,11 +507,11 @@ namespace eXl
     std::sort(m_Keys.begin(), m_Keys.end());
 
     m_CurrentSetupData.clear();
-    m_CurrentSetupData.resize(OGLSemanticManager::GetNumUniforms(),DataSetup());
+    m_CurrentSetupData.resize(m_Semantics.GetNumUniforms(),DataSetup());
     m_CurrentSetupUBO.clear();
-    m_CurrentSetupUBO.resize(OGLSemanticManager::GetNumUniforms(), DataSetup());
+    m_CurrentSetupUBO.resize(m_Semantics.GetNumUniforms(), DataSetup());
     m_CurrentSetupTexture.clear();
-    m_CurrentSetupTexture.resize(OGLSemanticManager::GetNumTextures(),DataSetup());
+    m_CurrentSetupTexture.resize(m_Semantics.GetNumTextures(),DataSetup());
 
     m_CurProgram = NULL;
     m_CurAssembly = NULL;
@@ -548,7 +553,7 @@ namespace eXl
                 }
                 if(drawCmd->m_VDecl != m_CurAssembly)
                 {
-                  drawCmd->m_VDecl->Apply(iCtx);
+                  drawCmd->m_VDecl->Apply(m_Semantics, iCtx);
                   m_CurAssembly = drawCmd->m_VDecl;
                 }
 

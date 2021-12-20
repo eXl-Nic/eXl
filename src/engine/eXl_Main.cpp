@@ -502,17 +502,20 @@ namespace eXl
 
       World& world = m_World->GetWorld();
 
-      float scaledTime = iDelta * m_DebugVisState.m_TimeScaling;
+      if (m_DebugVisState.m_TimeScaling != m_World->GetWorld().GetGameTimeScaling())
+      {
+        m_World->GetWorld().SetGameTimeScaling(m_DebugVisState.m_TimeScaling);
+      }
 
       InputSystem& inputs = GetInputSystem();
 
       //m_CamState.ProcessInputs(world, inputs);
-      m_World->Tick(scaledTime);
+      m_World->Tick();
 
       inputs.Clear();
 
       m_World->GetCamera().UpdateView(world);
-      m_World->Render(m_World->GetCamera().view, scaledTime);
+      m_World->Render(m_World->GetCamera().view);
 
       if (m_DebugVisState.m_ViewNavMesh)
       {

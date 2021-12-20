@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <core/string.hpp>
+#include <core/name.hpp>
 #include <ogl/renderer/ogltypes.hpp>
 #include <ogl/oglexp.hpp>
 
@@ -36,27 +36,62 @@ namespace eXl
     OGLWrapMode wrapY;
   };
 
+  MAKE_NAME(AttributeName);
+  MAKE_NAME(UniformName);
+  MAKE_NAME(TextureName);
+
   class EXL_OGL_API OGLSemanticManager
   {
   public:
-    static uint32_t RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult, uint32_t iDivisor = 0);
+    uint32_t RegisterAttribute(AttributeName iName, OGLType iAttribType, uint32_t iMult, uint32_t iDivisor = 0);
+    uint32_t RegisterUniformData(UniformName iName, TupleType const* iDataType);
+    uint32_t RegisterTexture(TextureName iTexName, OGLSamplerDesc const& iSampler);
 
-    static uint32_t RegisterUniformData(AString const& iName, TupleType const* iDataType);
+    uint32_t OGLSemanticManager::GetSlotForName(AttributeName iName) const
+    {
+      auto iter = m_AttributeMap.find(iName);
+      eXl_ASSERT_MSG(iter != m_AttributeMap.end(), EXL_FORMAT("Unknown Attribute %s", iName.get().c_str()));
+      return iter->second;
+    }
 
-    static uint32_t RegisterTexture(AString const& iTexName, OGLSamplerDesc const& iSampler);
+    uint32_t OGLSemanticManager::GetSlotForName(UniformName iName) const
+    {
+      auto iter = m_UniformMap.find(iName);
+      eXl_ASSERT_MSG(iter != m_UniformMap.end(), EXL_FORMAT("Unknown Uniform %s", iName.get().c_str()));
+      return iter->second;;
+    }
 
-    static OGLAttribDesc const& GetAttrib(uint32_t iName);
+    uint32_t OGLSemanticManager::GetSlotForName(TextureName iName) const
+    {
+      auto iter = m_TextureMap.find(iName);
+      eXl_ASSERT_MSG(iter != m_TextureMap.end(), EXL_FORMAT("Unknown Texture %s", iName.get().c_str()));
+      return iter->second;
+    }
 
-    static AString const* GetDataName(uint32_t iName);
-    static TupleType const* GetDataType(uint32_t iName);
+    OGLAttribDesc const& GetAttrib(uint32_t iName);
 
-    static OGLSamplerDesc const& GetSampler(uint32_t iName);
+    AString const* GetDataName(uint32_t iName);
+    TupleType const* GetDataType(uint32_t iName);
 
-    static uint32_t GetNumAttribs();
+    OGLSamplerDesc const& GetSampler(uint32_t iName);
 
-    static uint32_t GetNumUniforms();
+    uint32_t GetNumAttribs();
+    uint32_t GetNumUniforms();
+    uint32_t GetNumTextures();
+  protected:
+    struct OGLUniformData
+    {
+      AString m_Name;
+      TupleType const* m_Type;
+    };
 
-    static uint32_t GetNumTextures();
+    UnorderedMap<AttributeName, uint32_t> m_AttributeMap;
+    UnorderedMap<UniformName, uint32_t>   m_UniformMap;
+    UnorderedMap<TextureName, uint32_t>   m_TextureMap;
+
+    Vector<OGLUniformData> m_Uniforms;
+    Vector<OGLSamplerDesc> m_SamplerDesc;
+    Vector<OGLAttribDesc>  m_Attribs;
   };
 }
 

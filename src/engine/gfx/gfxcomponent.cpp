@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <engine/gfx/gfxcomponent.hpp>
-#include <engine/gfx/gfxsystem.hpp>
+#include "gfxspriterendernode.hpp"
 #include <ogl/renderer/ogldisplaylist.hpp>
 #include <ogl/oglspritealgo.hpp>
 #include <core/type/tagtype.hpp>
@@ -54,7 +54,7 @@ namespace eXl
 
   GfxComponent::GfxComponent()
   {
-    m_Program = OGLSpriteAlgo::GetSpriteProgram(false);
+    //m_Program = OGLSpriteAlgo::GetSpriteProgram(false);
     m_Transform.MakeIdentity();
     m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), &m_Transform);
   }
@@ -159,7 +159,7 @@ namespace eXl
     *m_Desc = iDesc;
     if (m_SpriteData.IsAssigned())
     {
-      m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
     }
   }
 
@@ -172,7 +172,7 @@ namespace eXl
 		m_Desc->m_Size = iSize;
 		if (m_SpriteData.IsAssigned())
 		{
-			m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
 		}
 	}
 
@@ -181,7 +181,7 @@ namespace eXl
     m_Desc->m_Offset = iOffset;
     if (m_SpriteData.IsAssigned())
     {
-      m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
     }
   }
 
@@ -190,7 +190,7 @@ namespace eXl
     m_Desc->m_Tileset.Set(iTileset);
 		if (m_SpriteData.IsAssigned())
 		{
-			m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
 		}
 	}
 
@@ -199,7 +199,7 @@ namespace eXl
     m_Desc->m_TileName = iName;
 		if (m_SpriteData.IsAssigned())
 		{
-			m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
 		}
 	}
 
@@ -208,7 +208,7 @@ namespace eXl
     m_Desc->m_AnimSpeed = iSpeed;
 		if (m_SpriteData.IsAssigned())
 		{
-			m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
 		}
 	}
 
@@ -217,7 +217,7 @@ namespace eXl
     m_Desc->m_RotateSprite = iRotate;
     if (m_SpriteData.IsAssigned())
     {
-      m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
     }
   }
 
@@ -226,7 +226,7 @@ namespace eXl
     m_Desc->m_Layer = iLayer;
     if (m_SpriteData.IsAssigned())
     {
-      m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
     }
   }
 
@@ -236,7 +236,7 @@ namespace eXl
     m_Desc->m_Tint = iTint;
     if (m_SpriteData.IsAssigned())
     {
-      m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
     }
   }
 
@@ -245,7 +245,7 @@ namespace eXl
     m_Desc->m_Flat = iValue;
     if (m_SpriteData.IsAssigned())
     {
-      m_System->SetSpriteDirty(*this);
+      m_RenderNode->SetSpriteDirty(*this);
     }
   }
 

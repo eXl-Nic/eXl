@@ -92,6 +92,7 @@ namespace eXl
       geom->m_Command = OGLDraw::TriangleList;
 
       GfxComponent& comp = iGfx.CreateComponent(iObject);
+      comp.SetProgram(iGfx.GetSpriteProgram());
       comp.SetGeometry(geom);
       comp.SetTransform(identMatrix);
 

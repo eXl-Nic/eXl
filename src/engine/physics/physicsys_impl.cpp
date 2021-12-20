@@ -489,7 +489,7 @@ namespace eXl
   void PhysicsSystem_Impl::Step(float iTime)
   {
     Cleanup();
-    m_dynamicsWorld->stepSimulation(iTime);
+    m_dynamicsWorld->stepSimulation(iTime, 100);
   }
 
   bool PhysicsSystem_Impl::SweepTest(PhysicComponent_Impl* iShape, Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)

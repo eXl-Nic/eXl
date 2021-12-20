@@ -115,6 +115,7 @@ namespace eXl
     std::function<void(World&)> timerDelegate;
     float time;
     bool loop;
+    bool gameTimer;
   };
 
   using TimerTable = ObjectTable<TimerDesc>;
@@ -236,10 +237,20 @@ namespace eXl
 
     void AddTick(Stage iStage, TickDelegate&& iDelegate);
 
-    void Tick(float iDelta, ProfilingState& ioProfiling);
+    void Tick(ProfilingState& ioProfiling);
 
     TimerHandle AddTimer(float iTimeInSec, bool iLoop, std::function<void(World&)>&& iDelegate);
+    TimerHandle AddGameTimer(float iTimeInSec, bool iLoop, std::function<void(World&)>&& iDelegate);
     void RemoveTimer(TimerHandle);
+
+    double GetRealTimeInSec();
+    double GetGameTimeInSec() { return m_ElapsedGameTime; }
+
+    float GetGameTimeScaling() const { return m_GameTimeScaling; }
+    void SetGameTimeScaling(float iScaling) { m_GameTimeScaling = iScaling; }
+
+    uint64_t GetCurrentTime() const { return m_CurrentTimestamp; }
+    uint64_t GetElapsedTime() const { return m_ElapsedTimestamp; }
 
   protected:
     void FlushObjectsToDelete();
@@ -271,12 +282,31 @@ namespace eXl
         return nextTick > iOther.nextTick;
       }
     };
+
+    struct GameTimerSchedule
+    {
+      double nextTick;
+      TimerHandle timer;
+
+      bool operator <(GameTimerSchedule const& iOther) const
+      {
+        return nextTick > iOther.nextTick;
+      }
+    };
     Vector<TimerSchedule> m_TimerSchedule;
+    Vector<GameTimerSchedule> m_GameTimerSchedule;
 
     ComponentManifest const& m_Components;
 
     PhysicsSystem* m_PhSystem = nullptr;
     AbilitySystem* m_AbilitySystem = nullptr;
     Transforms* m_Transforms = nullptr;
+
+    uint64_t m_StartTimestamp = 0;
+    uint64_t m_CurrentTimestamp = 0;
+    uint64_t m_ElapsedTimestamp = 0;
+
+    double m_ElapsedGameTime = 0;
+    float m_GameTimeScaling = 1.0;
   };
 }

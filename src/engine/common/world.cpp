@@ -284,8 +284,24 @@ namespace eXl
     return nullptr;
   }
 
-  void World::Tick(float iDelta, ProfilingState& ioProfiling)
+  void World::Tick(ProfilingState& ioProfiling)
   {
+    float iDelta = 0;
+    if (m_CurrentTimestamp != 0)
+    {
+      uint64_t prevStamp = m_CurrentTimestamp;
+      m_CurrentTimestamp = Clock::GetTimestamp();
+      m_ElapsedTimestamp = m_CurrentTimestamp - m_StartTimestamp;
+      double gameTimeDelta = (double(m_CurrentTimestamp - prevStamp) * m_GameTimeScaling) / Clock::GetTicksPerSecond();
+      m_ElapsedGameTime += gameTimeDelta;
+      iDelta = gameTimeDelta;
+    }
+    else
+    {
+      m_StartTimestamp = Clock::GetTimestamp();
+      m_CurrentTimestamp = m_StartTimestamp;
+    }
+
     ioProfiling.m_LastFrameTime = ioProfiling.m_CurFrameTime;
     Clock profiler;
 
@@ -356,6 +372,11 @@ namespace eXl
     ioProfiling.m_PostAbilitiesTime = profiler.GetTime() * 1000.0;
   }
 
+  double World::GetRealTimeInSec()
+  {
+    return double(m_ElapsedGameTime) / Clock::GetTicksPerSecond();
+  }
+
   void World::AddTick(Stage iStage, TickDelegate&& iDelegate)
   {
     m_Tick[iStage].emplace_back(std::move(iDelegate));
@@ -364,19 +385,39 @@ namespace eXl
   TimerHandle World::AddTimer(float iTimeInSec, bool iLoop, std::function<void(World&)>&& iDelegate)
   {
     TimerSchedule schedule;
-    uint64_t curTime = Clock::GetTimestamp();
-    schedule.nextTick = curTime + uint64_t(Clock::GetTicksPerSecond() * iTimeInSec);
+    schedule.nextTick = m_CurrentTimestamp + uint64_t(Clock::GetTicksPerSecond() * iTimeInSec);
 
     TimerHandle handle = m_Timers.Alloc();
     TimerDesc& desc = m_Timers.Get(handle);
     desc.loop = iLoop;
     desc.time = iTimeInSec;
     desc.timerDelegate = std::move(iDelegate);
+    desc.gameTimer = false;
 
     schedule.timer = handle;
 
     m_TimerSchedule.push_back(schedule);
     std::push_heap(m_TimerSchedule.begin(), m_TimerSchedule.end());
+
+    return handle;
+  }
+
+  TimerHandle World::AddGameTimer(float iTimeInSec, bool iLoop, std::function<void(World&)>&& iDelegate)
+  {
+    GameTimerSchedule schedule;
+    schedule.nextTick = m_ElapsedGameTime + iTimeInSec;
+
+    TimerHandle handle = m_Timers.Alloc();
+    TimerDesc& desc = m_Timers.Get(handle);
+    desc.loop = iLoop;
+    desc.time = iTimeInSec;
+    desc.timerDelegate = std::move(iDelegate);
+    desc.gameTimer = true;
+
+    schedule.timer = handle;
+
+    m_GameTimerSchedule.push_back(schedule);
+    std::push_heap(m_GameTimerSchedule.begin(), m_GameTimerSchedule.end());
 
     return handle;
   }
@@ -388,26 +429,51 @@ namespace eXl
 
   void World::ProcessTimers()
   {
-    uint64_t currentTime = Clock::GetTimestamp();
-    while (!m_TimerSchedule.empty() && m_TimerSchedule.front().nextTick <= currentTime)
+    while (!m_TimerSchedule.empty() && m_TimerSchedule.front().nextTick <= m_CurrentTimestamp)
     {
       TimerHandle curTimer = m_TimerSchedule.front().timer;
       TimerDesc const& desc = m_Timers.Get(curTimer);
-      desc.timerDelegate(*this);
       std::pop_heap(m_TimerSchedule.begin(), m_TimerSchedule.end());
-      if (desc.loop)
+      m_TimerSchedule.pop_back();
+      desc.timerDelegate(*this);
+      // Account for in-callback deletion
+      if (!m_Timers.IsValid(curTimer))
       {
-        m_TimerSchedule.back().nextTick = Clock::GetTimestamp() + uint64_t(Clock::GetTicksPerSecond() * desc.time);
+        continue;
       }
 
-      if (m_TimerSchedule.back().nextTick <= currentTime)
+      if (desc.loop)
       {
-        m_TimerSchedule.pop_back();
-        m_Timers.Release(curTimer);
+        m_TimerSchedule.push_back(TimerSchedule({ m_CurrentTimestamp + uint64_t(Clock::GetTicksPerSecond() * desc.time), curTimer}));
+        std::push_heap(m_TimerSchedule.begin(), m_TimerSchedule.end());
       }
       else
       {
-        std::push_heap(m_TimerSchedule.begin(), m_TimerSchedule.end());
+        m_Timers.Release(curTimer);
+      }
+    }
+
+    while (!m_GameTimerSchedule.empty() && m_GameTimerSchedule.front().nextTick <= m_ElapsedGameTime)
+    {
+      TimerHandle curTimer = m_GameTimerSchedule.front().timer;
+      TimerDesc const& desc = m_Timers.Get(curTimer);
+      std::pop_heap(m_GameTimerSchedule.begin(), m_GameTimerSchedule.end());
+      m_GameTimerSchedule.pop_back();
+      desc.timerDelegate(*this);
+      // Account for in-callback deletion
+      if (!m_Timers.IsValid(curTimer))
+      {
+        continue;
+      }
+
+      if (desc.loop)
+      {
+        m_GameTimerSchedule.push_back({ m_ElapsedGameTime + desc.time, curTimer });
+        std::push_heap(m_GameTimerSchedule.begin(), m_GameTimerSchedule.end());
+      }
+      else
+      {
+        m_Timers.Release(curTimer);
       }
     }
   }

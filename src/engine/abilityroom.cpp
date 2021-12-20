@@ -492,7 +492,7 @@ namespace eXl
       //}
     });
 
-    world.AddTimer(0.25, true, [this](World& iWorld)
+    world.AddGameTimer(0.25, true, [this](World& iWorld)
     {
       return;
 
@@ -698,7 +698,7 @@ return TriggerScriptXJKPQJDI
       //abilitySys.AddTag(fireball, fireballTag);
     }
 
-    iWorld.AddTimer(10.0, false, [fireball](World& iWorld)
+    iWorld.AddGameTimer(10.0, false, [fireball](World& iWorld)
     {
       iWorld.DeleteObject(fireball);
     });

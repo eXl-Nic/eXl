@@ -48,16 +48,30 @@ namespace eXl
     NavigatorSystem* navigator;
     AbilitySystem* abilities;
     ProjectileSystem* projectiles;
+    TimerHandle initTimer;
 
-    void Tick(float iDelta);
+    double lastRenderTime = 0;
 
-    void Render(GfxSystem::ViewInfo& iView, float iDelta);
+    void Tick();
+
+    void Render(GfxSystem::ViewInfo& iView);
 
     void SetAndInitScenario(Scenario* iScenario)
     {
       scenario = iScenario;
-      scenario->Init(world);
-    }
+      scenario->PreInit(world);
+      
+      initTimer = world.AddTimer(1.0e-6, true, [this](World& iWorld)
+        {
+          if ((gfxSys && gfxSys->GetRenderNode(gfxSys->GetDebugDrawerHandle())->IsInitialized())
+            || (gfxSys == nullptr && world.GetElapsedTime() != 0))
+          {
+            scenario->Init(world);
+            world.RemoveTimer(initTimer);
+            initTimer = TimerHandle();
+          }
+        });
+      }
 
     Scenario* scenario = nullptr;
 
@@ -242,14 +256,14 @@ namespace eXl
     return m_Impl->world;
   }
 
-  void WorldState::Tick(float iDelta)
+  void WorldState::Tick()
   {
-    m_Impl->Tick(iDelta);
+    m_Impl->Tick();
   }
 
-  void WorldState::Render(GfxSystem::ViewInfo& iView, float iDelta)
+  void WorldState::Render(GfxSystem::ViewInfo& iView)
   {
-    m_Impl->Render(iView, iDelta);
+    m_Impl->Render(iView);
   }
 
   WorldState::Impl::Impl(PropertiesManifest const& iManifest)
@@ -472,17 +486,17 @@ namespace eXl
     view.pos.Z() = camPos.m_Data[14];
   }
 
-  void WorldState::Impl::Tick(float iDelta)
+  void WorldState::Impl::Tick()
   {
     Engine_Application& app = Engine_Application::GetAppl();
     InputSystem& inputs = app.GetInputSystem();
 
-    world.Tick(iDelta, m_ProfilingState);
+    world.Tick(m_ProfilingState);
 
     inputs.Clear();
   }
 
-  void WorldState::Impl::Render(GfxSystem::ViewInfo& iView, float iDelta)
+  void WorldState::Impl::Render(GfxSystem::ViewInfo& iView)
   {
 #ifdef EXL_WITH_OGL
     Clock profiler;
@@ -491,7 +505,9 @@ namespace eXl
 
     gfxSys->SetView(iView);
 
-    gfxSys->RenderFrame(iDelta);
+    double curWorldTime = world.GetGameTimeInSec();
+    gfxSys->RenderFrame(curWorldTime - lastRenderTime);
+    lastRenderTime = curWorldTime;
     //view.pos.Z() -= 1;
 
     m_ProfilingState.m_RendererTime = profiler.GetTime() * 1000.0;

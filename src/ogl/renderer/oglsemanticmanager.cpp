@@ -15,22 +15,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  namespace
+  uint32_t OGLSemanticManager::RegisterAttribute(AttributeName iName, OGLType iAttribType, uint32_t iMult, uint32_t iDivisor)
   {
-    struct OGLUniformData
+    uint32_t attribSlot = m_Attribs.size();
+
+    auto insertRes = m_AttributeMap.insert(std::make_pair(iName, attribSlot));
+    if (!insertRes.second)
     {
-      AString m_Name;
-      TupleType const* m_Type;
-    };
-
-    Vector<OGLUniformData> s_Uniforms;
-    Vector<OGLSamplerDesc> s_SamplerDesc;
-    Vector<OGLAttribDesc>  s_Attribs;
-  }
-
-  uint32_t OGLSemanticManager::RegisterAttribute(AString const& iName, OGLType iAttribType, uint32_t iMult, uint32_t iDivisor)
-  {
-    eXl_ASSERT_MSG(iName.size() > 0, "Empty Name");
+      return insertRes.first->second;
+    }
 
     switch(iAttribType)
     {
@@ -44,90 +37,100 @@ namespace eXl
 
     eXl_ASSERT_MSG(iMult >= 1 || iMult <= 4, "Wrong multiplicity");
 
-    uint32_t attribName = s_Attribs.size();
-    s_Attribs.push_back(OGLAttribDesc());
-    s_Attribs.back().m_Mult = iMult;
-    s_Attribs.back().m_Name = iName;
-    s_Attribs.back().m_Type = iAttribType;
-    s_Attribs.back().m_Divisor = iDivisor;
+    m_Attribs.push_back(OGLAttribDesc());
+    m_Attribs.back().m_Mult = iMult;
+    m_Attribs.back().m_Name = iName.get();
+    m_Attribs.back().m_Type = iAttribType;
+    m_Attribs.back().m_Divisor = iDivisor;
 
-    return attribName;
+    return attribSlot;
   }
 
-  uint32_t OGLSemanticManager::RegisterUniformData(AString const& iName, TupleType const* iDataType)
+  uint32_t OGLSemanticManager::RegisterUniformData(UniformName iName, TupleType const* iDataType)
   {
-    eXl_ASSERT_MSG(iName.size() > 0, "Empty Name");
+    uint32_t uniformSlot = m_Uniforms.size();
+
+    auto insertRes = m_UniformMap.insert(std::make_pair(iName, uniformSlot));
+    if (!insertRes.second)
+    {
+      return insertRes.first->second;
+    }
+
     eXl_ASSERT_MSG(iDataType != NULL,"");
 
-    uint32_t uniformName = s_Uniforms.size();
-    s_Uniforms.push_back(OGLUniformData());
-    s_Uniforms.back().m_Name = iName;
-    s_Uniforms.back().m_Type = iDataType;
+    m_Uniforms.push_back(OGLUniformData());
+    m_Uniforms.back().m_Name = iName;
+    m_Uniforms.back().m_Type = iDataType;
 
-    return uniformName;
+    return uniformSlot;
   }
 
   OGLAttribDesc const& OGLSemanticManager::GetAttrib(uint32_t iName)
   {
     static OGLAttribDesc s_EmtpyAttrib;
-    if(iName < s_Attribs.size())
+    if(iName < m_Attribs.size())
     {
-      return s_Attribs[iName];
+      return m_Attribs[iName];
     }
     return s_EmtpyAttrib;
   }
 
   AString const* OGLSemanticManager::GetDataName(uint32_t iName)
   {
-    if (iName < s_Uniforms.size())
+    if (iName < m_Uniforms.size())
     {
-      return &s_Uniforms[iName].m_Name;
+      return &m_Uniforms[iName].m_Name;
     }
-    return NULL;
+    return nullptr;
   }
 
   TupleType const* OGLSemanticManager::GetDataType(uint32_t iName)
   {
-    if(iName < s_Uniforms.size())
+    if(iName < m_Uniforms.size())
     {
-      return s_Uniforms[iName].m_Type;
+      return m_Uniforms[iName].m_Type;
     }
     return NULL;
   }
 
-  uint32_t OGLSemanticManager::RegisterTexture(AString const& iTexName, OGLSamplerDesc const& iSampler)
+  uint32_t OGLSemanticManager::RegisterTexture(TextureName iTexName, OGLSamplerDesc const& iSampler)
   {
-    eXl_ASSERT_MSG(iTexName.size() > 0, "Empty Name");
+    uint32_t textureSlot = m_SamplerDesc.size();
 
-    uint32_t textureName = s_SamplerDesc.size();
-    s_SamplerDesc.push_back(iSampler);
-    s_SamplerDesc.back().name = iTexName;
+    auto insertRes = m_TextureMap.insert(std::make_pair(iTexName, textureSlot));
+    if (!insertRes.second)
+    {
+      return insertRes.first->second;
+    }
 
-    return textureName;
+    m_SamplerDesc.push_back(iSampler);
+    m_SamplerDesc.back().name = iTexName;
+
+    return textureSlot;
   }
 
   OGLSamplerDesc const& OGLSemanticManager::GetSampler(uint32_t iName)
   {
     static OGLSamplerDesc defaultSampler;
-    if(iName < s_SamplerDesc.size())
+    if(iName < m_SamplerDesc.size())
     {
-      return s_SamplerDesc[iName];
+      return m_SamplerDesc[iName];
     }
     return defaultSampler;
   }
 
   uint32_t OGLSemanticManager::GetNumAttribs()
   {
-    return s_Attribs.size();
+    return m_Attribs.size();
   }
 
   uint32_t OGLSemanticManager::GetNumUniforms()
   {
-    return s_Uniforms.size();
+    return m_Uniforms.size();
   }
 
   uint32_t OGLSemanticManager::GetNumTextures()
   {
-    return s_SamplerDesc.size();
+    return m_SamplerDesc.size();
   }
 }

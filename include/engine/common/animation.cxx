@@ -10,7 +10,7 @@ namespace eXl
     TimelineEntry& entry = m_Timelines.Get(newTimeline);
 
     entry.curTime = 0.0;
-    entry.startTimestamp = Clock::GetTimestamp();
+    entry.startTime = GetWorld().GetGameTimeInSec();
 
     oNewEntry = &entry;
 
@@ -24,8 +24,8 @@ namespace eXl
     TimelineEntry& entry = m_Timelines.Get(newTimeline);
 
     entry.curTime = 0.0;
-    entry.startTimestamp = Clock::GetTimestamp();
-    entry.loopTime = iLoopTime * Clock::GetTicksPerSecond();
+    entry.startTime = GetWorld().GetGameTimeInSec();
+    entry.loopTime = iLoopTime;
 
     oNewEntry = &entry;
 
@@ -35,21 +35,21 @@ namespace eXl
   template <typename TimelineBehaviour, typename Impl>
   void TimelineManager<TimelineBehaviour, Impl>::Tick()
   {
-    m_CurTimestamp = Clock::GetTimestamp();
+    double curTimestamp = GetWorld().GetGameTimeInSec();
     m_Timelines.Iterate([&](TimelineEntry& entry, TimelineHandle handle)
     {
-      uint64_t elapsed = m_CurTimestamp - entry.startTimestamp;
+      float elapsed = curTimestamp - entry.startTime;;
 
       if (entry.loopTime)
       {
         while (elapsed > *entry.loopTime)
         {
           elapsed -= *entry.loopTime;
-          entry.startTimestamp += *entry.loopTime;
+          entry.startTime += *entry.loopTime;
         }
       }
       
-      entry.curTime = float(elapsed) / float(Clock::GetTicksPerSecond());
+      entry.curTime = elapsed;
       if (!entry.Update(entry.curTime, *static_cast<Impl*>(this)))
       {
         m_ToDelete.insert(handle);

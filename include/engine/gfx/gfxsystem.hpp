@@ -22,12 +22,47 @@ namespace eXl
 	class GfxSpriteComponent;
   class GfxSystem;
   class Transforms;
-  class OGLTextureLoader;
+  class OGLDisplayList;
 
   namespace DebugTool
   {
     class Drawer;
   }
+
+  using GfxRenderNodeHandle = ObjectTableHandle_Base;
+
+  class GfxRenderNode : public HeapObject
+  {
+  public:
+    bool IsInitialized() const { return m_Sys != nullptr; }
+  protected:
+    friend GfxSystem;
+    using UpdateCallback = std::function<void(ObjectHandle const*, size_t)>;
+    using TransformUpdateCallback = std::function<void(ObjectHandle const*, Matrix4f const**, size_t)>;
+
+    virtual void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle)
+    {
+      m_Sys = &iSys;
+      m_NodeHandle = iHandle;
+    }
+
+    virtual TransformUpdateCallback GetTransformUpdateCallback()
+    {
+      return TransformUpdateCallback();
+    }
+
+    virtual UpdateCallback GetDeleteCallback()
+    {
+      return UpdateCallback();
+    }
+
+    virtual void Push(OGLDisplayList& iList, float iDelta) = 0;
+
+    void AddObject(ObjectHandle iObject);
+
+    GfxSystem* m_Sys = nullptr;
+    GfxRenderNodeHandle m_NodeHandle;
+  };
 
   class EXL_ENGINE_API GfxSystem : public ComponentManager
   {
@@ -60,11 +95,23 @@ namespace eXl
     static void StaticInit();
 
     GfxSystem(Transforms& iTransforms);
+    ~GfxSystem();
 
     void EnableDebugDraw();
     void DisableDebugDraw();
 
     DebugTool::Drawer* GetDebugDrawer();
+
+    OGLSemanticManager& GetSemanticManager();
+
+    GfxRenderNodeHandle GetDebugDrawerHandle();
+    GfxRenderNodeHandle GetSpriteHandle();
+
+    OGLCompiledProgram const* GetSpriteProgram();
+    OGLCompiledProgram const* GetLineProgram();
+
+    GfxRenderNodeHandle AddRenderNode(UniquePtr<GfxRenderNode> iNode);
+    GfxRenderNode* GetRenderNode(GfxRenderNodeHandle iNodeHandle);
 
     void SynchronizeTransforms();
 
@@ -87,10 +134,12 @@ namespace eXl
 
     void RenderFrame(float iDelta);
 
-		void SetSpriteDirty(GfxSpriteComponent& iSpriteComp);
+    Impl& GetImpl() { return *m_Impl; }
+    Transforms& GetTransforms();
+    using WorldSystem::GetWorld;
 
   protected:
-
-    Impl* m_Impl;
+    friend GfxRenderNode;
+    UniquePtr<Impl> m_Impl;
   };
 }

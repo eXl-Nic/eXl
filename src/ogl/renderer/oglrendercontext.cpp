@@ -24,23 +24,23 @@ namespace eXl
   {
   public:
 
-    OGLRenderContextImpl()
+    OGLRenderContextImpl(OGLSemanticManager& iSemantics)
     {
-      m_CurrentDataSlot.resize(OGLSemanticManager::GetNumUniforms(),-1);
-      m_CurrentAttribSlot.resize(OGLSemanticManager::GetNumAttribs(),-1);
-      m_CurrentTextureSlot.resize(OGLSemanticManager::GetNumTextures(),-1);
-      m_CurrentUBOSlot.resize(OGLSemanticManager::GetNumUniforms(), -1);
+      m_CurrentDataSlot.resize(iSemantics.GetNumUniforms(),-1);
+      m_CurrentAttribSlot.resize(iSemantics.GetNumAttribs(),-1);
+      m_CurrentTextureSlot.resize(iSemantics.GetNumTextures(),-1);
+      m_CurrentUBOSlot.resize(iSemantics.GetNumUniforms(), -1);
 
-      m_BufferBindings.resize(OGLSemanticManager::GetNumAttribs());
+      m_BufferBindings.resize(iSemantics.GetNumAttribs());
 
-      m_TextureCache.resize(OGLSemanticManager::GetNumTextures(),nullptr);
+      m_TextureCache.resize(iSemantics.GetNumTextures(),nullptr);
 
       //for(uint32_t i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
       //{
       //  m_DataCache.push_back(OGLSemanticManager::GetData(i)->Build());
       //}
-      m_DataCache.resize(OGLSemanticManager::GetNumUniforms(),nullptr);
-      m_UBOCache.resize(OGLSemanticManager::GetNumUniforms(), nullptr);
+      m_DataCache.resize(iSemantics.GetNumUniforms(),nullptr);
+      m_UBOCache.resize(iSemantics.GetNumUniforms(), nullptr);
 
       Clear();
     }
@@ -352,16 +352,16 @@ namespace eXl
       size_t offset;
     };
 
-    std::vector<int> m_CurrentAttribSlot;
-    std::vector<int> m_CurrentDataSlot;
-    std::vector<int> m_CurrentUBOSlot;
-    std::vector<int> m_CurrentTextureSlot;
+    Vector<int> m_CurrentAttribSlot;
+    Vector<int> m_CurrentDataSlot;
+    Vector<int> m_CurrentUBOSlot;
+    Vector<int> m_CurrentTextureSlot;
     
-    std::vector<BufferBinding>       m_BufferBindings;
+    Vector<BufferBinding>       m_BufferBindings;
     //std::vector<void*>               m_DataCache;
-    std::vector<void const*>         m_DataCache;
-    std::vector<OGLBuffer const*>    m_UBOCache;
-    std::vector<OGLTexture const*>   m_TextureCache;
+    Vector<void const*>         m_DataCache;
+    Vector<OGLBuffer const*>    m_UBOCache;
+    Vector<OGLTexture const*>   m_TextureCache;
     
     OGLTexture const**   m_CurrentTexture[8];
     void const**         m_CurrentData[16];
@@ -387,7 +387,8 @@ namespace eXl
     //std::vector<Type const*> m_Types;
   };
 
-  OGLRenderContext::OGLRenderContext():m_Impl(eXl_NEW OGLRenderContextImpl)
+  OGLRenderContext::OGLRenderContext(OGLSemanticManager& iSemantics)
+    : m_Impl(eXl_NEW OGLRenderContextImpl(iSemantics))
   {
   }
 

@@ -33,15 +33,11 @@ namespace eXl
     //}
   }
 
-  void OGLShaderData::AddData(uint32_t iSlot, void const* iData)
+  void OGLShaderData::AddData(UniformName iName, void const* iData)
   {
-    TupleType const* iDataType = OGLSemanticManager::GetDataType(iSlot);
-
-    eXl_ASSERT_REPAIR_RET(iDataType != nullptr, );
-
     for(uint32_t i = 0; i<m_Data.size(); ++i)
     {
-      if(m_Data[i].m_DataSlot == iSlot)
+      if(m_Data[i].m_Name == iName)
       {
         //void* dest = m_Data[i].m_Data;
         //iDataType->Copy(iData,dest);
@@ -51,35 +47,31 @@ namespace eXl
     }
 
     m_Data.push_back(ShaderData());
-    m_Data.back().m_DataSlot = iSlot;
+    m_Data.back().m_Name = iName;
     m_Data.back().m_Data = iData;
 
     //iDataType->Copy(iData,m_Data.back().m_Data);
   }
 
-  void OGLShaderData::SetDataBuffer(uint32_t iSlot, OGLBuffer const* iBuffer)
+  void OGLShaderData::SetDataBuffer(UniformName iName, OGLBuffer const* iBuffer)
   {
-    TupleType const* iDataType = OGLSemanticManager::GetDataType(iSlot);
-
-    eXl_ASSERT_REPAIR_RET(iDataType != nullptr, void());
-
     m_UBOData.push_back(UBOData());
-    m_UBOData.back().m_Slot = iSlot;
+    m_UBOData.back().m_Name = iName;
     m_UBOData.back().m_DataBuffer = iBuffer;
   }
 
-  void OGLShaderData::AddTexture(uint32_t iSlot, OGLTexture const* iTexture)
+  void OGLShaderData::AddTexture(TextureName iName, OGLTexture const* iTexture)
   {
     for(uint32_t i = 0; i<m_TexData.size(); ++i)
     {
-      if(m_TexData[i].m_TextureSlot == iSlot)
+      if(m_TexData[i].m_Name == iName)
       {
         m_TexData[i].m_Texture = iTexture;
       }
     }
 
     m_TexData.push_back(TextureData());
-    m_TexData.back().m_TextureSlot = iSlot;
+    m_TexData.back().m_Name = iName;
     m_TexData.back().m_Texture = iTexture;
   }
 }

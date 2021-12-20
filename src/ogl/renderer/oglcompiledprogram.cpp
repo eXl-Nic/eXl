@@ -239,22 +239,22 @@ namespace eXl
 
   }
 
-  void OGLProgramInterface::AddAttrib(uint32_t iAttribName)
+  void OGLProgramInterface::AddAttrib(AttributeName iAttribName)
   {
     m_AttribNames.push_back(iAttribName);
   }
 
-  void OGLProgramInterface::AddUniform(uint32_t iDataName)
+  void OGLProgramInterface::AddUniform(UniformName iDataName)
   {
     m_UnifNames.push_back(iDataName);
   }
 
-  void OGLProgramInterface::AddTexture(uint32_t iTexName)
+  void OGLProgramInterface::AddTexture(TextureName iTexName)
   {
     m_Textures.push_back(iTexName);
   }
   
-  OGLCompiledProgram* OGLProgramInterface::Compile(OGLProgram const* iProg)
+  OGLCompiledProgram* OGLProgramInterface::Compile(OGLSemanticManager& iManager, OGLProgram const* iProg)
   { 
     if(iProg == nullptr)
       return nullptr;
@@ -263,7 +263,12 @@ namespace eXl
 
     for(uint32_t i = 0; i<m_AttribNames.size(); ++i)
     {
-      OGLAttribDesc const& attrib = OGLSemanticManager::GetAttrib(m_AttribNames[i]);
+      std::optional<uint32_t> attribSlot = iManager.GetSlotForName(m_AttribNames[i]);
+      eXl_ASSERT_MSG_REPAIR_BEGIN(attribSlot.has_value(), "Invalid attribute")
+      {
+        continue;
+      }
+      OGLAttribDesc const& attrib = iManager.GetAttrib(*attribSlot);
       eXl_ASSERT_MSG(!attrib.m_Name.empty(),"Wrong attrib name");
       {
         int loc = iProg->GetAttribLocation(attrib.m_Name);
@@ -276,7 +281,7 @@ namespace eXl
           //eXl_ASSERT_MSG(oType == attrib.m_Type /*&& oNum == attrib.m_Mult*/,"Incompatible layout");
           if(oType == attrib.m_Type && tempTech.m_MaxAttrib < 16)
           {
-            tempTech.m_AttribSlot[tempTech.m_MaxAttrib] = m_AttribNames[i];
+            tempTech.m_AttribSlot[tempTech.m_MaxAttrib] = *attribSlot;
             tempTech.m_AttribDesc[tempTech.m_MaxAttrib].attribLoc = loc;
             tempTech.m_AttribDesc[tempTech.m_MaxAttrib].attribType = oType;
             tempTech.m_AttribDesc[tempTech.m_MaxAttrib].attribDivisor = attrib.m_Divisor;
@@ -294,10 +299,16 @@ namespace eXl
     {
       oList.clear();
 
-      TupleType const* dataType = OGLSemanticManager::GetDataType(m_UnifNames[i]);
+      std::optional<uint32_t> uniformSlot = iManager.GetSlotForName(m_UnifNames[i]);
+      eXl_ASSERT_MSG_REPAIR_BEGIN(uniformSlot.has_value(), "Invalid Uniform")
+      {
+        continue;
+      }
+
+      TupleType const* dataType = iManager.GetDataType(*uniformSlot);
       eXl_ASSERT_MSG(dataType != nullptr, "Wrong data name");
 
-      AString const* dataName = OGLSemanticManager::GetDataName(m_UnifNames[i]);
+      AString const* dataName = iManager.GetDataName(*uniformSlot);
       eXl_ASSERT(dataName != nullptr);
 
       uint32_t unifSize;
@@ -308,7 +319,7 @@ namespace eXl
 
         tempTech.m_TechData.m_BlockHandler[currentSlot] = std::make_pair(iProg->GetUniformBlockLocation(*dataName), unifSize);
 
-        tempTech.m_UnifBlockSlot[currentSlot] = m_UnifNames[i];
+        tempTech.m_UnifBlockSlot[currentSlot] = *uniformSlot;
         ++tempTech.m_MaxUnifBlock;
         continue;
       }
@@ -346,7 +357,7 @@ namespace eXl
         }
         if(tempTech.m_TechData.m_UnifHandler[currentSlot].size() > 0)
         {
-          tempTech.m_UnifSlot[currentSlot] = m_UnifNames[i];
+          tempTech.m_UnifSlot[currentSlot] = *uniformSlot;
           tempTech.m_MaxUnif++;
         }
       }
@@ -356,8 +367,14 @@ namespace eXl
     {
       if(tempTech.m_MaxTexture < 8)
       {
+        std::optional<uint32_t> textureSlot = iManager.GetSlotForName(m_Textures[i]);
+        eXl_ASSERT_MSG_REPAIR_BEGIN(textureSlot.has_value(), "Invalid Texture")
+        {
+          continue;
+        }
+
         uint32_t currentTexSlot = tempTech.m_MaxTexture;
-        OGLSamplerDesc const& sampler = OGLSemanticManager::GetSampler(m_Textures[i]);
+        OGLSamplerDesc const& sampler = iManager.GetSampler(*textureSlot);
         if(!sampler.name.empty())
         {
           int texLoc = iProg->GetUniformLocation(sampler.name);
@@ -380,7 +397,7 @@ namespace eXl
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.minFilter = sampler.minFilter;
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.wrapX = sampler.wrapX;
               tempTech.m_TechData.m_Samplers[currentTexSlot].second.wrapY = sampler.wrapY;
-              tempTech.m_TexSlot[currentTexSlot] = m_Textures[i];
+              tempTech.m_TexSlot[currentTexSlot] = *textureSlot;
               tempTech.m_MaxTexture++;
             }
           }
@@ -424,6 +441,14 @@ namespace eXl
 
   OGLCompiledProgram::OGLCompiledProgram()
   {
+  }
+
+  OGLCompiledProgram::~OGLCompiledProgram()
+  {
+    if (m_Program)
+    {
+      glDeleteProgram(m_Program->GetProgName());
+    }
   }
 
   void OGLCompiledProgram::HandleAttribute(uint32_t iAttribSlot, uint32_t iNum, size_t iStride, size_t iOffset)const

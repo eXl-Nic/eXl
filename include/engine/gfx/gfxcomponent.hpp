@@ -71,8 +71,11 @@ namespace eXl
     OGLShaderData m_TextureData;
   };
 
+  class GfxComponentRenderNode;
+
   class EXL_ENGINE_API GfxComponent
   {
+    friend GfxComponentRenderNode;
   protected:
     struct Draw
     {
@@ -146,7 +149,7 @@ namespace eXl
 
     Vector<Draw> m_Draws;
     IntrusivePtr<GeometryInfo> m_Geometry;
-    OGLCompiledProgram const* m_Program;
+    OGLCompiledProgram const* m_Program = nullptr;
   };
 
   class GfxSpriteComponent;
@@ -185,9 +188,10 @@ namespace eXl
 
 	typedef ObjectTable<GfxSpriteData> SpriteDataTable;
 
+  class GfxSpriteRenderNode;
 	class EXL_ENGINE_API GfxSpriteComponent
 	{
-		friend GfxSystem;
+		friend GfxSpriteRenderNode;
 	public:
 
     struct EXL_ENGINE_API Desc
@@ -223,7 +227,7 @@ namespace eXl
 
     Desc* m_Desc;
 
-		GfxSystem* m_System = nullptr;
+    GfxSpriteRenderNode* m_RenderNode = nullptr;
 		ObjectHandle m_Object;
 		SpriteDataTable::Handle m_SpriteData;
 	};

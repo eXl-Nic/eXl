@@ -106,6 +106,9 @@ namespace eXl
     static double       ToDouble(WString const& iStr);
     static void const*  ToPtr(WString const& iStr);
 
+    // Limited to 4kB length
+    static String Format(const char* iFormatStr, ...);
+
   };
 #ifdef EXL_CHAR_TYPE_IS_CHAR
 

@@ -43,6 +43,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <cstdlib>
 #include <memory>
+#include <optional>
 
 #ifndef __ANDROID__
 #pragma comment(linker, "/nodefaultlib:libc.lib")
@@ -54,6 +55,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define EXL_TO_STR_(s) #s
 #define EXL_TO_STR(s) EXL_TO_STR_(s)
 #define EXL_CONCAT(s,r) s##r
+#define EXL_FORMAT(s, ...) (::eXl::StringUtil::Format(s, __VA_ARGS__).c_str())
 
 namespace eXl
 {
@@ -290,6 +292,12 @@ namespace eXl
 
   template<typename T, size_t Size>
   constexpr T* ArrayEnd(T(&iArray)[Size]) { return iArray + ArrayLength(iArray); }
+
+  template <typename T>
+  using UniquePtr = std::unique_ptr<T>;
+
+  template <typename T>
+  using Optional = std::optional<T>;
 }
 
 #include <core/intrusiveptr.hpp>

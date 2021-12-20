@@ -23,7 +23,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
-#include <engine/gfx/characteranim.hpp>
 #include <engine/physics/physicsys.hpp>
 #include <engine/physics/physicsdef.hpp>
 #include <engine/map/map.hpp>
@@ -229,7 +228,7 @@ namespace eXl
       Archetype::Init();
       MapResource::Init();
       MCMCModelRsc::Init();
-      CharacterAnimation::Init();
+      //CharacterAnimation::Init();
 #ifdef EXL_LUA
       LuaScriptBehaviour::Init();
 #endif

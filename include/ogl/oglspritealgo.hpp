@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/matrix4.hpp>
 #include <math/vector4.hpp>
 #include <ogl/oglexp.hpp>
+#include <ogl/renderer/oglsemanticmanager.hpp>
 
 namespace eXl
 {
@@ -32,28 +33,25 @@ namespace eXl
   {
   public:
 
-    static void Init();
+    static void Init(OGLSemanticManager& iManager);
 
-    static uint32_t GetPosAttrib();
+    static AttributeName GetPosAttrib();
+    static AttributeName GetTexCoordAttrib();
 
-    static uint32_t GetTexCoordAttrib();
-
-    static uint32_t GetWorldMatUniform();
-
-    static uint32_t GetCameraUniform();
-
-    static uint32_t GetDiffuseTexture();
+    static UniformName GetWorldMatUniform();
+    static UniformName GetCameraUniform();
+    static TextureName GetDiffuseTexture();
   };
 
   class EXL_OGL_API OGLLineAlgo
   {
   public:
 
-    static void Init();
+    static void Init(OGLSemanticManager& iManager);
 
-    static OGLCompiledProgram const* GetProgram();
+    static OGLCompiledProgram const* CreateProgram(OGLSemanticManager& iSemantics);
 
-    static uint32_t GetColor();
+    static UniformName GetColor();
   };
 
   struct EXL_OGL_API SpriteColor
@@ -72,20 +70,20 @@ namespace eXl
   {
   public:
 
-    static void Init();
+    static void Init(OGLSemanticManager& iManager);
 
     static void ShutdownAPI();
 
-    static OGLCompiledProgram const* GetSpriteProgram(bool iFiltered = true);
+    static OGLCompiledProgram const* CreateSpriteProgram(OGLSemanticManager& iSemantics, bool iFiltered = true);
 
-    static OGLCompiledProgram const* GetFontProgram();
+    static OGLCompiledProgram const* CreateFontProgram(OGLSemanticManager& iSemantics);
 
-    static uint32_t GetSpriteColorUniform();
+    static UniformName GetSpriteColorUniform();
 
-    static uint32_t GetUnfilteredTexture();
+    static TextureName GetUnfilteredTexture();
   };
 
-
+#if 0
   struct LightInfo
   {
     //Vector3f m_Position;
@@ -167,4 +165,5 @@ namespace eXl
     static OGLCompiledProgram const* GetEnvBrdfProgram();
 
   };
+#endif
 }

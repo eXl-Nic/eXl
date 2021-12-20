@@ -8,7 +8,7 @@
 #include <core/resource/resourcemanager.hpp>
 
 using namespace eXl;
-
+#if 0
 TEST(DunAtk, Tileset)
 {
   Tileset* newSet = Tileset::Create("D:\\TestDir", "Cloud_Strife");
@@ -63,3 +63,4 @@ TEST(DunAtk, Tileset)
 
   Filesystem::remove(file);
 }
+#endif

@@ -27,12 +27,13 @@ namespace eXl
   class OGLCompiledProgram;
   class OGLRenderContext;
   class OGLFramebuffer;
+  class OGLSemanticManager;
   
   class EXL_OGL_API OGLDisplayList
   {
   public:
 
-    OGLDisplayList();
+    OGLDisplayList(OGLSemanticManager& iSemantics);
 
     void InitForPush();
 
@@ -95,6 +96,7 @@ namespace eXl
 
     std::vector<PendingDraw> m_PendingDraws;
 
+    OGLSemanticManager& m_Semantics;
     OGLStateCollection<OGLDepthCommand, OGLScissorCommand, OGLViewportCommand, OGLBlendCommand> m_States;
     
     OGLCompiledProgram const* m_CurProgram;

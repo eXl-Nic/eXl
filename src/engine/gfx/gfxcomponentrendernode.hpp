@@ -8,30 +8,31 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <math/quaternion.hpp>
-#include <math/vector3.hpp>
-#include <ogl/oglexp.hpp>
+#include <engine/gfx/gfxsystem.hpp>
 
-#define CHECKOGL() OGLUtils::CheckOGLState(__FILE__,__LINE__)
+#include <engine/gfx/gfxcomponent.hpp>
 
 namespace eXl
 {
-  class EXL_OGL_API OGLUtils
+  class GfxComponentRenderNode : public GfxRenderNode
   {
   public:
 
-    static void Init();
+    void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle) override;
+    void Push(OGLDisplayList& iList, float iDelta) override;
+    TransformUpdateCallback GetTransformUpdateCallback() override;
+    UpdateCallback GetDeleteCallback() override;
 
-    static void CheckOGLState(char const* iFile, int iLine);
+    void AddObject(ObjectHandle);
+    GfxComponent* GetComponent(ObjectHandle);
 
-    //static void MakeOGLMatrix(float (&oMatrix) [16], Quaternionf const& iOrient, Vector3f const& iPos);
-    static void MakeOGLMatrix(float* oMatrix, Quaternionf const& iOrient, Vector3f const& iPos);
+  protected:
 
-    static uint32_t CompileVertexShader(char const* iSource);
-    static uint32_t CompileFragmentShader(char const* iSource);
+    void RemoveObject(ObjectHandle);
 
-    static uint32_t CompileShader(uint32_t iType,char const* iSource);
+    typedef ObjectTable<GfxComponent> Components;
 
-    static uint32_t LinkProgram(uint32_t iVS, uint32_t iPS);
+    Components m_ToRender;
+    Vector<Components::Handle> m_ObjectToComp;
   };
 }

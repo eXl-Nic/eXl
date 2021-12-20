@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/containers.hpp>
 #include <engine/common/object.hpp>
+#include <engine/common/world.hpp>
 
 #include <math/math.hpp>
 
@@ -112,14 +113,14 @@ namespace eXl
   using LinearPositionAnimation = Animation<Vector3f>;
 
   template <typename TimelineBehaviour, typename Impl>
-  class TimelineManager
+  class TimelineManager : public WorldSystem
   {
   public:
 
     struct TimelineEntry : public TimelineBehaviour
     {
-      uint64_t startTimestamp;
-      boost::optional<uint64_t> loopTime;
+      double startTime;
+      boost::optional<float> loopTime;
       float curTime;
     };
 
@@ -139,6 +140,5 @@ namespace eXl
 
     TimelineTable m_Timelines;
     UnorderedSet<TimelineHandle> m_ToDelete;
-    uint64_t m_CurTimestamp;
   };
 }

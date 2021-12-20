@@ -28,13 +28,13 @@ namespace eXl
     struct ShaderData
     {
       void const*  m_Data;
-      uint32_t m_DataSlot;
+      UniformName m_Name;
     };
 
     struct UBOData
     {
       IntrusivePtr<OGLBuffer const> m_DataBuffer;
-      uint32_t m_Slot;
+      UniformName m_Name;
     };
 
     class TextureData
@@ -42,49 +42,51 @@ namespace eXl
     public:
       ~TextureData();
       IntrusivePtr<OGLTexture const> m_Texture;
-      uint32_t      m_TextureSlot;
+      TextureName m_Name;
     };
 
     ~OGLShaderData();
 
-    void AddData(uint32_t iSlot, void const* iData);
+    void AddData(UniformName iName, void const* iData);
 
-    void SetDataBuffer(uint32_t iSlot, OGLBuffer const* iBuffer);
-    void SetDataBuffer(uint32_t iSlot, IntrusivePtr<OGLBuffer const> const& iBuffer) { SetDataBuffer(iSlot, iBuffer.get()); }
-    void SetDataBuffer(uint32_t iSlot, IntrusivePtr<OGLBuffer> const& iBuffer) { SetDataBuffer(iSlot, iBuffer.get()); }
+    void CheckDirty();
 
-    void AddTexture(uint32_t iSlot, OGLTexture const* iTexture);
-    void AddTexture(uint32_t iSlot, IntrusivePtr<OGLTexture const> const& iTexture) { AddTexture(iSlot, iTexture.get()); }
-    void AddTexture(uint32_t iSlot, IntrusivePtr<OGLTexture> const& iTexture) { AddTexture(iSlot, iTexture.get()); }
+    void SetDataBuffer(UniformName iName, OGLBuffer const* iBuffer);
+    void SetDataBuffer(UniformName iName, IntrusivePtr<OGLBuffer const> const& iBuffer) { SetDataBuffer(iName, iBuffer.get()); }
+    void SetDataBuffer(UniformName iName, IntrusivePtr<OGLBuffer> const& iBuffer) { SetDataBuffer(iName, iBuffer.get()); }
+
+    void AddTexture(TextureName iName, OGLTexture const* iTexture);
+    void AddTexture(TextureName iName, IntrusivePtr<OGLTexture const> const& iTexture) { AddTexture(iName, iTexture.get()); }
+    void AddTexture(TextureName iName, IntrusivePtr<OGLTexture> const& iTexture) { AddTexture(iName, iTexture.get()); }
 
     inline uint32_t GetNumData() const { return m_Data.size(); }
     inline uint32_t GetNumUBO() const { return m_UBOData.size(); }
     ShaderData const* GetDataDescPtr() const { return &m_Data[0]; }
     UBOData const* GetUBODescPtr() const { return &m_UBOData[0]; }
 
-    inline void const* GetDataPtr(uint32_t iSlot) const
-    {
-      for(uint32_t i = 0; i<m_Data.size(); ++i)
-      {
-        if(m_Data[i].m_DataSlot == iSlot)
-        {
-          return m_Data[i].m_Data;
-        }
-      }
-      return nullptr;
-    }
-
-    inline OGLBuffer const* GetUBO(uint32_t iSlot) const
-    {
-      for (auto const& ubo : m_UBOData)
-      {
-        if (ubo.m_Slot == iSlot)
-        {
-          return ubo.m_DataBuffer.get();
-        }
-      }
-      return nullptr;
-    }
+    //inline void const* GetDataPtr(uint32_t iSlot) const
+    //{
+    //  for(uint32_t i = 0; i<m_Data.size(); ++i)
+    //  {
+    //    if(m_Data[i].m_DataSlot == iSlot)
+    //    {
+    //      return m_Data[i].m_Data;
+    //    }
+    //  }
+    //  return nullptr;
+    //}
+    //
+    //inline OGLBuffer const* GetUBO(uint32_t iSlot) const
+    //{
+    //  for (auto const& ubo : m_UBOData)
+    //  {
+    //    if (ubo.m_Slot == iSlot)
+    //    {
+    //      return ubo.m_DataBuffer.get();
+    //    }
+    //  }
+    //  return nullptr;
+    //}
 
     template <class T>
     inline T const* CastBuffer(uint32_t iSlot) const
@@ -108,5 +110,6 @@ namespace eXl
     SmallVector<ShaderData, 2>  m_Data;
     SmallVector<UBOData, 2>  m_UBOData;
     SmallVector<TextureData, 2> m_TexData;
+    bool m_Dirty = false;
   };
 }
