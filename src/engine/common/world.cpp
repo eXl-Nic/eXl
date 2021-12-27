@@ -12,9 +12,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/coretype.hpp>
 #include <core/type/tagtype.hpp>
 
+#include <engine/common/transforms.hpp>
+#include <engine/common/gamedatabase.hpp>
 #include <engine/physics/physicsys.hpp>
 #include <engine/game/ability.hpp>
-#include <engine/common/transforms.hpp>
 
 #include <core/clock.hpp>
 
@@ -262,6 +263,10 @@ namespace eXl
     {
       m_Transforms = trans;
     }
+    if (GameDatabase* database = GameDatabase::DynamicCast(system))
+    {
+      m_Database = database;
+    }
 
     return system;
   }
@@ -306,6 +311,10 @@ namespace eXl
     Clock profiler;
 
     FlushObjectsToDelete();
+    if (m_Database)
+    {
+      m_Database->GarbageCollect();
+    }
     
     if (m_AbilitySystem)
     {
@@ -370,6 +379,8 @@ namespace eXl
     }
 
     ioProfiling.m_PostAbilitiesTime = profiler.GetTime() * 1000.0;
+
+    ioProfiling.m_CurFrameTime = 1000 * double(Clock::GetTimestamp() - m_CurrentTimestamp) / Clock::GetTicksPerSecond();
   }
 
   double World::GetRealTimeInSec()

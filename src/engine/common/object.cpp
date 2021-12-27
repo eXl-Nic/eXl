@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  static const uint32_t s_PageSize = 1024;
 
   ObjectTable_Data::ObjectTable_Data(size_t iObjectSize, size_t iAlignment)
     : m_ObjectSize(iObjectSize)
@@ -82,23 +81,28 @@ namespace eXl
     return nullptr;
   }
 
+#if _DEBUG
   void* ObjectTable_Data::Get(ObjectTableHandle_Base iHandle) const
   {
     uint32_t globId = iHandle.GetId();
+    eXl_ASSERT(globId < m_NumPages* s_PageSize);
 
     Page& page = m_Pages[globId / s_PageSize];
-
     uint32_t locId = globId % s_PageSize;
+
+    uint32_t& gen = page.m_Generation[locId];
+    eXl_ASSERT(gen == iHandle.m_IdAndGen);
 
     return reinterpret_cast<char*>(page.m_Objects) + locId * m_ObjectOffset;
   }
+#endif
 
   void ObjectTable_Data::Release(ObjectTableHandle_Base iHandle, void(*deleter)(void*))
   {
     if(iHandle.IsAssigned())
     {
       uint32_t globId = iHandle.GetId();
-      //eXl_ASSERT(globId < m_NumPages * s_PageSize);
+      eXl_ASSERT_REPAIR_RET(globId < m_NumPages * s_PageSize, void());
 
       Page& page = m_Pages[globId / s_PageSize];
 
@@ -139,7 +143,10 @@ namespace eXl
     {
       return false;
     }
-    //eXl_ASSERT(iHandle.GetId() < m_NumPages * s_PageSize);
+    if (iHandle.GetId() >= m_NumPages * s_PageSize)
+    {
+      return false;
+    }
 
     Page& page = m_Pages[iHandle.GetId() / s_PageSize];
     uint32_t gen = page.m_Generation[iHandle.GetId() % s_PageSize];

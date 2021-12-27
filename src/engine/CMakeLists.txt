@@ -92,6 +92,8 @@ common/object.cpp
 common/transforms.cpp
 common/world.cpp
 common/debugtool.cpp
+common/gamedata.cpp
+common/gamedatabase.cpp
 
 gfx/tileset.cpp
 

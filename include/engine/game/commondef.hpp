@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/game/ability.hpp>
-#include <engine/game/archetype.hpp>
+#include <engine/common/gamedata.hpp>
 #include <engine/script/luascriptbehaviour.hpp>
 #include <engine/map/map.hpp>
 

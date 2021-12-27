@@ -151,7 +151,7 @@ namespace eXl
   class PhysicsSystem;
   class AbilitySystem;
   class Transforms;
-
+  class GameDatabase;
 
   MAKE_NAME(ComponentName);
 
@@ -298,6 +298,7 @@ namespace eXl
 
     ComponentManifest const& m_Components;
 
+    GameDatabase* m_Database = nullptr;
     PhysicsSystem* m_PhSystem = nullptr;
     AbilitySystem* m_AbilitySystem = nullptr;
     Transforms* m_Transforms = nullptr;

@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/resource/resourceloader.hpp>
 #include <core/resource/resourcemanager.hpp>
 
-#include <engine/game/archetype.hpp>
+#include <engine/common/gamedatabase.hpp>
 #include <core/type/typemanager.hpp>
 #include <core/type/tupletypestruct.hpp>
 
@@ -144,7 +144,7 @@ namespace eXl
 
       TupleType* newType = TupleTypeStruct::Create(fields, typeName);
       oTypes.m_Types.push_back(std::unique_ptr<TupleType>(newType));
-      oManifest.RegisterPropertySheet(PropertySheetName(typeName.c_str()), newType, true);
+      oManifest.RegisterPropertySheet(PropertySheetName(typeName.c_str()), newType);
     }
   }
 

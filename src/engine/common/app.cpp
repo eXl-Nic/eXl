@@ -25,7 +25,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/game/ability.hpp>
 #include <engine/game/projectile.hpp>
 #include <engine/common/transformanim.hpp>
-#include <engine/game/archetype.hpp>
+#include <engine/common/gamedatabase.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/game/scripttrigger.hpp>
 

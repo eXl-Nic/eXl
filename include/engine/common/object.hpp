@@ -79,6 +79,8 @@ namespace eXl
 
   struct EXL_ENGINE_API ObjectTable_Data
   {
+    static constexpr uint32_t s_PageSize = 1024;
+
     struct Page : public HeapObject
     {
       void Init(size_t iObjectSize, size_t iAlignment);
@@ -98,8 +100,17 @@ namespace eXl
     void* Alloc(ObjectTableHandle_Base& oHandle);
 
     void* TryGet(ObjectTableHandle_Base iHandle) const;
-
+#ifdef _DEBUG
     void* Get(ObjectTableHandle_Base iHandle) const;
+#else
+    void* Get(ObjectTableHandle_Base iHandle) const
+    {
+      uint32_t globId = iHandle.GetId();
+      Page& page = m_Pages[globId / s_PageSize];
+      uint32_t locId = globId % s_PageSize;
+      return reinterpret_cast<char*>(page.m_Objects) + locId * m_ObjectOffset;
+    }
+#endif
 
     void Release(ObjectTableHandle_Base iHandle, void(*deleter)(void*));
 
@@ -142,7 +153,7 @@ namespace eXl
     void Reset();
 
     template <typename Functor>
-    void Iterate(Functor&& iFun) const;
+    inline void Iterate(Functor&& iFun) const;
 
     ObjectTable_Data& GetImplementation() { return m_Data; }
 
@@ -240,7 +251,7 @@ namespace eXl
 
   template<typename T>
   template <typename Functor>
-  void ObjectTable<T>::Iterate(Functor&& iFun) const
+  inline void ObjectTable<T>::Iterate(Functor&& iFun) const
   {
     for (uint32_t pageNum = 0; pageNum < m_Data.m_NumPages; ++pageNum)
     {

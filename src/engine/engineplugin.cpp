@@ -12,12 +12,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 #include <core/corelib.hpp>
 
-#include <engine/game/archetype.hpp>
+
 #include <engine/game/commondef.hpp>
 
 #include <engine/gfx/tileset.hpp>
 #include <engine/map/tilinggroup.hpp>
 #include <engine/map/mcmcmodelrsc.hpp>
+#include <engine/common/project.hpp>
 #include <engine/game/archetype.hpp>
 #include <engine/common/project.hpp>
 
@@ -194,11 +195,13 @@ namespace eXl
     PropertiesManifest baseManifest;
     baseManifest.RegisterPropertySheet<HealthData>(HealthData::PropertyName());
     baseManifest.RegisterPropertySheet<GrabData>(GrabData::PropertyName());
+
     baseManifest.RegisterPropertySheet<TurretData>(TurretData::PropertyName());
-    baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
-    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false);
-    baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false);
     baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName(), true);
+
+    baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false, true);
+    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false, true);
+    baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false, true);
 
     return baseManifest;
   }

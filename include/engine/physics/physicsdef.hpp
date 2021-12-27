@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/vector3.hpp>
 #include <math/quaternion.hpp>
 #include <engine/common/world.hpp>
-#include <engine/game/archetype.hpp>
+#include <engine/common/gamedata.hpp>
 
 namespace eXl
 {
