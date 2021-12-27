@@ -52,7 +52,7 @@ namespace eXl
     {
       // -> Position in PIXELS !!!
       
-      AABB2Di GetBox()
+      AABB2Di GetBox() const
       {
         return m_BoxCache;
       }
@@ -123,7 +123,7 @@ namespace eXl
     World& m_World;
     
     GameDataView<TileItemData>& m_TilesView;
-    GameDataStorage<PlacedTile> m_PlacedTileData;
+    DenseGameDataStorage<PlacedTile> m_PlacedTileData;
 
     Vector<BoxIndexEntry> m_ResultsCache;
     LayerWidget* m_LayerWidget;

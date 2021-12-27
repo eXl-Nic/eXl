@@ -354,18 +354,16 @@ namespace eXl
 
   void ObjectsTool::Cleanup(ObjectHandle iHandle)
   {
-    MapResource::ObjectHeader* object = m_ObjectsView.GetDataForDeletion(iHandle);
+    MapResource::ObjectHeader const* object = m_ObjectsView.GetDataForDeletion(iHandle);
     if (object == nullptr)
     {
       return;
     }
-    PlacedObject* custoData = m_ObjectsEditorData.GetDataForDeletion(iHandle);
+    PlacedObject const* custoData = m_ObjectsEditorData.GetDataForDeletion(iHandle);
     if (custoData)
     {
       AABB2Di objBox = custoData->m_BoxCache;
       m_TilesIdx.remove(std::make_pair(objBox, iHandle));
-      custoData->m_CustoData.m_ComponentCustomization.clear();
-      custoData->m_CustoData.m_PropertyCustomization.clear();
     }
     
     m_IDs.erase(object->m_ObjectId);

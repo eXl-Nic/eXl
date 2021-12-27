@@ -21,20 +21,20 @@ namespace eXl
     DECLARE_RTTI(PropertiesManifest, RttiObject);
   public:
     template <typename T>
-    void RegisterPropertySheet(PropertySheetName iName, bool iIsArchetype = true, bool iIsSparse = true)
+    void RegisterPropertySheet(PropertySheetName iName, bool iIsSparse = true)
     {
       if (iIsSparse)
       {
         RegisterPropertySheet(iName, TypeManager::GetType<T>(), [] (World & iWorld)
         {
-          return new DensePropertySheetAllocator<T>(iWorld, TypeManager::GetType<T>());
+          return new SparsePropertySheetAllocator<T>(iWorld, TypeManager::GetType<T>());
         });
       }
       else
       { 
         RegisterPropertySheet(iName, TypeManager::GetType<T>(), [] (World & iWorld)
         {
-          return new SparsePropertySheetAllocator<T>(iWorld, TypeManager::GetType<T>());
+          return new DensePropertySheetAllocator<T>(iWorld, TypeManager::GetType<T>());
         });
       }
     }

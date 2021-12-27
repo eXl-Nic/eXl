@@ -92,7 +92,7 @@ namespace eXl
 
     World& m_World;
     GameDataView<TerrainIslandItemData>& m_IslandsView;
-    GameDataStorage<Island> m_PolyView;
+    DenseGameDataStorage<Island> m_PolyView;
     Vector<BoxIndexEntry> m_ResultsCache;
     LayerWidget* m_LayerWidget;
     TerrainWidget* m_TerrainWidget;

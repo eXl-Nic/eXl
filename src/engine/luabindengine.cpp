@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/common/world.hpp>
 #include <engine/common/transforms.hpp>
-#include <engine/game/archetype.hpp>
+#include <engine/common/gamedatabase.hpp>
 #include <engine/game/commondef.hpp>
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>

@@ -336,40 +336,12 @@ namespace eXl
 
   void MCMCLearnTool::TrainModel()
   {
-    ResourceHandle<MCMCModelRsc> handle = *m_CurModelSelector->Object()->CastBuffer<ResourceHandle<MCMCModelRsc>>();
-    MCMCModelRsc* model = const_cast<MCMCModelRsc*>(handle.GetOrLoad());
-    DocumentState* rscDoc = nullptr;
-    if (model == nullptr)
-    {
-      rscDoc = EditorState::CreateResource(MCMCModelRsc::StaticLoaderName());
-      if (rscDoc == nullptr)
-      {
-        return;
-      }
-      model = MCMCModelRsc::DynamicCast(rscDoc->GetResource());
-      handle.Set(model);
-      ConstDynObject handleRef(TypeManager::GetType<ResourceHandle<MCMCModelRsc>>(), &handle);
-      m_CurModelSelector->SetObject(&handleRef);
-    }
-    else
-    {
-      rscDoc = EditorState::OpenDocument(handle.GetUUID());
-    }
-
-    if (model == nullptr)
-    {
-      return;
-    }
-
-    model->m_DimScaling = m_ShapeScale->value();
-    model->m_ElementsVector.clear();
-    model->m_Model.reset();
+    uint32_t dimScale = m_ShapeScale->value();
+    MCMC2D::LearnExample example;
 
     UnorderedMap<std::pair<Resource::UUID, Name>, uint32_t> selectedElements;
 
     Vector<MCMC2D::Element> elements;
-
-    uint32_t dimScale = m_ShapeScale->value();
 
     for (uint32_t i = 0; i < m_Elements.size(); ++i)
     {
@@ -393,22 +365,6 @@ namespace eXl
         }
       }
     }
-
-    std::unique_ptr<Random> randGen(Random::CreateDefaultRNG(Clock::GetTimestamp()));
-    MCMC2D::SVMLearnParams params(*randGen);
-    //MCMC2D::DiskLearnParams params(*randGen);
-    params.m_QuantileCull = m_UseQuantileCull->checkState() == Qt::Checked;
-    params.m_MaxDist_ = m_InteractionRadius->value() * dimScale;
-    params.m_Toroidal = false;
-
-    params.m_Resample = false;
-    params.m_Oversampling = elements.size() * 4;
-    params.m_Dispersion = 2.0 / m_InteractionRadius->value();
-
-    MCMC2D::SVMLearner learner(elements, params);
-    //MCMC2D::DiskLearner learner(elements, params);
-
-    MCMC2D::LearnExample example;
 
     Vector<Polygoni> carvers;
 
@@ -473,6 +429,55 @@ namespace eXl
         example.m_Shape = std::move(polys[0]);
       }
     }
+
+    if (example.m_Shape.Empty())
+    {
+      LOG_ERROR << "MCMC learn : missing walls";
+      return;
+    }
+
+    ResourceHandle<MCMCModelRsc> handle = *m_CurModelSelector->Object()->CastBuffer<ResourceHandle<MCMCModelRsc>>();
+    MCMCModelRsc* model = const_cast<MCMCModelRsc*>(handle.GetOrLoad());
+    DocumentState* rscDoc = nullptr;
+    if (model == nullptr)
+    {
+      rscDoc = EditorState::CreateResource(MCMCModelRsc::StaticLoaderName());
+      if (rscDoc == nullptr)
+      {
+        return;
+      }
+      model = MCMCModelRsc::DynamicCast(rscDoc->GetResource());
+      handle.Set(model);
+      ConstDynObject handleRef(TypeManager::GetType<ResourceHandle<MCMCModelRsc>>(), &handle);
+      m_CurModelSelector->SetObject(&handleRef);
+    }
+    else
+    {
+      rscDoc = EditorState::OpenDocument(handle.GetUUID());
+    }
+
+    if (model == nullptr)
+    {
+      return;
+    }
+
+    model->m_DimScaling = m_ShapeScale->value();
+    model->m_ElementsVector.clear();
+    model->m_Model.reset();
+
+    std::unique_ptr<Random> randGen(Random::CreateDefaultRNG(Clock::GetTimestamp()));
+    MCMC2D::SVMLearnParams params(*randGen);
+    //MCMC2D::DiskLearnParams params(*randGen);
+    params.m_QuantileCull = m_UseQuantileCull->checkState() == Qt::Checked;
+    params.m_MaxDist_ = m_InteractionRadius->value() * dimScale;
+    params.m_Toroidal = false;
+
+    params.m_Resample = false;
+    params.m_Oversampling = elements.size() * 4;
+    params.m_Dispersion = 2.0 / m_InteractionRadius->value();
+
+    MCMC2D::SVMLearner learner(elements, params);
+    //MCMC2D::DiskLearner learner(elements, params);
 
     if (auto const* tiles = database->GetView<TileItemData>(TilesTool::ToolDataName()))
     {

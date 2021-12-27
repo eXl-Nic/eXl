@@ -593,7 +593,7 @@ namespace eXl
 
         m_Impl->m_Inputs.Clear();
 
-        m_Impl->m_World.Tick(iDelta);
+        m_Impl->m_World.Tick();
       });
 
       gameViewSplitter->addWidget(ratioWidget);
@@ -731,6 +731,6 @@ namespace eXl
     m_Archetype->Instantiate(m_ArchetypeObject, world, nullptr);
     world.GetSystem<Transforms>()->AddTransform(m_ArchetypeObject, nullptr);
 
-    m_World.Tick(0.0);
+    m_World.Tick();
   }
 }

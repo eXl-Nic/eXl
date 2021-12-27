@@ -5,6 +5,7 @@
 #include <core/image/imagestreamer.hpp>
 #include <core/resource/resourcemanager.hpp>
 #include <core/utils/filetextreader.hpp>
+#include "editor_gen.hpp"
 
 #include <QtGui>
 #include <QtWidgets/qapplication.h>
@@ -47,6 +48,7 @@ stop:0.6 rgba(255, 255, 255, 0));
     });
     
     Engine_Application::Start();
+    Register_EDITOR_Types();
     InitConsoleLog();
     InitFileLog("EngineCommonEditor.log");
     MainWindow* mainWindow = new MainWindow;

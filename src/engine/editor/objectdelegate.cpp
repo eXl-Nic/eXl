@@ -247,7 +247,7 @@ namespace eXl
     else
     {
       //DynObject objCopy(obj);
-      editor->setProperty("eXlObject", qVariantFromValue(obj));
+      editor->setProperty("eXlObject", QVariant::fromValue(obj));
     }
   }
 
@@ -286,7 +286,7 @@ namespace eXl
       }
       QVariant data = editor->property("eXlObject");
       DynObject objCopy(data.value<ConstDynObject const*>());
-      model->setData(index,qVariantFromValue(objCopy),Qt::EditRole);
+      model->setData(index, QVariant::fromValue(objCopy), Qt::EditRole);
     }
   }
 

@@ -121,7 +121,7 @@ namespace eXl
     TileName const* tileName = m_Tileset->GetTileNameFromIndex(m_FilteredModel->mapToSource(tileIndex));
     if (tileName != nullptr)
     {
-      model->setData(index, qVariantFromValue(QString::fromUtf8(tileName->get().c_str())));
+      model->setData(index, QVariant::fromValue(QString::fromUtf8(tileName->get().c_str())));
     }
   }
 

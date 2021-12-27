@@ -130,7 +130,6 @@ namespace eXl
 		Transforms* m_Transforms;
 		GfxSystem* m_Gfx;
 
-
     ObjectHandle m_ImageHandle;
     ObjectHandle m_AnimHandle;
 
@@ -154,6 +153,7 @@ namespace eXl
 
     Tileset* m_Tileset;
 
+    void InitDisplay();
     void UpdateTilePreview(QModelIndex iIndex);
     void UpdateTile(QModelIndex iIndex);
     void UpdateImage();
@@ -183,8 +183,6 @@ namespace eXl
 	{
     m_Impl->m_Editor = this;
     m_Impl->m_Tileset = Tileset::DynamicCast(iTilesetDoc->GetResource());
-
-    
 
 		QSplitter* rootSplitter = new QSplitter(Qt::Horizontal, this);
     QSplitter* viewSplitter = new QSplitter(Qt::Vertical, this);
@@ -310,7 +308,6 @@ namespace eXl
 		m_Impl->m_TileDataView = new QTreeView(this);
     m_Impl->m_TileDataView->setItemDelegate(new ObjectDelegate);
     
-
     dataSplitter->addWidget(tilesetCollection);
     dataSplitter->addWidget(m_Impl->m_TileDataView);
 
@@ -336,20 +333,6 @@ namespace eXl
       m_Impl->m_MainImageView->installEventFilter(m_Impl->m_Selection);
       m_Impl->m_MainImageView->SetPainterInterface(m_Impl->m_SelPainter);
       
-      GfxSystem::ViewInfo& view = m_Impl->m_MainImageView->GetViewInfo();
-      view.pos = Vector3f::UNIT_Z;
-      view.projection = GfxSystem::Orthographic;
-      view.displayedSize = 1.0;
-      view.backgroundColor = Vector4f::ONE;
-      
-      m_Impl->m_Gfx->SetView(view);
-      
-      m_Impl->m_ImageHandle = m_Impl->m_World.CreateObject();
-      
-      m_Impl->m_Transforms->AddTransform(m_Impl->m_ImageHandle, nullptr);
-
-      GfxComponent& gfxComp = m_Impl->m_Gfx->CreateComponent(m_Impl->m_ImageHandle);
-
       //m_Impl->m_RatioWidgetImage = new AspectRatioWidget(m_Impl->m_MainImageView, 1.0, 1.0, this);
 
       QWidget* imgDisplayWidget = new QWidget(this);
@@ -399,28 +382,16 @@ namespace eXl
       m_Impl->m_GridPainter = new GridPainter(m_Impl->m_TilePreview);
       m_Impl->m_TilePreview->SetPainterInterface(m_Impl->m_GridPainter);
 
-      GfxSystem::ViewInfo& view = m_Impl->m_TilePreview->GetViewInfo();
-      view.pos = Vector3f::UNIT_Z + Vector3f::UNIT_X * 2;
-      view.projection = GfxSystem::Orthographic;
-      view.displayedSize = 1.0;
-      view.backgroundColor = Vector4f::ONE;
-      m_Impl->m_TilePreview->ViewInfoUpdated();
-
-      m_Impl->m_Gfx->SetView(view);
-
-      m_Impl->m_AnimHandle = m_Impl->m_World.CreateObject();
-
-      Matrix4f animPosition = Matrix4f::IDENTITY;
-      MathTools::GetPosition2D(animPosition) = Vector2f::UNIT_X * 2;
-
-      m_Impl->m_Transforms->AddTransform(m_Impl->m_AnimHandle, &animPosition);
-      GfxSpriteComponent& gfxComp = m_Impl->m_Gfx->CreateSpriteComponent(m_Impl->m_AnimHandle);
-      gfxComp.SetTileset(m_Impl->m_Tileset);
 
       m_Impl->m_RatioWidgetTile = new AspectRatioWidget(m_Impl->m_TilePreview, 1.0, 1.0, this);
 
       viewSplitter->addWidget(m_Impl->m_RatioWidgetTile);
       m_Impl->m_TilePreview->SetAnimated(true);
+
+      m_Impl->m_TilePreview->SetTickCallback([this](float)
+      {
+          m_Impl->InitDisplay();
+      });
     }
 		
 		rootSplitter->addWidget(dataSplitter);
@@ -432,6 +403,57 @@ namespace eXl
 
 		setLayout(layout);
 	}
+
+  void TilesetEditor::Impl::InitDisplay()
+  {
+    if (!m_Gfx->GetRenderNode(m_Gfx->GetSpriteHandle())->IsInitialized())
+    {
+      return;
+    }
+
+    if (m_ImageHandle.IsAssigned())
+    {
+      return;
+    }
+
+    {
+      GfxSystem::ViewInfo& view = m_MainImageView->GetViewInfo();
+      view.projection = GfxSystem::Orthographic;
+      view.displayedSize = 1.0;
+      view.backgroundColor = Vector4f::ONE;
+      m_MainImageView->ViewInfoUpdated();
+    }
+
+    m_ImageHandle = m_World.CreateObject();
+
+    Matrix4f imagePosition = Matrix4f::IDENTITY;
+    MathTools::GetPosition(imagePosition) = -Vector3f::UNIT_Z;
+    m_Transforms->AddTransform(m_ImageHandle, &imagePosition);
+    m_Gfx->CreateComponent(m_ImageHandle);
+
+    {
+      GfxSystem::ViewInfo& view = m_TilePreview->GetViewInfo();
+      view.basis[0] = -Vector3f::UNIT_X;
+      view.basis[1] = Vector3f::UNIT_Y;
+      view.basis[2] = -Vector3f::UNIT_Z;
+      view.projection = GfxSystem::Orthographic;
+      view.displayedSize = 1.0;
+      view.backgroundColor = Vector4f::ONE;
+      m_TilePreview->ViewInfoUpdated();
+    }
+
+    m_AnimHandle = m_World.CreateObject();
+
+    Matrix4f animPosition = Matrix4f::IDENTITY;
+    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[0]) = -Vector3f::UNIT_X;
+    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[1]) =  Vector3f::UNIT_Y;
+    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[2]) = -Vector3f::UNIT_Z;
+    MathTools::GetPosition(animPosition) = Vector3f::UNIT_Z;
+
+    m_Transforms->AddTransform(m_AnimHandle, &animPosition);
+    GfxSpriteComponent& gfxComp = m_Gfx->CreateSpriteComponent(m_AnimHandle);
+    gfxComp.SetTileset(m_Tileset);
+  }
 
   void TilesetEditor::Impl::UpdateTile(QModelIndex iIndex)
   {
@@ -580,8 +602,9 @@ namespace eXl
       matInfo->m_SpriteInfo.imageSize = MathTools::ToFVec(imageSize);
       matInfo->SetupData();
 
+      gfxComp->SetProgram(m_Gfx->GetSpriteProgram());
       gfxComp->SetGeometry(geom.get());
-      gfxComp->AddDraw(matInfo.get(), 6, 0);
+      gfxComp->AddDraw(matInfo.get()).NumElements(6).End();
 
       m_MainImageView->setFixedSize(QSize(imageSize.X(), imageSize.Y()));
       //m_RatioWidgetImage->SetAspectRatio(imageSize.X(), imageSize.Y());

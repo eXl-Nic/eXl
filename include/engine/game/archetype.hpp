@@ -41,6 +41,7 @@ namespace eXl
     {
       DynObject m_Data;
       bool m_Instanced = false;
+      bool m_HasObjRef = false;
     };
 
     static void Init();

@@ -542,7 +542,7 @@ namespace eXl
 
   void TilesTool::Cleanup(ObjectHandle iHandle)
   {
-    PlacedTile* placedTile = m_PlacedTileData.GetDataForDeletion(iHandle);
+    PlacedTile const* placedTile = m_PlacedTileData.GetDataForDeletion(iHandle);
     if(placedTile == nullptr) 
     {
       return;

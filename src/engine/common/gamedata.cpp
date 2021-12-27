@@ -123,7 +123,7 @@ namespace eXl
 
   ObjectTableHandle_Base SparseDataAllocator::GetDataFromSlot(uint32_t iSlot)
   {
-    ObjectTableHandle_Base mutableHandle = m_ObjectHandles[iSlot];
+    ObjectTableHandle_Base& mutableHandle = m_ObjectHandles[iSlot];
     ObjectTableHandle_Base archetypeHandle = m_ArchetypeHandle[iSlot];
     if (mutableHandle.IsAssigned() && archetypeHandle != mutableHandle)
     {
@@ -131,7 +131,7 @@ namespace eXl
     }
     if (!mutableHandle.IsAssigned())
     {
-      m_ObjectHandles[iSlot] = Alloc();
+      mutableHandle = Alloc();
       if (archetypeHandle.IsAssigned() && m_Type)
       {
         void* mutableCopy = m_ObjectData.Get(m_ObjectHandles[iSlot]);

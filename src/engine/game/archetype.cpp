@@ -368,6 +368,33 @@ namespace eXl
     }
   }
 
+  bool HasObjectReferences(Type const* iType)
+  {
+    if (iType == TypeManager::GetType<ObjectReference>())
+    {
+      return true;
+    }
+    if (TupleType const* tuple = iType->IsTuple())
+    {
+      for (uint32_t i = 0; i < tuple->GetNumField(); ++i)
+      {
+        Type const* fieldType = tuple->GetFieldDetails(i);
+        
+        if(HasObjectReferences(fieldType))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (ArrayType const* arrayType = ArrayType::DynamicCast(iType))
+    {
+      return HasObjectReferences(arrayType->GetElementType());
+    }
+
+    return false;
+  }
+
   void Archetype::SetProperty(PropertySheetName iName, ConstDynObject const& iObject, bool iInstanced)
   {
     //eXl_ASSERT(GameDatabase::GetTypeFromName(iName) == iObject.GetType());
@@ -378,6 +405,7 @@ namespace eXl
     }
     iter->second.m_Data = DynObject(&iObject);
     iter->second.m_Instanced = iInstanced;
+    iter->second.m_HasObjRef = HasObjectReferences(iObject.GetType());
   }
 
   ConstDynObject const& Archetype::GetProperty(PropertySheetName iName) const
@@ -475,7 +503,8 @@ namespace eXl
       db->InstantiateArchetype(iHandle, this, iCusto);
       for (auto propEntry : m_Properties)
       {
-        if (propEntry.second.m_Instanced)
+        if (propEntry.second.m_Instanced
+          && propEntry.second.m_HasObjRef)
         {
           DynObject propData = db->ModifyData(iHandle, propEntry.first);
           PatchObjectReferences(iWorld, propData);
@@ -492,7 +521,6 @@ namespace eXl
         auto iter = iCusto->m_ComponentCustomization.find(component.first);
         if (iter != iCusto->m_ComponentCustomization.end())
         {
-          
           iCusto->ApplyCustomization(component.first, componentData);
         }
       }

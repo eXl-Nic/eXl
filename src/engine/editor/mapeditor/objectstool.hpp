@@ -57,7 +57,7 @@ namespace eXl
 		void DisableTool() override;
 
     GameDataView<MapResource::ObjectHeader> const& GetObjects() const { return m_ObjectsView; }
-    GameDataStorage<PlacedObject> const& GetObjectsAdditionalData() const { return m_ObjectsEditorData; }
+    DenseGameDataStorage<PlacedObject> const& GetObjectsAdditionalData() const { return m_ObjectsEditorData; }
 
     ObjectHandle AddAt(Archetype const* iArchetype, Vector2i iPixelPos);
 
@@ -93,7 +93,7 @@ namespace eXl
 
 		World& m_World;
     GameDataView<MapResource::ObjectHeader>& m_ObjectsView;
-    GameDataStorage<PlacedObject> m_ObjectsEditorData;
+    DenseGameDataStorage<PlacedObject> m_ObjectsEditorData;
 		Vector<BoxIndexEntry> m_ResultsCache;
 		BoxIndex m_TilesIdx;
 		UnorderedMap<uint64_t, ObjectHandle> m_IDs;

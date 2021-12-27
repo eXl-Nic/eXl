@@ -195,13 +195,12 @@ namespace eXl
     PropertiesManifest baseManifest;
     baseManifest.RegisterPropertySheet<HealthData>(HealthData::PropertyName());
     baseManifest.RegisterPropertySheet<GrabData>(GrabData::PropertyName());
-
     baseManifest.RegisterPropertySheet<TurretData>(TurretData::PropertyName());
-    baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName(), true);
+    baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName());
 
-    baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false, true);
-    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false, true);
-    baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false, true);
+    baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
+    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false);
+    baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false);
 
     return baseManifest;
   }

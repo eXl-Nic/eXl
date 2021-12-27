@@ -55,7 +55,7 @@ namespace eXl
     Vector<Polygoni> m_RunSpaces;
     MapEditor* m_ParentEditor;
     MiniatureCache m_Cache;
-    GameDataStorage<MCMCTag> m_MCMCData;
+    DenseGameDataStorage<MCMCTag> m_MCMCData;
 
     QListWidget* m_ElementsDisplay;
     QSpinBox* m_ShapeScale;

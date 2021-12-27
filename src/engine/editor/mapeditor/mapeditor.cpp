@@ -106,14 +106,12 @@ namespace eXl
         subTools.m_Selection = m_Selection;
 
         m_TilesTool = new TilesTool(iEditor, subTools, m_World.GetWorld());
-        m_TilesTool->Initialize(*m_Map);
       }
       {
         TerrainTool::Tools subTools;
         subTools.m_Selection = m_Selection;
 
         m_IslandsTool = new TerrainTool(iEditor, subTools, m_World.GetWorld());
-        m_IslandsTool->Initialize(*m_Map);
       }
       {
         ObjectsTool::Tools subTools;
@@ -121,7 +119,6 @@ namespace eXl
         subTools.m_Selection = m_Selection;
 
         m_ObjectsTool = new ObjectsTool(iEditor, subTools, m_World.GetWorld());
-        m_ObjectsTool->Initialize(*m_Map);
       }
 
       m_MCMCTool = new MCMCLearnTool(m_Editor, m_World.GetWorld(), m_Editor);
@@ -231,6 +228,16 @@ namespace eXl
 
         m_GameWidget->SetTickCallback([this](float iDelta)
         {
+          GfxSystem& gfx = *m_World.GetWorld().GetSystem<GfxSystem>();
+          if (!m_ToolsInitialized
+            && gfx.GetRenderNode(gfx.GetSpriteHandle())->IsInitialized())
+          {
+            m_TilesTool->Initialize(*m_Map);
+            m_IslandsTool->Initialize(*m_Map);
+            m_ObjectsTool->Initialize(*m_Map);
+            m_ToolsInitialized = true;
+          }
+
           m_World.GetCamera().ProcessInputs(m_World.GetWorld(), m_Inputs, CameraState::WheelZoom |CameraState::RightClickPan);
           m_World.GetCamera().UpdateView(m_World.GetWorld());
           m_GameWidget->GetViewInfo().pos = m_World.GetCamera().view.pos;
@@ -242,7 +249,7 @@ namespace eXl
 
           m_Inputs.Clear();
 
-          m_World.Tick(iDelta);
+          m_World.Tick();
         });
 
         //mapToolLayout->addWidget(ratioWidget);
@@ -269,6 +276,7 @@ namespace eXl
     TerrainTool* m_IslandsTool;
     ObjectsTool* m_ObjectsTool;
     MCMCLearnTool* m_MCMCTool;
+    bool m_ToolsInitialized = false;
 
     Map<uint32_t, EditorTool*> m_Tools;
 
