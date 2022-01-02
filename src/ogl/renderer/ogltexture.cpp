@@ -99,6 +99,10 @@ namespace eXl
     case OGLInternalTextureFormat::RG:
     case OGLInternalTextureFormat::RGB:
     case OGLInternalTextureFormat::RGBA:
+    case OGLInternalTextureFormat::R8:
+    case OGLInternalTextureFormat::RG8:
+    case OGLInternalTextureFormat::RGB8:
+    case OGLInternalTextureFormat::RGBA8:
       return OGLTextureElementType::UNSIGNED_BYTE;
       break;
     case OGLInternalTextureFormat::R32F:
@@ -123,18 +127,22 @@ namespace eXl
       return OGLTextureFormat::DEPTH_STENCIL;
       break;
     case OGLInternalTextureFormat::RED:
+    case OGLInternalTextureFormat::R8:
     case OGLInternalTextureFormat::R32F:
       return OGLTextureFormat::RED;
       break;
     case OGLInternalTextureFormat::RG:
+    case OGLInternalTextureFormat::RG8:
     case OGLInternalTextureFormat::RG32F:
       return OGLTextureFormat::RG;
       break;
     case OGLInternalTextureFormat::RGB:
+    case OGLInternalTextureFormat::RGB8:
     case OGLInternalTextureFormat::RGB32F:
       return OGLTextureFormat::RGB;
       break;
     case OGLInternalTextureFormat::RGBA:
+    case OGLInternalTextureFormat::RGBA8:
     case OGLInternalTextureFormat::RGBA32F:
       return OGLTextureFormat::RGBA;
       break;

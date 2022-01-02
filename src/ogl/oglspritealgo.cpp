@@ -52,30 +52,27 @@ namespace eXl
 
   void OGLBaseAlgo::Init(OGLSemanticManager& iManager)
   {
-    
-    {
-      iManager.RegisterAttribute(GetPosAttrib(), OGLType::FLOAT32,3);
-      iManager.RegisterAttribute(GetTexCoordAttrib(), OGLType::FLOAT32,2);
+    iManager.RegisterAttribute(GetPosAttrib(), OGLType::FLOAT32,3);
+    iManager.RegisterAttribute(GetTexCoordAttrib(), OGLType::FLOAT32,2);
 
-      TupleType const* type = TupleType::DynamicCast(CameraMatrix::GetType());;
+    TupleType const* type = TupleType::DynamicCast(CameraMatrix::GetType());;
       
-      iManager.RegisterUniformData(GetCameraUniform(), type);
+    iManager.RegisterUniformData(GetCameraUniform(), type);
 
-      List<FieldDesc> fieldList;
-      fieldList.push_back(FieldDesc::MakeField(TypeFieldName("worldMatrix"),&dummyStruct::dummyMat));
-      type = TupleTypeStruct::Create(fieldList);
+    List<FieldDesc> fieldList;
+    fieldList.push_back(FieldDesc::MakeField(TypeFieldName("worldMatrix"),&dummyStruct::dummyMat));
+    type = TupleTypeStruct::Create(fieldList);
 
-      iManager.RegisterUniformData(GetWorldMatUniform() ,type);
+    iManager.RegisterUniformData(GetWorldMatUniform() ,type);
 
-      OGLSamplerDesc samplerDesc;
-      samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
-      samplerDesc.maxFilter = OGLMagFilter::LINEAR;
-      samplerDesc.minFilter = OGLMinFilter::LINEAR;
-      samplerDesc.wrapX = OGLWrapMode::REPEAT;
-      samplerDesc.wrapY = OGLWrapMode::REPEAT;
+    OGLSamplerDesc samplerDesc;
+    samplerDesc.samplerType = OGLTextureType::TEXTURE_2D;
+    samplerDesc.maxFilter = OGLMagFilter::LINEAR;
+    samplerDesc.minFilter = OGLMinFilter::LINEAR;
+    samplerDesc.wrapX = OGLWrapMode::REPEAT;
+    samplerDesc.wrapY = OGLWrapMode::REPEAT;
 
-      iManager.RegisterTexture(GetDiffuseTexture() ,samplerDesc);
-    }
+    iManager.RegisterTexture(GetDiffuseTexture() ,samplerDesc);
   }
 
   AttributeName OGLBaseAlgo::GetPosAttrib()

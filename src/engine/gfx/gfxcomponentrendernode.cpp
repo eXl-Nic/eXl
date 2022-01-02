@@ -31,6 +31,7 @@ namespace eXl
 
   void GfxComponentRenderNode::Push(OGLDisplayList& iList, float iDelta)
   {
+    iList.SetDepth(true, true);
     m_ToRender.Iterate([&](GfxComponent& comp, Components::Handle)
       {
         comp.Push(iList);

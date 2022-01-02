@@ -14,6 +14,63 @@ namespace eXl
 {
   InputStream::InputStream () = default;
 
+  size_t BinaryInputStream::Read(size_t iOffset, size_t iSize, void* oData)
+  {
+    if (iOffset < m_Size)
+    {
+      size_t readSize = iOffset + iSize > m_Size ? m_Size - iOffset : iSize;
+      memcpy(oData, (uint8_t*)m_Data + iOffset, readSize);
+      return readSize;
+    }
+    return 0;
+  }
+
+  size_t BinaryInputStream::GetSize() const
+  {
+    return m_Size;
+  }
+
+  FileInputStream::FileInputStream(Path const& iPath)
+  {
+    m_File = fopen(iPath.string().c_str(), "rb");
+    if (m_File != nullptr)
+    {
+      fseek((FILE*)m_File, 0, SEEK_END);
+      m_Size = ftell((FILE*)m_File);
+      fseek((FILE*)m_File, 0, SEEK_SET);
+      m_Offset = 0;
+    }
+  }
+
+  FileInputStream::~FileInputStream()
+  {
+    fclose((FILE*)m_File);
+  }
+
+  size_t FileInputStream::Read(size_t iOffset, size_t iSize, void* oData)
+  {
+    if (iOffset >= m_Size)
+    {
+      return 0;
+    }
+
+    if (m_Offset != iOffset)
+    {
+      fseek((FILE*)m_File, iOffset, SEEK_SET);
+      m_Offset = iOffset;
+    }
+
+    size_t readElems = fread(oData, 1, iSize, (FILE*)m_File);
+    m_Offset += readElems;
+
+    return readElems;
+  }
+
+  size_t FileInputStream::GetSize() const
+  {
+    return m_Size;
+  }
+
   InputStream_istream::InputStream_streambuf::InputStream_streambuf(InputStream* iStream, size_t iBuffSize, size_t iPutBack)
     : m_Stream(iStream)
     , m_PutBack(iPutBack)

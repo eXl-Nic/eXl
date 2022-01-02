@@ -25,6 +25,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   IMPLEMENT_RTTI(GfxSystem);
+  IMPLEMENT_RTTI(GfxRenderNode);
 
   class GfxSystem::Impl
   {

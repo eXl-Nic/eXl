@@ -31,8 +31,9 @@ namespace eXl
 
   using GfxRenderNodeHandle = ObjectTableHandle_Base;
 
-  class GfxRenderNode : public HeapObject
+  class GfxRenderNode : public RttiObject
   {
+    DECLARE_RTTI(GfxRenderNode, RttiObject);
   public:
     bool IsInitialized() const { return m_Sys != nullptr; }
   protected:

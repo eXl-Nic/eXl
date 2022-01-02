@@ -17,12 +17,14 @@ namespace eXl
   class Random;
   class Tileset;
   class LuaScriptBehaviour;
+  class GfxGUIRenderNode;
 
   class AbilityRoom : public Scenario
   {
   public:
     AbilityRoom();
 
+    void PreInit(World& iWorld) override;
     void Init(World& iWorld) override;
 
     void Step(World& iWorld, float iDelta);
@@ -59,6 +61,8 @@ namespace eXl
     Tileset const* m_CrateTileset;
     Tileset const* m_VaseTileset;
     Tileset const* m_DungeonTileset;
+
+    GfxGUIRenderNode* m_GUIRenderNode;
 
     struct PlateTrigger;
     PlateTrigger* m_PlateBehaviour;

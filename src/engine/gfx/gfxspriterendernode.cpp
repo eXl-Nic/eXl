@@ -186,23 +186,6 @@ namespace eXl
       data.m_SpriteInfo.imageSize = MathTools::ToFVec(imageSize);
     }
     m_DirtyComponents.clear();
-
-    /*
-    m_SpriteData.Iterate([this](GfxSpriteData& data, SpriteDataTable::Handle)
-    {
-      if (data.m_Billboard)
-      {
-        Matrix4f alignMatrix = m_Camera.m_ViewInverseMat;
-        MathTools::GetPosition(alignMatrix) = Vector3f::ZERO;
-
-        Matrix4f spriteRotation = data.m_Transform;
-        MathTools::GetPosition(spriteRotation) = Vector3f::ZERO;
-
-        data.m_BillboardTransform = alignMatrix * spriteRotation;
-        MathTools::GetPosition(data.m_BillboardTransform) = MathTools::GetPosition(data.m_Transform);
-      }
-    });
-    */
   }
 
   void GfxSpriteRenderNode::Push(OGLDisplayList& iList, float iDelta)

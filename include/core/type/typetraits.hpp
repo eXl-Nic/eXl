@@ -102,7 +102,7 @@ return TypeName(#Enum);                \
 #define IMPLEMENT_TAG_TYPE(type) IMPLEMENT_TAG_TYPE_EX(type, type)
 
 #define EXL_REFLECTION_MARKER eXl_NeedReflection
-#define EXL_REFLECTION_MARKER_STR EXL_TO_STR(EXL_REFLECTION_MARKER)
+#define EXL_REFLECTION_MARKER_STR eXl_TO_STR(EXL_REFLECTION_MARKER)
 
 #ifdef EXL_REFLANG_COMPILER
   #define EXL_REFLECT           \

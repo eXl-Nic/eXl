@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/corelibexp.hpp>
 #include <core/heapobject.hpp>
 #include <core/containers.hpp>
+#include <core/path.hpp>
 
 #include <istream>
 #include <streambuf>
@@ -23,13 +24,42 @@ namespace eXl
   {
   public:
     virtual size_t Read(size_t iOffset, size_t iSize, void* oData) = 0;
-    virtual size_t GetSize() = 0;
+    virtual size_t GetSize() const = 0;
     virtual ~InputStream() {}
   protected:
     InputStream();
   private:
     InputStream& operator=(const InputStream&);
     InputStream(const InputStream&);
+  };
+
+  class EXL_CORE_API BinaryInputStream : public InputStream
+  {
+  public:
+    BinaryInputStream(void const* iPtr, size_t iSize)
+      : m_Data(iPtr)
+      , m_Size(iSize)
+    {}
+    size_t Read(size_t iOffset, size_t iSize, void* oData) override;
+    size_t GetSize() const override;
+
+  protected:
+    void const* m_Data;
+    size_t m_Size;
+  };
+
+  class EXL_CORE_API FileInputStream : public InputStream
+  {
+  public:
+    FileInputStream(Path const& iPath);
+    ~FileInputStream();
+    size_t Read(size_t iOffset, size_t iSize, void* oData) override;
+    size_t GetSize() const override;
+
+  protected:
+    void* m_File = nullptr;
+    size_t m_Size = 0;
+    size_t m_Offset = 0;
   };
 
   class InputStream_istream : public std::istream

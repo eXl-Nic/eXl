@@ -17,7 +17,6 @@ namespace eXl
   class Rtti;
   class Type;
   class TupleType;
-  class ResourceContainer;
 
   class EXL_CORE_API ClassType : public Type
   {

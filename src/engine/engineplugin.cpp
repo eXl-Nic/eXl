@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/map/mcmcmodelrsc.hpp>
 #include <engine/common/project.hpp>
 #include <engine/game/archetype.hpp>
-#include <engine/common/project.hpp>
+#include <engine/gui/fontresource.hpp>
 
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
@@ -38,8 +38,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #ifdef EXL_LUA
 #include <engine/script/luascriptsystem.hpp>
 #endif
-
-//#include <SWI-Prolog.h>
 
 namespace eXl
 {
@@ -230,6 +228,7 @@ namespace eXl
       Archetype::Init();
       MapResource::Init();
       MCMCModelRsc::Init();
+      FontResource::Init();
       //CharacterAnimation::Init();
 #ifdef EXL_LUA
       LuaScriptBehaviour::Init();

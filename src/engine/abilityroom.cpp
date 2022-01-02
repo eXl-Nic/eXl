@@ -31,6 +31,9 @@
 #include <engine/game/throwability.hpp>
 #include <engine/game/swordability.hpp>
 
+#include <engine/gui/fontresource.hpp>
+#include <engine/gfx/gfxguirendernode.hpp>
+
 #include <engine/script/luascriptsystem.hpp>
 
 #include <core/corelib.hpp>
@@ -81,70 +84,6 @@ namespace eXl
     AbilityRoom& m_Scenario;
   };
   
-  //AbilityName contactDamageAbilityName("ContactDamage");
-  //EffectName contactDamageEffectName("ContactDamage");
-  ////PropertyName healthPropertyName("Health");
-  //GameTagName invulnerableTagName("Invulnerable");
-  //GameTagName fireballTag("Fireball");
-
-  //class ContactDamageAbility : public AbilityDesc
-  //{
-  //  DECLARE_RTTI(ContactDamageAbility, AbilityDesc);
-  //public:
-  //  ContactDamageAbility()
-  //    : AbilityDesc(contactDamageAbilityName)
-  //  {}
-  //  
-  //  AbilityUseState Use(AbilityStateHandle, ObjectHandle iTarget) override;
-  //
-  //  AbilityState m_StateBuffer;
-  //};
-  //IMPLEMENT_RTTI(ContactDamageAbility);
-  //
-  //struct ContactDamageEffectState : public EffectState
-  //{
-  //  float damageAmount;
-  //};
-  //
-  //class ContactDamageEffect : public EffectDescT<ContactDamageEffectState>
-  //{
-  //  DECLARE_RTTI(ContactDamageEffect, EffectDesc)
-  //public:
-  //  ContactDamageEffect()
-  //    : EffectDescT(contactDamageEffectName)
-  //  {}
-  //  virtual void Apply(EffectHandle) override;
-  //};
-  //
-  //IMPLEMENT_RTTI(ContactDamageEffect);
-  //
-  //AbilityUseState ContactDamageAbility::Use(AbilityStateHandle iAbility, ObjectHandle iTarget)
-  //{
-  //  m_System->CreateEffect<ContactDamageEffect>(m_StateBuffer.m_Target, contactDamageEffectName, [](ObjectHandle iTarget, ContactDamageEffect& iEffect)
-  //  {
-  //    EffectHandle handle = iEffect.Create(iTarget);
-  //    auto& state = iEffect.Get(handle);
-  //    state.m_Target = iTarget;
-  //    state.damageAmount = 10;
-  //
-  //    return handle;
-  //  });
-  //  return AbilityUseState::Using;
-  //}
-  //
-  //void ContactDamageEffect::Apply(EffectHandle iToApply)
-  //{
-  //  ContactDamageEffectState& state = Get(iToApply);
-  //  if (!m_System->HasTag(state.m_Target, invulnerableTagName))
-  //  {
-  //    //boost::optional<float> health = m_System->GetProperty(state.m_Target, healthPropertyName);
-  //    //if (health)
-  //    //{
-  //    //  m_System->SetProperty(state.m_Target, healthPropertyName, *health - state.damageAmount);
-  //    //}
-  //  }
-  //  m_System->RemoveEffect(state.m_Target, m_Name, iToApply);
-  //}
   
   AbilityRoom::AbilityRoom()
   {
@@ -366,6 +305,14 @@ namespace eXl
     UnorderedMap<ObjectHandle, TriggerEntry> m_Entries;
   };
 
+  void AbilityRoom::PreInit(World& world)
+  {
+    auto& gfxSys = *world.GetSystem<GfxSystem>();
+
+    m_GUIRenderNode = eXl_NEW GfxGUIRenderNode;
+    gfxSys.AddRenderNode(UniquePtr<GfxRenderNode>(m_GUIRenderNode));
+  }
+
   void AbilityRoom::Init(World& world)
   {
     Engine_Application& appl = Engine_Application::GetAppl();
@@ -374,6 +321,12 @@ namespace eXl
       .AddOpenPanelCommand("Connect", [this, &world] { return new NetworkPanel(world, *this); })
       .EndMenu();
 
+    ResourceHandle<FontResource> fontHandle;
+    {
+      Resource::UUID id({ 120981379, 340138741, 394802740, 782939172 });
+      fontHandle.SetUUID(id);
+      fontHandle.Load();
+    }
 
     auto& transforms = *world.GetSystem<Transforms>();
     auto& gfxSys = *world.GetSystem<GfxSystem>();
@@ -394,7 +347,6 @@ namespace eXl
     auto triggerCb = std::make_unique<PlateTrigger>(*this, world);
     m_PlateBehaviour = triggerCb.get();
     m_PlateCallback = phSys.AddTriggerCallback(std::move(triggerCb));
-
 
     unsigned int const spriteSize = 16;
 
@@ -519,7 +471,17 @@ namespace eXl
       m_RotatingBase = m_RotatingBase * rot10;
     });
 
-    CreateCrate(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * - 4.0));
+    ObjectHandle crate = CreateCrate(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * - 4.0));
+    ObjectHandle textRender = world.CreateObject();
+
+    m_GUIRenderNode->AddText(textRender, "Test Text, oui je je je.\nLa La La o O Oo o kjjj\n IIIIEEEZZZAAA", 32, fontHandle.Get());
+
+    Matrix4f textTrans;
+    textTrans.MakeIdentity();
+    textTrans.m_Data[0] = textTrans.m_Data[5] = textTrans.m_Data[10] = 1.0 / 32;
+    transforms.AddTransform(textRender, &textTrans);
+    transforms.Attach(textRender, crate);
+
     CreateVase(world, MathTools::To3DVec(m_RoomCenter + Vector2f::UNIT_Y * -8.0));
 
     StartLocal(world);

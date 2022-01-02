@@ -233,8 +233,8 @@ namespace eXl
     }
     DataAllocatorBase* alloc = m_Allocators[iter->second].GetAlloc();
     uint32_t slot = alloc->GetSlot(iObject);
-    ObjectTableHandle_Base dataHandle = alloc->GetDataFromSlot(slot);
-    if (slot == -1 || !dataHandle.IsAssigned())
+    ObjectTableHandle_Base dataHandle;
+    if (slot == -1 || !(dataHandle = alloc->GetDataFromSlot(slot)).IsAssigned())
     {
       return DynObject();
     }
@@ -254,8 +254,8 @@ namespace eXl
 
     DataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
     uint32_t slot = alloc->GetSlot(iObject);
-    ObjectTableHandle_Base dataHandle = alloc->GetDataFromSlot(slot);
-    if (slot == -1 || !dataHandle.IsAssigned())
+    ObjectTableHandle_Base dataHandle;
+    if (slot == -1 || !(dataHandle = alloc->GetDataFromSlot(slot)).IsAssigned())
     {
       return ConstDynObject();
     }

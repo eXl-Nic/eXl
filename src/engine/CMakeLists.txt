@@ -14,15 +14,14 @@ SOURCE_GROUP("Pathfinding\\Src" REGULAR_EXPRESSION "pathfinding/.*cpp")
 SOURCE_GROUP("Pathfinding\\Header" REGULAR_EXPRESSION "pathfinding/.*(hpp|inl)")
 SOURCE_GROUP("Network\\Src" REGULAR_EXPRESSION "net/.*cpp")
 SOURCE_GROUP("Network\\Header" REGULAR_EXPRESSION "net/.*(hpp|inl)")
+SOURCE_GROUP("GUI\\Src" REGULAR_EXPRESSION "gui/.*cpp")
+SOURCE_GROUP("GUI\\Header" REGULAR_EXPRESSION "gui/.*(hpp|inl)")
 
 FILE(GLOB_RECURSE EXL_ENGINE_HEADER_FILES LIST_DIRECTORIES false ${INCLUDE_DIR}/*.hpp ${INCLUDE_DIR}/*.inl)
 
 if(NOT ${BUILD_EXL_SHARED})
 add_definitions(-DIMGUI_API=)
 endif()
-
-include_directories(${BULLET_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${LIBB64_INCLUDE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
 
 link_directories(${OGL_LIBRARY_DIR} ${OPENCV_LIBRARY_DIR})
 
@@ -66,6 +65,7 @@ gfx/gfxcomponent.cpp
 gfx/gfxdebugdrawer.cpp
 gfx/gfxcomponentrendernode.cpp
 gfx/gfxspriterendernode.cpp
+gfx/gfxguirendernode.cpp
 )
 
 endif()
@@ -125,15 +125,30 @@ map/mcmcmodelrsc.cpp
 net/spatial/spatialos_world.hpp
 net/spatial/spatialos_world.cpp
 
+gui/fontresource.cpp
+
 engineplugin.cpp
 
 ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.hpp
 )
 
+target_include_directories(eXl_Engine PRIVATE 
+  ${BULLET_INCLUDE_DIR} 
+  ${IMGUI_INCLUDE_DIR} 
+  ${LIBB64_INCLUDE_DIR} 
+  ${FREETYPE_INCLUDE_DIR}
+  ${UTF8_INCLUDE_DIR}
+  ${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
+
+target_include_directories(eXl_Engine PUBLIC  
+  ${IMGUI_INCLUDE_DIR} 
+  )
+
 set(HEADERS_TO_PARSE "${GAME_HEADERS}" 
 ${INCLUDE_DIR}/map/tilinggroup.hpp
 ${INCLUDE_DIR}/gfx/gfxcomponent.hpp
+${INCLUDE_DIR}/gfx/tileset.hpp
 ${INCLUDE_DIR}/map/map.hpp
 ${INCLUDE_DIR}/common/transforms.hpp
 ${INCLUDE_DIR}/physics/physicsdef.hpp)
@@ -153,6 +168,7 @@ set( PREREQS_PRIV
   BulletCollision
   BulletDynamics
   libb64
+  freetype
 )
 
 if(${WIN32})
@@ -175,7 +191,7 @@ set( MAIN_SOURCES
 
 add_library(eXl_Main ${LIBRARY_TYPE} ${MAIN_SOURCES})
 
-target_include_directories(eXl_Main PRIVATE ${IMGUI_INCLUDE_DIR} ${GLEW_INCLUDE_DIR})
+target_include_directories(eXl_Main PRIVATE ${SDL_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${GLEW_INCLUDE_DIR})
 target_link_directories(eXl_Main PRIVATE ${GLEW_LIBRARY_DIR})
 SETUP_EXL_LIB(eXl_Main "MAIN" DEPENDENCIES eXl_Engine)
 

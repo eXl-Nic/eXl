@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <string>
 #include <vector>
 
-#define PLUGIN_NAME_STR EXL_TO_STR(PLUGIN_NAME)
+#define PLUGIN_NAME_STR eXl_TO_STR(PLUGIN_NAME)
 
 namespace eXl
 {
@@ -61,7 +61,7 @@ extern "C"                           \
 
 #include <map>
 
-#define _GetLocalPlugin(name) EXL_CONCAT(name,_GetLocalPlugin)
+#define _GetLocalPlugin(name) eXl_CONCAT(name,_GetLocalPlugin)
 
 namespace eXl
 {

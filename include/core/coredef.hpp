@@ -52,10 +52,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/corenew.hpp>
 
-#define EXL_TO_STR_(s) #s
-#define EXL_TO_STR(s) EXL_TO_STR_(s)
-#define EXL_CONCAT(s,r) s##r
-#define EXL_FORMAT(s, ...) (::eXl::StringUtil::Format(s, __VA_ARGS__).c_str())
+#define eXl_TO_STR_(s) #s
+#define eXl_TO_STR(s) eXl_TO_STR_(s)
+#define eXl_CONCAT(s,r) s##r
+#define eXl_FORMAT(s, ...) (::eXl::StringUtil::Format(s, __VA_ARGS__).c_str())
 
 namespace eXl
 {
