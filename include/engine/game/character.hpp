@@ -50,6 +50,7 @@ namespace eXl
     };
 
     static ObjectHandle Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc);
+    void Register(World& iWorld) override;
 
 		void AddCharacter(ObjectHandle iObj, Desc const& iDesc);
     void DeleteComponent(ObjectHandle iObj) override;
@@ -72,21 +73,19 @@ namespace eXl
     struct Entry
     {
       Desc m_Desc;
-      ObjectHandle m_Handle;
       uint32_t m_CurState = 0;
       KinematicEntryHandle m_KinematicEntry;
       CharacterAnimation* m_Animation;
     };
 
-    ObjectTable<Entry> m_Entries;
-    UnorderedMap<ObjectHandle, ObjectTable<Entry>::Handle> m_Characters;
+    Optional<DenseGameDataStorage<Entry>> m_Characters;
   public:
     template <typename Functor>
     void Iterate(Functor&& iFn)
     {
-      m_Entries.Iterate([&iFn](Entry const& iEntry, ObjectTable<Entry>::Handle&)
+      m_Characters->Iterate([&iFn](ObjectHandle iObject, Entry const& iEntry)
         {
-          iFn(iEntry.m_Handle, iEntry.m_Desc);
+          iFn(iObject, iEntry.m_Desc);
         });
     }
 	};

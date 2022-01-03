@@ -79,6 +79,13 @@ namespace eXl
     return newObject;
   }
 
+  void CharacterSystem::Register(World& iWorld)
+  {
+    ComponentManager::Register(iWorld);
+    m_Characters.emplace(iWorld);
+  }
+
+
   uint32_t CharacterSystem::GetStateFromDir(Vector3f const& iDir, bool iMoving)
   {
     float dotProd[] =
@@ -101,7 +108,7 @@ namespace eXl
     Transforms* transforms = GetWorld().GetSystem<Transforms>();
     NavigatorSystem* navSys = GetWorld().GetSystem<NavigatorSystem>();
     GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
-    m_Entries.Iterate([this, transforms, navSys, velocities](Entry& entry, ObjectTable<Entry>::Handle)
+    m_Characters->Iterate([this, transforms, navSys, velocities](ObjectHandle iObject, Entry& entry)
     {
       Vector3f linVel;
       Vector3f dir;
@@ -124,11 +131,11 @@ namespace eXl
         moving = kEntry.m_Speed > Mathf::ZERO_TOLERANCE;
         dir = kEntry.m_Dir;
         linVel = dir * kEntry.m_Speed;
-        velocities->GetOrCreate(entry.m_Handle) = linVel;
+        velocities->GetOrCreate(iObject) = linVel;
       }
       else
       {
-        linVel = velocities->GetOrCreate(entry.m_Handle);
+        linVel = velocities->GetOrCreate(iObject);
         dir = linVel;
         float vel = linVel.Normalize();
         moving = vel > Mathf::ZERO_TOLERANCE;
@@ -138,13 +145,11 @@ namespace eXl
       {
         uint32_t curState = GetStateFromDir(dir, moving);
 
-        //eXl_ASSERT(curState < sizeof(s_StateAnimTable) / sizeof(TileName));
-
         if (entry.m_CurState != curState)
         {
           if (entry.m_Animation)
           {
-            entry.m_Animation->OnWalkingStateChange(entry.m_Handle, curState);
+            entry.m_Animation->OnWalkingStateChange(iObject, curState);
           }
           entry.m_CurState = curState;
         }
@@ -163,13 +168,11 @@ namespace eXl
 	{
 		if (GetWorld().IsObjectValid(iObj) )
 		{
-			if (m_Characters.count(iObj) == 0)
+			if (m_Characters->Get(iObj) == nullptr)
 			{
-        auto entryHandle = m_Entries.Alloc();
-        Entry& entry = m_Entries.Get(entryHandle);
+        Entry& entry = m_Characters->GetOrCreate(iObj);
         entry.m_CurState = uint32_t(CharStateFlags::Idle);
         entry.m_Desc = iDesc;
-        entry.m_Handle = iObj;
         entry.m_Animation = iDesc.animation;
         if (entry.m_Animation)
         {
@@ -205,7 +208,6 @@ namespace eXl
             entry.m_KinematicEntry = CreateKinematic(*phComp, &kEntry);
           }
         }
-        m_Characters.emplace(std::make_pair(iObj, entryHandle));
         ComponentManager::CreateComponent(iObj);
 			}
 		}
@@ -213,53 +215,46 @@ namespace eXl
 
   void CharacterSystem::DeleteComponent(ObjectHandle iObj)
   {
-    auto iter = m_Characters.find(iObj);
-    if (iter != m_Characters.end())
+    if (Entry*entry = m_Characters->Get(iObj))
     {
-      Entry& entry = m_Entries.Get(iter->second);
-      if (entry.m_KinematicEntry.IsAssigned())
+      if (entry->m_KinematicEntry.IsAssigned())
       {
-        RemoveKinematic(entry.m_KinematicEntry);
+        RemoveKinematic(entry->m_KinematicEntry);
       }
-      if (entry.m_Animation)
+      if (entry->m_Animation)
       {
-        entry.m_Animation->RemoveCharacter(iObj);
+        entry->m_Animation->RemoveCharacter(iObj);
       }
-      m_Entries.Release(iter->second);
-      m_Characters.erase(iter);
+      m_Characters->Erase(iObj);
       ComponentManager::DeleteComponent(iObj);
     }
   }
 
 	void CharacterSystem::SetSpeed(ObjectHandle iObj, float iSpeed)
 	{
-		auto iter = m_Characters.find(iObj);
-		if (iter != m_Characters.end())
-		{
-      Entry& entry = m_Entries.Get(iter->second);
-      if (entry.m_KinematicEntry.IsAssigned())
+    if (Entry*entry = m_Characters->Get(iObj))
+    {
+      if (entry->m_KinematicEntry.IsAssigned())
       {
-        KinematicEntry& kEntry = GetKinematic(entry.m_KinematicEntry);
-        kEntry.m_Speed = Mathf::Clamp(iSpeed, 0.0, entry.m_Desc.maxSpeed);
+        KinematicEntry& kEntry = GetKinematic(entry->m_KinematicEntry);
+        kEntry.m_Speed = Mathf::Clamp(iSpeed, 0.0, entry->m_Desc.maxSpeed);
       }
 		}
 	}
 
   void CharacterSystem::SetState(ObjectHandle iObj, uint32_t iState)
   {
-    auto iter = m_Characters.find(iObj);
-    if (iter != m_Characters.end())
+    if (Entry*entry = m_Characters->Get(iObj))
     {
-      Entry& entry = m_Entries.Get(iter->second);
-      if (entry.m_Desc.controlKind == ControlKind::Remote)
+      if (entry->m_Desc.controlKind == ControlKind::Remote)
       {
-        if (entry.m_CurState != iState)
+        if (entry->m_CurState != iState)
         {
-          if (entry.m_Animation)
+          if (entry->m_Animation)
           {
-            entry.m_Animation->OnWalkingStateChange(entry.m_Handle, entry.m_CurState);
+            entry->m_Animation->OnWalkingStateChange(iObj, entry->m_CurState);
           }
-          entry.m_CurState = iState;
+          entry->m_CurState = iState;
         }
       }
     }
@@ -267,11 +262,9 @@ namespace eXl
 
   uint32_t CharacterSystem::GetCurrentState(ObjectHandle iObj)
   {
-    auto iter = m_Characters.find(iObj);
-    if (iter != m_Characters.end())
+    if (Entry*entry = m_Characters->Get(iObj))
     {
-      Entry& entry = m_Entries.Get(iter->second);
-      return entry.m_CurState;
+      return entry->m_CurState;
     }
     return 0;
   }
@@ -279,11 +272,9 @@ namespace eXl
   Vector3f CharacterSystem::GetCurrentFacingDirection(ObjectHandle iObj)
   {
     Vector3f dir;
-    auto iter = m_Characters.find(iObj);
-    if (iter != m_Characters.end())
+    if (Entry*entry = m_Characters->Get(iObj))
     {
-      Entry& entry = m_Entries.Get(iter->second);
-      switch (entry.m_CurState & (uint32_t)CharacterSystem::StateFlags::DirMask)
+      switch (entry->m_CurState & (uint32_t)CharacterSystem::StateFlags::DirMask)
       {
       case (uint32_t)CharacterSystem::StateFlags::DirLeft:
         dir = Vector3f::UNIT_X * -1;
@@ -305,13 +296,11 @@ namespace eXl
 
 	void CharacterSystem::SetCurDir(ObjectHandle iObj, Vector3f const& iDir)
 	{
-		auto iter = m_Characters.find(iObj);
-		if (iter != m_Characters.end())
-		{
-      Entry& entry = m_Entries.Get(iter->second);
-      if (entry.m_KinematicEntry.IsAssigned())
+    if (Entry*entry = m_Characters->Get(iObj))
+    {
+      if (entry->m_KinematicEntry.IsAssigned())
       {
-        KinematicEntry& kEntry = GetKinematic(entry.m_KinematicEntry);
+        KinematicEntry& kEntry = GetKinematic(entry->m_KinematicEntry);
         kEntry.m_Dir = iDir;
         kEntry.m_Dir.Normalize();
       }
@@ -320,11 +309,9 @@ namespace eXl
 
   bool CharacterSystem::GrabObject(ObjectHandle iGrabber, ObjectHandle iGrabbed)
   {
-    auto iter = m_Characters.find(iGrabber);
-    if (iter != m_Characters.end())
+    if (Entry*entry = m_Characters->Get(iGrabber))
     {
-      Entry& entry = m_Entries.Get(iter->second);
-      if (entry.m_KinematicEntry.IsAssigned())
+      if (entry->m_KinematicEntry.IsAssigned())
       {
         auto& phSys = *GetWorld().GetSystem<PhysicsSystem>();
         
@@ -335,7 +322,7 @@ namespace eXl
           return false;
         }
         
-        return Attach(entry.m_KinematicEntry, *grabbedPh);
+        return Attach(entry->m_KinematicEntry, *grabbedPh);
       }
     }
     return false;
@@ -343,16 +330,14 @@ namespace eXl
 
   bool CharacterSystem::ReleaseObject(ObjectHandle iGrabber, ObjectHandle iGrabbed)
   {
-    auto iter = m_Characters.find(iGrabber);
-    if (iter != m_Characters.end())
+    if (Entry*entry = m_Characters->Get(iGrabber))
     {
-      Entry& entry = m_Entries.Get(iter->second);
-      if (entry.m_KinematicEntry.IsAssigned())
+      if (entry->m_KinematicEntry.IsAssigned())
       {
         auto& phSys = *GetWorld().GetSystem<PhysicsSystem>();
         
         PhysicComponent_Impl* grabbedComp = phSys.GetCompImpl(iGrabbed);
-        Detach(entry.m_KinematicEntry, *grabbedComp);
+        Detach(entry->m_KinematicEntry, *grabbedComp);
 
         return true;
       }
