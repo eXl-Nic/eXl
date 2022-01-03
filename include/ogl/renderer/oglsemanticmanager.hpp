@@ -47,21 +47,21 @@ namespace eXl
     uint32_t RegisterUniformData(UniformName iName, TupleType const* iDataType);
     uint32_t RegisterTexture(TextureName iTexName, OGLSamplerDesc const& iSampler);
 
-    uint32_t OGLSemanticManager::GetSlotForName(AttributeName iName) const
+    uint32_t GetSlotForName(AttributeName iName) const
     {
       auto iter = m_AttributeMap.find(iName);
       eXl_ASSERT_MSG(iter != m_AttributeMap.end(), eXl_FORMAT("Unknown Attribute %s", iName.get().c_str()));
       return iter->second;
     }
 
-    uint32_t OGLSemanticManager::GetSlotForName(UniformName iName) const
+    uint32_t GetSlotForName(UniformName iName) const
     {
       auto iter = m_UniformMap.find(iName);
       eXl_ASSERT_MSG(iter != m_UniformMap.end(), eXl_FORMAT("Unknown Uniform %s", iName.get().c_str()));
       return iter->second;;
     }
 
-    uint32_t OGLSemanticManager::GetSlotForName(TextureName iName) const
+    uint32_t GetSlotForName(TextureName iName) const
     {
       auto iter = m_TextureMap.find(iName);
       eXl_ASSERT_MSG(iter != m_TextureMap.end(), eXl_FORMAT("Unknown Texture %s", iName.get().c_str()));

@@ -1,4 +1,4 @@
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/engine)
+set(INCLUDE_DIR ${EXL_ROOT}/include/engine)
 
 SOURCE_GROUP("Common\\Src" REGULAR_EXPRESSION ".*cpp")
 SOURCE_GROUP("Common\\Header" REGULAR_EXPRESSION ".*(hpp|inl)")
@@ -139,7 +139,7 @@ target_include_directories(eXl_Engine PRIVATE
   ${LIBB64_INCLUDE_DIR} 
   ${FREETYPE_INCLUDE_DIR}
   ${UTF8_INCLUDE_DIR}
-  ${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
+  ${EXL_ROOT}/modules/cxxopts/include)
 
 target_include_directories(eXl_Engine PUBLIC  
   ${IMGUI_INCLUDE_DIR} 
@@ -186,7 +186,7 @@ set( MAIN_SOURCES
 	console.cpp
 	debugviews.cpp
 	sdlkeytranslator.cpp
-    ${CMAKE_SOURCE_DIR}/modules/imgui/backends/imgui_impl_sdl.cpp
+    ${EXL_ROOT}/modules/imgui/backends/imgui_impl_sdl.cpp
 )
 
 add_library(eXl_Main ${LIBRARY_TYPE} ${MAIN_SOURCES})

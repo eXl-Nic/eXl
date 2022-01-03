@@ -3,7 +3,7 @@
 # http://academic.cleardefinition.com/
 # Iowa State University HCI Graduate Program/VRAC
 
-set(LUABIND_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/core/lua/)
+set(LUABIND_INCLUDE_DIR ${EXL_ROOT}/include/core/lua/)
 
 set(LUABIND_SRCS
 	lua/luabind/class.cpp

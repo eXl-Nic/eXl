@@ -8,6 +8,8 @@ add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
 
 set(ANDROID_PLATFORM 19)
 
+set(EXL_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+
 set(CMAKE_DEBUG_POSTFIX "_d" CACHE STRING "")
 set(CMAKE_RELWITHDEBINFO_POSTFIX "_dev" CACHE STRING "")
 
@@ -19,6 +21,10 @@ set(ARMADILLO_ROOT "" CACHE PATH "Path to armadillo root directory")
 set(Clang_DIR "" CACHE PATH "Path to Clang")
 set(LLVM_DIR "" CACHE PATH "Path to LLVM")
 
+set(Clang_ROOT "" CACHE PATH "Path to Clang")
+set(LLVM_ROOT "" CACHE PATH "Path to LLVM")
+
+
 set(BUILD_EXL_SHARED ON CACHE BOOL "Build library as dlls")
 set(BUILD_EXL_OGL ON CACHE BOOL "Build the opengl renderer")
 set(BUILD_EXL_ENGINE ON CACHE BOOL "Build the eXl engine")
@@ -28,21 +34,21 @@ set(BUILD_EXL_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 
 set(BUILD_EXL_TESTS OFF CACHE BOOL "Build eXl tests")
 
-set(BULLET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/modules/bullet/src")
+set(BULLET_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/modules/bullet/src")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(SDL_ROOT "${CMAKE_SOURCE_DIR}/modules/sdl")
-set(IMGUI_ROOT "${CMAKE_SOURCE_DIR}/modules/imgui")
-set(XXHASH_ROOT "${CMAKE_SOURCE_DIR}/modules/xxHash")
-set(LIBB64_ROOT "${CMAKE_SOURCE_DIR}/contrib/libb64-1.2.1")
-set(VOROPP_ROOT "${CMAKE_SOURCE_DIR}/contrib/voro++-0.4.6")
-set(LBFGS_ROOT "${CMAKE_SOURCE_DIR}/modules/lbfgs")
-set(LIBSVM_ROOT "${CMAKE_SOURCE_DIR}/modules/libsvm")
-set(FREETYPE_ROOT "${CMAKE_SOURCE_DIR}/modules/freetype")
-set(LAYOUT_ROOT "${CMAKE_SOURCE_DIR}/modules/layout")
-set(GTEST_ROOT "${CMAKE_SOURCE_DIR}/modules/gtest")
-set(UTF8_ROOT "${CMAKE_SOURCE_DIR}/modules/utf8")
+set(SDL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/sdl")
+set(IMGUI_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/imgui")
+set(XXHASH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/xxHash")
+set(LIBB64_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/contrib/libb64-1.2.1")
+set(VOROPP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/contrib/voro++-0.4.6")
+set(LBFGS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/lbfgs")
+set(LIBSVM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/libsvm")
+set(FREETYPE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/freetype")
+set(LAYOUT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/layout")
+set(GTEST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/gtest")
+set(UTF8_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/modules/utf8")
 
 if(${ANDROID})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fno-rtti")
@@ -136,15 +142,18 @@ endif()
 set(MAIN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE} ${CMAKE_SOURCE_DIR}/include ${Boost_INCLUDE_DIR})
+set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/include ${Boost_INCLUDE_DIR})
 
 if(${BUILD_EXL_WITH_LUA})
   set(LUABIND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua/luabind)
   set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_LUA)
-  set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DLUABIND_DYNAMIC_LINK )
+  
+if(${BUILD_EXL_SHARED})
+	set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DLUABIND_DYNAMIC_LINK)
+endif()
 
-  set (LUA_ROOT ${CMAKE_SOURCE_DIR}/modules/lua)
-  set (LUA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/modules/lua)
+  set (LUA_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/modules/lua)
+  set (LUA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules/lua)
   set (LUA_LIBRARIES lua)
 
   set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE}
@@ -210,16 +219,16 @@ set_target_properties(Voro++ PROPERTIES FOLDER Dependencies)
 add_subdirectory(${LBFGS_ROOT} ${OUT_DIR}/modules/lbfgs)
 set_target_properties(lbfgs_lib PROPERTIES FOLDER Dependencies)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/libsvm ${OUT_DIR}/modules/libsvm)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/libsvm ${OUT_DIR}/modules/libsvm)
 
 set(XXHASH_BUILD_XXHSUM OFF CACHE BOOL "Build the xxhsum binary" FORCE)
 add_subdirectory(${XXHASH_ROOT}/cmake_unofficial ${OUT_DIR}/modules/xxhash)
 set_target_properties(xxhash PROPERTIES FOLDER Dependencies)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/lua ${OUT_DIR}/modules/lua)
-add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/imgui ${OUT_DIR}/modules/imgui)
-add_subdirectory(${CMAKE_SOURCE_DIR}/contrib/bullet ${OUT_DIR}/contrib/bullet)
-add_subdirectory(${CMAKE_SOURCE_DIR}/modules/freetype ${OUT_DIR}/modules/freetype)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/lua ${OUT_DIR}/modules/lua)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/imgui ${OUT_DIR}/modules/imgui)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/contrib/bullet ${OUT_DIR}/contrib/bullet)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modules/freetype ${OUT_DIR}/modules/freetype)
 set_target_properties(freetype PROPERTIES FOLDER Dependencies)
 
 if(${WIN32})

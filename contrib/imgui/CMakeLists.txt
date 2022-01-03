@@ -1,6 +1,6 @@
 project(libImGui)
 
-SET(IMGUI_DIR ${CMAKE_SOURCE_DIR}/modules/imgui)
+SET(IMGUI_DIR ${EXL_ROOT}/modules/imgui)
 
 include_directories(${IMGUI_DIR})
 

@@ -1,21 +1,10 @@
+SET(CLANG_INCLUDE_DIRS ${Clang_ROOT}/include)
+SET(CLANG_LIBRARY_DIRS ${Clang_ROOT}/lib)
+SET(CLANG_BINARY_DIR ${Clang_ROOT}/bin)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	set(LLVM_CONFIG true)
-endif()
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-find_package(Clang REQUIRED)
 include_directories(${CLANG_INCLUDE_DIRS})
-include_directories(${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
-
-set_target_properties(acc_gen PROPERTIES FOLDER Dependencies/Clang)
-set_target_properties(clang-tablegen-targets PROPERTIES FOLDER Dependencies/Clang)
-set_target_properties(intrinsics_gen PROPERTIES FOLDER Dependencies/Clang)
-set_target_properties(omp_gen PROPERTIES FOLDER Dependencies/Clang)
+include_directories(${EXL_ROOT}/modules/cxxopts/include)
+link_directories(${CLANG_LIBRARY_DIRS})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -37,3 +26,7 @@ add_executable(
 
 ADD_EXL_COMMON_DEFS(eXl_reflang)
 target_link_libraries(eXl_reflang eXl_Core libclang)
+add_custom_command(
+      TARGET eXl_reflang
+	  POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CLANG_BINARY_DIR}/libclang.dll $<TARGET_FILE_DIR:eXl_reflang>)

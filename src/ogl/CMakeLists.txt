@@ -1,6 +1,6 @@
 #project(eXl_OGL)
 
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/ogl)
+set(INCLUDE_DIR ${EXL_ROOT}/include/ogl)
 
 FILE(GLOB_RECURSE EXL_OGL_HEADER_FILES LIST_DIRECTORIES false ${INCLUDE_DIR}/*.hpp ${INCLUDE_DIR}/*.inl)
 
@@ -12,7 +12,6 @@ ${EXL_OGL_HEADER_FILES}
 oglspritealgo.cpp
 oglutils.cpp
 oglplugin.cpp
-ogltexturecache.cpp
 
 renderer/oglrendercommand.cpp
 renderer/oglcompiledprogram.cpp
