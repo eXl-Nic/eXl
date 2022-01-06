@@ -1,4 +1,4 @@
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/core)
+set(INCLUDE_DIR ${EXL_ROOT}/include/core)
 
 SOURCE_GROUP("Base\\Src" REGULAR_EXPRESSION "base/.*cpp")
 SOURCE_GROUP("Kernel\\Header" REGULAR_EXPRESSION "kernel/.*(hpp|inl)")
@@ -79,7 +79,7 @@ set (SOURCES ${SOURCES}
   type/tagtype.cpp
 )
 
-if(${BUILD_EXL_WITH_LUA})
+if(${EXL_BUILD_WITH_LUA})
 
 include(lua/luabind/luabind.cmake)
 
@@ -109,7 +109,7 @@ set(SOURCES ${SOURCES}
 
 add_library(eXl_Core ${LIBRARY_TYPE} ${SOURCES})
 
-if(${BUILD_EXL_WITH_LUA})
+if(${EXL_BUILD_WITH_LUA})
 target_compile_definitions(eXl_Core PRIVATE -DLUABIND_BUILDING)
 SET(CORE_LIBS ${CORE_LIBS} ${LUABIND_LIBRARIES} ${LUA_LIBRARIES})
 endif()
@@ -137,7 +137,7 @@ if(${UNIX})
 endif()
 
 target_include_directories(eXl_Core PRIVATE ${XXHASH_INCLUDE_DIR})
-target_include_directories(eXl_Core PRIVATE ${CMAKE_SOURCE_DIR}/modules/cxxopts/include)
+target_include_directories(eXl_Core PRIVATE ${EXL_ROOT}/modules/cxxopts/include)
 target_link_libraries(eXl_Core LINK_PUBLIC ${CORE_LIBS})
 target_link_libraries(eXl_Core LINK_PRIVATE ${CORE_LIBS_PRIVATE})
 

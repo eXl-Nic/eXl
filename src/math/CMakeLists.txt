@@ -1,6 +1,6 @@
 #project(eXl_Math)
 
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/math)
+set(INCLUDE_DIR ${EXL_ROOT}/include/math)
 
 FILE(GLOB_RECURSE EXL_MATH_HEADER_FILES LIST_DIRECTORIES false ${INCLUDE_DIR}/*.hpp ${INCLUDE_DIR}/*.inl)
 

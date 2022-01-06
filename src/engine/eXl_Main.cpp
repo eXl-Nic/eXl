@@ -134,7 +134,7 @@ public:
     return numRead * iSize;
   }
 
-  size_t GetSize() override
+  size_t GetSize() const override
   {
     return m_Size;
   }

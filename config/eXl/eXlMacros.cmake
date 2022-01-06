@@ -4,7 +4,7 @@ function(ADD_EXL_COMMON_DEFS TARGET_NAME)
  endfunction()
 
 function(ADD_EXL_LIB_PROPERTIES TARGET_NAME LIB_SUFFIX)
-  if(${BUILD_EXL_SHARED})
+  if(${EXL_BUILD_SHARED})
 		target_compile_options(${TARGET_NAME} PRIVATE -DBUILD_${LIB_SUFFIX}_DLL -DPLUGIN_NAME=${TARGET_NAME})
 	endif()
 	if(${WIN32})

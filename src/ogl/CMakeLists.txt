@@ -1,6 +1,6 @@
 #project(eXl_OGL)
 
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/ogl)
+set(INCLUDE_DIR ${EXL_ROOT}/include/ogl)
 
 FILE(GLOB_RECURSE EXL_OGL_HEADER_FILES LIST_DIRECTORIES false ${INCLUDE_DIR}/*.hpp ${INCLUDE_DIR}/*.inl)
 
@@ -8,11 +8,9 @@ SET(SOURCES
 
 ${EXL_OGL_HEADER_FILES}
 
-#oglspritebatcher.cpp
 oglspritealgo.cpp
 oglutils.cpp
 oglplugin.cpp
-ogltexturecache.cpp
 
 renderer/oglrendercommand.cpp
 renderer/oglcompiledprogram.cpp
@@ -52,3 +50,7 @@ set (REFLECTED_HEADERS ${INCLUDE_DIR}/oglspritealgo.hpp)
 SETUP_EXL_LIB(eXl_OGL "OGL" DEPENDENCIES eXl_Core eXl_Math HEADERS_TO_PARSE ${REFLECTED_HEADERS})
 
 target_link_libraries(eXl_OGL LINK_PRIVATE ${PREREQS_PRIV})
+if(${ANDROID})
+else()
+add_dependencies(eXl_OGL glew)
+endif()
