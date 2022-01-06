@@ -52,5 +52,7 @@ SETUP_EXL_LIB(eXl_OGL "OGL" DEPENDENCIES eXl_Core eXl_Math HEADERS_TO_PARSE ${RE
 target_link_libraries(eXl_OGL LINK_PRIVATE ${PREREQS_PRIV})
 if(${ANDROID})
 else()
+if(${EXL_BUILD_OGL})
 add_dependencies(eXl_OGL glew)
+endif()
 endif()

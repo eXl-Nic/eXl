@@ -17,9 +17,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  
-  void UpdateFromImage(Image const& iImage, GLenum iTextureType, GLuint iTexId, bool iGenMipMap, int iFace);
 
+#ifdef EXL_WITH_OGL
+  void UpdateFromImage(Image const& iImage, GLenum iTextureType, GLuint iTexId, bool iGenMipMap, int iFace);
+#endif
   //OGLTextureLoader::OGLTextureLoader(std::list<DataVault*> const& iSource):m_Source(iSource)
   //{
   //
@@ -46,8 +47,8 @@ namespace eXl
 
   OGLTexture* OGLTextureLoader::CreateFromBuffer(Image::Size const& iSize, Format iFormat, void const* iData, bool iGenMipMap)
   {
-    OGLTexture* res = NULL;
-
+    OGLTexture* res = nullptr;
+#ifdef EXL_WITH_OGL
     if(iSize.X() > 0 && iSize.Y() > 0)
     {
       GLuint texId;
@@ -139,6 +140,7 @@ namespace eXl
       res = eXl_NEW OGLTexture(iSize, OGLTextureType::TEXTURE_2D, internalFormat);
       res->m_TexId = texId;
     }
+#endif
     return res;
   }
 
@@ -217,6 +219,7 @@ namespace eXl
 
   OGLTexture* OGLTextureLoader::CreateFromImage(Image const* iImage, bool iGenMipMap)
   {
+#ifdef EXL_WITH_OGL
     if (iImage == NULL)
       return NULL;
 
@@ -232,11 +235,13 @@ namespace eXl
     UpdateFromImage(*iImage, GL_TEXTURE_2D, newTex->GetAPIHandle(), false, -1);
 
     return newTex;
+#endif
+    return nullptr;
   }
 
   OGLTexture* OGLTextureLoader::CreateCubeMap(Image const* const* iImage, bool iGenMipMap)
   {
-
+#ifdef EXL_WITH_OGL
     if(iImage[0] == NULL)
       return NULL;
 
@@ -279,10 +284,13 @@ namespace eXl
     }
 
     return newTex;
+#endif
+    return nullptr;
   }
 
   void OGLTextureLoader::SetFromImage(Image const* iImage, OGLTexture* iTexture, uint32_t iFace)
   {
+#ifdef EXL_WITH_OGL
     if (iImage == nullptr)
     {
       return ;
@@ -299,8 +307,10 @@ namespace eXl
       || (iFace >= 0 && iFace < iTexture->GetNumSlices()), void());
 
     UpdateFromImage(*iImage, GetGLTextureType(iTexture->GetTextureType()), iTexture->GetAPIHandle(), false, iFace);
+#endif
   }
 
+#ifdef EXL_WITH_OGL
   void UpdateFromImage(Image const& iImage, GLenum iTextureType, GLuint iTexId, bool iGenMipMap, int iFace)
   {
     if (iTexId == 0)
@@ -421,9 +431,10 @@ namespace eXl
       eXl_DELETE replImage;
     }
   }
-
+#endif
   Err OGLTextureLoader::ReadTexture(OGLTexture* iTexture, Image*& oImage, int iFace)
   {
+#ifdef EXL_WITH_OGL
 #ifdef __ANDROID__
     return Err::Failure;
 #endif
@@ -544,6 +555,7 @@ namespace eXl
       glBindTexture(textureTarget, 0);
       return Err::Success;
     }
+#endif
     return Err::Failure;
   }
 }

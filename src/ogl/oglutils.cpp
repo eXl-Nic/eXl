@@ -21,8 +21,10 @@ namespace eXl
     static bool s_Initialized = false;
     if (!s_Initialized)
     {
+#ifdef EXL_WITH_OGL
 #ifndef __ANDROID__
       glewInit();
+#endif
 #endif
 
       //LOG_INFO << "GL version : " << (char*)glGetString(GL_VERSION) << "\n";
@@ -33,11 +35,13 @@ namespace eXl
 
   void OGLUtils::CheckOGLState(char const* iFile, int iLine)
   {
+#ifdef EXL_WITH_OGL
     GLenum error;
     while((error = glGetError()) != GL_NO_ERROR)
     {
       LOG_INFO<<iFile<<","<<iLine<<" ogl error : "<<error;
     }
+#endif
   }
 
   //void OGLUtils::MakeOGLMatrix(float (&oMatrix) [16], Quaternionf const& iOrient, Vector3f const& iPos)
@@ -57,17 +61,26 @@ namespace eXl
 
   uint32_t OGLUtils::CompileVertexShader(char const* iSource)
   {
+#ifdef EXL_WITH_OGL
     return CompileShader(GL_VERTEX_SHADER, iSource);
+#else
+    return 0;
+#endif
   }
 
   uint32_t OGLUtils::CompileFragmentShader(char const* iSource)
   {
+#ifdef EXL_WITH_OGL
     return CompileShader(GL_FRAGMENT_SHADER, iSource);
+#else
+    return 0;
+#endif
   }
 
-  GLuint OGLUtils::CompileShader(GLenum iType,char const* iSource)
+  uint32_t OGLUtils::CompileShader(uint32_t iType,char const* iSource)
   {
-    GLuint shaderName = 0;
+    uint32_t shaderName = 0;
+#ifdef EXL_WITH_OGL
     if(iSource != NULL)
     {
       shaderName = glCreateShader(iType);
@@ -96,12 +109,14 @@ namespace eXl
       else
         LOG_ERROR<<"glCreateShader failed"<<"\n";
     }
+#endif
     return shaderName;
   }
 
-  GLuint OGLUtils::LinkProgram(GLuint iVS, GLuint iPS)
+  uint32_t OGLUtils::LinkProgram(uint32_t iVS, uint32_t iPS)
   {
-    GLuint progName = 0;
+    uint32_t progName = 0;
+#ifdef EXL_WITH_OGL
     if(iVS != 0 && iPS != 0)
     {
       progName = glCreateProgram();
@@ -127,6 +142,7 @@ namespace eXl
         progName = 0;
       }
     }
+#endif
 		return progName;
   }
 }

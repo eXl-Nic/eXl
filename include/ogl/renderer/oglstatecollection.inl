@@ -119,24 +119,6 @@ namespace eXl
     
   }
 
-  template <typename... Commands>
-  inline void OGLStateCollection<Commands...>::InitForRender()
-  {
-    if (!m_StateIds.empty())
-    {
-      StateIds dummy;
-      std::fill(dummy.m_Commands, dummy.m_Commands + GetListSize<Commands...>::result, 0xFFFF);
-
-      ApplyCommandCtx ctx;
-      ctx.prevState = dummy.m_Commands;
-      ctx.nextState = m_StateIds[0].m_Commands;
-      ctx.curIdx = 0;
-
-      ForEachUnwrapper<ApplyCommandHandler, Commands...>::Do(m_States[0], ctx);
-      m_CurrentState = 0;
-    }
-  }
-
   struct ApplyCommandCtx
   {
     int curIdx = 0;
@@ -160,6 +142,24 @@ namespace eXl
       ++iCtx.nextState;
     }
   };
+
+  template <typename... Commands>
+  inline void OGLStateCollection<Commands...>::InitForRender()
+  {
+    if (!m_StateIds.empty())
+    {
+      StateIds dummy;
+      std::fill(dummy.m_Commands, dummy.m_Commands + GetListSize<Commands...>::result, 0xFFFF);
+
+      ApplyCommandCtx ctx;
+      ctx.prevState = dummy.m_Commands;
+      ctx.nextState = m_StateIds[0].m_Commands;
+      ctx.curIdx = 0;
+
+      ForEachUnwrapper<ApplyCommandHandler, Commands...>::Do(m_States[0], ctx);
+      m_CurrentState = 0;
+    }
+  }
 
   template <typename... Commands>
   inline void OGLStateCollection<Commands...>::ApplyCommand(uint16_t iCmdId)
@@ -195,7 +195,7 @@ namespace eXl
     template <typename... Commands>
     inline static void Do(CommandStorage<StateCommand>& iCmd, GatherCommandsCtx<Commands...>& iCtx)
     {
-      iCmd.m_Command = iCtx.collection.GetCurrentSetCommand<StateCommand>();
+      iCmd.m_Command = iCtx.collection.template GetCurrentSetCommand<StateCommand>();
     }
   };
 

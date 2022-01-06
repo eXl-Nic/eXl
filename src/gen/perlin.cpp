@@ -10,6 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <gen/perlin.hpp>
 #include <core/random.hpp>
+#include <cfloat>
 
 namespace eXl
 {

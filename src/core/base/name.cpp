@@ -20,7 +20,6 @@ namespace eXl
   void Name_Init()
   {
 #if defined(EXL_SHARED_LIBRARY) && defined(EXL_NAME_EXPLICIT_INIT)
-    NameCore::reset_init();
     new(s_NameSingleton.address()) NameCoreHolder;
     NameCore::init();
 #endif

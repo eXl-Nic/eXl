@@ -12,7 +12,6 @@ SET(IMGUI_SOURCES
   ${IMGUI_DIR}/imgui_widgets.cpp 
 )
 
-if(${EXL_BUILD_OGL})
 
 if(${ANDROID})
 SET(IMGUI_SOURCES ${IMGUI_SOURCES} ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
@@ -23,8 +22,6 @@ else()
 
 	include_directories(${GLEW_INCLUDE_DIR})
 	link_directories(${GLEW_LIBRARY_DIR})
-endif()
-
 endif()
 
 SET(PREREQS_PRIV ${OGL_LIBRARIES})
@@ -47,3 +44,4 @@ endif()
 if(${LINUX})
   SET_TARGET_PROPERTIES(imgui PROPERTIES COMPILE_FLAGS -fPIC)
 endif(${LINUX})
+

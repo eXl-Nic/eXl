@@ -29,7 +29,6 @@ namespace eXl
   class GfxSystem;
   class OGLDisplayList;
 
-
 	class EXL_ENGINE_API GfxResource : public HeapObject
 	{
 		DECLARE_RefC;
@@ -145,10 +144,10 @@ namespace eXl
     ObjectHandle m_Object;
     Matrix4f m_Transform;
 
-    OGLShaderData m_PositionData;
-
     Vector<Draw> m_Draws;
     IntrusivePtr<GeometryInfo> m_Geometry;
+
+    OGLShaderData m_PositionData;
     OGLCompiledProgram const* m_Program = nullptr;
   };
 
@@ -157,17 +156,21 @@ namespace eXl
 	{
 		IntrusivePtr<GeometryInfo> m_Geometry;
 
-		IntrusivePtr<OGLTexture const> m_Texture;
 		SpriteColor m_SpriteInfo;
 
     // TODO : Put that into the Tileset
     // TODO : Make a cache somewhere.
-		OGLShaderData m_TextureData;
+		
 		Matrix4f m_Transform;
     Matrix4f m_BillboardTransform;
     Vector2f m_CurScale;
     Vector2f m_CurOffset;
+
+
+    IntrusivePtr<OGLTexture const> m_Texture;
+    OGLShaderData m_TextureData;
 		OGLShaderData m_PositionData;
+
 		GfxSpriteComponent* m_Component;
 
 		float m_RemainingTime;

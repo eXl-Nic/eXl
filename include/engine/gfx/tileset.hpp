@@ -71,9 +71,8 @@ namespace eXl
     static ResourceLoaderName StaticLoaderName();
 
     Image const* GetImage(ImageName iImage) const;
-#ifdef EXL_WITH_OGL
     IntrusivePtr<OGLTexture> GetTexture(ImageName iImage) const;
-#endif
+
     Vector2i GetImageSize(ImageName iImage) const;
 
     Err Stream_Data(Streamer& iStreamer) const override;

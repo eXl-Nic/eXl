@@ -302,9 +302,10 @@ namespace eXl
     return Vector2i::ZERO;
   }
 
-#ifdef EXL_WITH_OGL
+
   IntrusivePtr<OGLTexture> Tileset::GetTexture(ImageName iImage) const
   {
+#ifdef EXL_WITH_OGL
     auto iter = m_Textures.find(iImage);
 
     if (iter == m_Textures.end())
@@ -334,8 +335,10 @@ namespace eXl
     }
 
     return iter->second;
-  }
+#else
+    return nullptr;
 #endif
+  }
 
   Err Tileset::Stream_Data(Streamer& iStreamer) const
   {

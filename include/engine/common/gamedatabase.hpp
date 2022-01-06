@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/common/gamedata.hpp>
 #include <core/resource/resource.hpp>
+#include <core/type/dynobject.hpp>
 
 namespace eXl
 {

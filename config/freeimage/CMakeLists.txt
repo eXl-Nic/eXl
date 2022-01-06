@@ -347,7 +347,7 @@ include_directories(${FREEIMAGE_ROOT}/Source/OpenEXR/Imath)
 include_directories(${FREEIMAGE_ROOT}/Source/ZLib)
 
 add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DNO_LCMS)
-add_definitions(-Dauto_ptr=unique_ptr)
+#add_definitions(-Dauto_ptr=unique_ptr)
 
 if(${EXL_BUILD_SHARED})
 add_definitions(-DFREEIMAGE_EXPORTS)

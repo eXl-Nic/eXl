@@ -6,3 +6,4 @@ snapshots
 contrib/SDL2-2.0.9/android-project
 contrib/SDL2-2.0.9/android-project/app
 .vscode
+__pycache__

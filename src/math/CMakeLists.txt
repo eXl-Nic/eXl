@@ -41,12 +41,18 @@ set( SOURCES
 
 set( SOURCES
   ${SOURCES}
+  seginter.cpp
+  )
+
+if("ON" OR NOT ${EXL_BUILD_SHARED} OR MSVC)
+set( SOURCES
+  ${SOURCES}
   polygoni.cpp
   polygonf.cpp
   polygond.cpp
   aabb2dpolygoni.cpp
-  seginter.cpp
-  )
+)
+endif()
 
 if(${ENABLE_ARMADILLO})
   set(SOURCES ${SOURCES}

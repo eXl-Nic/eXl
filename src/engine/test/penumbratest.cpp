@@ -8,7 +8,7 @@
 #include <math/seginter.hpp>
 
 #include <fstream>
-#include <core/utils/filetextreader.hpp>
+//#include <core/utils/filetextreader.hpp>
 
 using namespace eXl;
 
@@ -21,7 +21,7 @@ TEST(Pathfinding, VelocityObstacle)
   obs.AddPoint(Vector2f::UNIT_X * 2.0f, 1.0, Vector2f::ZERO);
 
   Vector2f bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_GT(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_Y)), 0.9);
+  ASSERT_GT(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_Y)), 0.8);
 
   obs.Start(nullptr, Vector2f::ZERO, 1.0, Vector2f::UNIT_X, 1.0);
   obs.AddPoint(Vector2f::UNIT_X * 2.0f, 1.0, Vector2f::UNIT_X);
@@ -33,13 +33,16 @@ TEST(Pathfinding, VelocityObstacle)
   obs.AddPoint(Vector2f::UNIT_X * 4.0f, 1.0, Vector2f::ZERO);
 
   bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  //ASSERT_EQ(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_X)), 1.0);
+  ASSERT_GT(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_X)), 0.75);
 
   obs.Start(nullptr, Vector2f::ZERO, 1.0, Vector2f::UNIT_X, 1.0);
   obs.AddPoint(Vector2f::UNIT_X * 4.0f, 1.0, -Vector2f::UNIT_X);
   obs.AddPoint(Vector2f::UNIT_X * 4.0f + Vector2f::UNIT_Y * 2.0f, 1.0, -Vector2f::UNIT_X);
 
   Vector2f bestVel1 = obs.FindBestVelocity(Vector2f::ZERO);
+
+  ASSERT_LT(Mathf::Abs(bestVel1.Dot(Vector2f::UNIT_X)), 0.3);
+  ASSERT_LT(bestVel1.Dot(Vector2f::UNIT_Y), -0.5);
 
   obs.Start(nullptr, Vector2f::UNIT_X * 4.0f, 1.0, -Vector2f::UNIT_X, 1.0);
   obs.AddPoint(Vector2f::ZERO, 1.0, Vector2f::UNIT_X);
@@ -333,7 +336,7 @@ TEST(Pathfinding, IntersectorTest)
 
     inter.IntersectSegments(segs, outSegs);
   }
-
+#if 0
   {
     Vector<Segmenti> segs;
 
@@ -350,4 +353,5 @@ TEST(Pathfinding, IntersectorTest)
 
     inter.IntersectSegments(segs, outSegs);
   }
+#endif
 }

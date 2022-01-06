@@ -36,13 +36,13 @@ namespace eXl
     void RemoveObject(ObjectHandle);
     void PrepareSprites();
 
-    UniquePtr<OGLCompiledProgram const> m_SpriteProgram;
-
     SpriteDataTable m_SpriteData;
     SpriteComponents m_SpriteComp;
     Vector<SpriteComponents::Handle> m_ObjectToSpriteComp;
     UnorderedSet<GfxSpriteComponent*> m_DirtyComponents;
     UnorderedMap<Vector3f, IntrusivePtr<GeometryInfo>> m_SpriteGeomCache;
+
+    UniquePtr<OGLCompiledProgram const> m_SpriteProgram;
     IntrusivePtr<OGLBuffer> m_DefaultSpriteIdxBuffer;
   };
 }

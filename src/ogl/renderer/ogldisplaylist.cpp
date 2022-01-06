@@ -23,6 +23,7 @@ namespace eXl
 {
   void OGLDepthCommand::Apply()
   {
+#ifdef EXL_WITH_OGL
     if(m_Flag & ReadZ)
     {
       glEnable(GL_DEPTH_TEST);
@@ -41,10 +42,12 @@ namespace eXl
     {
       glDepthMask(GL_FALSE);
     }
+#endif
   }
 
   void OGLScissorCommand::Apply()
   {
+#ifdef EXL_WITH_OGL
     if(m_Flag & EnableScissor)
     {
       glEnable(GL_SCISSOR_TEST);
@@ -54,15 +57,19 @@ namespace eXl
     {
       glDisable(GL_SCISSOR_TEST);
     }
+#endif
   }
 
   void OGLViewportCommand::Apply()
   {
+#ifdef EXL_WITH_OGL
     glViewport(m_Orig.X(),m_Orig.Y(), m_Size.X(),m_Size.Y());
+#endif
   }
 
   void OGLBlendCommand::Apply()
   {
+#ifdef EXL_WITH_OGL
     if (m_Flag & Enabled)
     {
       glEnable(GL_BLEND);
@@ -72,6 +79,7 @@ namespace eXl
     {
       glDisable(GL_BLEND);
     }
+#endif
   }
 
   OGLDisplayList::OGLDisplayList(OGLSemanticManager& iSemantics)
@@ -515,7 +523,7 @@ namespace eXl
 
     m_CurProgram = NULL;
     m_CurAssembly = NULL;
-    m_CurDataSet = NULL;
+    m_CurDataSet = 0;
 
     m_Timestamp = 0;
 
@@ -661,6 +669,7 @@ namespace eXl
               break;
             case OGLDraw::Clear:
               {
+#ifdef EXL_WITH_OGL
                 OGLClear const* clearCmd = (OGLClear const*)curCmd;
                 if (clearCmd->m_StateId != m_States.GetCurState())
                 {
@@ -676,6 +685,7 @@ namespace eXl
                   glClearDepthf(clearCmd->m_ClearDepth);
                   glClear(GL_DEPTH_BUFFER_BIT);
                 }
+#endif
               }
               break;
             default:

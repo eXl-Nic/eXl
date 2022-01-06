@@ -86,7 +86,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
     T* Create(Path const& iDir, String const& iName) const
     {
-      ResourceMetaData* metaData = CreateNewMetaData(iName);
+      ResourceMetaData* metaData = BaseLoader::CreateNewMetaData(iName);
 
       Path rscPath = iDir / Path(iName.c_str());
       rscPath.replace_extension(ResourceManager::GetAssetExtension().c_str());

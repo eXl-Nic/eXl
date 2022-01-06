@@ -228,7 +228,7 @@ TEST(DunAtk, AVLTree)
 
 TEST(DunAtk, ObjectReg) 
 {
-  auto& objTable = ObjectTable<int>();
+  auto objTable = ObjectTable<int>();
 
   auto newObject1 = objTable.Alloc();
   auto newObject2 = objTable.Alloc();

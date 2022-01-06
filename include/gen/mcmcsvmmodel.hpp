@@ -89,19 +89,19 @@ namespace eXl
     };
 
     template <unsigned int Dim, typename Kernel>
-    struct Hyperplane 
+    struct Hyperplane_T
     {
-      Hyperplane()
+      Hyperplane_T()
       {
       }
 
-      Hyperplane(Kernel const& iKernel)
+      Hyperplane_T(Kernel const& iKernel)
         : m_Kernel(iKernel)
       {
 
       }
 
-      Hyperplane(Hyperplane const& iPlane)
+      Hyperplane_T(Hyperplane_T const& iPlane)
         : m_Kernel(iPlane.m_Kernel)
         , m_Bias(iPlane.m_Bias)
         , m_Supports(iPlane.m_Supports)
@@ -143,7 +143,7 @@ namespace eXl
 
       static constexpr unsigned int Dim = SVM_VECTOR_SIZE;
       typedef GaussianKernel Kernel;
-      typedef Hyperplane<Dim, Kernel> Hyperplane;
+      typedef Hyperplane_T<Dim, Kernel> Hyperplane;
 
       SVMModel()
         : LearnedModel(Vector<DistParams>(), Vector<Element>(), false)

@@ -20,6 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+#ifdef EXL_WITH_OGL
   class OGLRenderContextImpl : public HeapObject
   {
   public:
@@ -386,54 +387,74 @@ namespace eXl
 
     //std::vector<Type const*> m_Types;
   };
+#endif
 
   OGLRenderContext::OGLRenderContext(OGLSemanticManager& iSemantics)
+#ifdef EXL_WITH_OGL
     : m_Impl(eXl_NEW OGLRenderContextImpl(iSemantics))
+#endif
   {
   }
 
   void OGLRenderContext::SetFramebuffer(OGLFramebuffer* iFBO)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->SetFramebuffer(iFBO);
+#endif
   }
 
   OGLRenderContext::~OGLRenderContext()
   {
+#ifdef EXL_WITH_OGL
     eXl_DELETE m_Impl;
+#endif
   }
 
   void OGLRenderContext::Clear()
   {
+#ifdef EXL_WITH_OGL
     m_Impl->CleanupState();
+#endif
   }
 
   void OGLRenderContext::SetProgram(OGLCompiledProgram const* iProgram)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->SetProgram(iProgram);
+#endif
   }
 
   void OGLRenderContext::SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->SetVertexAttrib(iAttribName, iBuffer, iNum, iStride, iOffset);
+#endif
   }
 
   void OGLRenderContext::SetUniformData(uint32_t iDataName, void const* iData)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->SetUniformData(iDataName,iData);
+#endif
   }
 
   void OGLRenderContext::SetUniformBuffer(uint32_t iDataName, OGLBuffer const* iBuffer)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->SetUniformBuffer(iDataName, iBuffer);
+#endif
   }
 
   void OGLRenderContext::SetTexture(uint32_t iTexName, OGLTexture const* iTex)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->SetTexture(iTexName,iTex);
+#endif
   }
 
   void OGLRenderContext::Draw(OGLConnectivity iTopo, uint32_t iFirstVertex, uint32_t iNumVertices)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->CheckCache();
     if(m_Impl->m_CurrentIndexBuffer != nullptr)
     {
@@ -442,10 +463,12 @@ namespace eXl
     }
 
     glDrawArrays(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices);
+#endif
   }
 
   void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer,OGLConnectivity iTopo, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
   {
+#ifdef EXL_WITH_OGL
     if(iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
     {
       LOG_WARNING<<"Invalid buffer for DrawIndexed"<<"\n";
@@ -459,10 +482,12 @@ namespace eXl
     }
 
     glDrawElementsBaseVertex(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iBaseVertex);
+#endif
   }
 
   void OGLRenderContext::DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseInstance, uint32_t iFirstVertex, uint32_t iNumVertices)
   {
+#ifdef EXL_WITH_OGL
     m_Impl->CheckCache();
     if (m_Impl->m_CurrentIndexBuffer != nullptr)
     {
@@ -471,10 +496,12 @@ namespace eXl
     }
 
     glDrawArraysInstancedBaseInstance(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices, iNumInstances, iBaseInstance);
+#endif
   }
 
   void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseinstance, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
   {
+#ifdef EXL_WITH_OGL
     if (iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
     {
       LOG_WARNING << "Invalid buffer for DrawIndexed" << "\n";
@@ -488,5 +515,6 @@ namespace eXl
     }
 
     glDrawElementsInstancedBaseVertexBaseInstance(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances, iBaseVertex, iBaseinstance);
+#endif
   }
 }

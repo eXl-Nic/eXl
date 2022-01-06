@@ -416,7 +416,7 @@ namespace eXl
   VelocityObstacle::BestVelocity::BestVelocity(float iDirMult)
     : dirMult(iDirMult)
   {
-    std::fill(curScore, curScore + 4, -FLT_MAX);
+    std::fill(curScore, curScore + 4, -Mathf::MAX_REAL);
   }
 
   float VelocityObstacle::BestVelocity::ComputeScore(Vector2f const& iOptimalDir, Vector2f const& iCandidateDir, float iCandidateSpeed)
@@ -426,7 +426,7 @@ namespace eXl
       float score = iCandidateDir.Dot(iOptimalDir) * dirMult + iCandidateSpeed;
       return score;
     }
-    return -FLT_MAX;
+    return -Mathf::MAX_REAL;
   }
 
   void VelocityObstacle::BestVelocity::Update(Vector2f const& iCandidateDir, float iCandidateSpeed)
@@ -553,7 +553,7 @@ namespace eXl
 
     float* bestScore = std::max_element(velocities.curScore, velocities.curScore + 4);
     uint32_t priority = bestScore - velocities.curScore;
-    if (*bestScore > -FLT_MIN)
+    if (*bestScore > -Mathf::EPSILON)
       //for (uint32_t priority = 0; priority < 4; ++priority)
     {
       //if (velocities.curScore[priority] > )

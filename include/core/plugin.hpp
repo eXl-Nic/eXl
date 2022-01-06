@@ -132,6 +132,6 @@ namespace eXl
     unsigned int m_LoadOrder;
     unsigned int m_Depth = 0;
 
-    std::vector<String> m_Dependencies;
+    Vector<String> m_Dependencies;
   };
 }

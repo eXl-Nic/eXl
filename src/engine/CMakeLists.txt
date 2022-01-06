@@ -56,8 +56,6 @@ game/scripttrigger.cpp
 
 SET(GFX_SRC)
 
-if(${EXL_BUILD_OGL})
-
 SET(GFX_SRC
 
 gfx/gfxsystem.cpp
@@ -67,8 +65,6 @@ gfx/gfxcomponentrendernode.cpp
 gfx/gfxspriterendernode.cpp
 gfx/gfxguirendernode.cpp
 )
-
-endif()
 
 set (LUA_SRC
 
@@ -153,23 +149,26 @@ ${INCLUDE_DIR}/map/map.hpp
 ${INCLUDE_DIR}/common/transforms.hpp
 ${INCLUDE_DIR}/physics/physicsdef.hpp)
 
-SET (EXL_DEPENDENCIES eXl_Gen)
+SET (EXL_DEPENDENCIES eXl_Gen eXl_OGL)
 
-if(${EXL_BUILD_OGL})
-SET (EXL_DEPENDENCIES ${EXL_DEPENDENCIES} eXl_OGL)
-endif()
 
 SETUP_EXL_LIB(eXl_Engine "ENGINE" DEPENDENCIES ${EXL_DEPENDENCIES} HEADERS_TO_PARSE "${HEADERS_TO_PARSE}")
 
 set( PREREQS_PRIV
-  imgui
-  ${OGL_LIBRARIES}
-  LinearMath
-  BulletCollision
   BulletDynamics
+  BulletCollision
+  LinearMath
   libb64
   freetype
 )
+
+if(${EXL_BUILD_OGL})
+set( PREREQS_PRIV
+  ${PREREQS_PRIV}
+  imgui
+  ${OGL_LIBRARIES}
+  )
+endif()
 
 if(${WIN32})
 set( PREREQS_PRIV

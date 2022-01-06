@@ -1,6 +1,4 @@
-SET(CLANG_INCLUDE_DIRS ${Clang_ROOT}/include)
-SET(CLANG_LIBRARY_DIRS ${Clang_ROOT}/lib)
-SET(CLANG_BINARY_DIR ${Clang_ROOT}/bin)
+
 
 include_directories(${CLANG_INCLUDE_DIRS})
 include_directories(${EXL_ROOT}/modules/cxxopts/include)

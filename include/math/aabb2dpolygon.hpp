@@ -119,13 +119,18 @@ namespace eXl
   DEFINE_MATH_TYPE_EX(AABB2DPolygon<int>, AABB2DPolygoni)
 }
 
-#ifdef EXL_SHARED_LIBRARY
+#if defined(EXL_SHARED_LIBRARY)
+#if defined(WIN32) || 1
 namespace eXl
 {
-  template class EXL_MATH_API AABB2DPolygon<int>;
+  extern template class EXL_MATH_API AABB2DPolygon<int>;
   //template class EXL_MATH_API AABB2DPolygon<float>;
   //template class EXL_MATH_API AABB2DPolygon<double>;
 }
+
+#else
+#include <math/aabb2dpolygon.inl>
+#endif
 #endif 
 
 namespace eXl

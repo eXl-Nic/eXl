@@ -9,9 +9,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <core/string.hpp>
+#include <core/coredef.hpp>
 
 #include <cstdio>
 #include <cstdarg>
+#include <cstring>
 
 namespace eXl
 {
@@ -259,7 +261,7 @@ namespace eXl
   {
     va_list args;
     va_start(args, iFormatStr);
-    int res = vsprintf_s(s_PrintBuffer, iFormatStr, args);
+    int res = vsnprintf(s_PrintBuffer, ArrayLength(s_PrintBuffer), iFormatStr, args);
     va_end(args);
 
     if (res > 0)

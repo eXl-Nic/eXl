@@ -223,12 +223,16 @@ namespace eXl
   typedef Polygon<double> Polygond;
 }
 
-#ifdef EXL_SHARED_LIBRARY
+#if defined(EXL_SHARED_LIBRARY)
+#if defined(WIN32) || 1
 namespace eXl
 {
-  template class EXL_MATH_API Polygon<int>;
-  template class EXL_MATH_API Polygon<float>;
-  template class EXL_MATH_API Polygon<double>;
+  extern template class EXL_MATH_API Polygon<int>;
+  extern template class EXL_MATH_API Polygon<float>;
+  extern template class EXL_MATH_API Polygon<double>;
 }
+#else
+#include <math/polygon.inl>
+#endif
 #endif
 

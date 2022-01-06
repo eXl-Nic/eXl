@@ -56,9 +56,10 @@ namespace eXl
     }
   }
 
-  OGLProgram::OGLProgram(GLuint iProgramName)
+  OGLProgram::OGLProgram(uint32_t iProgramName)
     : m_ProgramName(iProgramName)
   {
+#ifdef EXL_WITH_OGL
     if(iProgramName != 0)
     {
       GLint numUnif;
@@ -143,9 +144,10 @@ namespace eXl
         }
       }
     }
+#endif
   }
 
-  GLint OGLProgram::GetAttribLocation(AString const& iName)const
+  int32_t OGLProgram::GetAttribLocation(AString const& iName)const
   {
     AttribDescMap::const_iterator iter = m_AttribsMap.find(iName);
     if(iter != m_AttribsMap.end())
@@ -155,7 +157,7 @@ namespace eXl
     return -1;
   }
 
-  GLint OGLProgram::GetUniformLocation(AString const& iName)const
+  int32_t OGLProgram::GetUniformLocation(AString const& iName)const
   {
     UniformDescMap::const_iterator iter = m_UniformsMap.find(iName);
     if(iter != m_UniformsMap.end())
@@ -165,7 +167,7 @@ namespace eXl
     return -1;
   }
 
-  GLint OGLProgram::GetUniformBlockLocation(AString const& iName)const
+  int32_t OGLProgram::GetUniformBlockLocation(AString const& iName)const
   {
     UniformBlockDescMap::const_iterator iter = m_BlocksMap.find(iName);
     if (iter != m_BlocksMap.end())

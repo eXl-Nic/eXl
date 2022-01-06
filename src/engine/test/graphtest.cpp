@@ -6,6 +6,7 @@
 #include <math/mathtools.hpp>
 
 #include <boost/graph/iteration_macros.hpp>
+#include <gen/graphutils.hpp>
 
 using namespace eXl;
 

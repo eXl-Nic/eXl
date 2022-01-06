@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define EXL_ALLOCATOR_INCLUDED
 
 #include <core/memorymanager.hpp>
+#include <limits>
 #include <memory>
 #include <type_traits>
 

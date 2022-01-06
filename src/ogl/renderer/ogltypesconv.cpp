@@ -13,10 +13,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  GLenum GetGLUsage(OGLBufferUsage iUsage)
+  uint32_t GetGLUsage(OGLBufferUsage iUsage)
   {
     switch(iUsage)
     {
+#ifdef EXL_WITH_OGL
     case OGLBufferUsage::ARRAY_BUFFER:
       return GL_ARRAY_BUFFER;
       break;
@@ -29,14 +30,15 @@ namespace eXl
     case OGLBufferUsage::TEXTURE_BUFFER:
       return GL_TEXTURE_BUFFER;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unsupported buffer usage");
-      return GL_ARRAY_BUFFER;
+      return 0;
       break;
     }
   }
 
-  GLenum GetGLAccess(OGLBufferAccess iAccess)
+  uint32_t GetGLAccess(OGLBufferAccess iAccess)
   {
 #ifdef __ANDROID__
       return 0;
@@ -44,6 +46,7 @@ namespace eXl
 
     switch(iAccess)
     {
+#ifdef EXL_WITH_OGL
     case OGLBufferAccess::READ:
       return GL_READ_ONLY;
       break;
@@ -53,18 +56,20 @@ namespace eXl
     case OGLBufferAccess::READWRITE:
       return GL_READ_WRITE;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unsupported buffer access");
-      return GL_READ_ONLY;
+      return 0;
       break;
     }
 #endif
   }
 
-  GLenum GetGLType(OGLType iType)
+  uint32_t GetGLType(OGLType iType)
   {
     switch(iType)
     {
+#ifdef EXL_WITH_OGL
     case OGLType::FLOAT32:
       return GL_FLOAT;
       break;
@@ -101,17 +106,19 @@ namespace eXl
     case OGLType::SAMPLER_CUBE:
       return GL_SAMPLER_CUBE;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unsupported type");
-      return GL_INT;
+      return 0;
       break;
     }
   }
 
-  OGLType ConvertGLType(GLenum iType)
+  OGLType ConvertGLType(uint32_t iType)
   {
     switch(iType)
     {
+#ifdef EXL_WITH_OGL
     case GL_FLOAT:
       return OGLType::FLOAT32;
       break;
@@ -184,6 +191,7 @@ namespace eXl
     case GL_INT_SAMPLER_BUFFER:
       return OGLType::INT_SAMPLER_BUFFER;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unsupported type");
       return OGLType::INT32;
@@ -191,10 +199,11 @@ namespace eXl
     }
   }
 
-  GLenum GetGLConnectivity(OGLConnectivity iConn)
+  uint32_t GetGLConnectivity(OGLConnectivity iConn)
   {
     switch(iConn)
     {
+#ifdef EXL_WITH_OGL
     case OGLConnectivity::POINT:
       return GL_POINTS;
       break;
@@ -210,17 +219,19 @@ namespace eXl
     case OGLConnectivity::TRIANGLESTRIP:
       return GL_TRIANGLE_STRIP;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Invalid connectivity ");
-      return GL_POINTS;
+      return 0;
       break;
     }
   }
 
-  GLenum GetGLMinFilter(OGLMinFilter iMinFilter)
+  uint32_t GetGLMinFilter(OGLMinFilter iMinFilter)
   {
     switch(iMinFilter)
     {
+#ifdef EXL_WITH_OGL
     case OGLMinFilter::NEAREST:
       return GL_NEAREST;
       break;
@@ -239,33 +250,37 @@ namespace eXl
     case OGLMinFilter::LINEAR_MIPMAP_LINEAR:
       return GL_LINEAR_MIPMAP_LINEAR;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Invalid min filter");
-      return GL_NEAREST;
+      return 0;
       break;
     }
   }
-  GLenum GetGLMagFilter(OGLMagFilter iMagFilter)
+  uint32_t GetGLMagFilter(OGLMagFilter iMagFilter)
   {
     switch(iMagFilter)
     {
+#ifdef EXL_WITH_OGL
     case OGLMagFilter::NEAREST:
       return GL_NEAREST;
       break;
     case OGLMagFilter::LINEAR:
       return GL_LINEAR;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Invalid mag filter");
-      return GL_NEAREST;
+      return 0;
       break;
     }
   }
 
-  GLenum GetGLWrapMode(OGLWrapMode iMode)
+  uint32_t GetGLWrapMode(OGLWrapMode iMode)
   {
     switch(iMode)
     {
+#ifdef EXL_WITH_OGL
     case OGLWrapMode::CLAMP_TO_EDGE:
       return GL_CLAMP_TO_EDGE;
       break;
@@ -275,17 +290,19 @@ namespace eXl
     case OGLWrapMode::MIRRORED_REPEAT:
       return GL_MIRRORED_REPEAT;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Invalid wrap mode filter");
-      return GL_CLAMP_TO_EDGE;
+      return 0;
       break;
     }
   }
 
-  GLenum GetGLBlend(OGLBlend iMode)
+  uint32_t GetGLBlend(OGLBlend iMode)
   {
     switch (iMode)
     {
+#ifdef EXL_WITH_OGL
     case OGLBlend::ZERO:
       return GL_ZERO;
       break;
@@ -345,6 +362,7 @@ namespace eXl
       return GL_ONE_MINUS_SRC1_ALPHA;
       break;
 #endif
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
       return 0;
@@ -352,10 +370,11 @@ namespace eXl
     }
   };
 
-  GLenum GetGLTextureType(OGLTextureType iTex)
+  uint32_t GetGLTextureType(OGLTextureType iTex)
   {
     switch (iTex)
     {
+#ifdef EXL_WITH_OGL
     case OGLTextureType::TEXTURE_1D:
       return GL_TEXTURE_1D;
       break;
@@ -377,6 +396,7 @@ namespace eXl
     case OGLTextureType::TEXTURE_BUFFER:
       return GL_TEXTURE_BUFFER;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
       return 0;
@@ -384,10 +404,11 @@ namespace eXl
     }
   }
 
-  GLenum GetGLInternalTextureFormat(OGLInternalTextureFormat iFormat)
+  uint32_t GetGLInternalTextureFormat(OGLInternalTextureFormat iFormat)
   {
     switch (iFormat)
     {
+#ifdef EXL_WITH_OGL
     case OGLInternalTextureFormat::DEPTH_COMPONENT:
       return GL_DEPTH_COMPONENT;
       break;
@@ -442,6 +463,7 @@ namespace eXl
     case OGLInternalTextureFormat::RGBA32I:
       return GL_RGBA32I;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
       return 0;
@@ -449,10 +471,11 @@ namespace eXl
     }
   }
 
-  GLenum GetGLTextureElementType(OGLTextureElementType iType)
+  uint32_t GetGLTextureElementType(OGLTextureElementType iType)
   {
     switch (iType)
     {
+#ifdef EXL_WITH_OGL
       case OGLTextureElementType::UNSIGNED_BYTE:
         return GL_UNSIGNED_BYTE;
         break;
@@ -492,6 +515,7 @@ namespace eXl
       case OGLTextureElementType::UNSIGNED_INT_2_10_10_10_REV:
         return GL_UNSIGNED_INT_2_10_10_10_REV;
         break;
+#endif
       default:
         eXl_ASSERT_MSG(false, "Unrecognized GL constant");
         return 0;
@@ -499,10 +523,11 @@ namespace eXl
     }
   }
 
-  GLenum GetGLTextureFormat(OGLTextureFormat iFormat)
+  uint32_t GetGLTextureFormat(OGLTextureFormat iFormat)
   {
     switch (iFormat)
     {
+#ifdef EXL_WITH_OGL
     case OGLTextureFormat::RED:
       return GL_RED;
       break;
@@ -548,6 +573,7 @@ namespace eXl
     case OGLTextureFormat::DEPTH_STENCIL:
       return GL_DEPTH_STENCIL;
       break;
+#endif
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
       return 0;

@@ -64,9 +64,7 @@ add_subdirectory(src/core ${OUT_DIR}/eXl/core)
 add_subdirectory(src/math ${OUT_DIR}/eXl/math)
 add_subdirectory(src/gen ${OUT_DIR}/eXl/gen)
 
-if(${EXL_BUILD_OGL})
-  add_subdirectory(src/ogl ${OUT_DIR}/eXl/ogl)
-endif()
+add_subdirectory(src/ogl ${OUT_DIR}/eXl/ogl)
 
 if(${EXL_BUILD_ENGINE})
   add_subdirectory(src/engine ${OUT_DIR}/eXl/engine)

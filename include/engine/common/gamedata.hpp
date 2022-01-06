@@ -244,7 +244,7 @@ namespace eXl
     template <typename Functor>
     inline void Iterate(Functor const& iFn) const
     {
-      if (IsSparseAlloc<Alloc>::value)
+      if (IsSparseAlloc<Allocator>::value)
       {
         static_cast<SparseGameDataView<T> const&>(m_Alloc.m_View).SparseGameDataView<T>::Iterate(iFn);
       }

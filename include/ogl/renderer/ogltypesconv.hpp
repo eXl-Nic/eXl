@@ -10,22 +10,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <cstdint>
 #include <ogl/renderer/ogltypes.hpp>
 #include <ogl/renderer/oglinclude.hpp>
 
 namespace eXl
 {
-  GLenum GetGLUsage(OGLBufferUsage iUsage);
-  GLenum GetGLAccess(OGLBufferAccess iAccess);
-  GLenum GetGLType(OGLType iType);
-  OGLType ConvertGLType(GLenum iType);
-  GLenum GetGLConnectivity(OGLConnectivity iConn);
-  GLenum GetGLMinFilter(OGLMinFilter iMinFilter);
-  GLenum GetGLMagFilter(OGLMagFilter iMagFilter);
-  GLenum GetGLWrapMode(OGLWrapMode iMode);
-  GLenum GetGLBlend(OGLBlend iMode);
-  GLenum GetGLTextureType(OGLTextureType iTex);
-  GLenum GetGLInternalTextureFormat(OGLInternalTextureFormat iFOrmat);
-  GLenum GetGLTextureElementType(OGLTextureElementType iType);
-  GLenum GetGLTextureFormat(OGLTextureFormat iTex);
+  uint32_t GetGLUsage(OGLBufferUsage iUsage);
+  uint32_t GetGLAccess(OGLBufferAccess iAccess);
+  uint32_t GetGLType(OGLType iType);
+  OGLType ConvertGLType(uint32_t iType);
+  uint32_t GetGLConnectivity(OGLConnectivity iConn);
+  uint32_t GetGLMinFilter(OGLMinFilter iMinFilter);
+  uint32_t GetGLMagFilter(OGLMagFilter iMagFilter);
+  uint32_t GetGLWrapMode(OGLWrapMode iMode);
+  uint32_t GetGLBlend(OGLBlend iMode);
+  uint32_t GetGLTextureType(OGLTextureType iTex);
+  uint32_t GetGLInternalTextureFormat(OGLInternalTextureFormat iFOrmat);
+  uint32_t GetGLTextureElementType(OGLTextureElementType iType);
+  uint32_t GetGLTextureFormat(OGLTextureFormat iTex);
 }

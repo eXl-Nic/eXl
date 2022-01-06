@@ -90,7 +90,7 @@ inline ObjectTableHandle_Base SparseDataAllocator::GetDataFromSlot_Inl(uint32_t 
 
 template <typename T>
 DenseGameDataView<T>::DenseGameDataView(World& iWorld, DenseDataAllocator& iAlloc, ObjectTable<T>& iObjectsSpec)
-  : GameDataView(iWorld, iObjectsSpec)
+  : GameDataView<T>(iWorld, iObjectsSpec)
   , m_Alloc(iAlloc)
 {}
 
@@ -103,7 +103,7 @@ T const* DenseGameDataView<T>::Get(ObjectHandle iObject) const
 template <typename T>
 T* DenseGameDataView<T>::Get(ObjectHandle iObject)
 {
-  if (!m_World.IsObjectValid(iObject))
+  if (!this->m_World.IsObjectValid(iObject))
   {
     return nullptr;
   }
@@ -114,13 +114,13 @@ T* DenseGameDataView<T>::Get(ObjectHandle iObject)
     return nullptr;
   }
 
-  return &m_ObjectSpec.Get(ObjectTable<T>::Handle(m_Alloc.GetDataFromSlot_Inl(slot)));
+  return &this->m_ObjectSpec.Get(typename ObjectTable<T>::Handle(m_Alloc.GetDataFromSlot_Inl(slot)));
 }
 
 template <typename T>
 T const* DenseGameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
 {
-  if (!m_World.IsObjectBeingDestroyed(iObject))
+  if (!this->m_World.IsObjectBeingDestroyed(iObject))
   {
     return nullptr;
   }
@@ -131,7 +131,7 @@ T const* DenseGameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
     return nullptr;
   }
 
-  return &m_ObjectSpec.Get(ObjectTable<T>::Handle(m_Alloc.GetDataFromSlot_Inl(slot)));
+  return &this->m_ObjectSpec.Get(typename ObjectTable<T>::Handle(m_Alloc.GetDataFromSlot_Inl(slot)));
 }
 
 template <typename T>
@@ -143,7 +143,7 @@ T& DenseGameDataView<T>::GetOrCreate(ObjectHandle iObject)
     slot = m_Alloc.AllocateSlot_Inl(iObject);
   }
 
-  return m_ObjectSpec.Get(reinterpret_cast<ObjectTable<T>::Handle&>(slot));
+  return this->m_ObjectSpec.Get(reinterpret_cast<typename ObjectTable<T>::Handle&>(slot));
 }
 
 template <typename T>
@@ -166,14 +166,14 @@ const DataAllocatorBase& DenseGameDataView<T>::GetAlloc() const
 
 template <typename T>
 SparseGameDataView<T>::SparseGameDataView(World& iWorld, SparseDataAllocator& iAlloc, ObjectTable<T>& iObjectsSpec)
-  : GameDataView(iWorld, iObjectsSpec)
+  : GameDataView<T>(iWorld, iObjectsSpec)
   , m_Alloc(iAlloc)
 {}
 
 template <typename T>
 T const* SparseGameDataView<T>::Get(ObjectHandle iObject) const
 {
-  if (!m_World.IsObjectValid(iObject))
+  if (!this->m_World.IsObjectValid(iObject))
   {
     return nullptr;
   }
@@ -183,13 +183,13 @@ T const* SparseGameDataView<T>::Get(ObjectHandle iObject) const
     return nullptr;
   }
   ObjectTableHandle_Base constHandle = m_Alloc.GetDataFromSlot_Inl(slot);
-  return m_ObjectSpec.TryGet(ObjectTable<T>::Handle(constHandle));
+  return this->m_ObjectSpec.TryGet(typename ObjectTable<T>::Handle(constHandle));
 }
 
 template <typename T>
 T* SparseGameDataView<T>::Get(ObjectHandle iObject)
 {
-  if (!m_World.IsObjectValid(iObject))
+  if (!this->m_World.IsObjectValid(iObject))
   {
     return nullptr;
   }
@@ -199,13 +199,13 @@ T* SparseGameDataView<T>::Get(ObjectHandle iObject)
     return nullptr;
   }
   ObjectTableHandle_Base mutableHandle = m_Alloc.GetDataFromSlot(slot);
-  return m_ObjectSpec.TryGet(ObjectTable<T>::Handle(mutableHandle));
+  return this->m_ObjectSpec.TryGet(typename ObjectTable<T>::Handle(mutableHandle));
 }
 
 template <typename T>
 T const* SparseGameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
 {
-  if (!m_World.IsObjectBeingDestroyed(iObject))
+  if (!this->m_World.IsObjectBeingDestroyed(iObject))
   {
     return nullptr;
   }
@@ -217,7 +217,7 @@ T const* SparseGameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
   }
 
   ObjectTableHandle_Base constHandle = const_cast<const SparseGameDataView<T>*>(this)->m_Alloc.GetDataFromSlot_Inl(slot);
-  return m_ObjectSpec.TryGet(ObjectTable<T>::Handle(constHandle));
+  return this->m_ObjectSpec.TryGet(typename ObjectTable<T>::Handle(constHandle));
 }
 
 template <typename T>
@@ -230,7 +230,7 @@ T& SparseGameDataView<T>::GetOrCreate(ObjectHandle iObject)
   }
 
   ObjectTableHandle_Base mutableHandle = m_Alloc.GetDataFromSlot(slot);
-  return m_ObjectSpec.Get(ObjectTable<T>::Handle(mutableHandle));
+  return this->m_ObjectSpec.Get(typename ObjectTable<T>::Handle(mutableHandle));
 }
 
 template <typename T>
@@ -255,11 +255,11 @@ template <typename T>
 template <typename Functor>
 inline void DenseGameDataView<T>::Iterate(Functor const& iFn)
 {
-  m_ObjectSpec.Iterate([&iFn, this](T& iData, ObjectTable<T>::Handle iHandle)
+  this->m_ObjectSpec.Iterate([&iFn, this](T& iData, typename ObjectTable<T>::Handle iHandle)
     {
       uint32_t slot = iHandle.GetId();
       ObjectHandle object = m_Alloc.m_WorldObjects[slot];
-      if (m_World.IsObjectValid(object))
+      if (this->m_World.IsObjectValid(object))
       {
         iFn(object, iData);
       }
@@ -270,11 +270,11 @@ template <typename T>
 template <typename Functor>
 inline void DenseGameDataView<T>::Iterate(Functor const& iFn) const
 {
-  m_ObjectSpec.Iterate([&iFn, this](T const& iData, ObjectTable<T>::Handle iHandle)
+  this->m_ObjectSpec.Iterate([&iFn, this](T const& iData, typename ObjectTable<T>::Handle iHandle)
     {
       uint32_t slot = iHandle.GetId();
       ObjectHandle object = m_Alloc.m_WorldObjects[slot];
-      if (m_World.IsObjectValid(object))
+      if (this->m_World.IsObjectValid(object))
       {
         iFn(object, iData);
       }

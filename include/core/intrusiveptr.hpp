@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <cstddef>
+#include <core/coredef.hpp>
 
 namespace eXl
 {
@@ -31,7 +31,7 @@ namespace eXl
     {
     }
 
-    IntrusivePtr(nullptr_t) : m_Ptr(0)
+    IntrusivePtr(std::nullptr_t) : m_Ptr(0)
     {
     }
 

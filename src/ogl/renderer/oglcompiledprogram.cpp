@@ -24,6 +24,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+#ifdef EXL_WITH_OGL
   namespace
   {
     void SetV1F(uint32_t iLoc, uint32_t iCount, void const* iData)
@@ -227,11 +228,13 @@ namespace eXl
       }
     }
   }
-
+#endif
   void OGLProgramInterface::InitStaticData()
   {
+#ifdef EXL_WITH_OGL
     s_Exception.Init();
     s_TypeMap.Init();
+#endif
   }
 
   OGLProgramInterface::OGLProgramInterface()
@@ -256,6 +259,7 @@ namespace eXl
   
   OGLCompiledProgram* OGLProgramInterface::Compile(OGLSemanticManager& iManager, OGLProgram const* iProg)
   { 
+#ifdef EXL_WITH_OGL
     if(iProg == nullptr)
       return nullptr;
 
@@ -437,6 +441,8 @@ namespace eXl
     }
 
     return newTech;
+#endif
+    return nullptr;
   }
 
   OGLCompiledProgram::OGLCompiledProgram()
@@ -445,14 +451,17 @@ namespace eXl
 
   OGLCompiledProgram::~OGLCompiledProgram()
   {
+#ifdef EXL_WITH_OGL
     if (m_Program)
     {
       glDeleteProgram(m_Program->GetProgName());
     }
+#endif
   }
 
   void OGLCompiledProgram::HandleAttribute(uint32_t iAttribSlot, uint32_t iNum, size_t iStride, size_t iOffset)const
   {
+#ifdef EXL_WITH_OGL
     switch (m_AttribDesc[iAttribSlot].attribType)
     {
     case OGLType::FLOAT32:
@@ -473,10 +482,12 @@ namespace eXl
     }
     
     glVertexAttribDivisor(m_AttribDesc[iAttribSlot].attribLoc, m_AttribDesc[iAttribSlot].attribDivisor);
+#endif
   }
 
   void OGLCompiledProgram::HandleTexture(uint32_t iTexSlot, OGLTexture const* iTexture)const
   {
+#ifdef EXL_WITH_OGL
     glActiveTexture(GL_TEXTURE0 + iTexSlot);
 
     GLenum textureTarget = GetGLTextureType(m_TechData.m_Samplers[iTexSlot].second.samplerType);
@@ -492,10 +503,12 @@ namespace eXl
       glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapX));
       glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GetGLWrapMode(m_TechData.m_Samplers[iTexSlot].second.wrapY));
     }
+#endif
   }
 
   void OGLCompiledProgram::HandleUniform(uint32_t iSlot, void const* iData) const
   {
+#ifdef EXL_WITH_OGL
     uint32_t numFields = m_TechData.m_UnifHandler[iSlot].size();
     uint8_t const* iterData = reinterpret_cast<uint8_t const*>(iData);
     OGLDataHandlerProgData::DataSetter const* setter = &m_TechData.m_UnifHandler[iSlot][0];
@@ -504,12 +517,15 @@ namespace eXl
       setter->setter(setter->location, setter->count, iterData + setter->offset);
       setter++;
     }
+#endif
   }
 
   void OGLCompiledProgram::HandleUniformBlock(uint32_t iSlot, uint32_t iBuffer) const
   {
+#ifdef EXL_WITH_OGL
     //glBindBufferRange(GL_UNIFORM_BUFFER, m_TechData.m_BlockHandler[iSlot].first, iBuffer, 0, m_TechData.m_BlockHandler[iSlot].second);
     glBindBufferBase(GL_UNIFORM_BUFFER, m_TechData.m_BlockHandler[iSlot].first, iBuffer);
+#endif
   }
 
   uint32_t OGLCompiledProgram::GetAttribLocation(uint32_t iAttribSlot) const

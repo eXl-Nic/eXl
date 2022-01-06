@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include "core\corelibexp.hpp"
+#include <core/corelibexp.hpp>
 
 namespace eXl
 {

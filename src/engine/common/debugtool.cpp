@@ -90,7 +90,7 @@ namespace eXl
       {
         if(s_State.m_BreakIn[iSys])
         {
-#ifndef __ANDROID__
+#ifdef WIN32
           __debugbreak();
 #endif
           s_State.m_BreakIn[iSys] = false;

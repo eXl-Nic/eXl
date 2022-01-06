@@ -88,20 +88,20 @@ namespace eXl
     //  return nullptr;
     //}
 
-    template <class T>
-    inline T const* CastBuffer(uint32_t iSlot) const
-    {
-      for(uint32_t i = 0; i<m_Data.size(); ++i)
-      {
-        if(m_Data[i].m_DataSlot == iSlot)
-        {
-          Type const* type = OGLSemanticManager::GetData(iSlot);
-          ConstDynObject tempObj(type, m_Data[i].m_Data);
-          return tempObj.CastBuffer<T>();
-        }
-      }
-      return nullptr;
-    }
+    //template <class T>
+    //inline T const* CastBuffer(uint32_t iSlot) const
+    //{
+    //  for(uint32_t i = 0; i<m_Data.size(); ++i)
+    //  {
+    //    if(m_Data[i].m_DataSlot == iSlot)
+    //    {
+    //      Type const* type = OGLSemanticManager::GetData(iSlot);
+    //      ConstDynObject tempObj(type, m_Data[i].m_Data);
+    //      return tempObj.CastBuffer<T>();
+    //    }
+    //  }
+    //  return nullptr;
+    //}
 
     inline uint32_t GetNumTexture() const{return m_TexData.size();}
     TextureData const* GetTexturePtr() const{return &m_TexData[0];}

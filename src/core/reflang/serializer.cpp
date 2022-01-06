@@ -19,7 +19,7 @@ namespace eXl
       {
         static std::locale s_curLocale("");
 
-        return std::isalnum(static_cast<unsigned char>(c), s_curLocale) || c == '_';
+        return std::isalnum(static_cast<char>(c), s_curLocale) || c == '_';
       }
 
 	    void AutoGenComment(std::ostream& o)

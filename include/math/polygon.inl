@@ -399,7 +399,8 @@ namespace eXl
   template <typename Real>
   bool Polygon<Real>::ContainsPoint(Vector2<Real> const& iPoint) const
   {
-    return boost::polygon::contains(*this, iPoint);
+    boost::polygon::point_data<Real> point(iPoint.X(), iPoint.Y());
+    return boost::polygon::contains(*this, point);
   }
 
   //template <typename Real>

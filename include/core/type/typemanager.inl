@@ -11,10 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 template <typename T>
 ArrayType const* TypeManager::GetArrayType()
 {
-  if (GetType<T>() == GetType<bool>())
-  {
-    return nullptr;
-  }
   ArrayType const* registeredType = GetArrayType(GetType<T>());
   if (registeredType == nullptr)
   {
@@ -23,6 +19,12 @@ ArrayType const* TypeManager::GetArrayType()
   }
 
   return registeredType;
+}
+
+template <>
+inline ArrayType const* TypeManager::GetArrayType<bool>()
+{
+  return nullptr;
 }
 
 template <class T>

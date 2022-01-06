@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
 
-#include "graphutils.hpp"
+//#include "graphutils.hpp"
 
 namespace eXl
 {
@@ -168,7 +168,7 @@ namespace eXl
 
     ES_RuleSystem();
 
-    void Print(std::ostream& oStream, Graph const& iGraph, TIndexMap<Graph> const& iIdxMap, NodePrintCallback, EdgePrintCallback) const;
+    //void Print(std::ostream& oStream, Graph const& iGraph, TIndexMap<Graph> const& iIdxMap, NodePrintCallback, EdgePrintCallback) const;
 
     bool IsRuleSymmetric(uint32_t iRuleId) const;
 

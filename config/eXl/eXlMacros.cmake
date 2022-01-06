@@ -33,14 +33,15 @@ function(SETUP_EXL_TARGET TARGET_NAME)
     endif()
 
 		foreach(DIRECTORY_ITEM ${EXL_DEPS_INCLUDE})
-			set(REFLANG_INCLUDES "${REFLANG_INCLUDES} --include-directory=\"${DIRECTORY_ITEM}\"")
+			set(REFLANG_INCLUDES ${REFLANG_INCLUDES} --include-directory=\"${DIRECTORY_ITEM}\")
 		endforeach()
 
 		set(REFLECTION_TARGET ${TARGET_NAME}_Reflection)
     
-    if(${WIN32})
-		set(REFLANG_PATH $<TARGET_FILE:eXl_reflang>)
-    endif(${WIN32})
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows"
+    OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+      set(REFLANG_PATH $<TARGET_FILE:eXl_reflang>)
+    endif()
     
     string(TOLOWER ${ARGS_LIB_SUFFIX} LIB_SUFFIX_FILENAME)
 

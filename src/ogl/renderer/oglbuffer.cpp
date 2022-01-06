@@ -23,6 +23,7 @@ namespace eXl
 
   OGLBuffer* OGLBuffer::CreateBuffer(OGLBufferUsage iUsage, size_t iSize, void* iData)
   {
+#ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(iUsage);
     GLuint newBufferId;
     glGenBuffers(1,&newBufferId);
@@ -45,18 +46,22 @@ namespace eXl
         return newBuffer;
       }
     }
-    return NULL;
+#endif
+    return nullptr;
   }
 
   void OGLBuffer::SetData(size_t iOffset, size_t iSize, void* iData)
   {
+#ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(m_Usage);
     glBindBuffer(glUsage,m_Id);
     glBufferSubData(glUsage,iOffset,iSize,iData);
+#endif
   }
 
   void* OGLBuffer::MapBuffer(OGLBufferAccess iAccess)
   {
+#ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(m_Usage);
     GLenum glAccess = GetGLAccess(iAccess);
 #ifndef __ANDROID__
@@ -70,10 +75,14 @@ namespace eXl
     }
     return s_TempBuffer;
 #endif
+#else
+    return nullptr;
+#endif
   }
 
   void OGLBuffer::UnmapBuffer()
   {
+#ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(m_Usage);
 #ifndef __ANDROID__
     glBindBuffer(glUsage,m_Id);
@@ -84,11 +93,14 @@ namespace eXl
     glBufferSubData(glUsage,0,GetBufferSize(),s_TempBuffer);
 #endif
     CHECKOGL();
+#endif
   }
 
   OGLBuffer::~OGLBuffer()
   {
+#ifdef EXL_WITH_OGL
     glDeleteBuffers(1,&m_Id);
+#endif
   }
 
   OGLBuffer::OGLBuffer():m_Id(0)

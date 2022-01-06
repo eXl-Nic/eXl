@@ -107,6 +107,7 @@ namespace eXl
 
   OGLCompiledProgram const* OGLSpriteAlgo::CreateSpriteProgram(OGLSemanticManager& iSemantics, bool iFiltered)
   {
+#ifdef EXL_WITH_OGL
     if (!iFiltered)
     {
       GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
@@ -151,10 +152,14 @@ namespace eXl
 
       return uSprTechDesc.Compile(iSemantics, unfilteredProgram);
     }
+#else
+    return nullptr;
+#endif
   }
 
   OGLCompiledProgram const* OGLSpriteAlgo::CreateFontProgram(OGLSemanticManager& iSemantics)
   {
+#ifdef EXL_WITH_OGL
     GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
     GLuint fontFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, fontPS);
     GLuint fontProgramId = OGLUtils::LinkProgram(defaultVShader, fontFShader);
@@ -173,6 +178,9 @@ namespace eXl
     fontTechDesc.AddUniform(OGLSpriteAlgo::GetSpriteColorUniform());
 
     return fontTechDesc.Compile(iSemantics, fontProgram);
+#else
+    return nullptr;
+#endif
   }
 
   UniformName OGLSpriteAlgo::GetSpriteColorUniform()
@@ -252,6 +260,7 @@ namespace eXl
 
   OGLCompiledProgram const* OGLLineAlgo::CreateProgram(OGLSemanticManager& iSemantics)
   {
+#ifdef EXL_WITH_OGL
     GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
     GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, linePS);
 
@@ -270,6 +279,9 @@ namespace eXl
     lineTechDesc.AddUniform(OGLLineAlgo::GetColor());
 
     return lineTechDesc.Compile(iSemantics, defaultProgram);
+#else
+    return nullptr;
+#endif
   }
 
   UniformName OGLLineAlgo::GetColor()

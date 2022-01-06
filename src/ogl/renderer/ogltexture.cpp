@@ -47,6 +47,7 @@ namespace eXl
 
   void OGLTexture::AllocateTexture()
   {
+#ifdef EXL_WITH_OGL
     eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER || m_Buffer != nullptr, void());
     
     if (m_TexId != 0)
@@ -83,6 +84,7 @@ namespace eXl
       glTexBuffer(textureTarget, GetGLInternalTextureFormat(m_InternalFormat), m_Buffer->GetBufferId());
       break;
     }
+#endif
   }
 
   OGLTextureElementType OGLTexture::GetElementType() const
@@ -168,6 +170,7 @@ namespace eXl
 
   OGLTexture::~OGLTexture()
   {
+#ifdef EXL_WITH_OGL
     //if(m_TextureData != NULL)
     //{
     //  eXl_FREE(m_TextureData);
@@ -176,7 +179,8 @@ namespace eXl
     {
       glDeleteTextures(1,&m_TexId);
     }
-    
+
+#endif
   }
 
   //void OGLTexture::DropTextureData()
@@ -190,6 +194,7 @@ namespace eXl
 
   void OGLTexture::Update(AABB2Di iBox, OGLTextureElementType iType, OGLTextureFormat iFormat, void const* iData, uint32_t iMip, uint32_t iSlice)
   {
+#ifdef EXL_WITH_OGL
     eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER, void());
     if(m_TexId != 0 && iData != NULL)
     {
@@ -252,5 +257,6 @@ namespace eXl
         
       }
     }
+#endif
   }
 }

@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <boost/property_map/function_property_map.hpp>
 
 #include <math/mathtools.hpp>
-
+#include <gen/graphutils.hpp>
 //#define DEBUG_PRINT_PREGRAPH
 
 namespace eXl
@@ -481,7 +481,7 @@ namespace eXl
 
   }
 
-  void ES_RuleSystem::Print(std::ostream& oStream, Graph const& iGraph, TIndexMap<Graph> const& iIdxMap, NodePrintCallback iNode, EdgePrintCallback iEdge) const
+  void Print(std::ostream& oStream, ES_RuleSystem::Graph const& iGraph, TIndexMap<ES_RuleSystem::Graph> const& iIdxMap, ES_RuleSystem::NodePrintCallback iNode, ES_RuleSystem::EdgePrintCallback iEdge)
   {
     oStream << "BeginPrint\n";
     for (auto edge : EdgesIter(iGraph))

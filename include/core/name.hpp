@@ -14,7 +14,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/coredef.hpp>
 #include <boost/flyweight.hpp>
 #include <boost/flyweight/no_tracking.hpp>
+#if !defined(EXL_NAME_EXPLICIT_INIT)
 #include <boost/flyweight/intermodule_holder.hpp>
+#endif
 
 #define MAKE_NAME_DECL(NameType) \
 struct NameType : eXl::Name \
@@ -74,7 +76,7 @@ namespace eXl
 
   using NameCore = boost::flyweights::detail::flyweight_core<
     boost::flyweights::detail::default_value_policy<String>, DefaultTag, boost::flyweights::no_tracking,
-    boost::flyweights::hashed_factory<boost::mpl::na, boost::mpl::na, boost::mpl::na, 0>, boost::flyweights::simple_locking, eXl::eXlIntermoduleHolder>;
+    boost::flyweights::hashed_factory<boost::mpl::na, boost::mpl::na, boost::mpl::na>, boost::flyweights::simple_locking, eXl::eXlIntermoduleHolder>;
 
   using NameCoreHolder = NameCore::holder_struct;
 
