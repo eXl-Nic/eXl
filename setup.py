@@ -33,12 +33,12 @@ def computeFileHash(file):
   return sha1.hexdigest()
   
 def unzipLLVM(outPath, packageFileName):
-  #Thanks LLVM
+  #Thanks LLVM for publishing an exe for windows binaries.
   septZPath = os.path.join("C:", "Program Files", "7-Zip", "7z.exe")
   extractDir = outPath + "_temp"
   res = subprocess.run([septZPath, "x", "-o" + extractDir, packageFileName])
   if res.returncode != 0:
-    print("Failed to extract llvm to " + extractDir + "\n")
+    print("Failed to extract llvm to " + extractDir)
     return False
   os.mkdir(outPath)
   libDir = os.path.join(extractDir, "_Ÿ€")
@@ -79,11 +79,11 @@ def main() -> int:
     if os.path.exists(outPath) and hasHash and os.path.exists(hashFile):
       hashStr = open(hashFile, "r").read()
       if hashStr == dep["hash"]:
-        print(dep["name"] + "up to date\n")
+        print(dep["name"] + " up to date")
         mustUpdate = False
         continue
       else :
-        print("Different hash for " + dep["name"] + "\nCurrent : " + hashStr + "\nExpected : " + dep["hash"] + "\nRedownloading\n")
+        print("Different hash for " + dep["name"] + "\nCurrent : " + hashStr + "\nExpected : " + dep["hash"] + "\nRedownloading")
     
     if os.path.exists(outPath):
       shutil.rmtree(outPath)
@@ -101,7 +101,7 @@ def main() -> int:
     packageFile.close()
     
     if hasHash and fileHash != dep["hash"]:
-      print("WARNING : Library " + dep["name"] + " has unexpected hash " + fileHash + ", skipping\n")
+      print("WARNING : Library " + dep["name"] + " has unexpected hash " + fileHash + ", skipping")
       
     print("Unzipping " + dep["name"] + "\n")
     if zipfile.is_zipfile(packageFileName):
@@ -112,9 +112,22 @@ def main() -> int:
       if not unzipLLVM(outPath, packageFileName):
         continue
     else :
-      print("ERROR : Unrecognized archive format for file " + packageFileName + "\n")
+      print("ERROR : Unrecognized archive format for file " + packageFileName)
       continue
       
+    if "patches" in dep:
+      patchFailed = False
+      for patch in dep["patches"]:
+        fileToPatch = os.path.join(outPath, patch["file"])
+        patchFile = os.path.join(eXlDir, patch["patch"])
+        res = subprocess.run(["patch", "-p1", fileToPatch, patchFile])
+        if res.returncode != 0:
+          patchFailed = True
+          print("Failed to patch file " + fileToPatch)
+          break
+      if patchFailed:
+        continue
+    
     open(hashFile, "w").write(fileHash)
     os.remove(packageFileName)
   
