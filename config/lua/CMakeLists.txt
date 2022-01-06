@@ -9,7 +9,7 @@ include(${CMAKE_MODULE_PATH}/CustomMacros.cmake)
 
 enable_testing()
 
-if(${BUILD_EXL_SHARED})
+if(${EXL_BUILD_SHARED})
 	set(BUILD_STATIC OFF)
 else()
 	set(BUILD_STATIC ON)

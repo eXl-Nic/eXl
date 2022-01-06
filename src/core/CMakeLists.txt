@@ -79,7 +79,7 @@ set (SOURCES ${SOURCES}
   type/tagtype.cpp
 )
 
-if(${BUILD_EXL_WITH_LUA})
+if(${EXL_BUILD_WITH_LUA})
 
 include(lua/luabind/luabind.cmake)
 
@@ -109,7 +109,7 @@ set(SOURCES ${SOURCES}
 
 add_library(eXl_Core ${LIBRARY_TYPE} ${SOURCES})
 
-if(${BUILD_EXL_WITH_LUA})
+if(${EXL_BUILD_WITH_LUA})
 target_compile_definitions(eXl_Core PRIVATE -DLUABIND_BUILDING)
 SET(CORE_LIBS ${CORE_LIBS} ${LUABIND_LIBRARIES} ${LUA_LIBRARIES})
 endif()

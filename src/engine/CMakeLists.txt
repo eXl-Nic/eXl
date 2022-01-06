@@ -19,7 +19,7 @@ SOURCE_GROUP("GUI\\Header" REGULAR_EXPRESSION "gui/.*(hpp|inl)")
 
 FILE(GLOB_RECURSE EXL_ENGINE_HEADER_FILES LIST_DIRECTORIES false ${INCLUDE_DIR}/*.hpp ${INCLUDE_DIR}/*.inl)
 
-if(NOT ${BUILD_EXL_SHARED})
+if(NOT ${EXL_BUILD_SHARED})
 add_definitions(-DIMGUI_API=)
 endif()
 
@@ -56,7 +56,7 @@ game/scripttrigger.cpp
 
 SET(GFX_SRC)
 
-if(${BUILD_EXL_OGL})
+if(${EXL_BUILD_OGL})
 
 SET(GFX_SRC
 
@@ -155,7 +155,7 @@ ${INCLUDE_DIR}/physics/physicsdef.hpp)
 
 SET (EXL_DEPENDENCIES eXl_Gen)
 
-if(${BUILD_EXL_OGL})
+if(${EXL_BUILD_OGL})
 SET (EXL_DEPENDENCIES ${EXL_DEPENDENCIES} eXl_OGL)
 endif()
 
@@ -215,14 +215,14 @@ endif()
 
 target_link_libraries(eXl_Main PRIVATE ${PRIVATE_LIBRARIES})
 
-if(${BUILD_EXL_EDITOR})
-add_subdirectory(editor ${OUT_DIR}/engine/editor)
+if(${EXL_BUILD_EDITOR})
+add_subdirectory(editor ${OUT_DIR}/eXl/editor)
 endif()
 
 add_executable(eXl_Player main_player.cpp)
 SETUP_EXL_TARGET(eXl_Player DEPENDENCIES eXl_Main)
 
-if(${BUILD_EXL_TESTS})
+if(${EXL_BUILD_TESTS})
 add_subdirectory(test)
 endif()
 

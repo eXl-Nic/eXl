@@ -1,0 +1,13 @@
+set(GLEW_ROOT "${EXL_ROOT}/package/glew/glew-2.2.0")
+SET(GLEW_INCLUDE_DIR ${GLEW_ROOT}/include)
+SET(GLEW_VARIANT "Release/x64")
+if(${MSVC})
+if(${EXL_BUILD_SHARED})
+SET(GLEW_LIBRARY ${GLEW_ROOT}/lib/${GLEW_VARIANT}/glew32.lib)
+else()
+SET(GLEW_LIBRARY ${GLEW_ROOT}/${GLEW_VARIANT}/glew32s.lib)
+endif()
+endif()
+
+add_subdirectory(config/glew)
+set_target_properties(glew PROPERTIES FOLDER Dependencies)
