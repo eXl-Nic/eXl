@@ -1,4 +1,4 @@
-set(Boost_ROOT "${EXL_ROOT}/package/boost/boost_1_78_0")
+
 if(${ANDROID})  
   SET(Boost_INCLUDE_DIR ${Boost_ROOT})
   

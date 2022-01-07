@@ -20,6 +20,10 @@
       {
         "file" : "FreeImage/Source/FreeImage/Plugin.cpp",
         "patch" : "config/freeimage/plugin.patch"
+      },
+      {
+        "file" : "FreeImage/Source/FreeImage/MultiPage.cpp",
+        "patch" : "config/freeimage/multipage.patch"
       }
     ]
   },

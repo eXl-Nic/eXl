@@ -15,7 +15,7 @@ set(USE_GRAPHICAL_BENCHMARK OFF CACHE BOOL "" FORCE)
 set(USE_MSVC_RUNTIME_LIBRARY_DLL ON CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(${EXL_ROOT}/modules/bullet ${OUT_DIR}/modules/bullet)
+add_subdirectory(${BULLET_ROOT} ${OUT_DIR}/modules/bullet)
 
 set_target_properties(Bullet3Common PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(BulletCollision PROPERTIES FOLDER Dependencies/Bullet)
@@ -27,3 +27,5 @@ set_target_properties(ConvexDecomposition PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(GIMPACTUtils PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(HACD PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(LinearMath PROPERTIES FOLDER Dependencies/Bullet)
+
+set(BULLET_INCLUDE_DIR "${BULLET_ROOT}/src")
