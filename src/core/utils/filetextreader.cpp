@@ -79,4 +79,33 @@ namespace eXl
     return nullptr;
   }
 }
+#else 
+
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+namespace eXl
+{
+  FileTextReader::~FileTextReader()
+  {
+    munmap(m_Mapping, m_Size);
+  }
+
+  FileTextReader* FileTextReader::Create(char const* iPath)
+  {
+    int fd = open(iPath, O_RDONLY);
+    eXl_ASSERT_MSG_REPAIR_RET(fd != -1, eXl_FORMAT("While trying to open %s", iPath), nullptr);
+
+    struct stat sb;
+    eXl_ASSERT_MSG_REPAIR_RET(fstat(fd, &sb) != -1, eXl_FORMAT("While trying to stat %s", iPath), nullptr);
+
+    void* addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+    eXl_ASSERT_MSG_REPAIR_RET(addr != MAP_FAILED, eXl_FORMAT("While trying to map %s", iPath), nullptr);
+    const char* fileBegin = (char*)addr;
+    return eXl_NEW FileTextReader(String(iPath), nullptr, addr, fileBegin, fileBegin + sb.st_size);
+  }
+}
+
 #endif

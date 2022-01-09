@@ -17,6 +17,9 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(${BULLET_ROOT} ${OUT_DIR}/modules/bullet)
 
+set(EXECUTABLE_OUTPUT_PATH ${OUT_DIR} CACHE PATH "Output Dir" FORCE)
+set(LIBRARY_OUTPUT_PATH ${OUT_DIR} CACHE PATH "Output Dir" FORCE)
+
 set_target_properties(Bullet3Common PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(BulletCollision PROPERTIES FOLDER Dependencies/Bullet)
 set_target_properties(BulletDynamics PROPERTIES FOLDER Dependencies/Bullet)

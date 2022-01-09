@@ -207,7 +207,7 @@ namespace eXl
   {
   public:
     EnginePlugin() 
-      : Plugin("EbninePlugin")
+      : Plugin("EnginePlugin")
     {
       m_Dependencies.push_back("eXl_Math");
 #ifdef EXL_WITH_OGL

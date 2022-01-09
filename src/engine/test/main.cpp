@@ -4,6 +4,25 @@
 #include <core/coretest.hpp>
 #include <core/vlog.hpp>
 
+#ifndef EXL_SHARED_LIBRARY
+
+#include <core/plugin.hpp>
+
+namespace eXl
+{
+  Plugin& MathPlugin_GetPlugin();
+  Plugin& OGLPlugin_GetPlugin();
+  Plugin& EnginePlugin_GetPlugin();
+
+  PluginLoadMap s_StaticPluginMap =
+  {
+    {"eXl_OGL", &OGLPlugin_GetPlugin},
+    {"eXl_Math", &MathPlugin_GetPlugin},
+    {"eXl_Engine", &EnginePlugin_GetPlugin}
+  };
+}
+#endif
+
 struct CoreLibCtx
 {
   CoreLibCtx()

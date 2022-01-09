@@ -50,7 +50,12 @@ namespace eXl
   using PendingPluginVector = boost::container::static_vector<Plugin*, 128>;
   namespace
   {
-    PluginMap s_PluginMap;
+
+    PluginMap& GetPluginMap()
+    {
+      static PluginMap s_PluginMap;
+      return s_PluginMap;
+    }
     PendingPluginVector& GetPendingLoadPlugins()
     {
       static PendingPluginVector s_PendingLoadPlugins;
@@ -86,17 +91,17 @@ namespace eXl
     m_Name(iName),
     m_Library(nullptr)
   {
-    s_PluginMap.insert(std::make_pair(iName,this));
+    GetPluginMap().insert(std::make_pair(iName,this));
     m_LoadOrder = s_LoadNum++;
     GetPendingLoadPlugins().push_back(this);
   }
 
   Plugin::~Plugin()
   {
-    PluginMap::iterator iter = s_PluginMap.find(m_Name);
-    if(iter != s_PluginMap.end())
+    PluginMap::iterator iter = GetPluginMap().find(m_Name);
+    if(iter != GetPluginMap().end())
     {
-      s_PluginMap.erase(iter);
+      GetPluginMap().erase(iter);
     }
 
     if (m_Library)
@@ -128,9 +133,9 @@ namespace eXl
 
   Plugin* Plugin::LoadLib(const String& iFilename)
   {
-    PluginMap::iterator iter = s_PluginMap.find(iFilename);
+    PluginMap::iterator iter = GetPluginMap().find(iFilename);
 
-    if(iter == s_PluginMap.end())
+    if(iter == GetPluginMap().end())
     {
 #ifndef EXL_SHARED_LIBRARY
       PluginLoadMap::iterator iter = s_StaticPluginMap.find(iFilename);
@@ -188,8 +193,8 @@ namespace eXl
     void _PLClose()
     {
       Set<Plugin*,CompareLoadOrder> destSet;
-      PluginMap::iterator iter = s_PluginMap.begin();
-      PluginMap::iterator iterEnd = s_PluginMap.end();
+      PluginMap::iterator iter = GetPluginMap().begin();
+      PluginMap::iterator iterEnd = GetPluginMap().end();
       for(;iter != iterEnd;++iter)
       {
         destSet.insert(iter->second);

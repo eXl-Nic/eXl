@@ -24,19 +24,6 @@ namespace eXl
     using TextFileReadFactory = std::function<std::unique_ptr<TextReader>(char const* iPath)>;
 
     EXL_CORE_API void SetTextFileReadFactory(TextFileReadFactory);
-
-#ifdef EXL_RSC_HAS_FILESYSTEM
-    template <typename T>
-    T* Load(Path const& iPath)
-    {
-      return static_cast<T*>(LoadExpectedType(iPath, T::StaticLoaderName()));
-    }
-#endif
-    template <typename T>
-    T* Load(Resource::UUID const& iUUID)
-    {
-      return static_cast<T*>(LoadExpectedType(iUUID, T::StaticLoaderName()));
-    }
     
     EXL_CORE_API void AddManifest(RttiObject const& iManifest);
     EXL_CORE_API void RemoveManifest(RttiObject const& iManifest);
@@ -54,6 +41,11 @@ namespace eXl
     EXL_CORE_API ResourceLoader* GetLoader(ResourceLoaderName iLoaderName);
 
     EXL_CORE_API Resource* LoadExpectedType(Resource::UUID const& iUUID, const ResourceLoaderName& iExpectedLoader);
+    template <typename T>
+    T* Load(Resource::UUID const& iUUID)
+    {
+      return static_cast<T*>(LoadExpectedType(iUUID, T::StaticLoaderName()));
+    }
     EXL_CORE_API Resource* Load(Resource::UUID const& iUUID, ResourceLoaderName* oLoader = nullptr);
 
     EXL_CORE_API Vector<Resource::Header> ListResources();
@@ -74,6 +66,11 @@ namespace eXl
     EXL_CORE_API Err SaveTo(Resource* iRsc, Path const& iPath);
     EXL_CORE_API Err Save(Resource* iRsc);
     EXL_CORE_API void Bake(Path const& iDest);
+    template <typename T>
+    T* Load(Path const& iPath)
+    {
+      return static_cast<T*>(LoadExpectedType(iPath, T::StaticLoaderName()));
+    }
 #endif
   }
 }

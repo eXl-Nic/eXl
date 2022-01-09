@@ -18,8 +18,6 @@ set(EXL_BUILD_WITH_FREEIMAGE ON CACHE BOOL "Enable eXl Freeimage integration")
 
 set(EXL_BUILD_TESTS OFF CACHE BOOL "Build eXl tests")
 
-
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(Boost_ROOT "${EXL_ROOT}/package/boost/boost_1_78_0")
@@ -37,6 +35,7 @@ set(LAYOUT_ROOT "${EXL_ROOT}/modules/layout")
 set(GTEST_ROOT "${EXL_ROOT}/modules/gtest")
 set(UTF8_ROOT "${EXL_ROOT}/modules/utf8")
 
+include(config/eXl/eXlSetupBuildPath.cmake)
 include(config/eXl/eXlconfig.cmake)
 include(config/eXl/eXlMacros.cmake)
 

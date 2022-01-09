@@ -47,6 +47,8 @@ endif()
 
 set (REFLECTED_HEADERS ${INCLUDE_DIR}/oglspritealgo.hpp)
 
+add_definitions(${GLEW_DEFINES})
+
 SETUP_EXL_LIB(eXl_OGL "OGL" DEPENDENCIES eXl_Core eXl_Math HEADERS_TO_PARSE ${REFLECTED_HEADERS})
 
 target_link_libraries(eXl_OGL LINK_PRIVATE ${PREREQS_PRIV})
