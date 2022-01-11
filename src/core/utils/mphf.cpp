@@ -48,7 +48,7 @@ namespace eXl
       return POT;
     }(iNumKeys);
 
-    for (uint32_t i = 0; i < 3; ++i, m_HashLen++)
+    for (uint32_t numTry = 0; numTry < 3; ++numTry, m_HashLen++)
     {
       m_Mask = (1 << m_HashLen) - 1;
 
@@ -142,7 +142,7 @@ namespace eXl
       {
         uint32_t curEdgeIdx = sortedEdges.back();
         sortedEdges.pop_back();
-
+        //uint32_t curEdgeIdx = i;
         Edge& curEdge = edges[curEdgeIdx];
         uint32_t nodeIdx;
         uint32_t nodeHash = 0;
@@ -165,13 +165,14 @@ namespace eXl
         eXl_ASSERT(labelCheck == 3);
 
         int32_t assignment = nodeHash;
-
+        uint32_t testSum = 0;
         for (auto otherNodeIdx : curEdge.nodeIdx)
         {
           if (visited[otherNodeIdx])
           {
             uint32_t otherNodeValue = nodes[otherNodeIdx].value;
             assignment -= GetLabel(otherNodeValue);
+            testSum += GetLabel(otherNodeValue);
           }
         }
 
@@ -182,6 +183,7 @@ namespace eXl
         }
 
         eXl_ASSERT(assignment != 3);
+        eXl_ASSERT((assignment + testSum) % 3 == nodeHash);
         uint64_t bitValue = assignment;
         bitValue <<= (2 * bits);
 
@@ -190,8 +192,10 @@ namespace eXl
 
         labelCheck = GetLabel(nodeValue);
         eXl_ASSERT(labelCheck == assignment);
-
-        visited[nodeIdx] = true;
+        for (auto allNodeIdx : curEdge.nodeIdx)
+        {
+          visited[allNodeIdx] = true;
+        }
       }
 
       uint32_t totCheck = 0;
