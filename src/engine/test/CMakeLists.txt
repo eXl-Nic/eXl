@@ -10,6 +10,7 @@ transformtest.cpp
 resourcetest.cpp
 graphtest.cpp
 maptest.cpp
+mphf.cpp
 
 main.cpp
 )
