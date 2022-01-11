@@ -12,57 +12,7 @@
 #include <x86intrin.h>
 #endif
 
-
 using namespace eXl;
-
-class StringMPH : public MPHF_Base<String, StringMPH>
-{
-public:
-
-  template <typename Iter>
-  void Build(Iter const& iBegin, Iter const& iEnd)
-  {
-    std::unique_ptr<Random> rand(Random::CreateDefaultRNG(__rdtsc()));
-    m_Seed1 = rand->Generate();
-    m_Seed2 = rand->Generate();
-    m_Seed3 = rand->Generate();
-    for (uint32_t i = 0; i < 64; ++i)
-    {
-      if (_Build(iBegin, iEnd))
-      {
-        return;
-      }
-      m_Seed1 = rand->Generate();
-      m_Seed2 = rand->Generate();
-      m_Seed3 = rand->Generate();
-    }
-
-    eXl_FAIL_MSG("Failed to build a perfect hashing function in 64 tries");
-  }
-
-  void Hash(String const& iStr, uint32_t (&oHashes)[3]) const
-  {
-    size_t value = boost::hash_value(iStr);
-
-    size_t hash1 = m_Seed1;
-    boost::hash_combine(hash1, value);
-
-    size_t hash2 = m_Seed2;
-    boost::hash_combine(hash2, value);
-
-    size_t hash3 = m_Seed3;
-    //boost::hash_combine(hash3, value);
-    hash3 ^= std::hash<String>()(iStr);
-
-    oHashes[0] = hash1;//(hash1 & 0xFFFF);
-    oHashes[1] = hash2;//((hash1 >> 16) & 0xFFFF);
-    oHashes[2] = hash3;//(hash2 & 0xFFFF);
-  }
-private:
-  uint32_t m_Seed1;
-  uint32_t m_Seed2;
-  uint32_t m_Seed3;
-};
 
 class NameMPHF : public MPHF_Base<Name, NameMPHF>
 {
@@ -70,19 +20,12 @@ public:
   template <typename Iter>
   void Build(Iter const& iBegin, Iter const& iEnd)
   {
-    std::unique_ptr<Random> rand(Random::CreateDefaultRNG(__rdtsc()));
-    m_Seed1 = rand->Generate();
-    m_Seed2 = rand->Generate();
-    m_Seed3 = rand->Generate();
     for (uint32_t i = 0; i < 64; ++i)
     {
       if (_Build(iBegin, iEnd))
       {
         return;
       }
-      m_Seed1 = rand->Generate();
-      m_Seed2 = rand->Generate();
-      m_Seed3 = rand->Generate();
     }
 
     eXl_FAIL_MSG("Failed to build a perfect hashing function in 64 tries");
@@ -90,20 +33,6 @@ public:
 
   void Hash(Name const& iName, uint32_t(&oHashes)[3]) const
   {
-    //size_t value = boost::hash_value(iName.get());
-    //
-    //size_t hash1 = m_Seed1;
-    //boost::hash_combine(hash1, value);
-    //
-    //size_t hash2 = m_Seed2;
-    //boost::hash_combine(hash2, value);
-    //
-    //size_t hash3 = m_Seed3;
-    //boost::hash_combine(hash3, value);
-    //
-    //oHashes[0] = hash1;
-    //oHashes[1] = hash2;
-    //oHashes[2] = hash3;
     ptrdiff_t ptr = (ptrdiff_t)iName.get().c_str();
     ptr = ((ptr >> 16) ^ ptr) * 0x45d9f3b45d9f3b;
     ptr = ((ptr >> 16) ^ ptr) * 0x45d9f3b45d9f3b;
@@ -113,10 +42,6 @@ public:
     oHashes[1] = (ptr >> 21) & (1 << 22) - 1;
     oHashes[2] = (ptr >> 42) & (1 << 22) - 1;
   }
-protected:
-  uint32_t m_Seed1;
-  uint32_t m_Seed2;
-  uint32_t m_Seed3;
 };
 
 TEST(Core, MPHF)

@@ -9,9 +9,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <core/coredef.hpp>
+#include <core/random.hpp>
 
 namespace eXl
 {
+  /*
+   * Inspired by the paper "Simple and Space-Efficient Minimal Perfect Hash Functions"
+   */
   struct EXL_CORE_API MPHF_Data
   {
     uint32_t m_HashLen;
@@ -80,6 +84,11 @@ namespace eXl
       return m_Data.Compute(hashes);
     }
 
+    MPHF_Data const& GetData() const
+    {
+      return m_Data;
+    }
+
   protected:
     template <typename Iter>
     Err _Build(Iter const& iBegin, Iter const& iEnd)
@@ -102,5 +111,39 @@ namespace eXl
     }
   private:
     MPHF_Data m_Data;
+  };
+
+  class EXL_CORE_API StringMPH : public MPHF_Base<KString, StringMPH>
+  {
+  public:
+
+    template <typename Iter>
+    Err Build(Iter const& iBegin, Iter const& iEnd)
+    {
+      std::unique_ptr<Random> rand(Random::CreateDefaultRNG(__rdtsc()));
+      UpdateSeeds(*rand);
+      for (uint32_t i = 0; i < 64; ++i)
+      {
+        if (_Build(iBegin, iEnd))
+        {
+          return Err::Success;
+        }
+        UpdateSeeds(*rand);
+      }
+
+      eXl_FAIL_MSG_RET("Failed to build a perfect hashing function in 64 tries", Err::Failure);
+    }
+
+    void Hash(KString iStr, uint32_t(&oHashes)[3]) const;
+
+    void GetSeeds(uint32_t (&oSeeds)[3]) const
+    {
+      std::copy(m_Seeds, ArrayEnd(m_Seeds), oSeeds);
+    }
+
+  private:
+    void UpdateSeeds(Random& iRand);
+
+    uint32_t m_Seeds[3];
   };
 }

@@ -9,6 +9,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <core/utils/mphf.hpp>
+#include <functional>
+#include <xxhash.h>
 
 namespace eXl
 {
@@ -60,7 +62,7 @@ namespace eXl
 
       UnorderedMap<uint32_t, uint32_t> valueToNode;
       Vector<Node> nodes;
-      nodes.reserve(iNumKeys * 2);
+      nodes.reserve(iNumKeys * 3);
       Vector<uint32_t> nodesByDegree;
 
       // Build the graph. Node == hash value. Edge == values assigned to a given key.
@@ -142,7 +144,6 @@ namespace eXl
       {
         uint32_t curEdgeIdx = sortedEdges.back();
         sortedEdges.pop_back();
-        //uint32_t curEdgeIdx = i;
         Edge& curEdge = edges[curEdgeIdx];
         uint32_t nodeIdx;
         uint32_t nodeHash = 0;
@@ -155,14 +156,9 @@ namespace eXl
           }
         }
 
-        eXl_ASSERT(nodeHash != 3);
-
         uint32_t nodeValue = nodes[nodeIdx].value;
         uint32_t bucket = nodeValue / 32;
         uint32_t bits = nodeValue % 32;
-
-        uint32_t labelCheck = GetLabel(nodeValue);
-        eXl_ASSERT(labelCheck == 3);
 
         int32_t assignment = nodeHash;
         uint32_t testSum = 0;
@@ -182,34 +178,15 @@ namespace eXl
           assignment += 3;
         }
 
-        eXl_ASSERT(assignment != 3);
-        eXl_ASSERT((assignment + testSum) % 3 == nodeHash);
         uint64_t bitValue = assignment;
         bitValue <<= (2 * bits);
 
         m_AssignmentTable[bucket] &= ~(3ull << (2 * bits));
         m_AssignmentTable[bucket] |= bitValue;
 
-        labelCheck = GetLabel(nodeValue);
-        eXl_ASSERT(labelCheck == assignment);
         for (auto allNodeIdx : curEdge.nodeIdx)
         {
           visited[allNodeIdx] = true;
-        }
-      }
-
-      uint32_t totCheck = 0;
-      uint32_t totCheck_2 = 0;
-      for (uint32_t i = 0; i < nodes.size(); ++i)
-      {
-        if (visited[i])
-        {
-          ++totCheck_2;
-          uint32_t label = GetLabel(nodes[i].value);
-          if (label != 3)
-          {
-            totCheck++;
-          }
         }
       }
 
@@ -223,5 +200,27 @@ namespace eXl
       return Err::Success;
     }
     return Err::Failure;
+  }
+
+  void StringMPH::Hash(KString iStr, uint32_t(&oHashes)[3]) const
+  {
+    size_t value = boost::hash_value(iStr);
+
+    size_t hash1 = m_Seeds[0];
+    boost::hash_combine(hash1, value);
+
+    size_t hash2 = XXH32(iStr.data(), iStr.size(), m_Seeds[1]);
+    size_t hash3 = m_Seeds[2] ^ std::hash<KString>()(iStr);
+
+    oHashes[0] = hash1;
+    oHashes[1] = hash2;
+    oHashes[2] = hash3;
+  }
+
+  void StringMPH::UpdateSeeds(Random& iRand)
+  {
+    m_Seeds[0] = iRand.Generate();
+    m_Seeds[1] = iRand.Generate();
+    m_Seeds[2] = iRand.Generate();
   }
 }
