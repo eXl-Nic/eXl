@@ -44,7 +44,7 @@ namespace eXl
     m_CurTerrainType = types[0].m_TerrainType;
     for (auto const& type : types)
     {
-      m_TerrainSelector->addItem(type.m_TerrainType.get().c_str());
+      m_TerrainSelector->addItem(type.m_TerrainType.c_str());
     }
 
 		QObject::connect(m_TerrainSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, types](int iIndex)

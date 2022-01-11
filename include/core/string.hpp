@@ -92,12 +92,12 @@ namespace eXl
     static AString ToASCII(wchar_t const*);
     inline static AString ToASCII(WString const& iStr){return ToASCII(iStr.c_str());}
 
-    static int          ToInt(AString const& iStr);
-    static unsigned int ToUInt(AString const& iStr);
-    static size_t       ToSizeT(AString const& iStr);
-    static float        ToFloat(AString const& iStr);
-    static double       ToDouble(AString const& iStr);
-    static void const*  ToPtr(AString const& iStr);
+    static int          ToInt(KString const& iStr);
+    static unsigned int ToUInt(KString const& iStr);
+    static size_t       ToSizeT(KString const& iStr);
+    static float        ToFloat(KString const& iStr);
+    static double       ToDouble(KString const& iStr);
+    static void const*  ToPtr(KString const& iStr);
 
     static int          ToInt(WString const& iStr);
     static unsigned int ToUInt(WString const& iStr);

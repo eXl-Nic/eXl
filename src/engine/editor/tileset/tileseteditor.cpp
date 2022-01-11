@@ -54,9 +54,9 @@ namespace eXl
 
     virtual DocumentState* CreateNewDocument()
     {
-      QString resourceLoaderName = m_Loader.get().c_str();
+      QString resourceLoaderName = m_Loader.c_str();
       QString title("New ");
-      title.append(QString::fromUtf8(Tileset::StaticLoaderName().get().c_str()));
+      title.append(QString::fromUtf8(Tileset::StaticLoaderName().c_str()));
 
       QString file = QFileDialog::getSaveFileName(nullptr, title,
         QString::fromStdString(EditorState::GetProjectDirectory().string()),

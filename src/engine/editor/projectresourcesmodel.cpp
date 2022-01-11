@@ -161,7 +161,7 @@ namespace eXl
       QModelIndex parent = index.parent();
       if (!parent.isValid())
       {
-        return QString::fromUtf8(m_IndexToLoader[index.row()].get().c_str());
+        return QString::fromUtf8(m_IndexToLoader[index.row()].c_str());
       }
       else
       {

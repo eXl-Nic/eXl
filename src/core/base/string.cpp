@@ -14,6 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include <charconv>
 
 namespace eXl
 {
@@ -128,55 +129,68 @@ namespace eXl
 #if WIN32
 #define SScanF sscanf_s
 #define WSScanF wscanf_s
+
+  float StringUtil::ToFloat(KString const& iStr)
+  {
+    float res;
+    std::from_chars(iStr.data(), iStr.data() + iStr.size(), res);
+    return res;
+  }
+
+  double StringUtil::ToDouble(KString const& iStr)
+  {
+    double res;
+    std::from_chars(iStr.data(), iStr.data() + iStr.size(), res);
+    return res;
+  }
+
 #else
 #define SScanF sscanf
 #define WSScanF wscanf
-#endif
 
-
-  int StringUtil::ToInt(AString const& iStr)
-  {
-    int res;
-    SScanF(iStr.c_str(), "%i", &res);
-    return res;
-  }
-
-  unsigned int StringUtil::ToUInt(AString const& iStr)
-  {
-    unsigned int res;
-    SScanF(iStr.c_str(),"%u",&res);
-    return res;
-  }
-
-  size_t StringUtil::ToSizeT(AString const& iStr)
-  {
-    size_t res;
-#ifdef WIN32
-    SScanF(iStr.c_str(),"%Iu",&res);
-#else
-    SScanF(iStr.c_str(),"%zu",&res);
-#endif
-    return res;
-  }
-
-  float StringUtil::ToFloat(AString const& iStr)
+  float StringUtil::ToFloat(KString const& iStr)
   {
     float res;
-    SScanF(iStr.c_str(),"%f",&res);
+    String temp(iStr);
+    SScanF(temp.c_str(), "%f", &res);
     return res;
   }
 
-  double StringUtil::ToDouble(AString const& iStr)
+  double StringUtil::ToDouble(KString const& iStr)
   {
     double res;
-    SScanF(iStr.c_str(),"%lf",&res);
+    String temp(iStr);
+    SScanF(temp.c_str(), "%lf", &res);
+    return res;
+  }
+#endif
+
+  int StringUtil::ToInt(KString const& iStr)
+  {
+    int res;
+    std::from_chars(iStr.data(), iStr.data() + iStr.size(), res);
     return res;
   }
 
-  void const* StringUtil::ToPtr(AString const& iStr)
+  unsigned int StringUtil::ToUInt(KString const& iStr)
   {
+    unsigned int res;
+    std::from_chars(iStr.data(), iStr.data() + iStr.size(), res);
+    return res;
+  }
+
+  size_t StringUtil::ToSizeT(KString const& iStr)
+  {
+    size_t res;
+    std::from_chars(iStr.data(), iStr.data() + iStr.size(), res);
+    return res;
+  }
+
+  void const* StringUtil::ToPtr(KString const& iStr)
+  {
+    String temp(iStr);
     void const* res;
-    SScanF(iStr.c_str(),"%p",&res);
+    SScanF(temp.c_str(),"%p",&res);
     return res;
   }
 

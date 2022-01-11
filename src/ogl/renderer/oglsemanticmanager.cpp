@@ -59,7 +59,7 @@ namespace eXl
     eXl_ASSERT_MSG(iDataType != NULL,"");
 
     m_Uniforms.push_back(OGLUniformData());
-    m_Uniforms.back().m_Name = iName;
+    m_Uniforms.back().m_Name = iName.get();
     m_Uniforms.back().m_Type = iDataType;
 
     return uniformSlot;
@@ -104,7 +104,7 @@ namespace eXl
     }
 
     m_SamplerDesc.push_back(iSampler);
-    m_SamplerDesc.back().name = iTexName;
+    m_SamplerDesc.back().name = iTexName.get();
 
     return textureSlot;
   }

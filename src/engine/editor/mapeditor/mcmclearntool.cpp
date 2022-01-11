@@ -259,7 +259,7 @@ namespace eXl
           info.placeable = true;
           info.layers.insert(iTile.m_Layer);
           GetTileInfo(iTile.m_Tileset, iTile.m_Tile, info);
-          info.desc = String("Tile : ") + iTile.m_Tile.get();
+          info.desc = String("Tile : ") + String(iTile.m_Tile.get());
         });
     }
 
@@ -282,7 +282,7 @@ namespace eXl
           {
             GetTileInfo(group->GetTileset(), group->m_DefaultTile, info);
           }
-          info.desc = "Terrain : " + iIsland.m_Terrain.get();
+          info.desc = "Terrain : " + String(iIsland.m_Terrain.get());
         });
     }
 

@@ -373,7 +373,7 @@ namespace eXl
     {
       ResourceHandle<Tileset> handle;
       handle.SetUUID(iUUID);
-      return m_Impl->m_TilesTool->AddAt(handle, TileName(iSubobject.get()), 0, TerrainTypeName("Wall"), iPos, false);
+      return m_Impl->m_TilesTool->AddAt(handle, TileName(iSubobject), 0, TerrainTypeName("Wall"), iPos, false);
     }
     else if (header->m_LoaderName == Archetype::StaticLoaderName())
     {

@@ -37,7 +37,7 @@ namespace eXl
     }
     else if (objType == TypeManager::GetType<Name>())
     {
-      oVariant = QString(iObj.CastBuffer<Name>()->get().c_str());
+      oVariant = QString(iObj.CastBuffer<Name>()->c_str());
     }
     else if(objType == TypeManager::GetType<bool>())
     {

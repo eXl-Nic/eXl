@@ -280,7 +280,7 @@ namespace eXl
     m_Impl->m_BehaviourSelector->addItem("<empty>");
     for (auto const& name : m_Impl->m_Behaviours)
     {
-      m_Impl->m_BehaviourSelector->addItem(QString::fromUtf8(name.get().c_str()));
+      m_Impl->m_BehaviourSelector->addItem(QString::fromUtf8(name.c_str()));
     }
 
     if (LuaScriptSystem::GetBehaviourDesc(m_Impl->m_Script->m_BehaviourName))
@@ -346,7 +346,7 @@ namespace eXl
     }
     String scriptObjName = m_Script->GetName();
     scriptObjName.append("_");
-    scriptObjName.append(desc->behaviourName);
+    scriptObjName.append(desc->behaviourName.get());
     scriptObjName.append("_script");
     
     String defaultScript;

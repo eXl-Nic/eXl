@@ -12,11 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/string.hpp>
 #include <core/coredef.hpp>
-#include <boost/flyweight.hpp>
-#include <boost/flyweight/no_tracking.hpp>
-#if !defined(EXL_NAME_EXPLICIT_INIT)
-#include <boost/flyweight/intermodule_holder.hpp>
-#endif
 
 #define MAKE_NAME_DECL(NameType) \
 struct NameType : eXl::Name \
@@ -45,12 +40,22 @@ inline size_t hash_value(NameType const& iName) \
 MAKE_NAME_DECL(NameType); \
 MAKE_NAME_TYPE(NameType)
 
+//#define EXL_NAME_BOOST_IMPL
+
+#ifdef EXL_NAME_BOOST_IMPL
+
+#include <boost/flyweight.hpp>
+#include <boost/flyweight/no_tracking.hpp>
+#if !defined(EXL_NAME_EXPLICIT_INIT)
+#include <boost/flyweight/intermodule_holder.hpp>
+#endif
+
 namespace eXl
 {
   struct DefaultTag {};
 
 #if !defined(EXL_SHARED_LIBRARY)
-  using Name = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, boost::flyweights::no_tracking>;
+  using Name_Base = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, boost::flyweights::no_tracking>;
 #endif
 
 #if defined(EXL_SHARED_LIBRARY)
@@ -72,7 +77,7 @@ namespace eXl
     };
   };
 
-  using Name = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, eXlIntermoduleHolder, boost::flyweights::no_tracking>;
+  using Name_Base = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, eXlIntermoduleHolder, boost::flyweights::no_tracking>;
 
   using NameCore = boost::flyweights::detail::flyweight_core<
     boost::flyweights::detail::default_value_policy<String>, DefaultTag, boost::flyweights::no_tracking,
@@ -87,10 +92,66 @@ namespace eXl
     EXL_CORE_API static NameCoreHolder& get();
   };
 #else
-  using Name = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, boost::flyweights::intermodule_holder, boost::flyweights::no_tracking>;
+  using Name_Base = boost::flyweight<String, boost::flyweights::tag<DefaultTag>, boost::flyweights::intermodule_holder, boost::flyweights::no_tracking>;
 #endif
 #endif
+
+  struct Name : Name_Base
+  {
+    Name() {}
+    Name(Name_Base const& iOther) : Name_Base(static_cast<Name_Base const&>(iOther)) {}
+    Name(eXl::String const& iStr) : Name_Base(iStr.c_str()) {}
+    Name(eXl::Char const* iStr) : Name_Base(iStr) {}
+    Name& operator=(eXl::Char const* iStr) { *static_cast<Name_Base*>(this) = iStr; return *this; } \
+      bool operator == (Name const& iOther) const { return *static_cast<Name_Base const*>(this) == static_cast<Name_Base const&>(iOther); }
+    bool operator != (Name const& iOther) const { return !(*this == iOther); }
+    bool operator < (Name const& iOther) const { return *static_cast<Name_Base const*>(this) < static_cast<Name_Base const&>(iOther); }
+
+    char const* c_str() const
+    {
+      return get().c_str();
+    }
+  };
+
 }
+#else
+
+namespace eXl
+{
+  struct EXL_CORE_API Name
+  {
+    Name();
+    Name(Name const& iOther)
+      : m_Str(iOther.m_Str)
+    {}
+    Name(String const& iStr);
+    Name(Char const* iStr);
+    Name& operator=(Char const* iStr);
+    bool operator == (Name const& iOther) const { return c_str() == iOther.c_str(); }
+    bool operator != (Name const& iOther) const { return !(*this == iOther); }
+    bool operator < (Name const& iOther) const { return c_str() < iOther.c_str(); }
+
+    KString const& get() const
+    {
+      return m_Str;
+    }
+
+    char const* c_str() const
+    {
+      return m_Str.data();
+    }
+
+  private:
+    KString m_Str;
+  };
+
+  inline size_t hash_value(Name const& iName)
+  {
+    return boost::hash_value((void*)iName.c_str());
+  }
+}
+
+#endif
 
 #include <core/type/typetraits.hpp>
 #include <core/vlog.hpp>

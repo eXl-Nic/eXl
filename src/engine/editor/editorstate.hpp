@@ -163,9 +163,9 @@ signals:
 
     DocumentState* CreateNewDocument() override
     {
-      QString resourceLoaderName = m_Loader.get().c_str();
+      QString resourceLoaderName = m_Loader.c_str();
       QString title("New ");
-      title.append(QString::fromUtf8(Resource::StaticLoaderName().get().c_str()));
+      title.append(QString::fromUtf8(Resource::StaticLoaderName().c_str()));
 
       QString file = QFileDialog::getSaveFileName(nullptr, title,
         QString::fromStdString(EditorState::GetProjectDirectory().string()),

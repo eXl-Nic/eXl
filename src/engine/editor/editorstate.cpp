@@ -215,7 +215,7 @@ namespace eXl
     eXl_ASSERT(loader != nullptr);
     eXl_ASSERT(loader->CanCreateDefaultResource());
 
-    QString resourceLoaderName = m_Loader.get().c_str();
+    QString resourceLoaderName = m_Loader.c_str();
     QString title("New ");
     title.append(resourceLoaderName);
 

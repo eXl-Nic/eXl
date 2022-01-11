@@ -343,7 +343,7 @@ namespace eXl
       {
         TreeItem const* node = parentNode->children[iIndex.row()].get();
 
-        return QString::fromUtf8(node->objectName.get().c_str());
+        return QString::fromUtf8(node->objectName.c_str());
       }
       else if(parentNode == &m_Root)
       {

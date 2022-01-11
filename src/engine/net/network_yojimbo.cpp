@@ -9,6 +9,27 @@ namespace eXl
 {
   namespace Network
   {
+
+    class TestNetDriver : public NetDriver
+    {
+    public:
+
+      void TestCommand(uint32_t iParam1, float iParam2, String const& iParam3)
+      {
+
+      }
+
+      void TestCommand2()
+      {}
+
+      TestNetDriver(NetCtx& iCtx)
+        : NetDriver(iCtx)
+      {
+        DeclareCommand(NetRole::Server, CommandName("Fougni"), &TestNetDriver::TestCommand, false);
+        DeclareCommand(NetRole::Server, CommandName("Fougna"), &TestNetDriver::TestCommand2, false);
+      }
+    };
+
     namespace
     {
       static const uint8_t DEFAULT_PRIVATE_KEY[yojimbo::KeyBytes] = { 0 };

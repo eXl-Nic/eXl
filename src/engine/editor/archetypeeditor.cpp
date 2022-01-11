@@ -157,7 +157,7 @@ namespace eXl
     {
       if (index.column() == 0)
       {
-        return QString::fromUtf8(name->get().c_str());
+        return QString::fromUtf8(name->c_str());
       }
       if (index.column() == 1)
       {
@@ -346,7 +346,7 @@ namespace eXl
       m_Impl->m_AvailablePropNames = EditorState::GetProjectProperties().GetArchetypeProperties();
       for (auto name : m_Impl->m_AvailablePropNames)
       {
-        propertySelector->addItem(name.get().c_str());
+        propertySelector->addItem(name.c_str());
       }
 
       propCollectionLayout->addWidget(propCollectionTool);
@@ -361,7 +361,7 @@ namespace eXl
           if (m_Impl->m_PropsCollectionModel->insertRow(curRowCount))
           {
             QModelIndex newIndex = m_Impl->m_PropsCollectionModel->index(curRowCount, 0, QModelIndex());
-            m_Impl->m_PropsCollectionModel->setData(newIndex, QString(m_Impl->m_AvailablePropNames[selName].get().c_str()), Qt::EditRole);
+            m_Impl->m_PropsCollectionModel->setData(newIndex, QString(m_Impl->m_AvailablePropNames[selName].c_str()), Qt::EditRole);
           }
         }
       });
@@ -415,7 +415,7 @@ namespace eXl
     m_Impl->m_AvailableComponentNames = EngineCommon::GetComponents().GetComponents();
     for (auto name : m_Impl->m_AvailableComponentNames)
     {
-      componentSelector->addItem(name.get().c_str());
+      componentSelector->addItem(name.c_str());
     }
     for (auto compName : m_Impl->m_Archetype->GetComponents())
     {

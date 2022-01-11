@@ -275,7 +275,7 @@ namespace eXl
       {
         continue;
       }
-      QAction* newAction = new QAction(QString::fromUtf8(loader.get().c_str()), this);
+      QAction* newAction = new QAction(QString::fromUtf8(loader.c_str()), this);
       newAction->setData(QVariant::fromValue(loader));
       createActSigMapper->setMapping(newAction, newAction);
       connect(newAction, SIGNAL(triggered()), createActSigMapper, SLOT(map()));

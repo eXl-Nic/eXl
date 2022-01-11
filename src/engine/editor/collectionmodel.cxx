@@ -9,7 +9,7 @@ namespace eXl
     template<typename KeyType, typename std::enable_if<std::is_base_of<Name, KeyType>::value>::type = true>
     inline QString KeyTypeToString(KeyType const& iKey)
     {
-      return QString(iKey.get().c_str());
+      return QString(iKey.c_str());
     }
 
     inline QString KeyTypeToString(String const& iKey)
@@ -122,12 +122,12 @@ namespace eXl
     {
       if(index.column() == 0)
       {
-        return KeyTypeToString(*name);
+        return name->c_str();
       }
     }
     else if(role == Qt::EditRole && index.column() == 0)
     {
-      return KeyTypeToString(*name);
+      return name->c_str();
     }
     return QVariant();
   }

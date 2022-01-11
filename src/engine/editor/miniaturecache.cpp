@@ -22,7 +22,7 @@ namespace eXl
     {
       ResourceHandle<Tileset> handle;
       handle.SetUUID(iUUID);
-      return GetMiniature(handle, TileName(iSubobject.get()));
+      return GetMiniature(handle, TileName(iSubobject));
     }
 
     if (header->m_LoaderName == TilingGroup::StaticLoaderName())

@@ -172,7 +172,7 @@ namespace eXl
       {
         for (auto content : *props)
         {
-          printf("   %s", content.m_Type.get().c_str());
+          printf("   %s", content.m_Type.c_str());
           printf(" : %i\n", content.m_Size);
         }
       }

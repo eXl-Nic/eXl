@@ -68,6 +68,7 @@ set (SOURCES ${SOURCES}
   type/arraytype.cpp
   type/coretype.cpp
   type/fixedlengtharray.cpp
+  type/fundesc.cpp
   type/resourcehandletype.cpp
   type/type.cpp
   type/typemanager.cpp

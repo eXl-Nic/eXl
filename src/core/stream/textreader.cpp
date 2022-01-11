@@ -14,9 +14,12 @@ namespace eXl
 {
   IMPLEMENT_RTTI(TextReader)
 
-  bool isNumericChar(char x)
+  namespace 
   {
-    return (x >= '0' && x <= '9')? true: false;
+    bool isNumericChar(char x)
+    {
+      return (x >= '0' && x <= '9') ? true : false;
+    }
   }
 
   Err TextReader::ClearWhiteSpaces()
@@ -217,6 +220,7 @@ namespace eXl
     if(m_NextCharPtr == m_FileEnd)
     {
       m_NextCharPtr = nullptr;
+      return 0;
     }
     return *(m_NextCharPtr++);
   }

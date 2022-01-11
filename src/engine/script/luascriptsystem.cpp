@@ -188,7 +188,7 @@ namespace eXl
 
     for (auto const& functionEntry : desc->functions)
     {
-      luabind::object function = scriptObject[functionEntry.first.get().c_str()];
+      luabind::object function = scriptObject[functionEntry.first.c_str()];
       if (function.is_valid())
       {
         function.push(state);

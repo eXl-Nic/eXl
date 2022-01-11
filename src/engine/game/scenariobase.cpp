@@ -66,7 +66,7 @@ namespace eXl
     StartLocal(iWorld);
   }
 
-  ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld, Network::NetRole iRole)
+  ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld)
   {
     Archetype const* toSpawn = nullptr;
     if ((toSpawn = m_MainCharacter.GetOrLoad()) == nullptr
@@ -143,7 +143,6 @@ namespace eXl
   void Scenario_Base::ProcessInputs(World& iWorld)
   {
     Engine_Application& app = Engine_Application::GetAppl();
-
     InputSystem& iInputs = app.GetInputSystem();
 
     GfxSystem* gfxSys = iWorld.GetSystem<GfxSystem>();

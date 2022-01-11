@@ -16,7 +16,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/mathexp.hpp>
 
 #include <boost/rational.hpp>
-#include <boost/pool/object_pool.hpp>
+#include <boost/operators.hpp>
 
 namespace eXl
 {

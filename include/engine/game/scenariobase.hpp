@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/common/app.hpp>
-#include <engine/net/network.hpp>
 #include <engine/map/map.hpp>
 
 namespace eXl
@@ -60,9 +59,8 @@ namespace eXl
     MapResource::InstanceData m_InstatiatedMap;
 
     ObjectHandle m_MainChar;
-    Network::NetRole m_CurMode = Network::NetRole::None;
 
-    ObjectHandle SpawnCharacter(World& iWorld, Network::NetRole iRole);
+    ObjectHandle SpawnCharacter(World& iWorld);
     Vector2f m_SpawnPos;
 
     UniquePtr<CharacterAnimation> m_DefaultAnim;

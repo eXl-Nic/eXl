@@ -148,7 +148,7 @@ namespace eXl
       {
         if (m_ImagePathCache.count(tile.second.m_ImageName) == 0)
         {
-          Path imagePath = rscDir / Path(imgName.get().c_str());
+          Path imagePath = rscDir / Path(imgName.c_str());
           m_ImagePathCache.insert(std::make_pair(imgName, imagePath));
         }
       }
@@ -225,7 +225,7 @@ namespace eXl
         Path rscPath = ResourceManager::GetPath(GetHeader().m_ResourceId);
         Path rscDir = rscPath.parent_path();
 
-        Path imagePath = rscDir / Path(iTile.m_ImageName.get().c_str());
+        Path imagePath = rscDir / Path(iTile.m_ImageName.c_str());
         if (!Filesystem::exists(imagePath) || Filesystem::is_directory(imagePath))
         {
           LOG_ERROR << "Could not find an image at " << imagePath.string() << "\n";

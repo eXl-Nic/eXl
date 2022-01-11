@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <core/coredef.hpp>
+#include <core/type/fundesc.hpp>
 #include <engine/enginelib.hpp>
 
 #include <math/vector3.hpp>
@@ -93,6 +94,69 @@ namespace eXl
       Unknown
     };
 
+    struct NetCtx;
+
+    MAKE_NAME_DECL(CommandName);
+
+    struct CommandDesc
+    {
+      FunDesc m_Desc;
+      NetRole m_Executor;
+      bool m_Reliable;
+    };
+
+    template<typename RetType, typename... Args>
+    struct CallRetTypeDispatcher
+    {
+      template <typename Function>
+      static void Execute(Function const& iFun, ConstDynObject& iArgsBuffer, DynObject& oOutput)
+      {
+        Type const* retType = TypeManager::GetType<RetType>();
+        oOutput.SetType(retType, retType->Build(), true);
+        *oOutput.CastBuffer<RetType>() = Invoker<Args...>:: template Call<RetType>(iFun, iArgsBuffer);
+      }
+    };
+
+    template<typename... Args>
+    struct CallRetTypeDispatcher<void, Args...>
+    {
+      template <typename Function>
+      static void Execute(Function const& iFun, ConstDynObject& iArgsBuffer, DynObject& oOutput)
+      {
+        Invoker<Args...>::template Call<void>(iFun, iArgsBuffer);
+      }
+    };
+
+    class NetDriver
+    {
+    public:
+
+    protected:
+
+      template<typename T, typename RetType, typename... Args>
+      void DeclareCommand(NetRole iExecutor, CommandName iName, RetType(T::* iMemFun)(Args...), bool iReliable)
+      {
+        CommandDesc desc;
+        desc.m_Desc = FunDesc::Create<RetType(Args...)>();
+        desc.m_Executor = iExecutor;
+        desc.m_Reliable = iReliable;
+        auto callback = [this, iMemFun](ConstDynObject& iArgsBuffer, DynObject& oOutput)
+        {
+          CallRetTypeDispatcher<RetType, Args...>::Execute([this, iMemFun](Args... iArgs)
+            {
+              return (static_cast<T*>(this)->*iMemFun)(std::forward<Args>(iArgs)...);
+            }, iArgsBuffer, oOutput);
+        };
+        DeclareCommand(iName, callback, desc);
+      }
+
+      NetDriver(NetCtx& iCtx);
+      using CommandCallback = std::function<void(ConstDynObject& iArgs, DynObject& oOutput) >;
+      void DeclareCommand(CommandName iName, CommandCallback iCallback, CommandDesc iSettings );
+
+      NetCtx& m_Ctx;
+    };
+
     struct ClientEvents
     {
       virtual void OnNewObject(uint32_t, ObjectId, ClientData const&) = 0;
@@ -123,6 +187,7 @@ namespace eXl
 
       uint16_t const m_ServerPort;
 
+      NetDriver* m_NetDriver = nullptr;
       ClientEvents* m_ClientEvents = nullptr;
       ServerEvents* m_ServerEvents = nullptr;
 

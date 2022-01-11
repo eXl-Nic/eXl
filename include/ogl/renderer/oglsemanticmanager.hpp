@@ -50,21 +50,21 @@ namespace eXl
     uint32_t GetSlotForName(AttributeName iName) const
     {
       auto iter = m_AttributeMap.find(iName);
-      eXl_ASSERT_MSG(iter != m_AttributeMap.end(), eXl_FORMAT("Unknown Attribute %s", iName.get().c_str()));
+      eXl_ASSERT_MSG(iter != m_AttributeMap.end(), eXl_FORMAT("Unknown Attribute %s", iName.c_str()));
       return iter->second;
     }
 
     uint32_t GetSlotForName(UniformName iName) const
     {
       auto iter = m_UniformMap.find(iName);
-      eXl_ASSERT_MSG(iter != m_UniformMap.end(), eXl_FORMAT("Unknown Uniform %s", iName.get().c_str()));
+      eXl_ASSERT_MSG(iter != m_UniformMap.end(), eXl_FORMAT("Unknown Uniform %s", iName.c_str()));
       return iter->second;;
     }
 
     uint32_t GetSlotForName(TextureName iName) const
     {
       auto iter = m_TextureMap.find(iName);
-      eXl_ASSERT_MSG(iter != m_TextureMap.end(), eXl_FORMAT("Unknown Texture %s", iName.get().c_str()));
+      eXl_ASSERT_MSG(iter != m_TextureMap.end(), eXl_FORMAT("Unknown Texture %s", iName.c_str()));
       return iter->second;
     }
 

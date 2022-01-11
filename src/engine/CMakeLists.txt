@@ -137,6 +137,7 @@ target_include_directories(eXl_Engine PRIVATE
   ${LIBB64_INCLUDE_DIR} 
   ${FREETYPE_INCLUDE_DIR}
   ${UTF8_INCLUDE_DIR}
+  ${YOJIMBO_INCLUDE_DIR}
   ${EXL_ROOT}/modules/cxxopts/include)
 
 target_include_directories(eXl_Engine PUBLIC  
@@ -231,7 +232,3 @@ endif()
 
 add_executable(Navigator_Sample main_navigator.cpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
 SETUP_EXL_TARGET(Navigator_Sample DEPENDENCIES eXl_Main)
-
-add_executable(Abilities_Sample main_abilities.cpp abilityroom.cpp abilityroom.hpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
-SETUP_EXL_TARGET(Abilities_Sample DEPENDENCIES eXl_Main)
-target_link_libraries(Abilities_Sample PRIVATE imgui)
