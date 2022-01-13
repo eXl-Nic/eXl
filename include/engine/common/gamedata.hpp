@@ -40,7 +40,7 @@ namespace eXl
   };
 
   // Dense -> ObjectTable data is never released.
-  // Iterating over the object table data is done in the same order as the world objects.
+  // Each object table entry is associated to a unique world object.
   struct EXL_ENGINE_API DenseDataAllocator : public DataAllocatorBase
   {
     DenseDataAllocator(Type const* iType, ObjectTable_Data& iObjects);
@@ -60,6 +60,7 @@ namespace eXl
   };
 
   // Sparse -> ObjectTable data is released, and can even be shared.
+  // A copy-on modified pattern is implemented in order to share data from archetypes.
   struct EXL_ENGINE_API SparseDataAllocator : public DataAllocatorBase
   {
     SparseDataAllocator(Type const* iType, ObjectTable_Data& iObjects);

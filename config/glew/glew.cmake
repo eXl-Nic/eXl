@@ -1,4 +1,3 @@
-set(GLEW_ROOT "${EXL_ROOT}/package/glew/glew-2.2.0")
 SET(GLEW_INCLUDE_DIR ${GLEW_ROOT}/include)
 SET(GLEW_VARIANT "Release/x64")
 SET(GLEW_DEFINES )
