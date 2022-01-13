@@ -116,6 +116,7 @@ map/map.cpp
 map/map_instantiate.cpp
 map/mcmcmodelrsc.cpp
 
+net/network.cpp
 net/network_yojimbo.cpp
 net/dispatcher.cpp
 

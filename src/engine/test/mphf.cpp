@@ -33,7 +33,7 @@ public:
 
   void Hash(Name const& iName, uint32_t(&oHashes)[3]) const
   {
-    ptrdiff_t ptr = (ptrdiff_t)iName.get().c_str();
+    ptrdiff_t ptr = (ptrdiff_t)iName.c_str();
     ptr = ((ptr >> 16) ^ ptr) * 0x45d9f3b45d9f3b;
     ptr = ((ptr >> 16) ^ ptr) * 0x45d9f3b45d9f3b;
     ptr = (ptr >> 16) ^ ptr;

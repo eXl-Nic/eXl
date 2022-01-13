@@ -65,7 +65,7 @@ namespace eXl
         if (m_Pages.size() > 1)
         {
           --pageIdx;
-          std::swap(m_Pages[pageIdx], m_Pages[pageIdx + 1]);
+          m_Pages[pageIdx].Swap(m_Pages[pageIdx + 1]);
         }
       }
       else
@@ -88,6 +88,32 @@ namespace eXl
       {
         eXl_FREE(m_Alloc);
       }
+
+      Page(Page&& iMoved)
+      {
+        m_Alloc = iMoved.m_Alloc;
+        m_Available = iMoved.m_Available;
+        m_Cur = iMoved.m_Cur;
+        iMoved.m_Alloc = nullptr;
+      }
+      Page(Page const&) = delete;
+      Page& operator=(Page const&) = delete;
+
+      void Swap(Page& iOther)
+      {
+        Char* tempAlloc = iOther.m_Alloc;
+        size_t tempAvailable = iOther.m_Available;
+        Char* tempCur = iOther.m_Cur;
+
+        iOther.m_Alloc = m_Alloc;
+        iOther.m_Available = m_Available;
+        iOther.m_Cur = m_Cur;
+
+        m_Alloc = tempAlloc;
+        m_Available = tempAvailable;
+        m_Cur = tempCur;
+      }
+
       Char* m_Alloc;
       size_t m_Available;
       Char* m_Cur;

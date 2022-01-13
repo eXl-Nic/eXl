@@ -54,7 +54,10 @@ namespace eXl
     {
       m_Mask = (1 << m_HashLen) - 1;
 
-      m_AssignmentTable.resize(3 * ((m_Mask + 1) / 32), UINT64_MAX);
+      uint32_t arraySize = ((m_Mask + 1) / 32);
+      arraySize = arraySize == 0 ? 1 : arraySize;
+
+      m_AssignmentTable.resize(3 * arraySize, UINT64_MAX);
       m_RankTable.resize(m_AssignmentTable.size(), 0);
 
       Vector<Edge> edges;

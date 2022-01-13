@@ -52,6 +52,13 @@ namespace eXl
     {}
   };
 
+  template<>
+  struct GetArgList<>
+  {
+    static void GetArgs(Vector<Type const*>& oArgs)
+    {}
+  };
+
   template<typename... Args>
   struct ValidateArgList;
 
@@ -134,6 +141,9 @@ namespace eXl
     Vector<size_t> m_Offsets;
   };
 
+  template<uint32_t Step, typename... Args>
+  struct BufferPopulator;
+
   struct FunDesc
   {
     Type const* returnType;
@@ -146,10 +156,42 @@ namespace eXl
         && ValidateArgList<Args...>::Validate(0, arguments);
     }
 
+    template <typename... Args>
+    Err PopulateArgBuffer(ArgsBuffer const& iType, DynObject& oBuffer, Args... iArgs) const
+    {
+      if (!ValidateArgList<Args...>::Validate(0, arguments))
+      {
+        return Err::Failure;
+      }
+
+      oBuffer.SetType(&iType, iType.Alloc(), true);
+      BufferPopulator<0, Args...>::Populate(iType, oBuffer, std::forward<Args>(iArgs)...);
+      return Err::Success;
+    }
+
     template <class FunType>
     static FunDesc Create()
     {
       return GetFunDesc_Impl<FunType>::Create();
+    }
+  };
+
+  template<uint32_t Step, typename Arg, typename... Args>
+  struct BufferPopulator<Step, Arg, Args...>
+  {
+    static void Populate(ArgsBuffer const& iType, DynObject& oData, Arg&& iArg, Args&&... iArgs)
+    {
+      Type const* fieldType;
+      new(iType.GetField(oData.GetBuffer(), Step, fieldType)) Arg(std::forward<Arg>(iArg));
+      BufferPopulator<Step + 1, Args...>::Populate(iType, oData, std::forward<Args>(iArgs)...);
+    }
+  };
+
+  template<uint32_t Step>
+  struct BufferPopulator<Step>
+  {
+    static void Populate(ArgsBuffer const& iType, DynObject& oData)
+    {
     }
   };
 
@@ -191,15 +233,11 @@ namespace eXl
   template <uint32_t Step, uint32_t Max, typename NextArg, typename... Args >
   struct MakePositionalList_Impl <typename std::enable_if<Step != Max, bool>::type, Step, Max, NextArg, Args...>
      : MakePositionalList_Impl<bool, Step + 1, Max, Args..., PositionalArg<NextArg, Step>>
-  {
-    //using type = typename MakePositionalList_Impl<bool, Step + 1, Max, Args..., PositionalArg<NextArg, Step>>::type;
-  };
+  {};
 
   template <typename... Args>
   struct MakePositionalList : MakePositionalList_Impl<bool, 0, sizeof...(Args), Args...>
-  {
-    //using type = typename MakePositionalList_Impl<bool, 0, sizeof...(Args), Args...>::type;
-  };
+  {};
 
   template <typename ArgsList>
   struct PositionalInvoker;
@@ -212,9 +250,6 @@ namespace eXl
     {
       return iFun(*iBuffer.GetField<typename Args::ArgType>(uint32_t(Args::ArgPos))...);
     }
-    //template <typename Positional>
-    //typename Positional::ArgType const* Apply()
-    //{}
   };
 
   template <typename... Args>
