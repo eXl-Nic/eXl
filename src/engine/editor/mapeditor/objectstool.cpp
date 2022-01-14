@@ -38,11 +38,11 @@ namespace eXl
 
   Vector2i GetSizeFromArchetype(Archetype const* iArchetype)
   {
-    auto const& components = iArchetype->GetComponents();
-    auto iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
-    if (iterGfx != components.end())
+    auto const& data = iArchetype->GetProperties();
+    auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
+    if (iterGfx != data.end())
     {
-      auto const* gfxDesc = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
+      auto const* gfxDesc = iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>();
 
       Vector2i tileSize = SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
       tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
@@ -72,20 +72,20 @@ namespace eXl
     Vector2i pixelPos = MathTools::ToIVec(MathTools::As2DVec(iObject.m_Position) * EngineCommon::s_WorldToPixel);
 
     Archetype const* archetype = iObject.m_Archetype.GetOrLoad();
-    auto const& components = archetype->GetComponents();
-    auto const iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
-    if (iterGfx != components.end())
+    auto const& data = archetype->GetProperties();
+    auto const iterGfx = data.find(EngineCommon::GfxSpriteDescName());
+    if (iterGfx != data.end())
     {
       DynObject customizedData;
       GfxSpriteComponent::Desc const* spriteData;
-      auto iterCusto = custoData.m_CustoData.m_ComponentCustomization.find(EngineCommon::GfxSpriteComponentName());
-      if (iterCusto == custoData.m_CustoData.m_ComponentCustomization.end())
+      auto iterCusto = custoData.m_CustoData.m_PropertyCustomization.find(EngineCommon::GfxSpriteDescName());
+      if (iterCusto == custoData.m_CustoData.m_PropertyCustomization.end())
       {
-        spriteData = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
+        spriteData = iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>();
       }
       else
       {
-        customizedData = DynObject(&iterGfx->second);
+        customizedData = DynObject(&iterGfx->second.m_Data);
         CustomizationData::ApplyCustomization(customizedData, iterCusto->second);
         spriteData = customizedData.CastBuffer<GfxSpriteComponent::Desc>();
       }
@@ -277,18 +277,18 @@ namespace eXl
 		ClearPenToolTile();
     if (m_SelectedArchetype != nullptr)
     {
-      auto const& components = m_SelectedArchetype->GetComponents();
-      auto iterGfx = components.find(ComponentName("GfxSprite"));
-      if (iterGfx != components.end())
+      Vector2i tileSize = GetSizeFromArchetype(m_SelectedArchetype);
+      auto const& data = m_SelectedArchetype->GetProperties();
+      auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
+      if (iterGfx != data.end())
       {
-        GfxSpriteComponent::Desc const* gfxDesc = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
-
         ObjectHandle penObj = m_World.CreateObject();
-        
+
+        auto const* gfxDesc = iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>();
         AddTileToWorld(penObj, gfxDesc);
 
         m_Tools.m_Pen->SetPenObject(penObj);
-        Vector2i tileSize = SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
+        SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
         tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
         tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * EngineCommon::s_WorldToPixel));
         m_Tools.m_Pen->SetSnapSize(tileSize);
@@ -568,11 +568,11 @@ namespace eXl
 		MathTools::GetPosition(worldTrans) = iObject.m_Position;
 		trans.AddTransform(iHandle, &worldTrans);
 
-    auto const& components = iObject.m_Archetype.GetOrLoad()->GetComponents();
-    auto iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
-    if (iterGfx != components.end())
+    auto const& data = iObject.m_Archetype.GetOrLoad()->GetProperties();
+    auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
+    if (iterGfx != data.end())
     {
-      AddTileToWorld(iHandle, iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>());
+      AddTileToWorld(iHandle, iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>());
     }
 	}
 

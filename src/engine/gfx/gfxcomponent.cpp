@@ -154,8 +154,22 @@ namespace eXl
 		iList.PopData();
 	}
 
+  bool GfxSpriteComponent::Mutate()
+  {
+    if (m_Desc != nullptr)
+    {
+      return true;
+    }
+    m_Desc = &GetSpriteComponentView(m_RenderNode->GetWorld())->GetOrCreate(m_Object);
+    return m_Desc != nullptr;
+  }
+
   void GfxSpriteComponent::SetDesc(Desc const& iDesc)
   {
+    if(!Mutate())
+    {
+      return;
+    }
     *m_Desc = iDesc;
     if (m_SpriteData.IsAssigned())
     {
@@ -169,6 +183,10 @@ namespace eXl
 
 	void GfxSpriteComponent::SetSize(Vector2f const& iSize)
 	{
+    if (!Mutate())
+    {
+      return;
+    }
 		m_Desc->m_Size = iSize;
 		if (m_SpriteData.IsAssigned())
 		{
@@ -178,6 +196,10 @@ namespace eXl
 
   void GfxSpriteComponent::SetOffset(Vector2f const& iOffset)
   {
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_Offset = iOffset;
     if (m_SpriteData.IsAssigned())
     {
@@ -187,6 +209,10 @@ namespace eXl
 
 	void GfxSpriteComponent::SetTileset(Tileset const* iTileset)
 	{
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_Tileset.Set(iTileset);
 		if (m_SpriteData.IsAssigned())
 		{
@@ -196,6 +222,10 @@ namespace eXl
 
 	void GfxSpriteComponent::SetTileName(TileName iName)
 	{
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_TileName = iName;
 		if (m_SpriteData.IsAssigned())
 		{
@@ -205,6 +235,10 @@ namespace eXl
 
 	void GfxSpriteComponent::SetAnimationSpeed(float iSpeed)
 	{
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_AnimSpeed = iSpeed;
 		if (m_SpriteData.IsAssigned())
 		{
@@ -214,6 +248,10 @@ namespace eXl
 
   void GfxSpriteComponent::SetRotateSprite(bool iRotate)
   {
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_RotateSprite = iRotate;
     if (m_SpriteData.IsAssigned())
     {
@@ -223,6 +261,10 @@ namespace eXl
 
   void GfxSpriteComponent::SetLayer(uint8_t iLayer)
   {
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_Layer = iLayer;
     if (m_SpriteData.IsAssigned())
     {
@@ -233,6 +275,10 @@ namespace eXl
 
   void GfxSpriteComponent::SetTint(Vector4f const& iTint)
   {
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_Tint = iTint;
     if (m_SpriteData.IsAssigned())
     {
@@ -242,6 +288,10 @@ namespace eXl
 
   void GfxSpriteComponent::SetFlat(bool iValue)
   {
+    if (!Mutate())
+    {
+      return;
+    }
     m_Desc->m_Flat = iValue;
     if (m_SpriteData.IsAssigned())
     {
@@ -258,5 +308,4 @@ namespace eXl
     }
     return nullptr;
   }
-
 }

@@ -38,7 +38,7 @@ namespace eXl
 
     PhysicInitData desc;
     uint32_t flags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity | PhysicFlags::AddSensor;
-
+    
     if(iDesc.controlKind == ControlKind::Remote)
     {
       flags |= (PhysicFlags::IsGhost | PhysicFlags::Kinematic);

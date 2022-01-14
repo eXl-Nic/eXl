@@ -60,8 +60,8 @@ namespace eXl
       mat.m_Data[15] = 1;
       worldTrans.getOpenGLMatrix(mat.m_Data);
 
-      if ((m_InitData->GetFlags() & PhysicFlags::AlignRotToVelocity)
-        && (m_InitData->GetFlags() & (PhysicFlags::IsGhost | PhysicFlags::Kinematic)) == 0
+      if ((m_InitData.GetFlags() & PhysicFlags::AlignRotToVelocity)
+        && (m_InitData.GetFlags() & (PhysicFlags::IsGhost | PhysicFlags::Kinematic)) == 0
         && !m_Object->getInterpolationLinearVelocity().isZero())
       {
         Vector3f* rotMat[] =
@@ -86,10 +86,10 @@ namespace eXl
     return m_System.m_Impl->SweepTest(this, iFrom, iTo, oRes, iIgnore, iMask);
   }
 
-  void PhysicComponent_Impl::Build(ObjectHandle iTransform, PhysicInitData& iInitData)
+  void PhysicComponent_Impl::Build(ObjectHandle iTransform, PhysicInitData const& iInitData)
   {
     m_ObjectId = iTransform;
-    m_InitData = &iInitData;
+    m_InitData = iInitData;
 
     //m_GroupMask = iInitData.GetFilter();
     //m_GroupMask <<= 16;

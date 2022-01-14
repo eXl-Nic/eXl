@@ -18,6 +18,7 @@ namespace eXl
 {
   class EXL_ENGINE_API Scenario_Base : public Scenario
   {
+    DECLARE_RTTI(Scenario_Base, Scenario);
   public:
 
     void Init(World& iWorld) override;

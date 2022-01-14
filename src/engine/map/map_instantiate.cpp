@@ -256,70 +256,73 @@ namespace eXl
       }
 
       auto const* carver = database->GetData<EngineCommon::TerrainCarver>(mapObject, EngineCommon::TerrainCarver::PropertyName());
-      if (carver != nullptr)
+      auto const* shapeDesc = database->GetData<EngineCommon::ObjectShapeData>(mapObject, EngineCommon::ObjectShapeData::PropertyName());
+      if (carver != nullptr && shapeDesc != nullptr)
       {
-        Vector2i offset(carver->m_Shape.m_Offset.X() * EngineCommon::s_WorldToPixel, carver->m_Shape.m_Offset.Y() * EngineCommon::s_WorldToPixel);
-        offset += MathTools::ToIVec(MathTools::As2DVec(objectDesc.m_Header.m_Position) * EngineCommon::s_WorldToPixel);
-        Vector2i size;
-        switch (carver->m_Shape.m_Type)
+        for (auto const& shape : shapeDesc->m_Shapes)
         {
-        case EngineCommon::PhysicsShapeType::Box:
-          size = Vector2i(carver->m_Shape.m_Dims.X(), carver->m_Shape.m_Dims.Y()) * EngineCommon::s_WorldToPixel;
-          break;
-        case EngineCommon::PhysicsShapeType::Sphere:
-          size = Vector2i(carver->m_Shape.m_Dims.X(), carver->m_Shape.m_Dims.X()) * EngineCommon::s_WorldToPixel;
-          break;
-        }
-        
-        AABB2Di pixelBox(offset - size / 2, size);
-
-        Vector<AABB2DPolygoni> diffResult;
-        for (auto& entry : components)
-        {
-          if (entry.first == carver->m_TerrainType)
+          Vector2i offset(shape.m_Offset.X() * EngineCommon::s_WorldToPixel, shape.m_Offset.Y() * EngineCommon::s_WorldToPixel);
+          offset += MathTools::ToIVec(MathTools::As2DVec(objectDesc.m_Header.m_Position) * EngineCommon::s_WorldToPixel);
+          Vector2i size;
+          switch (shape.m_Type)
           {
-            entry.second.push_back(AABB2DPolygoni(pixelBox));
-            continue;
+          case EngineCommon::PhysicsShapeType::Box:
+            size = Vector2i(shape.m_Dims.X(), shape.m_Dims.Y()) * EngineCommon::s_WorldToPixel;
+            break;
+          case EngineCommon::PhysicsShapeType::Sphere:
+            size = Vector2i(shape.m_Dims.X(), shape.m_Dims.X()) * EngineCommon::s_WorldToPixel;
+            break;
           }
-          Vector<AABB2DPolygoni> newComponents;
-          for (auto& poly : entry.second)
-          {
-            if (poly.GetAABB().Intersect(pixelBox))
-            {
-              diffResult.clear();
-              poly.Difference(pixelBox, diffResult);
+          AABB2Di pixelBox(offset - size / 2, size);
 
-              if (diffResult.size() == 0)
+          Vector<AABB2DPolygoni> diffResult;
+          for (auto& entry : components)
+          {
+            if (entry.first == carver->m_TerrainType)
+            {
+              entry.second.push_back(AABB2DPolygoni(pixelBox));
+              continue;
+            }
+            Vector<AABB2DPolygoni> newComponents;
+            for (auto& poly : entry.second)
+            {
+              if (poly.GetAABB().Intersect(pixelBox))
               {
-                poly.Clear();
-              }
-              if (diffResult.size() == 1)
-              {
-                poly = std::move(diffResult[0]);
-              }
-              if (diffResult.size() > 1)
-              {
-                poly.Clear();
-                for (auto& newComps : diffResult)
+                diffResult.clear();
+                poly.Difference(pixelBox, diffResult);
+
+                if (diffResult.size() == 0)
                 {
-                  newComponents.push_back(std::move(newComps));
+                  poly.Clear();
+                }
+                if (diffResult.size() == 1)
+                {
+                  poly = std::move(diffResult[0]);
+                }
+                if (diffResult.size() > 1)
+                {
+                  poly.Clear();
+                  for (auto& newComps : diffResult)
+                  {
+                    newComponents.push_back(std::move(newComps));
+                  }
                 }
               }
             }
-          }
-          for (int32_t i = 0; i<(int32_t)entry.second.size(); ++i)
-          {
-            auto& poly = entry.second[i];
-            if (poly.Empty())
+            for (int32_t i = 0; i < (int32_t)entry.second.size(); ++i)
             {
-              poly = std::move(entry.second.back());
-              entry.second.pop_back();
-              --i;
+              auto& poly = entry.second[i];
+              if (poly.Empty())
+              {
+                poly = std::move(entry.second.back());
+                entry.second.pop_back();
+                --i;
+              }
             }
-          }
-          for (auto& newComp : newComponents)
-          {
-            entry.second.push_back(std::move(newComp));
+            for (auto& newComp : newComponents)
+            {
+              entry.second.push_back(std::move(newComp));
+            }
           }
         }
       }
@@ -378,29 +381,31 @@ namespace eXl
 
     if (NavigatorSystem* navSys = iWorld.GetSystem<NavigatorSystem>())
     {
-      GameDataView<PhysicInitData>* view = GetPhysicsInitDataView(iWorld);
+      auto view = database->GetView<EngineCommon::PhysicBodyData>(EngineCommon::PhysicBodyData::PropertyName());
+      auto shapeView = database->GetView<EngineCommon::ObjectShapeData>(EngineCommon::ObjectShapeData::PropertyName());
 
       Vector<AABB2Di> tileObstacles;
 
-      auto extractNavMeshBox = [&tileObstacles, view, trans](ObjectHandle obj)
+      auto extractNavMeshBox = [&tileObstacles, view, trans, shapeView](ObjectHandle obj)
       {
         if (auto phData = view->Get(obj))
         {
-          if (phData->GetFlags() & PhysicFlags::Static)
+          EngineCommon::ObjectShapeData const* shapes = shapeView->Get(obj);
+          if (phData->m_Type == EngineCommon::PhysicsType::Static && shapes)
           {
             Matrix4f const& pos = trans->GetWorldTransform(obj);
-            for (auto const& geom : phData->GetGeoms())
+
+            for (auto const& geom : shapes->m_Shapes)
             {
-              Vector2i pixelMin = MathTools::ToIVec(MathTools::As2DVec((MathTools::GetPosition(pos) + geom.position) * EngineCommon::s_WorldToPixel));
+              Vector2i pixelMin = MathTools::ToIVec(MathTools::As2DVec((MathTools::GetPosition(pos) + geom.m_Offset) * EngineCommon::s_WorldToPixel));
               Vector2i shapeSize;
-              switch (geom.shape)
+              switch (geom.m_Type)
               {
-              case GeomDef::Sphere:
-              case GeomDef::Capsule:
-                shapeSize = Vector2i(geom.geomData.X(), geom.geomData.X()) * EngineCommon::s_WorldToPixel;
+              case EngineCommon::PhysicsShapeType::Sphere:
+                shapeSize = Vector2i(geom.m_Dims.X(), geom.m_Dims.X()) * EngineCommon::s_WorldToPixel;
                 break;
-              case GeomDef::Box:
-                shapeSize = Vector2i(geom.geomData.X(), geom.geomData.Y()) * EngineCommon::s_WorldToPixel;
+              case EngineCommon::PhysicsShapeType::Box:
+                shapeSize = Vector2i(geom.m_Dims.X(), geom.m_Dims.Y()) * EngineCommon::s_WorldToPixel;
                 break;
               }
 
@@ -422,7 +427,7 @@ namespace eXl
         extractNavMeshBox(obj);
         if (auto phData = view->Get(obj))
         {
-          if ((phData->GetFlags() & PhysicFlags::Static) == 0)
+          if (phData->m_Type != EngineCommon::PhysicsType::Static)
           {
             // Insert obstactle ?
 

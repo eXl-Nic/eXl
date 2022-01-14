@@ -299,6 +299,38 @@ namespace eXl
     return iter->second;
   }
 
+  void GameDatabase::ForgetArchetype(Archetype const& iArchetype)
+  {
+    auto iter = m_ArchetypeData.find(&iArchetype);
+    if (iter != m_ArchetypeData.end())
+    {
+      for (auto const& prop : iter->second.m_Data)
+      {
+        PropertySheetName propertySheet = prop.first;
+
+        auto iter = m_AllocatorSlot.find(propertySheet);
+        eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
+
+        if (SparseDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+        {
+          for (uint32_t i = 0; i < sparseAlloc->m_ArchetypeHandle.size(); ++i)
+          {
+            if (sparseAlloc->m_ArchetypeHandle[i] == prop.second.handle
+              && sparseAlloc->m_ObjectHandles[i] == prop.second.handle)
+            {
+              // Detach from archetype data by requesting a mutable copy;
+              sparseAlloc->m_ObjectHandles[i] = ObjectTableHandle_Base();
+              sparseAlloc->GetDataFromSlot(i);
+              sparseAlloc->m_ArchetypeHandle[i] = ObjectTableHandle_Base();
+            }
+          }
+          sparseAlloc->Release(prop.second.handle);
+        }
+      }
+      m_ArchetypeData.erase(iter);
+    }
+  }
+
   void GameDatabase::GarbageCollect()
   {
     if (m_Allocators.empty())

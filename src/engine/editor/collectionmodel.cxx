@@ -6,9 +6,6 @@ namespace eXl
 {
   namespace
   {
-    //template<typename KeyType>
-    //QString KeyTypeToString(KeyType const& iKey);
-
     template<typename KeyType, typename std::enable_if<std::is_base_of<Name, KeyType>::value>::type = true>
     inline QString KeyTypeToString(KeyType const& iKey)
     {
@@ -26,18 +23,17 @@ namespace eXl
     : QAbstractItemModel(iParent)
     , m_Resource(iResource)
   {
-    //eXlImageToQImage(iTileset->GetImage(), m_CacheTileset);
-    //BuildMap();
   }
 
   template <typename Key, typename Val, typename Resource>
-  void CollectionModel<Key, Val, Resource>::Reset()
+  template <typename Container>
+  void CollectionModel<Key, Val, Resource>::Reset(Container const& iContainer)
   {
     beginResetModel();
 
     m_IndexToName.clear();
     m_NameToIndex.clear();
-    BuildMap();
+    BuildMap(iContainer);
 
     endResetModel();
   }

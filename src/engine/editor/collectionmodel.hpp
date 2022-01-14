@@ -10,7 +10,8 @@ namespace eXl
   {
   public:
 
-    void Reset();
+    template <typename Container>
+    void Reset(Container const&);
 
     Key const* GetNameFromIndex(QModelIndex const& iIndex) const;
     QModelIndex GetIndexFromName(Key const& iKey) const;

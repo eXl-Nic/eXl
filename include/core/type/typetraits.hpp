@@ -138,13 +138,19 @@ namespace eXl
   };
 
   template <typename T>
+  struct IsSmallVectorType
+  {
+    static constexpr bool s_Value = false;
+  };
+
+  template <typename T>
   struct IsVectorType<Vector<T>>
   {
     static constexpr bool s_Value = true;
   };
 
   template <typename T, uint32_t Size>
-  struct IsVectorType<SmallVector<T, Size>>
+  struct IsSmallVectorType<SmallVector<T, Size>>
   {
     static constexpr bool s_Value = true;
   };

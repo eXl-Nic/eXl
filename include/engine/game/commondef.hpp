@@ -60,7 +60,6 @@ namespace eXl
     EXL_ENGINE_API ComponentName TriggerComponentName();
     EXL_ENGINE_API PropertySheetName VelocityName();
     EXL_ENGINE_API PropertySheetName GfxSpriteDescName();
-    EXL_ENGINE_API PropertySheetName PhysicsInitDataName();
 
     struct EXL_ENGINE_API GrabData
     {
@@ -117,17 +116,43 @@ namespace eXl
     {
       EXL_REFLECT;
 
+      AABB2Df Compute2DBox() const;
+
+      // NB: Counts offset as additional radius
+      float ComputeBoundingCircle2DRadius() const;
+
       PhysicsShapeType m_Type;
       Vector3f m_Dims = Vector3f::ONE;
       Vector3f m_Offset = Vector3f::ZERO;
     };
 
-    struct EXL_ENGINE_API PhysicsCompTestData
+    struct EXL_ENGINE_API ObjectShapeData
     {
-      EXL_REFLECT;
+      EXL_REFLECT_PROPERTY;
+
+      AABB2Df Compute2DBox() const;
+      float ComputeBoundingCircle2DRadius() const;
+
+      bool IsSimpleBox() const
+      {
+        return m_Shapes.size() == 1 && m_Shapes[0].m_Type == PhysicsShapeType::Box
+          && m_Shapes[0].m_Offset == Vector3f::ZERO;
+      }
+
+      bool IsSimpleSphere() const
+      {
+        return m_Shapes.size() == 1 && m_Shapes[0].m_Type == PhysicsShapeType::Sphere
+          && m_Shapes[0].m_Offset == Vector3f::ZERO;
+      }
+
+      SmallVector<PhysicsShape, 1> m_Shapes;
+    };
+
+    struct EXL_ENGINE_API PhysicBodyData
+    {
+      EXL_REFLECT_PROPERTY;
       PhysicsType m_Type;
       PhysicsCollisionCategory m_Category = PhysicsCollisionCategory::Default;
-      Vector<PhysicsShape> m_Shapes;
     };
 
     struct EXL_ENGINE_API TriggerComponentDesc
@@ -137,15 +162,13 @@ namespace eXl
       TriggerComponentDesc(const TriggerComponentDesc&);
       TriggerComponentDesc(TriggerComponentDesc&&);
 
-      EXL_REFLECT;
+      EXL_REFLECT_PROPERTY;
       ResourceHandle<LuaScriptBehaviour> m_Script;
-      PhysicsShape m_Shape;
     };
 
     struct EXL_ENGINE_API TerrainCarver
     {
       TerrainTypeName m_TerrainType;
-      PhysicsShape m_Shape;
 
       EXL_REFLECT_PROPERTY;
     };
@@ -165,6 +188,5 @@ namespace eXl
   namespace EngineCommon
   {
     constexpr uint32_t s_BasePhFlags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation;
-    //constexpr uint32_t s_BasePhFlags = 1<<4 | 1<<13 | 1<<14;
   }
 }

@@ -153,9 +153,10 @@ namespace eXl
   class Transforms;
   class GameDatabase;
 
+  MAKE_NAME(PropertySheetName);
   MAKE_NAME(ComponentName);
 
-  using ComponentFactory = std::function<void(World&, ObjectHandle, ConstDynObject const&)>;
+  using ComponentFactory = std::function<void(World&, ObjectHandle)>;
 
   class EXL_ENGINE_API ComponentManifest : public RttiObject
   {
@@ -164,14 +165,14 @@ namespace eXl
 
     struct ComponentEntry
     {
-      Type const* type;
+      UnorderedSet<PropertySheetName> requiredData;
       ComponentFactory factory;
     };
 
-    Type const* GetComponentTypeFromName(ComponentName iName) const;
+    UnorderedSet<PropertySheetName> const* GetRequiredDataForComponent(ComponentName iName) const;
     ComponentFactory const* GetComponentFactory(ComponentName iName) const;
     Vector<ComponentName> GetComponents() const;
-    void RegisterComponent(ComponentName iName, Type const* iType, ComponentFactory iFactory);
+    void RegisterComponent(ComponentName iName, ComponentFactory iFactory, std::initializer_list<PropertySheetName> iReqData);
 
   protected:
     UnorderedMap<ComponentName, ComponentEntry> m_Components;

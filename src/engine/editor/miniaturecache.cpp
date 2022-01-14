@@ -83,13 +83,13 @@ namespace eXl
     Archetype const* archetype = iArchetype.GetOrLoad();
     eXl_ASSERT_REPAIR_RET(archetype != nullptr, QPixmap());
 
-    auto const& components = archetype->GetComponents();
-    auto iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
-    if (iterGfx == components.end())
+    auto const& data = archetype->GetProperties();
+    auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
+    if (iterGfx == data.end())
     {
       return QPixmap();
     }
-    auto const* gfxDesc = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
+    auto const* gfxDesc = iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>();
 
     QPixmap miniature = GetMiniature(gfxDesc->m_Tileset, gfxDesc->m_TileName);
 

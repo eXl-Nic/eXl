@@ -32,7 +32,7 @@ namespace eXl
   protected:
 
     static SpriteDataTable::Handle GetSpriteData(GfxSpriteComponent& iComp);
-    static Vector2f const& GetSpriteOffset(GfxSpriteComponent& iComp);
+    static GfxSpriteComponent::Desc const* GetDescFromComponent(GfxSpriteComponent const& comp, SparseGameDataView<GfxSpriteComponent::Desc> const* iView);
     void RemoveObject(ObjectHandle);
     void PrepareSprites();
 

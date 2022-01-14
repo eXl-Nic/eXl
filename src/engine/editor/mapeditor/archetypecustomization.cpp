@@ -216,13 +216,10 @@ namespace eXl
     emit beginResetModel();
 
     m_Archetype = iArchetype;
-    auto const& components = m_Archetype->GetComponents();
     auto const& properties = m_Archetype->GetProperties();
     
-    m_ComponentRoot->children.clear();
     m_PropertiesRoot->children.clear();
 
-    m_Components.clear();
     m_Properties.clear();
 
     auto applyCusto = [](CustomizationModel& iModel, CustomizationData::FieldsMap const& iCusto)
@@ -238,22 +235,6 @@ namespace eXl
         }
       }
     };
-
-    for (auto const& compEntry : components)
-    {
-      auto model = std::make_unique<CustomizationModel>(nullptr, compEntry.second);
-
-      ComponentName name = compEntry.first;
-      auto compCusto = iData.m_ComponentCustomization.find(name);
-      if (compCusto != iData.m_ComponentCustomization.end())
-      {
-        applyCusto(*model, compCusto->second);
-      }
-
-      m_ComponentRoot->children.emplace_back(BuildTree(QModelIndex(), m_ComponentRoot, name, model.get()));
-      AddCallbacks(m_ComponentRoot, name, model.get());
-      m_Components.insert(std::make_pair(name, std::move(model)));
-    }
 
     for (auto const& propEntry : properties)
     {

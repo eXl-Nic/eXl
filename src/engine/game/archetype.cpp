@@ -9,6 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <engine/game/archetype.hpp>
+#include <engine/common/world.hpp>
 #include <engine/game/commondef.hpp>
 #include <core/resource/resourceloader.hpp>
 #include <core/resource/resourcemanager.hpp>
@@ -76,21 +77,7 @@ namespace eXl
     iStreamer.BeginSequence();
     for (auto component : m_Components)
     {
-      iStreamer.BeginStruct();
-      iStreamer.PushKey("Name");
-      iStreamer.WriteString(component.first.get());
-      iStreamer.PopKey();
-      iStreamer.PushKey("Data");
-
-      Type const* compType = component.second.GetType();
-
-      auto& manifest = *iStreamer.GetManifest<ComponentManifest>();
-      eXl_ASSERT(manifest.GetComponentTypeFromName(component.first) == compType);
-
-      compType->Stream(component.second.GetBuffer(), &iStreamer);
-
-      iStreamer.PopKey();
-      iStreamer.EndStruct();
+      iStreamer.Write(&component);
     }
     iStreamer.EndSequence();
     iStreamer.PopKey();
@@ -102,6 +89,8 @@ namespace eXl
 
   Err Archetype::Unstream_Data(Unstreamer& iStreamer)
   {
+    auto& manifest = *iStreamer.GetManifest<PropertiesManifest>();
+    auto& compManifest = *iStreamer.GetManifest<ComponentManifest>();
     iStreamer.BeginStruct();
 
     iStreamer.PushKey("Properties");
@@ -122,7 +111,7 @@ namespace eXl
 
         PropertySheetName name(tempStr);
 
-        auto& manifest = *iStreamer.GetManifest<PropertiesManifest>();
+       
         Type const* propertyType = manifest.GetTypeFromName(name);
         eXl_ASSERT_REPAIR_BEGIN(propertyType != nullptr){}
         else
@@ -150,28 +139,15 @@ namespace eXl
       do
       {
         String tempStr;
-        iStreamer.BeginStruct();
-        iStreamer.PushKey("Name");
         iStreamer.ReadString(&tempStr);
-        iStreamer.PopKey();
-        iStreamer.PushKey("Data");
-
+        
         ComponentName name(tempStr);
-        auto& manifest = *iStreamer.GetManifest<ComponentManifest>();
-        Type const* componentType = manifest.GetComponentTypeFromName(name);
-        eXl_ASSERT_REPAIR_BEGIN(componentType != nullptr){}
+        UnorderedSet<PropertySheetName> const* reqData = compManifest.GetRequiredDataForComponent(name);
+        eXl_ASSERT_REPAIR_BEGIN(reqData != nullptr){}
         else
         {
-          void* buffer = nullptr;
-          componentType->Unstream(buffer, &iStreamer);
-          DynObject componentData;
-          componentData.SetType(componentType, buffer, true);
-          m_Components.emplace(std::make_pair(name, std::move(componentData)));
+          AddComponent(name, compManifest, manifest);
         }
-        iStreamer.PopKey();
-        iStreamer.EndStruct();
-
-
       } while (iStreamer.NextSequenceElement());
     }
     iStreamer.PopKey();
@@ -301,23 +277,6 @@ namespace eXl
       StreamCustoMap(propKeyName, iProperty, iStreamer);
     });
     iStreamer.PopKey();
-
-    String const compKeyName("Component");
-
-    iStreamer.PushKey("Components");
-    iStreamer.HandleSequence(m_ComponentCustomization,
-      [&](decltype(m_ComponentCustomization)& oMap, Unstreamer& iStreamer)
-    {
-      UnstreamCustoMap(compKeyName, oMap, iStreamer,
-        [](ComponentName iName) { return EngineCommon::GetComponents().GetComponentTypeFromName(iName); });
-
-    },
-      [&](decltype(m_ComponentCustomization)::value_type const& iProperty, Streamer& iStreamer)
-    {
-      StreamCustoMap(compKeyName, iProperty, iStreamer);
-    });
-    iStreamer.PopKey();
-
     iStreamer.EndStruct();
 
     return Err::Success;
@@ -341,18 +300,6 @@ namespace eXl
         eXl_ASSERT_REPAIR_RET(fieldType->CanAssignFrom(fieldData.GetType()), );
         fieldType->Copy(fieldData.GetBuffer(), destField);
       }
-    }
-  }
-
-  void CustomizationData::ApplyCustomization(ComponentName iName, DynObject& ioData) const
-  {
-    TupleType const* objType = EngineCommon::GetComponents().GetComponentTypeFromName(iName)->IsTuple();
-    eXl_ASSERT_REPAIR_RET(ioData.GetType() == objType, );
-
-    auto compCusto = m_ComponentCustomization.find(iName);
-    if (compCusto != m_ComponentCustomization.end())
-    {
-      ApplyCustomization(ioData, compCusto->second);
     }
   }
 
@@ -419,34 +366,56 @@ namespace eXl
     return s_Empty;
   }
 
-  void Archetype::RemoveProperty(PropertySheetName iName)
+  void Archetype::RemoveProperty(PropertySheetName iName, ComponentManifest const& iManifest)
   {
     m_Properties.erase(iName);
-  }
-
-  void Archetype::SetComponent(ComponentName iName, ConstDynObject const& iObject)
-  {
-    //eXl_ASSERT(GameDatabase::GetComponentTypeFromName(iName) == iObject.GetType());
-    auto iter = m_Components.find(iName);
-    if (iter == m_Components.end())
+    SmallVector<ComponentName, 2> componentsToRemove;
+    for (auto comp : m_Components)
     {
-      iter = m_Components.insert(std::make_pair(iName, DynObject())).first;
+      UnorderedSet<PropertySheetName> const* iProperties = iManifest.GetRequiredDataForComponent(comp);
+      if (iProperties == nullptr)
+      {
+        continue;
+      }
+
     }
-    iter->second = DynObject(&iObject);
   }
 
-  ConstDynObject const& Archetype::GetComponent(ComponentName iName) const
+  void Archetype::AddComponent(ComponentName iName, ComponentManifest const& iManifest, PropertiesManifest const& iPropDesc)
   {
-    static ConstDynObject s_Empty;
-    auto iter = m_Components.find(iName);
-    if (iter != m_Components.end())
+    if (HasComponent(iName))
     {
-      return iter->second;
+      return;
     }
-    return s_Empty;
+
+    UnorderedSet<PropertySheetName> const* properties = iManifest.GetRequiredDataForComponent(iName);
+    if (properties == nullptr)
+    {
+      return;
+    }
+
+    for (auto prop : *properties)
+    {
+      if (m_Properties.count(prop) == 0)
+      {
+        Type const* type = iPropDesc.GetTypeFromName(prop);
+        eXl_ASSERT_REPAIR_BEGIN(type != nullptr)
+        {
+          continue;
+        }
+        DynObject defaultData;
+        defaultData.SetType(type, type->Build(), true);
+        SetProperty(prop, defaultData, true);
+      }
+    }
+    m_Components.emplace(iName);
   }
 
-  
+  bool Archetype::HasComponent(ComponentName iName) const
+  {
+    return m_Components.count(iName) > 0;
+  }
+
   void Archetype::RemoveComponent(ComponentName iName)
   {
     m_Components.erase(iName);
@@ -514,21 +483,10 @@ namespace eXl
 
     for (auto const& component : m_Components)
     {
-      DynObject componentData = component.second.Ref();
-      componentData = DynObject(&componentData);
-      if (iCusto)
-      {
-        auto iter = iCusto->m_ComponentCustomization.find(component.first);
-        if (iter != iCusto->m_ComponentCustomization.end())
-        {
-          iCusto->ApplyCustomization(component.first, componentData);
-        }
-      }
-      PatchObjectReferences(iWorld, componentData);
-      ComponentFactory const* factory = iWorld.GetComponents().GetComponentFactory(component.first);
+      ComponentFactory const* factory = iWorld.GetComponents().GetComponentFactory(component);
       if (factory && (*factory))
       {
-        (*factory)(iWorld, iHandle, componentData);
+        (*factory)(iWorld, iHandle);
       }
     }
   }

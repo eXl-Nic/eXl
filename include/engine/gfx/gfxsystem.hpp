@@ -36,6 +36,7 @@ namespace eXl
     DECLARE_RTTI(GfxRenderNode, RttiObject);
   public:
     bool IsInitialized() const { return m_Sys != nullptr; }
+    World& GetWorld() const;
   protected:
     friend GfxSystem;
     using UpdateCallback = std::function<void(ObjectHandle const*, size_t)>;
@@ -143,4 +144,6 @@ namespace eXl
     friend GfxRenderNode;
     UniquePtr<Impl> m_Impl;
   };
+
+  inline World& GfxRenderNode::GetWorld() const { return m_Sys->GetWorld(); }
 }

@@ -14,6 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/menumanager.hpp>
 
 #include <core/application.hpp>
+#include <core/rtti.hpp>
 #include <engine/gfx/gfxsystem.hpp>
 
 
@@ -26,8 +27,9 @@ namespace eXl
   class WorldState;
   struct CameraState;
 
-  class EXL_ENGINE_API Scenario
+  class EXL_ENGINE_API Scenario : public RttiObject
   {
+    DECLARE_RTTI(Scenario, RttiObject);
   public:
 
     virtual void PreInit(World& iWorld) {};

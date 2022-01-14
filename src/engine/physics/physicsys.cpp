@@ -164,10 +164,7 @@ namespace eXl
 
     PhysicComponent_Impl* compImpl = eXl_NEW PhysicComponent_Impl(*this);
 
-    PhysicInitData& initData = GetPhysicsInitDataView(GetWorld())->GetOrCreate(iObject);
-    initData = iInit;
-
-    compImpl->Build(iObject, initData);
+    compImpl->Build(iObject, iInit);
     if(iInit.GetFlags() & PhysicFlags::IsGhost)
     {
       m_Impl->m_dynamicsWorld->addCollisionObject(compImpl->m_Object, iInit.GetCategory(), iInit.GetFilter());
@@ -243,8 +240,8 @@ namespace eXl
         compImpl->m_Object->setWorldTransform(btTrans);
         compImpl->m_Object->setInterpolationWorldTransform(btTrans);
 
-        uint16_t group = compImpl->m_InitData->GetCategory();
-        uint16_t mask = compImpl->m_InitData->GetFilter();
+        uint16_t group = compImpl->m_InitData.GetCategory();
+        uint16_t mask = compImpl->m_InitData.GetFilter();
 
         if ((compImpl->GetFlags() & PhysicFlags::IsGhost) == 0)
         {

@@ -33,6 +33,8 @@ namespace eXl
       ContactFilterCallback contactCb;
     };
 
+    void Register(World& iWorld) override;
+
     static ObjectHandle Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc);
 
 		void AddProjectile(ObjectHandle iObj, Desc const& iDesc, Vector3f const& iInitialSpeed);
@@ -45,13 +47,12 @@ namespace eXl
     struct Entry
     {
       Desc m_Desc;
-      ObjectHandle m_Handle;
       uint32_t m_CurState = 0;
       ObjectTable<KinematicEntry>::Handle m_KinematicEntry;
       GfxSpriteComponent* m_GfxComp = nullptr;
     };
 
-    ObjectTable<Entry> m_Entries;
+    Optional<DenseGameDataStorage<Entry>> m_Entries;
     UnorderedMap<ObjectHandle, ObjectTable<Entry>::Handle> m_Projectiles;
 	};
 }

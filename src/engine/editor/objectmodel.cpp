@@ -24,6 +24,11 @@ namespace eXl
   void ObjectModel::ClearModelFromView(QAbstractItemView* iView)
   {
     ObjectModel* model = qobject_cast<ObjectModel*>(iView->model());
+    if (QAbstractItemDelegate* delegate = iView->itemDelegate())
+    {
+      iView->setItemDelegate(nullptr);
+      delete delegate;
+    }
     if (model)
     {
       iView->setModel(nullptr);
@@ -38,6 +43,7 @@ namespace eXl
     {
       model = new ObjectModel(iView, false, iObj);
       iView->setModel(model);
+
     }
     else if(model)
     {

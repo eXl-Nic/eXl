@@ -24,6 +24,7 @@
 #include <QTreeView>
 #include <QTableView>
 #include <QListView>
+#include <QListWidget>
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QToolbar>
@@ -207,7 +208,7 @@ namespace eXl
 
   bool PropertySheetCollectionModel::RemoveFromResource(PropertySheetName const& iName)
   {
-    m_Resource->RemoveProperty(iName);
+    m_Resource->RemoveProperty(iName, EngineCommon::GetComponents());
     return true;
   }
 
@@ -217,97 +218,6 @@ namespace eXl
     if (iter != m_Resource->GetProperties().end())
     {
       return &iter->second;
-    }
-    return nullptr;
-  }
-
-  class ComponentCollectionModel : public CollectionModel<ComponentName, ConstDynObject, Archetype>
-  {
-    //Q_OBJECT
-  public:
-    static ComponentCollectionModel* Create(QObject* iParent, Archetype* iArchetype);
-
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
-
-    bool setData(const QModelIndex &iIndex, const QVariant &value, int role);
-
-  protected:
-    ComponentCollectionModel(QObject* iParent, Archetype* iGroup);
-    bool AddToResource(ComponentName const& iName, ConstDynObject const& iObject) override;
-    bool RemoveFromResource(ComponentName const& iName) override;
-    ConstDynObject const* FindInResource(ComponentName const& iName) const override;
-
-  };
-
-  ComponentCollectionModel* ComponentCollectionModel::Create(QObject* iParent, Archetype* iArchetype)
-  {
-    ComponentCollectionModel* newModel = new ComponentCollectionModel(iParent, iArchetype);
-    newModel->BuildMap(iArchetype->GetComponents());
-
-    return newModel;
-  }
-
-  Qt::ItemFlags ComponentCollectionModel::flags(const QModelIndex &index) const
-  {
-    if (index.isValid())
-    {
-      Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-      return flags;
-    }
-    return Qt::ItemFlag();
-  }
-
-  bool ComponentCollectionModel::setData(const QModelIndex &iIndex, const QVariant &value, int role)
-  {
-    if (iIndex.isValid() && role == Qt::EditRole && iIndex.column() == 0)
-    {
-      ComponentName name(value.toString().toUtf8().data());
-      if (m_NameToIndex.find(name) == m_NameToIndex.end())
-      {
-        ComponentName oldName = m_IndexToName[iIndex.row()];
-
-        Type const* type = EngineCommon::GetComponents().GetComponentTypeFromName(name);
-        DynObject newData;
-        newData.SetType(type, type->Build(), true);
-        m_Resource->SetComponent(name, newData);
-
-        m_IndexToName[iIndex.row()] = name;
-        m_NameToIndex.erase(oldName);
-        m_NameToIndex.insert(std::make_pair(name, iIndex.row()));
-
-        emit dataChanged(iIndex, iIndex);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  ComponentCollectionModel::ComponentCollectionModel(QObject* iParent, Archetype* iArchetype)
-    : CollectionModel(iParent, iArchetype)
-  {
-  }
-
-  bool ComponentCollectionModel::AddToResource(ComponentName const& iName, ConstDynObject const& iObject)
-  {
-    if (EngineCommon::GetComponents().GetComponentTypeFromName(iName))
-    {
-      m_Resource->SetComponent(iName, iObject);
-    }
-    return true;
-  }
-
-  bool ComponentCollectionModel::RemoveFromResource(ComponentName const& iName)
-  {
-    m_Resource->RemoveComponent(iName);
-    return true;
-  }
-
-  ConstDynObject const* ComponentCollectionModel::FindInResource(ComponentName const& iName) const
-  {
-    ConstDynObject const& prop = m_Resource->GetComponent(iName);
-    if (prop.IsValid())
-    {
-      return &prop;
     }
     return nullptr;
   }
@@ -339,27 +249,20 @@ namespace eXl
     QModelIndex m_GroupSelection;
 
     PropertySheetCollectionModel* m_PropsCollectionModel;
-    ComponentCollectionModel* m_CompCollectionModel;
 
     QTreeView* m_PropDataView;
     QTableView* m_PropCollectionView;
 
-    QTreeView* m_ComponentDataView;
-    QListView* m_ComponentCollectionView;
+    QListWidget* m_ComponentCollectionView;
 
     QModelIndex m_CurrentPropIdx;
     QModelIndex m_CurrentCompIdx;
 
     PropertySheetName m_CurrentEditedSheetName;
     DynObject m_CurrentEditedSheet;
-    //ObjectModel* m_CurrentPropertyModel = nullptr;
     
     ArchetypeEditor* m_Editor;
     Archetype* m_Archetype;
-
-    ComponentName m_CurrentEditedComponentName;
-    DynObject m_CurrentEditedComponent;
-    //ObjectModel* m_CurrentComponentModel = nullptr;
 
     Vector<PropertySheetName> m_AvailablePropNames;
     Vector<ComponentName> m_AvailableComponentNames;
@@ -370,7 +273,6 @@ namespace eXl
     uint32_t m_TilenameFieldIdx;
     
     void UpdateEditedProperty(QModelIndex);
-    void UpdateEditedComponent(QModelIndex);
     void UpdateTileItemDelegate();
     void RecreateObject();
 	};
@@ -389,7 +291,6 @@ namespace eXl
     m_Impl->m_Archetype = Archetype::DynamicCast(iDoc->GetResource());
 
     m_Impl->m_PropsCollectionModel = PropertySheetCollectionModel::Create(this, m_Impl->m_Archetype);
-    m_Impl->m_CompCollectionModel = ComponentCollectionModel::Create(this, m_Impl->m_Archetype);
 
     m_Impl->m_GfxSpriteDescType->GetFieldDetails("m_Tileset", m_Impl->m_TilesetField);
     m_Impl->m_GfxSpriteDescType->GetFieldDetails("m_TileName", m_Impl->m_TilenameFieldIdx);
@@ -475,7 +376,6 @@ namespace eXl
       });
 
       m_Impl->m_PropDataView = new QTreeView(this);
-      m_Impl->m_PropDataView->setItemDelegate(new ObjectDelegate);
 
       dataSplitter->addWidget(propCollection);
 
@@ -488,37 +388,23 @@ namespace eXl
     QVBoxLayout* componentCollectionLayout = new QVBoxLayout(this);
     componentCollection->setLayout(componentCollectionLayout);
     QToolBar* compCollectionTool = new QToolBar(this);
-    m_Impl->m_ComponentCollectionView = new QListView(this);
-    m_Impl->m_ComponentCollectionView->setModel(m_Impl->m_CompCollectionModel);
+    m_Impl->m_ComponentCollectionView = new QListWidget(this);
     m_Impl->m_ComponentCollectionView->setSelectionModel(new QItemSelectionModel(m_Impl->m_ComponentCollectionView->model()));
 
     QObject::connect(m_Impl->m_ComponentCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
-    {
-      if (iSelected.isEmpty())
       {
-        ObjectModel::ClearModelFromView(m_Impl->m_ComponentDataView);
-        m_Impl->m_CurrentEditedComponentName = ComponentName();
-      }
-      else
-      {
-        if (iSelected.indexes().size() == 1)
-        {
-          m_Impl->m_CurrentCompIdx = *iSelected.indexes().begin();
-          m_Impl->UpdateEditedComponent(m_Impl->m_CurrentCompIdx);
-        }
-      }
-    });
+      });
 
-    QObject::connect(m_Impl->m_CompCollectionModel, &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
+    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
     {
       m_Impl->m_Editor->ModifyResource();
     });
 
-    QObject::connect(m_Impl->m_CompCollectionModel, &QAbstractItemModel::rowsInserted, [this]()
+    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::rowsInserted, [this]()
     {
       m_Impl->m_Editor->ModifyResource();
     });
-    QObject::connect(m_Impl->m_CompCollectionModel, &QAbstractItemModel::rowsRemoved, [this]()
+    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::rowsRemoved, [this]()
     {
       m_Impl->m_Editor->ModifyResource();
     });
@@ -531,40 +417,44 @@ namespace eXl
     {
       componentSelector->addItem(name.get().c_str());
     }
+    for (auto compName : m_Impl->m_Archetype->GetComponents())
+    {
+      m_Impl->m_ComponentCollectionView->addItem(QString::fromUtf8(compName.get().c_str()));
+    }
 
     componentCollectionLayout->addWidget(compCollectionTool);
     componentCollectionLayout->addWidget(m_Impl->m_ComponentCollectionView);
 
     compCollectionTool->addAction(style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this, componentSelector]
     {
-      uint32_t curRowCount = m_Impl->m_CompCollectionModel->rowCount(QModelIndex());
+      uint32_t curRowCount = m_Impl->m_ComponentCollectionView->count();
       int selName = componentSelector->currentIndex();
-      if (!m_Impl->m_CompCollectionModel->GetIndexFromName(m_Impl->m_AvailableComponentNames[selName]).isValid())
+      ComponentName newComp = m_Impl->m_AvailableComponentNames[selName];
+      if (!m_Impl->m_Archetype->HasComponent(newComp))
       {
-        if (m_Impl->m_CompCollectionModel->insertRow(curRowCount))
-        {
-          QModelIndex newIndex = m_Impl->m_CompCollectionModel->index(curRowCount, 0, QModelIndex());
-          m_Impl->m_CompCollectionModel->setData(newIndex, QString(m_Impl->m_AvailableComponentNames[selName].get().c_str()), Qt::EditRole);
-        }
+        m_Impl->m_Archetype->AddComponent(newComp, EngineCommon::GetComponents(), EditorState::GetProjectProperties());
+        m_Impl->m_PropsCollectionModel->Reset(m_Impl->m_Archetype->GetProperties());
+        m_Impl->m_ComponentCollectionView->addItem(QString::fromUtf8(newComp.get().c_str()));
       }
       m_Impl->RecreateObject();
     });
 
     compCollectionTool->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this]
-    {
-      QModelIndex currentSelection = m_Impl->m_ComponentCollectionView->selectionModel()->currentIndex();
-      if (currentSelection.isValid())
       {
-        m_Impl->m_CompCollectionModel->removeRow(currentSelection.row(), currentSelection.parent());
-      }
-      m_Impl->RecreateObject();
-    });
-
-    m_Impl->m_ComponentDataView = new QTreeView(this);
-    //m_Impl->m_ComponentDataView->setItemDelegate(new ObjectDelegate);
+        QModelIndex currentSelection = m_Impl->m_ComponentCollectionView->selectionModel()->currentIndex();
+        if (currentSelection.isValid())
+        {
+          QString text = m_Impl->m_ComponentCollectionView->item(currentSelection.row())->text();
+          ComponentName componentName(text.toStdString().c_str());
+          if (m_Impl->m_Archetype->HasComponent(componentName))
+          {
+            m_Impl->m_Archetype->RemoveComponent(componentName);
+          }
+        }
+        m_Impl->RecreateObject();
+      });
     
     componentsSplitter->addWidget(componentCollection);
-    componentsSplitter->addWidget(m_Impl->m_ComponentDataView);
 		rootSplitter->addWidget(componentsSplitter);
 
     {
@@ -584,6 +474,15 @@ namespace eXl
 
       gameWidget->SetTickCallback([this, gameWidget](float iDelta)
       {
+        World& world = m_Impl->m_World.GetWorld();
+        GfxSystem& gfx = *world.GetSystem<GfxSystem>();
+        if (!m_Impl->m_ArchetypeObject.IsAssigned()
+          && gfx.GetRenderNode(gfx.GetSpriteHandle())->IsInitialized())
+        {
+          m_Impl->m_ArchetypeObject = world.CreateObject();
+          m_Impl->m_Archetype->Instantiate(m_Impl->m_ArchetypeObject, world, nullptr);
+        }
+
         m_Impl->m_World.GetCamera().ProcessInputs(m_Impl->m_World.GetWorld(), m_Impl->m_Inputs, CameraState::WheelZoom | CameraState::RightClickPan);
         gameWidget->GetViewInfo().pos = m_Impl->m_World.GetCamera().view.pos;
         gameWidget->GetViewInfo().basis[0] = m_Impl->m_World.GetCamera().view.basis[0];
@@ -602,11 +501,6 @@ namespace eXl
       rootSplitter->addWidget(gameViewSplitter);
     }
 
-    World& world = m_Impl->m_World.GetWorld();
-
-    m_Impl->m_ArchetypeObject = world.CreateObject();
-    m_Impl->m_Archetype->Instantiate(m_Impl->m_ArchetypeObject, world, nullptr);
-
 		QVBoxLayout* layout = new QVBoxLayout(this);
 
 		layout->addWidget(rootSplitter);
@@ -623,8 +517,8 @@ namespace eXl
     m_CurrentEditedSheetName = *name;
 
     m_CurrentEditedSheet = DynObject(obj->m_Data);
-    bool needToCreateModel = m_ComponentDataView->model() == nullptr;
-    ObjectModel::CreateOrUpdateModel(m_PropDataView, false, m_CurrentEditedSheet);
+    bool needToCreateModel = m_PropDataView->model() == nullptr;
+    ObjectModel* objectModel = ObjectModel::CreateOrUpdateModelWithDelegate<TileItemDelegate>(m_PropDataView, false, m_CurrentEditedSheet);
     if (needToCreateModel)
     {
       auto onSheetDataChanged = [this, iIndex]()
@@ -634,7 +528,16 @@ namespace eXl
 
         m_Editor->ModifyResource();
         m_Archetype->SetProperty(m_CurrentEditedSheetName, m_CurrentEditedSheet, obj->m_Instanced);
+        RecreateObject();
       };
+
+      QObject::connect(objectModel, &ObjectModel::dataChanged, [this](const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>&)
+      {
+        if (!topLeft.parent().isValid() && topLeft.row() == m_TilesetField)
+        {
+          UpdateTileItemDelegate();
+        }
+      });
 
       QObject::connect(m_PropDataView->model(), &QAbstractItemModel::dataChanged, [onSheetDataChanged](QModelIndex const& iDataIndex)
       {
@@ -649,14 +552,14 @@ namespace eXl
 
   void ArchetypeEditor::Impl::UpdateTileItemDelegate()
   {
-    TileItemDelegate* itemDelegate = static_cast<TileItemDelegate*>(m_ComponentDataView->itemDelegate());
-    if (m_CurrentEditedComponentName != EngineCommon::GfxSpriteComponentName())
+    TileItemDelegate* itemDelegate = static_cast<TileItemDelegate*>(m_PropDataView->itemDelegate());
+    if (m_CurrentEditedSheetName != EngineCommon::GfxSpriteDescName())
     {
       itemDelegate->Clear();
     }
     else
     {
-      GfxSpriteComponent::Desc* desc = m_CurrentEditedComponent.CastBuffer<GfxSpriteComponent::Desc>();
+      GfxSpriteComponent::Desc* desc = m_CurrentEditedSheet.CastBuffer<GfxSpriteComponent::Desc>();
 
       Tileset* tileset = nullptr;
       if (desc->m_Tileset.GetUUID().IsValid())
@@ -668,56 +571,10 @@ namespace eXl
       if (tileset)
       {
         TileCollectionModel* tiles = TileCollectionModel::Create(itemDelegate, tileset);
-        itemDelegate->Setup(qobject_cast<ObjectModel*>(m_ComponentDataView->model()), tiles, m_GfxSpriteDescType, m_TilenameFieldIdx);
+        itemDelegate->Setup(qobject_cast<ObjectModel*>(m_PropDataView->model()), tiles, m_GfxSpriteDescType, m_TilenameFieldIdx);
       }
     }
   };
-
-  void ArchetypeEditor::Impl::UpdateEditedComponent(QModelIndex iIndex)
-  {
-    ComponentName const* name = m_CompCollectionModel->GetNameFromIndex(iIndex);
-    eXl_ASSERT(name != nullptr);
-    ConstDynObject const* obj = m_CompCollectionModel->GetObjectFromIndex(iIndex);
-    eXl_ASSERT(obj != nullptr);
-
-    m_CurrentEditedComponentName = *name;
-    m_CurrentEditedComponent = DynObject(obj);
-    bool needToCreateModel = m_ComponentDataView->model() == nullptr;
-    ObjectModel* objectModel = ObjectModel::CreateOrUpdateModel(m_ComponentDataView, false, m_CurrentEditedComponent);
-    if (needToCreateModel)
-    {
-      auto onComponentDataChanged = [this, iIndex]()
-      {
-        m_Editor->ModifyResource();
-
-        m_Archetype->SetComponent(m_CurrentEditedComponentName, m_CurrentEditedComponent);
-      };
-      QObject::connect(objectModel, &QAbstractItemModel::dataChanged, [this, onComponentDataChanged](QModelIndex const& iDataIndex)
-      {
-        onComponentDataChanged();
-        RecreateObject();
-      });
-
-      QObject::connect(objectModel, &ObjectModel::dataChanged, [this](const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &)
-      {
-        if (!topLeft.parent().isValid() && topLeft.row() == m_TilesetField)
-        {
-          UpdateTileItemDelegate();
-        }
-      });
-
-      QObject::connect(objectModel, &QAbstractItemModel::rowsInserted, onComponentDataChanged);
-      QObject::connect(objectModel, &QAbstractItemModel::rowsRemoved, onComponentDataChanged);
-      m_ComponentDataView->setItemDelegate(new TileItemDelegate(m_ComponentDataView));
-    }
-
-    QAbstractItemDelegate* delegate = m_ComponentDataView->itemDelegate();
-
-    if (*name == EngineCommon::GfxSpriteComponentName())
-    {  
-      UpdateTileItemDelegate();
-    }
-  }
 
   void ArchetypeEditor::Impl::RecreateObject()
   {
@@ -727,6 +584,7 @@ namespace eXl
     }
     
     World& world = m_World.GetWorld();
+    world.GetSystem<GameDatabase>()->ForgetArchetype(*m_Archetype);
     m_ArchetypeObject = world.CreateObject();
     m_Archetype->Instantiate(m_ArchetypeObject, world, nullptr);
     world.GetSystem<Transforms>()->AddTransform(m_ArchetypeObject, nullptr);

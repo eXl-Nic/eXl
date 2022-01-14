@@ -82,7 +82,8 @@ namespace eXl
     }
 
     if (!m_ArchetypeHandle.back().IsAssigned()
-      || m_ObjectHandles.back() != m_ArchetypeHandle.back())
+      || (m_ObjectHandles.back().IsAssigned() 
+        && m_ObjectHandles.back() != m_ArchetypeHandle.back()))
     {
       Release(m_ObjectHandles.back());
     }

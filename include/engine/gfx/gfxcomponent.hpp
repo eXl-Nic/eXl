@@ -228,7 +228,9 @@ namespace eXl
 		
 	protected:
 
-    Desc* m_Desc;
+    bool Mutate();
+
+    Desc* m_Desc = nullptr;
 
     GfxSpriteRenderNode* m_RenderNode = nullptr;
 		ObjectHandle m_Object;

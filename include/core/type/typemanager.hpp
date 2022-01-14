@@ -62,31 +62,6 @@ namespace eXl
       size_t m_Offset;
     };
 
-    /**
-       Return a registration class to create dynamic objects.
-    **********************************************************************/
-    EXL_CORE_API UsrTypeReg BeginTypeRegistration(TypeName iName);
-
-    class EXL_CORE_API SignTypeReg
-    {
-      friend EXL_CORE_API SignTypeReg BeginSignatureRegistration();
-    public:
-
-      SignTypeReg& AddParam(const Type* iType);
-
-      const TupleType* EndRegistration();
-
-    private:
-      SignTypeReg();
-      List<FieldDesc> m_Fields;
-      size_t m_Offset;
-    };
-
-    /**
-       Return a registration class to create signatures.
-    **********************************************************************/
-    EXL_CORE_API SignTypeReg BeginSignatureRegistration();
-
     class EnumTypeReg;
 
     class EXL_CORE_API EnumTypeReg
@@ -113,12 +88,6 @@ namespace eXl
     **********************************************************************/
     template <class T>
     NativeTypeReg<T> BeginNativeTypeRegistration(TypeName iName);
-
-    /**
-       This version of the call assumes that an TypeID has been declared for T, so it can be used in Signatures.
-    **********************************************************************/
-    template <class T>
-    NativeTypeReg<T> BeginNativeTypeRegistrationWithSign(TypeName iName);
     
     /**
        Registraction class used to map C++ structs to the reflexion system.
@@ -127,7 +96,6 @@ namespace eXl
     class NativeTypeReg
     {
       friend NativeTypeReg<T> BeginNativeTypeRegistration<T>(TypeName iName);
-      friend NativeTypeReg<T> BeginNativeTypeRegistrationWithSign<T>(TypeName iName);
     public:
     
       template <class U>
@@ -138,12 +106,6 @@ namespace eXl
 
       template <class U>
       NativeTypeReg& AddCustomField(const String& iName, U T::* iOffset, Type const* iFieldType);
-    
-      //inline NativeTypeReg& SetCtors(const CtorsDesc& iCtors){
-      //  if(iCtors.IsOk())
-      //    m_Ctors = iCtors;
-      //  return *this;
-      //}
       
       const TupleType* EndRegistration(/*ResourceContainer* iCont*/);
     private:
@@ -151,102 +113,6 @@ namespace eXl
       String m_Name;
       List<FieldDesc> m_Fields;
     };
-    
-    /**
-       Registraction class used to map C++ types to the reflexion system.
-       This is not a Type, as these objects will be references through RttiOPtr
-    **********************************************************************/
-    class ClassTypeRegImpl;
-
-    template <class T>
-    class ClassTypeReg;
-
-    /**
-       Register a class type, to be able to create it, manipulate its properties.
-       If the object inherits RttiObjectRefC, you'll also be able to retrieve an ObjectPtr to reference it.
-       NB : Object must have static methods CreateInstance and CopyInstance
-       NB : Direct parent class must be RttiObjectRefC, or be registered
-    **********************************************************************/
-    template <class T>
-    ClassTypeReg<T> BeginClassRegistration();
-
-    /**
-       Same as previous method, but htis time you can specify the ctor yourself.
-    **********************************************************************/
-    template <class T>
-    ClassTypeReg<T> BeginClassRegistrationWithCtor(RttiObject* (*iObjectFactory)());
-
-    template <class T>
-    class ClassTypeReg
-    {
-      friend ClassTypeReg<T> BeginClassRegistration<T>();
-      friend ClassTypeReg<T> BeginClassRegistrationWithCtor<T>(RttiObject* (*iObjectFactory)());
-    public:
-      inline ClassTypeReg(ClassTypeReg const&);
-      inline ~ClassTypeReg();
-
-      //template <class U, U const& (T::*GetterMeth)()const, void (T::*SetterMeth)(U const& iValue) >
-      //inline ClassTypeReg& AddProperty(const String& iName);
-      //
-      //template <class U, U (T::*GetterMeth)()const, void (T::*SetterMeth)(U iValue) >
-      //inline ClassTypeReg& AddPropertyVal(const String& iName);
-      //
-      //template <class U, U const& (T::*GetterMeth)()const>
-      //inline ClassTypeReg& AddReadOnlyProperty(const String& iName);
-      //
-      //template <class U, U (T::*GetterMeth)()const>
-      //inline ClassTypeReg& AddReadOnlyPropertyVal(const String& iName);
-      //
-      //inline ClassTypeReg& AddProperty(String const& iName, Type const* iType
-      //  , void(*GetterFun)(Type const*, void const* , void* )
-      //  , void(*SetterFun)(Type const*, void* , void const* ));
-      
-      const ClassType* EndRegistration();
-    private:
-      //Provide an Id to make the glue between an introspected struct and signatures.
-      inline ClassTypeReg(RttiObject* (*iObjectFactory)());
-      mutable ClassTypeRegImpl* m_Impl;
-    };
-
-    /**
-       Register a class for which you want to retrieve an ObjectPtr or a ResourceHandle, but with no additionnal info.
-       You won't be able to create it through a class type.
-       Eg : Have a pointer to an abstract class to be able to specify derived classes.
-       NB : Direct parent class must be registered
-    **********************************************************************/
-    EXL_CORE_API Err RegisterTransientClassForRtti(Rtti const& iRtti);
-
-    template <class T>
-    inline Err RegisterTransientClassFor(){return RegisterTransientClassForRtti(T::StaticRtti());}
-
-    /**
-       Register a custom class type.
-    **********************************************************************/
-    EXL_CORE_API Err RegisterClassForRtti(Rtti const& iRtti, ClassType const* iType);
-
-    template <class T>
-    inline Err RegisterClassFor(ClassType const* iClass){return RegisterClassForRtti(T::StaticRtti(),iClass);}
-
-    /**
-       
-    **********************************************************************/
-    EXL_CORE_API ClassType const* GetClassForRtti(Rtti const& iRtti);
-
-    /**
-       
-    **********************************************************************/
-    EXL_CORE_API ClassType const* GetClassForName(TypeName iName);
-
-    template <class T>
-    inline ClassType const* GetClassFor(){return GetClassForRtti(T::StaticRtti());}
-
-    /**
-       
-    **********************************************************************/
-    EXL_CORE_API ObjectPtrType const* GetObjectPtrForRtti(Rtti const& iRtti);
-
-    template <class T>
-    inline ObjectPtrType const* GetObjectPtrFor(){return GetObjectPtrForRtti(T::StaticRtti());}
 
     /**
        List rtti derived from a specified rtti, and registered in the manager.
@@ -274,11 +140,6 @@ namespace eXl
 
       template <class T>
       const TupleType* RegisterSignature(size_t iId,const List<FieldDesc>& iFields);
-
-      EXL_CORE_API ClassTypeRegImpl* BeginClassRegistration(Rtti const& iRtti
-        , RttiObject* (*iObjectFactory)());
-
-      EXL_CORE_API ClassType const* EndClassReg(ClassTypeRegImpl* iRegImpl);
     }
   }
 }

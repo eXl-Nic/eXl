@@ -18,6 +18,24 @@ namespace eXl
     static void ClearModelFromView(QAbstractItemView* iView);
     static ObjectModel* CreateOrUpdateModel(QAbstractItemView* iView, bool iReadOnly, DynObject& iObj);
 
+    template<typename T>
+    static ObjectModel* CreateOrUpdateModelWithDelegate(QAbstractItemView* iView, bool iReadOnly, DynObject& iObj)
+    {
+      T* newDelegate = nullptr;
+      if (iView->model() == nullptr)
+      {
+        newDelegate = new T(iView);
+      }
+      ObjectModel* model = CreateOrUpdateModel(iView, iReadOnly, iObj);
+
+      if (newDelegate)
+      {
+        iView->setItemDelegate(newDelegate);
+      }
+
+      return model;
+    }
+
     ObjectModel(QObject* iParent, bool iReadOnly, DynObject& iObj);
 
     void UpdateModel(DynObject& iObj);

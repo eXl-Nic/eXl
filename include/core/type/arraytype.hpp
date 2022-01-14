@@ -100,6 +100,29 @@ namespace eXl
 
     void* GetElement(void* iObj, unsigned int i) const override;
   };
+
+  template <class T, uint32_t S>
+  class CoreSmallArrayType : public ArrayType
+  {
+  public:
+
+    CoreSmallArrayType();
+    CoreSmallArrayType(Type const* iType);
+
+    void* Alloc()const override;
+
+    void Free(void* iObj)const override;
+
+    void* Construct(void* iObj)const override;
+
+    void Destruct(void* iObj)const override;
+
+    unsigned int GetArraySize(void const* iObj) const override;
+
+    void SetArraySize_Uninit(void* iObj, unsigned int iSize) const override;
+
+    void* GetElement(void* iObj, unsigned int i) const override;
+  };
 }
 
 #include <core/type/typemanager.hpp>
@@ -159,8 +182,65 @@ namespace eXl
   template <class T>
   void* CoreArrayType<T>::GetElement(void* iObj,unsigned int i) const
   {
-    eXl_ASSERT_MSG(i<GetArraySize(iObj),"Bad Idx");
+    eXl_ASSERT_REPAIR_RET(i < GetArraySize(iObj), nullptr);
     return &((Vector<T>*)iObj)->at(i);
+  }
+
+  template <class T, uint32_t S>
+  CoreSmallArrayType<T,S>::CoreSmallArrayType()
+    : ArrayType(TypeManager::GetType<T>()->GetName() + "_Array", 0, TypeTraits::GetSize<SmallVector<T, S>>(), Type_Is_CoreType, TypeManager::GetType<T>())
+  {
+
+  }
+
+  template <class T, uint32_t S>
+  CoreSmallArrayType<T, S>::CoreSmallArrayType(Type const* iType)
+    : ArrayType(iType->GetName() + "_Array", 0, TypeTraits::GetSize<SmallVector<T, S>>(), iType->IsCoreType() ? Type_Is_CoreType : 0, iType)
+  {
+
+  }
+
+  template <class T, uint32_t S>
+  void* CoreSmallArrayType<T, S>::Alloc()const
+  {
+    return TypeTraits::Alloc<SmallVector<T, S> >();
+  }
+
+  template <class T, uint32_t S>
+  void CoreSmallArrayType<T, S>::Free(void* iObj)const
+  {
+    TypeTraits::Free<SmallVector<T, S> >(iObj);
+  }
+
+  template <class T, uint32_t S>
+  void* CoreSmallArrayType<T, S>::Construct(void* iObj)const
+  {
+    return TypeTraits::DefaultCTor<Vector<T> >(iObj);
+  }
+
+  template <class T, uint32_t S>
+  void CoreSmallArrayType<T, S>::Destruct(void* iObj)const
+  {
+    return TypeTraits::DTor<SmallVector<T, S> >(iObj);
+  }
+
+  template <class T, uint32_t S>
+  unsigned int CoreSmallArrayType<T, S>::GetArraySize(void const* iObj) const
+  {
+    return ((SmallVector<T, S>*)iObj)->size();
+  }
+
+  template <class T, uint32_t S>
+  void CoreSmallArrayType<T, S>::SetArraySize_Uninit(void* iObj, unsigned int iSize) const
+  {
+    ((SmallVector<T, S>*)iObj)->resize(iSize);
+  }
+
+  template <class T, uint32_t S>
+  void* CoreSmallArrayType<T, S>::GetElement(void* iObj, unsigned int i) const
+  {
+    eXl_ASSERT_REPAIR_RET(i < GetArraySize(iObj), nullptr);
+    return &((SmallVector<T, S>*)iObj)->at(i);
   }
 
   class EXL_CORE_API GnrArrayType : public ArrayType

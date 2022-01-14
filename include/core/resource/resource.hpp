@@ -167,7 +167,7 @@ namespace eXl
   {
   public:
 
-    bool IsLoaded() { return m_Resource != nullptr; }
+    bool IsLoaded() const { return m_Resource != nullptr; }
 
     void Set(T const* iResource)
     {

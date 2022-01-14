@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 #include <core/corelib.hpp>
 
-
 #include <engine/game/commondef.hpp>
 
 #include <engine/gfx/tileset.hpp>
@@ -41,6 +40,59 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  namespace EngineCommon
+  {
+    AABB2Df PhysicsShape::Compute2DBox() const
+    {
+      if (m_Type == PhysicsShapeType::Box)
+      {
+        return AABB2Df(MathTools::As2DVec(m_Offset - m_Dims * 0.5)
+          , MathTools::As2DVec(m_Dims));
+      }
+      return AABB2Df(m_Offset.X() - m_Dims.X(), m_Offset.Y() - m_Dims.X()
+        , m_Offset.Y() - m_Dims.X(), m_Offset.Y() - m_Dims.X());
+    }
+
+    float PhysicsShape::ComputeBoundingCircle2DRadius() const
+    {
+      if (m_Type == PhysicsShapeType::Box)
+      {
+        return MathTools::As2DVec(m_Offset + m_Dims * 0.5).Length();
+      }
+      return m_Offset.Length() + m_Dims.X();
+    }
+
+    AABB2Df ObjectShapeData::Compute2DBox() const
+    {
+      if (m_Shapes.empty())
+      {
+        return AABB2Df();
+      }
+      AABB2Df box = m_Shapes[0].Compute2DBox();
+      for (uint32_t i = 1; i < m_Shapes.size(); ++i)
+      {
+        box.Absorb(m_Shapes[i].Compute2DBox());
+      }
+      return box;
+    }
+
+    float ObjectShapeData::ComputeBoundingCircle2DRadius() const
+    {
+      if (m_Shapes.empty())
+      {
+        return 0;
+      }
+      float maxRadius = m_Shapes[0].ComputeBoundingCircle2DRadius();
+      for (uint32_t i = 1; i < m_Shapes.size(); ++i)
+      {
+        float radius = m_Shapes[i].ComputeBoundingCircle2DRadius();
+        maxRadius = Mathf::Max(radius, maxRadius);
+      }
+
+      return maxRadius;
+    }
+  }
+
   void CharacterAnimation_StaticInit();
   void CharacterAnimation_StaticDestroy();
   void Script_StaticInit();
@@ -180,12 +232,32 @@ namespace eXl
   PropertySheetName EngineCommon::TurretData::PropertyName() { return s_NameRegistry->m_TurretDataName; }
   PropertySheetName EngineCommon::TerrainCarver::PropertyName() { return s_NameRegistry->m_TerrainCarverName; }
   PropertySheetName EngineCommon::GfxSpriteDescName() { return s_NameRegistry->m_SpriteDescDataName; }
-  PropertySheetName EngineCommon::PhysicsInitDataName() { return s_NameRegistry->m_PhysicsInitDataName; }
+
+  PropertySheetName EngineCommon::ObjectShapeData::PropertyName() 
+  { 
+    static PropertySheetName s_Name("ObjectShape");
+    return s_Name;
+  }
+
+  PropertySheetName EngineCommon::PhysicBodyData::PropertyName()
+  {
+    static PropertySheetName s_Name("PhysicBody");
+    return s_Name;
+  }
+
+  PropertySheetName EngineCommon::TriggerComponentDesc::PropertyName()
+  {
+    static PropertySheetName s_Name("TriggerDescriprion");
+    return s_Name;
+  }
+
 
   void Register_ENGINE_Types();
   LUA_REG_FUN(BindDunatk);
 
   boost::optional<ComponentManifest> s_EngineCommonManifest;
+
+  using namespace EngineCommon;
 
   ComponentManifest const& EngineCommon::GetComponents() { return s_EngineCommonManifest.get(); }
   PropertiesManifest EngineCommon::GetBaseProperties()
@@ -196,9 +268,12 @@ namespace eXl
     baseManifest.RegisterPropertySheet<TurretData>(TurretData::PropertyName());
     baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName());
 
+    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(GfxSpriteDescName());
+    baseManifest.RegisterPropertySheet<ObjectShapeData>(ObjectShapeData::PropertyName());
+    baseManifest.RegisterPropertySheet<PhysicBodyData>(PhysicBodyData::PropertyName());
+    baseManifest.RegisterPropertySheet<TriggerComponentDesc>(TriggerComponentDesc::PropertyName());
+
     baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
-    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(EngineCommon::GfxSpriteDescName(), false);
-    baseManifest.RegisterPropertySheet<PhysicInitData>(EngineCommon::PhysicsInitDataName(), false);
 
     return baseManifest;
   }
@@ -241,65 +316,68 @@ namespace eXl
 
       TypeManager::RegisterCoreType<ObjectHandle>();
 
-      auto createGfxSpriteFactory = [](World& iWorld, ObjectHandle iObject, ConstDynObject const& iComponentData)
+      auto createGfxSpriteFactory = [](World& iWorld, ObjectHandle iObject)
       {
 #ifdef EXL_WITH_OGL
         if (GfxSystem* gfx = iWorld.GetSystem<GfxSystem>())
         {
-          GfxSpriteComponent::Desc const* spriteDesc = iComponentData.CastBuffer<GfxSpriteComponent::Desc>();
           GfxSpriteComponent& spriteComp = gfx->CreateSpriteComponent(iObject);
-          spriteComp.SetDesc(*spriteDesc);
         }
 #endif
       };
 
-      auto createPhysicsFactory = [](World& iWorld, ObjectHandle iObject, ConstDynObject const& iComponentData)
+      auto createPhysicsFactory = [](World& iWorld, ObjectHandle iObject)
       {
         PhysicsSystem& ph = *iWorld.GetSystem<PhysicsSystem>();
-        EngineCommon::PhysicsCompTestData const* phDesc = iComponentData.CastBuffer<EngineCommon::PhysicsCompTestData>();
+        GameDatabase& gameDb = *iWorld.GetSystem<GameDatabase>();
+        ObjectShapeData const* shapeDesc = gameDb.GetData<ObjectShapeData>(iObject, ObjectShapeData::PropertyName());
+        PhysicBodyData const* phDesc = gameDb.GetData<PhysicBodyData>(iObject, PhysicBodyData::PropertyName());
+
+        eXl_ASSERT_REPAIR_RET(shapeDesc != nullptr, void());
+        eXl_ASSERT_REPAIR_RET(phDesc != nullptr, void());
 
         PhysicInitData initData;
         initData.SetFlags(EngineCommon::s_BasePhFlags);
         switch (phDesc->m_Type)
         {
-        case EngineCommon::PhysicsType::Static:
+        case PhysicsType::Static:
           initData.SetFlags(initData.GetFlags() | PhysicFlags::Static);
           break;
-        case EngineCommon::PhysicsType::Kinematic:
+        case PhysicsType::Kinematic:
           initData.SetFlags(initData.GetFlags() | PhysicFlags::Kinematic);
           break;
         }
 
         switch (phDesc->m_Category)
         {
-        case EngineCommon::PhysicsCollisionCategory::Default:
-          initData.SetCategory(EngineCommon::s_DefaultCategory, ~1);
+        case PhysicsCollisionCategory::Default:
+          initData.SetCategory(s_DefaultCategory, ~1);
           break;
-        case EngineCommon::PhysicsCollisionCategory::Wall:
-          initData.SetCategory(EngineCommon::s_WallCategory, EngineCommon::s_WallMask);
+        case PhysicsCollisionCategory::Wall:
+          initData.SetCategory(s_WallCategory, s_WallMask);
           break;
-        case EngineCommon::PhysicsCollisionCategory::Character:
-          initData.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
+        case PhysicsCollisionCategory::Character:
+          initData.SetCategory(s_CharacterCategory, s_CharacterMask);
           break;
-        case EngineCommon::PhysicsCollisionCategory::Trigger:
-          initData.SetCategory(EngineCommon::s_TriggerCategory, EngineCommon::s_TriggerMask);
+        case PhysicsCollisionCategory::Trigger:
+          initData.SetCategory(s_TriggerCategory, s_TriggerMask);
           break;
-        case EngineCommon::PhysicsCollisionCategory::Projectile:
-          initData.SetCategory(EngineCommon::s_ProjectileCategory, EngineCommon::s_ProjectileMask);
+        case PhysicsCollisionCategory::Projectile:
+          initData.SetCategory(s_ProjectileCategory, s_ProjectileMask);
           break;
-        case EngineCommon::PhysicsCollisionCategory::None:
+        case PhysicsCollisionCategory::None:
           initData.SetCategory(0, 0);
           break;
         }
 
-        for (auto const& shape : phDesc->m_Shapes)
+        for (auto const& shape : shapeDesc->m_Shapes)
         {
           switch (shape.m_Type)
           {
-          case EngineCommon::PhysicsShapeType::Sphere:
+          case PhysicsShapeType::Sphere:
             initData.AddSphere(shape.m_Dims.X(), shape.m_Offset);
             break;
-          case EngineCommon::PhysicsShapeType::Box:
+          case PhysicsShapeType::Box:
             initData.AddBox(shape.m_Dims, shape.m_Offset);
             break;
           }
@@ -308,7 +386,7 @@ namespace eXl
         ph.CreateComponent(iObject, initData);
       };
 
-      auto createTriggerFactory = [](World& iWorld, ObjectHandle iObject, ConstDynObject const& iComponentData)
+      auto createTriggerFactory = [](World& iWorld, ObjectHandle iObject)
       {
         ScriptTriggerSystem* triggerSys = iWorld.GetSystem<ScriptTriggerSystem>();
         PhysicsSystem* phSys = iWorld.GetSystem<PhysicsSystem>();
@@ -318,28 +396,40 @@ namespace eXl
           return;
         }
 
-        EngineCommon::TriggerComponentDesc const* desc = iComponentData.CastBuffer<EngineCommon::TriggerComponentDesc>();
+        GameDatabase& gameDb = *iWorld.GetSystem<GameDatabase>();
+        ObjectShapeData const* shapeDesc = gameDb.GetData<ObjectShapeData>(iObject, ObjectShapeData::PropertyName());
+        TriggerComponentDesc const* desc = gameDb.GetData<TriggerComponentDesc>(iObject, TriggerComponentDesc::PropertyName());
+
+        eXl_ASSERT_REPAIR_RET(shapeDesc != nullptr, void());
+        eXl_ASSERT_REPAIR_RET(desc != nullptr, void());
 
         LuaScriptBehaviour const* script = desc->m_Script.GetOrLoad();
         if (!script)
         {
           return;
         }
+        if (shapeDesc->m_Shapes.empty())
+        {
+          return;
+        }
 
         TriggerDef def;
 
-        switch (desc->m_Shape.m_Type)
+        if (shapeDesc->IsSimpleSphere())
         {
-        case EngineCommon::PhysicsShapeType::Sphere:
-          def.m_Geom = GeomDef::MakeSphere(desc->m_Shape.m_Dims.X());
-          break;
-        case EngineCommon::PhysicsShapeType::Box:
-          def.m_Geom = GeomDef::MakeBox(desc->m_Shape.m_Dims);
-          break;
+          def.m_Geom = GeomDef::MakeSphere(shapeDesc->m_Shapes[0].m_Dims.X());
         }
-
-        def.m_Category = EngineCommon::s_TriggerCategory;
-        def.m_Filter = EngineCommon::s_TriggerMask;
+        else if (shapeDesc->IsSimpleBox())
+        {
+          def.m_Geom = GeomDef::MakeBox(shapeDesc->m_Shapes[0].m_Dims);
+        }
+        else
+        {
+          eXl_FAIL_MSG_RET("Only simple shapes are supported for triggers", void());
+        }
+        
+        def.m_Category = s_TriggerCategory;
+        def.m_Filter = s_TriggerMask;
 
         phSys->AddTrigger(iObject, def, triggerSys->GetScriptCallbackhandle());
         scriptSys->AddBehaviour(iObject, *script);
@@ -347,39 +437,9 @@ namespace eXl
 
       s_EngineCommonManifest.emplace();
 
-      s_EngineCommonManifest->RegisterComponent(EngineCommon::GfxSpriteComponentName(), GfxSpriteComponent::Desc::GetType(), createGfxSpriteFactory);
-      s_EngineCommonManifest->RegisterComponent(EngineCommon::PhysicsComponentName(), EngineCommon::PhysicsCompTestData::GetType(), createPhysicsFactory);
-      s_EngineCommonManifest->RegisterComponent(EngineCommon::TriggerComponentName(), EngineCommon::TriggerComponentDesc::GetType(), createTriggerFactory);
-#if 0
-      String appPath(GetAppPath());
-      Path appDir(appPath.c_str());
-      appDir = appDir.parent_path();
-
-      String homeArg("--home=");
-      Path pl_homeFile = appDir / "swipl.home";
-      std::ifstream homeFile(pl_homeFile.string());
-      if (homeFile.is_open())
-      {
-        char pl_homePath[256] = { 0 };
-        homeFile.read(pl_homePath, sizeof(pl_homePath) - 1);
-        homeArg += pl_homePath;
-        while (std::isspace(homeArg.back()))
-        {
-          homeArg.pop_back();
-        }
-      }
-      else
-      {
-        homeArg += appDir.string().c_str();
-      }
-      
-      char* pl_argv[3] = { const_cast<char*>(appPath.c_str()), const_cast<char*>(homeArg.c_str()), "--quiet" };
-      if (!PL_initialise(3, pl_argv))
-      {
-        eXl_ASSERT(false);
-      }
-#endif
-
+      s_EngineCommonManifest->RegisterComponent(GfxSpriteComponentName(), createGfxSpriteFactory, { GfxSpriteDescName() });
+      s_EngineCommonManifest->RegisterComponent(PhysicsComponentName(), createPhysicsFactory, {ObjectShapeData::PropertyName(), PhysicBodyData::PropertyName()});
+      s_EngineCommonManifest->RegisterComponent(TriggerComponentName(), createTriggerFactory, {ObjectShapeData::PropertyName(), TriggerComponentDesc::PropertyName() });
       
 #ifdef EXL_LUA
       BehaviourDesc desc;

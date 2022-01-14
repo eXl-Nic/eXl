@@ -457,7 +457,7 @@ namespace eXl
       m_NeighExtraction.Remove(id, comp.get());
       RemoveContactCb(id);
 
-      if(!(comp->m_InitData->GetFlags() & PhysicFlags::IsGhost))
+      if(!(comp->m_InitData.GetFlags() & PhysicFlags::IsGhost))
       {
         btRigidBody* object = btRigidBody::upcast(comp->m_Object);
         eXl_ASSERT_MSG(object!=NULL,"Bad upcast");

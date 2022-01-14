@@ -67,9 +67,9 @@ namespace eXl
     {}
     ~PhysicComponent_Impl();
 
-    void Build(ObjectHandle iObject, PhysicInitData& iInitData);
+    void Build(ObjectHandle iObject, PhysicInitData const& iInitData);
 
-    inline unsigned int GetFlags() const {return m_InitData->GetFlags();}
+    inline unsigned int GetFlags() const {return m_InitData.GetFlags();}
 
     inline btCollisionObject* GetObject() const {return m_Object;}
 
@@ -107,7 +107,7 @@ namespace eXl
     btPairCachingGhostObject* m_Sensor = nullptr;
     btCollisionShape* m_Shape = nullptr;
     btTransform m_CachedTransform;
-    PhysicInitData* m_InitData;
+    PhysicInitData m_InitData;
     //unsigned int m_Flags = 0;
     //uint32_t m_GroupMask;
     float m_Mass = 0.0;

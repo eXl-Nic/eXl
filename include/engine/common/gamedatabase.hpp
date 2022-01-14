@@ -83,6 +83,7 @@ namespace eXl
     void GarbageCollect();
 
     void InstantiateArchetype(ObjectHandle iObject, Archetype const* iArchetype, CustomizationData const* iCusto);
+    void ForgetArchetype(Archetype const&);
     DynObject ModifyData(ObjectHandle iObject, PropertySheetName iName);
     ConstDynObject GetData(ObjectHandle iObject, PropertySheetName iName);
 

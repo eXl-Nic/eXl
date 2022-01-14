@@ -18,6 +18,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  class ComponentManifest;
+
   struct EXL_ENGINE_API CustomizationData
   {
     using FieldsMap = UnorderedMap<TypeFieldName, DynObject>;
@@ -27,7 +29,6 @@ namespace eXl
 
     static void ApplyCustomization(DynObject& ioData, FieldsMap const& iFields);
 
-    void ApplyCustomization(ComponentName iName, DynObject& ioData) const;
     void ApplyCustomization(PropertySheetName iName, DynObject& ioData) const;
     SERIALIZE_METHODS;
   };
@@ -60,17 +61,17 @@ namespace eXl
     uint32_t ComputeHash() override;
 
     void SetProperty(PropertySheetName iName, ConstDynObject const& iObject, bool iInstanced);
-    void RemoveProperty(PropertySheetName iName);
+    void RemoveProperty(PropertySheetName iName, ComponentManifest const& iManifest);
     ConstDynObject const& GetProperty(PropertySheetName iName) const;
     UnorderedMap<PropertySheetName, PropertyEntry> const& GetProperties() const
     {
       return m_Properties;
     }
 
-    void SetComponent(ComponentName iName, ConstDynObject const& iObject);
+    void AddComponent(ComponentName iName, ComponentManifest const& iManifest, PropertiesManifest const& iPropDesc);
     void RemoveComponent(ComponentName iName);
-    ConstDynObject const& GetComponent(ComponentName iName) const;
-    UnorderedMap<ComponentName, DynObject> const& GetComponents() const
+    bool HasComponent(ComponentName iName) const;
+    UnorderedSet<ComponentName> const& GetComponents() const
     {
       return m_Components;
     }
@@ -80,7 +81,7 @@ namespace eXl
     Archetype(ResourceMetaData&);
 
     UnorderedMap<PropertySheetName, PropertyEntry> m_Properties;
-    UnorderedMap<ComponentName, DynObject> m_Components;
+    UnorderedSet<ComponentName> m_Components;
   };
 
 #include "archetype.inl"

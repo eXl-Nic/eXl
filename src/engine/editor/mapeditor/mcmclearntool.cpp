@@ -222,13 +222,13 @@ namespace eXl
 
     oInfo.size = Vector2i::ONE;
 
-    auto const& components = archetype->GetComponents();
-    auto iterGfx = components.find(EngineCommon::GfxSpriteComponentName());
-    if (iterGfx == components.end())
+    auto const& data = archetype->GetProperties();
+    auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
+    if (iterGfx == data.end())
     {
       return;
     }
-    auto const* gfxDesc = iterGfx->second.CastBuffer<GfxSpriteComponent::Desc>();
+    auto const* gfxDesc = iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>();
 
     GetTileInfo(gfxDesc->m_Tileset, gfxDesc->m_TileName, oInfo);
 

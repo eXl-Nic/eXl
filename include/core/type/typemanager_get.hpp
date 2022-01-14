@@ -35,9 +35,14 @@ namespace eXl
 
     EXL_CORE_API ArrayType const* GetArrayType(Type const* iType);
     EXL_CORE_API void RegisterArrayType(ArrayType const* iType);
+    EXL_CORE_API ArrayType const* GetSmallArrayType(Type const* iType, uint32_t iBufferSize);
+    EXL_CORE_API void RegisterSmallArrayType(ArrayType const* iType, uint32_t iBufferSize);
 
     template <typename T>
     ArrayType const* GetArrayType();
+
+    template <typename T, uint32_t S>
+    ArrayType const* GetSmallArrayType();
 
     template<class T, typename std::enable_if<std::is_same<T, void>::value, bool>::type = true>
     inline Type const* GetTypeDispatched()
@@ -67,6 +72,21 @@ namespace eXl
     inline Type const* GetTypeDispatched()
     {
       return GetArrayType<typename T::value_type>();
+    }
+
+    template<typename T>
+    struct SmallVectorStaticSize;
+
+    template<typename T, uint32_t S>
+    struct SmallVectorStaticSize<SmallVector<T, S>>
+    {
+      static constexpr uint32_t value = S;
+    };
+
+    template<class T, typename std::enable_if<IsSmallVectorType<T>::s_Value, bool>::type = true>
+    inline Type const* GetTypeDispatched()
+    {
+      return GetSmallArrayType<typename T::value_type, SmallVectorStaticSize<T>::value> ();
     }
 
     template<class T, decltype(T::eXl_Reflected) R = true>

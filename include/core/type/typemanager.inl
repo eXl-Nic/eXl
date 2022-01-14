@@ -21,6 +21,19 @@ ArrayType const* TypeManager::GetArrayType()
   return registeredType;
 }
 
+template <typename T, uint32_t S>
+ArrayType const* TypeManager::GetSmallArrayType()
+{
+  ArrayType const* registeredType = GetSmallArrayType(GetType<T>(), S);
+  if (registeredType == nullptr)
+  {
+    registeredType = new CoreSmallArrayType<T, S>();
+    RegisterSmallArrayType(registeredType, S);
+  }
+
+  return registeredType;
+}
+
 template <>
 inline ArrayType const* TypeManager::GetArrayType<bool>()
 {
@@ -106,114 +119,4 @@ const TupleType* TypeManager::NativeTypeReg<T>::EndRegistration()
     RegisterArrayType(registeredType);
   }
   return res->IsTuple(); 
-}
-
-template <class T, class U, U const& (T::*GetterMeth)()const>
-void GetterTemplate(Type const*, void const* iObj, void* oProp)
-{
-  *reinterpret_cast<U*>(oProp) = (reinterpret_cast<T const*>(iObj)->*GetterMeth)();
-}
-
-template <class T, class U, U (T::*GetterMeth)()const>
-void GetterValTemplate(Type const*, void const* iObj, void* oProp)
-{
-  *reinterpret_cast<U*>(oProp) = (reinterpret_cast<T const*>(iObj)->*GetterMeth)();
-}
-
-template <class T, class U, void(T::*SetterMeth)(U const& )>
-void SetterTemplate(Type const*, void* iObj, void const* iProp)
-{
-  (reinterpret_cast<T*>(iObj)->*SetterMeth)(*reinterpret_cast<U const*>(iProp));
-}
-
-template <class T, class U, void(T::*SetterMeth)(U)>
-void SetterValTemplate(Type const*, void* iObj, void const* iProp)
-{
-  (reinterpret_cast<T*>(iObj)->*SetterMeth)(*reinterpret_cast<U const*>(iProp));
-}
-
-//template <class T>
-//template <class U, U const& (T::*GetterMeth)()const, void (T::*SetterMeth)(U const& iValue) >
-//inline TypeManager::ClassTypeReg<T>& TypeManager::ClassTypeReg<T>::AddProperty(const String& iName)
-//{
-//  TypeManager::detail::AddProperty(m_Impl, TypeManager::GetCoreType<U>(), iName,
-//    &GetterTemplate<T,U,GetterMeth>,&SetterTemplate<T,U,SetterMeth>);
-//  return *this;
-//}
-//
-//template <class T>
-//template <class U, U (T::*GetterMeth)()const, void (T::*SetterMeth)(U iValue) >
-//inline TypeManager::ClassTypeReg<T>& TypeManager::ClassTypeReg<T>::AddPropertyVal(const String& iName)
-//{
-//  TypeManager::detail::AddProperty(m_Impl, TypeManager::GetCoreType<U>(), iName,
-//    &GetterValTemplate<T,U,GetterMeth>,&SetterValTemplate<T,U,SetterMeth>);
-//  return *this;
-//}
-//
-//template <class T>
-//template <class U, U const& (T::*GetterMeth)()const>
-//inline TypeManager::ClassTypeReg<T>& TypeManager::ClassTypeReg<T>::AddReadOnlyProperty(const String& iName)
-//{
-//  TypeManager::detail::AddProperty(m_Impl, TypeManager::GetCoreType<U>(), iName,
-//    &GetterTemplate<T,U,GetterMeth>,nullptr);
-//  return *this;
-//}
-//
-//template <class T>
-//template <class U, U (T::*GetterMeth)()const>
-//inline TypeManager::ClassTypeReg<T>& TypeManager::ClassTypeReg<T>::AddReadOnlyPropertyVal(const String& iName)
-//{
-//  TypeManager::detail::AddProperty(m_Impl, TypeManager::GetCoreType<U>(), iName,
-//    &GetterValTemplate<T,U,GetterMeth>,nullptr);
-//  return *this;
-//}
-//
-//template <class T>
-//inline TypeManager::ClassTypeReg<T>& TypeManager::ClassTypeReg<T>::AddProperty(String const& iName, Type const* iType
-//        , void(*GetterFun)(Type const*, void const* , void* )
-//        , void(*SetterFun)(Type const*, void* , void const* ))
-//{
-//  TypeManager::detail::AddProperty(m_Impl, iType, iName,GetterFun,SetterFun);
-//  return *this;
-//}
-      
-template <class T>
-inline const ClassType* TypeManager::ClassTypeReg<T>::EndRegistration()
-{
-  ClassType const* ret = TypeManager::detail::EndClassReg(m_Impl);
-  m_Impl = nullptr;
-  return ret;
-}
-
-template <class T>
-inline TypeManager::ClassTypeReg<T>::ClassTypeReg(RttiObject* (*iObjectFactory)())
-{
-  m_Impl = TypeManager::detail::BeginClassRegistration(T::StaticRtti(),iObjectFactory);
-}
-
-template <class T>
-inline TypeManager::ClassTypeReg<T>::ClassTypeReg(ClassTypeReg<T> const& iOther)
-{
-  m_Impl = iOther.m_Impl;
-  iOther.m_Impl = nullptr;
-}
-
-template <class T>
-inline TypeManager::ClassTypeReg<T>::~ClassTypeReg()
-{
-  if(m_Impl != nullptr)
-    eXl_DELETE m_Impl;
-  m_Impl = nullptr;
-}
-
-template <class T>
-inline TypeManager::ClassTypeReg<T> TypeManager::BeginClassRegistration()
-{
-  return ClassTypeReg<T>(&T::CreateInstance);
-}
-
-template <class T>
-inline TypeManager::ClassTypeReg<T> TypeManager::BeginClassRegistrationWithCtor(RttiObject* (*iObjectFactory)())
-{
-  return ClassTypeReg<T>(iObjectFactory);
 }

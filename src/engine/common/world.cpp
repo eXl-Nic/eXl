@@ -65,18 +65,17 @@ namespace eXl
     }
   }
 
-  void ComponentManifest::RegisterComponent(ComponentName iName, Type const* iType, ComponentFactory iFactory)
+  void ComponentManifest::RegisterComponent(ComponentName iName, ComponentFactory iFactory, std::initializer_list<PropertySheetName> iReqData)
   {
-    eXl_ASSERT(iType != nullptr);
     eXl_ASSERT(m_Components.count(iName) == 0);
 
     ComponentEntry newEntry;
-    newEntry.type = iType;
+    newEntry.requiredData = std::move(iReqData);
     newEntry.factory = iFactory;
     m_Components.insert(std::make_pair(iName, newEntry));
   }
 
-  Type const* ComponentManifest::GetComponentTypeFromName(ComponentName iName) const
+  UnorderedSet<PropertySheetName> const* ComponentManifest::GetRequiredDataForComponent(ComponentName iName) const
   {
     auto iter = m_Components.find(iName);
     if (iter == m_Components.end())
@@ -84,7 +83,7 @@ namespace eXl
       return nullptr;
     }
 
-    return iter->second.type;
+    return &iter->second.requiredData;
   }
 
   ComponentFactory const* ComponentManifest::GetComponentFactory(ComponentName iName) const

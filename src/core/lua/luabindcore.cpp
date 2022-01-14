@@ -126,24 +126,7 @@ namespace eXl
       .def("GetElementType",&ArrayType::GetElementType),
 
       luabind::namespace_("TypeManager")[
-        // luabind::class_<TypeManager::EnumTypeReg>("EnumTypeReg")
-        //.def("AddValue",&TypeManager::EnumTypeReg::AddValue,luabind::return_reference_to<1>())
-        //.def("EndRegistration",&TypeManager::EnumTypeReg::EndRegistration),
-        //
-        //luabind::class_<TypeManager::UsrTypeReg>("UsrTypeReg")
-        //.def("AddField",&TypeManager::UsrTypeReg::AddField,luabind::return_reference_to<1>())
-        //.def("AddFieldsFrom",&TypeManager::UsrTypeReg::AddFieldsFrom,luabind::return_reference_to<1>())
-        //.def("EndRegistration",&TypeManager::UsrTypeReg::EndRegistration),
-        //
-        //luabind::class_<TypeManager::SignTypeReg>("SignTypeReg")
-        //.def("AddParam",&TypeManager::SignTypeReg::AddParam,luabind::return_reference_to<1>())
-        //.def("EndRegistration",&TypeManager::SignTypeReg::EndRegistration),
-
-        //luabind::def("GetType",(Type const*(*)(const std::string&))&TypeManager::GetType),
         luabind::def("GetArrayType",static_cast<ArrayType const*(*)(Type const*)>(&TypeManager::GetArrayType))
-        //luabind::def("BeginEnumTypeRegistration",&TypeManager::BeginEnumTypeRegistration),
-        //luabind::def("BeginTypeRegistration",&TypeManager::BeginTypeRegistration),
-        //luabind::def("BeginSignatureRegistration",&TypeManager::BeginSignatureRegistration)
         ],
 
         luabind::class_<Name>("Name")
@@ -157,11 +140,9 @@ namespace eXl
     TypeManager::GetArrayType<uint32_t>()->RegisterLua(iState);
     TypeManager::GetArrayType<int32_t>()->RegisterLua(iState);
     TypeManager::GetArrayType<float>()->RegisterLua(iState);
-    //TypeManager::GetArrayType<bool>()->RegisterLua(iState);
     TypeManager::GetArrayType<uint8_t>()->RegisterLua(iState);
     TypeManager::GetArrayType<AString>()->RegisterLua(iState);
     TypeManager::GetArrayType<Name>()->RegisterLua(iState);
-    //TypeManager::GetArrayType<KString>()->RegisterLua(iState);
 
     return 0;
   }

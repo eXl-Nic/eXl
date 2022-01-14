@@ -36,19 +36,25 @@ namespace eXl
     return iComp.m_SpriteData;
   }
 
-  Vector2f const& GfxSpriteRenderNode::GetSpriteOffset(GfxSpriteComponent& iComp)
-  {
-    return iComp.m_Desc->m_Offset;
-  }
-
   static void GetPositionOnly(Matrix4f const& iMat, Matrix4f& oMat)
   {
     MathTools::GetPosition(oMat) = MathTools::GetPosition(iMat);
   }
 
+  GfxSpriteComponent::Desc const* GfxSpriteRenderNode::GetDescFromComponent(GfxSpriteComponent const& comp, SparseGameDataView<GfxSpriteComponent::Desc> const* iView)
+  {
+    GfxSpriteComponent::Desc const* descData = comp.m_Desc;
+    if (descData == nullptr)
+    {
+      descData = iView->Get(comp.m_Object);
+    }
+
+    return descData;
+  }
 
   void GfxSpriteRenderNode::PrepareSprites()
   {
+    SparseGameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(GetWorld())->GetSparseView();
     for (GfxSpriteComponent* comp : m_DirtyComponents)
     {
       if (m_DefaultSpriteIdxBuffer == nullptr)
@@ -60,22 +66,30 @@ namespace eXl
       {
         comp->m_SpriteData = m_SpriteData.Alloc();
       }
+
+      GfxSpriteComponent::Desc const* descData = GetDescFromComponent(*comp, spriteDescView);
+
+      if (descData == nullptr)
+      {
+        continue;
+      }
+
       GfxSpriteData& data = m_SpriteData.Get(comp->m_SpriteData);
       data.m_Component = comp;
       data.m_RemainingTime = -1.0;
       data.m_CurScale = Vector2f::ONE;
       data.m_CurOffset = Vector2f::ZERO;
-      data.m_Rotate = comp->m_Desc->m_RotateSprite;
+      data.m_Rotate = descData->m_RotateSprite;
       data.m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), data.m_Billboard ? &data.m_BillboardTransform : &data.m_Transform);
-      data.m_Layer = comp->m_Desc->m_Layer;
-      data.m_SpriteInfo.tint = comp->m_Desc->m_Tint;
+      data.m_Layer = descData->m_Layer;
+      data.m_SpriteInfo.tint = descData->m_Tint;
 
-      if (comp->m_Desc->m_Tileset.GetUUID().IsValid()
-        && !comp->m_Desc->m_Tileset.IsLoaded())
+      if (descData->m_Tileset.GetUUID().IsValid()
+        && !descData->m_Tileset.IsLoaded())
       {
-        comp->m_Desc->m_Tileset.Load();
+        descData->m_Tileset.Load();
       }
-      Tileset const* tileset = comp->m_Desc->m_Tileset.Get();
+      Tileset const* tileset = descData->m_Tileset.Get();
 
       if (tileset == nullptr)
       {
@@ -88,7 +102,7 @@ namespace eXl
       Vector2i tileSize = Vector2i::ONE;
       Vector2i tileOffset = Vector2i::ZERO;
 
-      if (Tile const* tile = tileset->Find(comp->m_Desc->m_TileName))
+      if (Tile const* tile = tileset->Find(descData->m_TileName))
       {
         data.m_Texture = tileset->GetTexture(tile->m_ImageName);
         data.m_TextureData.~OGLShaderData();
@@ -118,7 +132,7 @@ namespace eXl
         if (!tile->m_Frames.empty())
         {
           tileOffset = tile->m_Frames[0];
-          float frameTime = tile->m_FrameDuration / comp->m_Desc->m_AnimSpeed;
+          float frameTime = tile->m_FrameDuration / descData->m_AnimSpeed;
           if (tile->m_Frames.size() > 1 && frameTime > 0 && frameTime < Mathf::MAX_REAL)
           {
             data.m_CurrentFrame = 0;
@@ -134,7 +148,7 @@ namespace eXl
       }
       else
       {
-        LOG_WARNING << "Used unknown tile " << comp->m_Desc->m_TileName.get() << "\n";
+        LOG_WARNING << "Used unknown tile " << descData->m_TileName.get() << "\n";
 
         data.m_Texture = nullptr;
         continue;
@@ -149,7 +163,7 @@ namespace eXl
         localTrans.MakeIdentity();
         localTrans.m_Data[0] = data.m_CurScale.X();
         localTrans.m_Data[5] = data.m_CurScale.Y();
-        MathTools::GetPosition2D(localTrans) = comp->m_Desc->m_Offset + data.m_CurOffset;
+        MathTools::GetPosition2D(localTrans) = descData->m_Offset + data.m_CurOffset;
 
         data.m_Transform = worldTrans * localTrans;
       }
@@ -158,16 +172,16 @@ namespace eXl
         data.m_Transform.m_Data[0] = data.m_CurScale.X();
         data.m_Transform.m_Data[5] = data.m_CurScale.Y();
         GetPositionOnly(worldTrans, data.m_Transform);
-        MathTools::GetPosition2D(data.m_Transform) += comp->m_Desc->m_Offset + data.m_CurOffset;
+        MathTools::GetPosition2D(data.m_Transform) += descData->m_Offset + data.m_CurOffset;
       }
 
-      Vector3f cacheKey = MathTools::To3DVec(comp->m_Desc->m_Size, comp->m_Desc->m_Flat ? 0.0f : 1.0f);
+      Vector3f cacheKey = MathTools::To3DVec(descData->m_Size, descData->m_Flat ? 0.0f : 1.0f);
 
       auto cacheIter = m_SpriteGeomCache.find(cacheKey);
       if (cacheIter == m_SpriteGeomCache.end())
       {
         IntrusivePtr<GeometryInfo> geom(eXl_NEW GeometryInfo);
-        geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(comp->m_Desc->m_Size, comp->m_Desc->m_Flat);
+        geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(descData->m_Size, descData->m_Flat);
         geom->m_Indices = m_DefaultSpriteIdxBuffer;
         geom->SetupAssembly(true);
         cacheIter = m_SpriteGeomCache.insert(std::make_pair(cacheKey, geom)).first;
@@ -193,7 +207,8 @@ namespace eXl
     PrepareSprites();
     iList.SetDepth(true, true);
     iList.SetProgram(m_SpriteProgram.get());
-    m_SpriteData.Iterate([this, &iList, iDelta](GfxSpriteData& data, SpriteDataTable::Handle)
+    SparseGameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(GetWorld())->GetSparseView();
+    m_SpriteData.Iterate([&](GfxSpriteData& data, SpriteDataTable::Handle)
       {
         if (!data.m_Texture)
         {
@@ -205,9 +220,14 @@ namespace eXl
           data.m_RemainingTime -= iDelta;
           if (data.m_RemainingTime <= 0)
           {
-            GfxSpriteComponent* comp = data.m_Component;
-            Tileset const* tileset = comp->m_Desc->m_Tileset.Get();
-            Tile const* tile = tileset->Find(comp->m_Desc->m_TileName);
+            GfxSpriteComponent::Desc const* descData = GetDescFromComponent(*data.m_Component, spriteDescView);
+            if (descData == nullptr)
+            {
+              return;
+            }
+
+            Tileset const* tileset = descData->m_Tileset.Get();
+            Tile const* tile = tileset->Find(descData->m_TileName);
             if (tile)
             {
               bool lastFrame = data.m_Forward ?
@@ -244,7 +264,7 @@ namespace eXl
               if (updateAnim)
               {
                 Vector2i offsetPix = tile->m_Frames[data.m_CurrentFrame];
-                data.m_RemainingTime = tile->m_FrameDuration / comp->m_Desc->m_AnimSpeed;
+                data.m_RemainingTime = tile->m_FrameDuration / descData->m_AnimSpeed;
                 data.m_SpriteInfo.tcOffset = Vector2f(offsetPix.X() * texStep.X(), offsetPix.Y() * texStep.Y());
               }
             }
@@ -259,6 +279,7 @@ namespace eXl
   {
     return [this](ObjectHandle const* iObjects, Matrix4f const** iTransforms, uint32_t iNum)
     {
+      SparseGameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(GetWorld())->GetSparseView();
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects, ++iTransforms)
       {
         SpriteComponents::Handle objHandle = m_ObjectToSpriteComp[iObjects->GetId()];
@@ -268,20 +289,25 @@ namespace eXl
           if (dataHandle.IsAssigned())
           {
             GfxSpriteData& data = m_SpriteData.Get(dataHandle);
+            GfxSpriteComponent::Desc const* descData = GetDescFromComponent(*data.m_Component, spriteDescView);
+            if (descData == nullptr)
+            {
+              continue;
+            }
             if (data.m_Rotate)
             {
               Matrix4f localTrans;
               localTrans.MakeIdentity();
               localTrans.m_Data[0] = data.m_CurScale.X();
               localTrans.m_Data[5] = data.m_CurScale.Y();
-              MathTools::GetPosition2D(localTrans) = GetSpriteOffset(*obj) + data.m_CurOffset;
+              MathTools::GetPosition2D(localTrans) = descData->m_Offset + data.m_CurOffset;
 
               data.m_Transform = (**iTransforms) * localTrans;
             }
             else
             {
               GetPositionOnly(**iTransforms, data.m_Transform);
-              MathTools::GetPosition2D(data.m_Transform) += GetSpriteOffset(*obj) + data.m_CurOffset;
+              MathTools::GetPosition2D(data.m_Transform) += descData->m_Offset + data.m_CurOffset;
             }
           }
         }
@@ -321,11 +347,8 @@ namespace eXl
     SpriteComponents::Handle compHandle = m_SpriteComp.Alloc();
     GfxSpriteComponent& newComp = m_SpriteComp.Get(compHandle);
 
-    GfxSpriteComponent::Desc& desc = GetSpriteComponentView(m_Sys->GetWorld())->GetOrCreate(iObject);
-
     newComp.m_RenderNode = this;
     newComp.m_Object = iObject;
-    newComp.m_Desc = &desc;
     m_DirtyComponents.insert(&newComp);
 
     while (m_ObjectToSpriteComp.size() <= iObject.GetId())

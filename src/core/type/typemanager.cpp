@@ -32,7 +32,8 @@ namespace eXl
       struct TypeCmpName
       {
         typedef TypeName const result_type;
-        const TypeName operator()(const Type* iType) const{
+        const TypeName operator()(const Type* iType) const
+        {
           return iType->GetName();
         }
       };
@@ -40,7 +41,8 @@ namespace eXl
       struct TypeCmpID
       {
         typedef size_t result_type;
-        size_t operator()(TupleType* iType) const{
+        size_t operator()(TupleType* iType) const
+        {
           return iType->GetTypeId();
         }
       };
@@ -58,6 +60,7 @@ namespace eXl
 
       //typedef std::pair<const TupleType*,const TupleType*> ViewKey;
       typedef UnorderedMap<Type const*, ArrayType const*> ArrayCacheMap;
+      typedef UnorderedMap<std::pair<Type const*, uint32_t>, ArrayType const*> SmallArrayCacheMap;
 
       struct ClassTypeEntry
       {
@@ -129,18 +132,13 @@ namespace eXl
 
       static const size_t UsrTypeFlag = size_t(1)<<(sizeof(size_t)*8-1);
 
-      void _RegisterInLua(lua_State* iState)
-      {
-  
-      }
     }
 
     struct TMData
     {
-      //Type const*   m_CoreTypes[64];
-      //size_t        m_IDGen;
       detail::TypeMap       m_TypeMap;
       detail::ArrayCacheMap m_ArrayMap;
+      detail::SmallArrayCacheMap m_SmallArrayMap;
       detail::ClassMap      m_ClassMap;
 
       void Clear()
@@ -236,50 +234,8 @@ namespace eXl
         TupleType* newType = TupleTypeStruct::MakeTuple(iName,iList,newId);
         List<FieldDesc>::const_iterator iter =  iList.begin();
         List<FieldDesc>::const_iterator iterEnd =  iList.end();
-        //for(;iter!=iterEnd;iter++)
-        //{
-        //  newType->AddDependency(iter->GetType());
-        //}
-        //if(RegisterType(newType,iCont)==nullptr)
-        //{
-        //  //if(iId==nullptr)
-        //  //  TMData::Get().m_IDGen--;
-        //  newType->Destroy();
-        //  return nullptr;
-        //}
         return newType;
       }
-      return nullptr;
-    }
-
-
-    //const Type* GetType(const String& iName)
-    //{
-    //  detail::TypeMap_by_Name::iterator iter = TMData::Get().m_TypeMap.get<1>().find(iName);
-    //  if(iter == TMData::Get().m_TypeMap.get<1>().end())
-    //  {
-    //    return nullptr;
-    //  }
-    //  return *iter;
-    //}
-
-    const Type* GetType(size_t iId)
-    {
-      //if(iId >0)
-      //{
-      //  if(iId < 64)
-      //  {
-      //    return TMData::Get().m_CoreTypes[iId];
-      //  }
-      //  else
-      //  {
-      //    detail::TypeMap_by_ID::iterator iter = TMData::Get().m_TypeMap.get<0>().find(iId);
-      //    if(iter != TMData::Get().m_TypeMap.get<0>().end())
-      //    {
-      //      return *iter;
-      //    }
-      //  }
-      //}
       return nullptr;
     }
 
@@ -300,44 +256,6 @@ namespace eXl
       }
 
       TMData::Get().m_TypeMap.insert(const_cast<Type*>(iType));
-
-      //TupleType* signature = TupleType::DynamicCast(iType);
-      //size_t typeId = iType->GetTypeId();
-      //if(typeId > 0)
-      //{
-      //  if(typeId < 64)
-      //  {
-      //    if(TMData::Get().m_CoreTypes[typeId] != nullptr)
-      //    {
-      //      
-      //      return TMData::Get().m_CoreTypes[typeId];
-      //    }
-      //    else
-      //    {
-      //      TMData::Get().m_CoreTypes[typeId] = iType;
-      //    }
-      //  }
-      //  else if(/*typeId & StorageFlag &&*/ signature != nullptr)
-      //  {
-      //    detail::TypeMap_by_ID::iterator iter2 = TMData::Get().m_TypeMap.get<0>().find(iType->GetTypeId());
-      //    if(iter2 != TMData::Get().m_TypeMap.get<0>().end())
-      //    {
-      //      //iCont = nullptr;
-      //      signature = *iter2;
-      //      iType = signature;
-      //      //iType = eXl_NEW SignatureProxy(signature);
-      //    }
-      //    else
-      //    {
-      //      //signature->FinishResource(iCont);
-      //      //iCont = nullptr;
-      //      
-      //      TMData::Get().m_TypeMap.insert(signature);
-      //    }
-      //  }
-      //}
-     
-
       return iType;
     }
 
@@ -365,19 +283,6 @@ namespace eXl
 
       return coreTypes;
     }
-
-    /*
-    const TupleType* GetView(const TupleType* iFrom,const TupleType* iTo){
-      detail::TypeViewMap_by_Key::iterator iter = TMData::Get().m_TVMap.get<0>().find(std::make_pair(iFrom,iTo),detail::CompView());
-      if(iter==TMData::Get().m_TVMap.get<0>().end()){
-        const TupleTypeView* newView = TupleTypeView::MakeView(iFrom,iTo);
-        std::pair<detail::TypeViewMap::iterator,bool> res = TMData::Get().m_TVMap.insert(newView);
-        eXl_ASSERT_MSG(res.second,"View Map insertion problem");
-        return newView;
-      }
-      return *iter;
-    }
-    */
 
     TypeManager::EnumTypeReg::EnumTypeReg(TypeName iName)
       : m_Name(iName)
@@ -436,64 +341,6 @@ namespace eXl
       return EnumTypeReg(iName);
     }
 
-    SignTypeReg BeginSignatureRegistration()
-    {
-      return SignTypeReg();
-    }
-
-    SignTypeReg::SignTypeReg():m_Offset(0)
-    {
-
-    }
-
-    SignTypeReg& SignTypeReg::AddParam(const Type* iType)
-    {
-      if(m_Fields.size() == 5/*10 en 64 bits*/)
-      {
-        LOG_WARNING << "Too much parameters" <<"\n";
-      }
-
-      TupleType const* tupleType = iType->IsTuple();
-      if(tupleType != nullptr && !(tupleType->IsCoreType()))
-      {
-        LOG_WARNING << "Err : " << iType->GetName() << " is not registered as a Core type" << "\n";
-        return *this;
-      }
-      
-      AString fileName("Field");
-      StringUtil::FromSizeT(m_Fields.size());
-
-      m_Fields.push_back(FieldDesc(TypeFieldName(fileName.c_str()),m_Offset,iType));
-      m_Offset += iType->GetSize();
-      return *this;
-    }
-
-    const TupleType* SignTypeReg::EndRegistration()
-    {
-      if(m_Fields.empty())
-        return nullptr;
-
-      size_t signType=0;//StorageFlag;
-      std::list<FieldDesc>::iterator iter = m_Fields.begin();
-      std::list<FieldDesc>::iterator iterEnd = m_Fields.end();
-      for(unsigned int i = 0; iter != iterEnd;++i,++iter)
-      {
-        if(!iter->GetType()->IsCoreType())
-        {
-          return nullptr;
-        }
-        
-        signType |= iter->GetType()->GetTypeId()<<(6*i);
-      }
-      TupleType* newType = TupleTypeStruct::MakeTuple(TypeName(AString("Signature")+StringUtil::AFromSizeT(signType)),m_Fields,signType);
-      Type const* regType = RegisterType(newType);
-      if(regType)
-      {
-        return regType->IsTuple();
-      }
-      return nullptr;
-    }
-
     ArrayType const* GetArrayType(Type const* iType)
     {
       if(iType != nullptr)
@@ -520,6 +367,38 @@ namespace eXl
         if (iter == TMData::Get().m_ArrayMap.end())
         {
           TMData::Get().m_ArrayMap.insert(std::make_pair(iType->GetElementType(), iType));
+        }
+      }
+    }
+
+
+    ArrayType const* GetSmallArrayType(Type const* iType, uint32_t iBufferSize)
+    {
+      if (iType != nullptr)
+      {
+        detail::SmallArrayCacheMap::iterator iter = TMData::Get().m_SmallArrayMap.find(std::make_pair(iType, iBufferSize));
+        if (iter == TMData::Get().m_SmallArrayMap.end())
+        {
+          return nullptr;
+        }
+        else
+        {
+          return iter->second;
+        }
+      }
+      return nullptr;
+    }
+
+    void RegisterSmallArrayType(ArrayType const* iType, uint32_t iBufferSize)
+    {
+      if (iType != nullptr)
+      {
+        eXl_ASSERT_REPAIR_RET(iType->IsCoreType(), );
+        auto key = std::make_pair(iType->GetElementType(), iBufferSize);
+        detail::SmallArrayCacheMap::iterator iter = TMData::Get().m_SmallArrayMap.find(key);
+        if (iter == TMData::Get().m_SmallArrayMap.end())
+        {
+          TMData::Get().m_SmallArrayMap.insert(std::make_pair(key, iType));
         }
       }
     }
@@ -562,218 +441,12 @@ namespace eXl
       return nullptr;
     }
 
-#if 0
-    class ClassTypeRegImpl : public HeapObject
-    {
-    public:
-      inline ClassTypeRegImpl(Rtti const& iRtti, ClassTypeRttiObject::ObjectFactory iObjectFactory)
-        :m_Rtti(iRtti)
-        ,m_ObjectFactory(iObjectFactory)
-      {
-      }
-
-      Rtti const& m_Rtti;
-      ClassTypeRttiObject::ObjectFactory m_ObjectFactory;
-      
-    };
-
-    ClassType const* GetClassForName(TypeName iName)
-    {
-      detail::ClassMap_by_Name::iterator iter = TMData::Get().m_ClassMap.get<2>().find(iName);
-      if(iter != TMData::Get().m_ClassMap.get<2>().end())
-      {
-        return iter->classType;
-      }
-      return nullptr;
-    }
-
-    Err RegisterTransientClassForRtti(Rtti const& iRtti)
-    {
-      Err err = Err::Failure;
-      if(&iRtti != &RttiObject::StaticRtti()
-      && &iRtti != &RttiObjectRefC::StaticRtti())
-      {
-        detail::ClassMap_by_Rtti::iterator iter = TMData::Get().m_ClassMap.get<0>().find(&iRtti);
-        if(iter == TMData::Get().m_ClassMap.get<0>().end())
-        {
-          ClassType const* ParentRttiClass = nullptr;
-          if(iRtti.GetFather() != &RttiObject::StaticRtti()
-          && iRtti.GetFather() != &RttiObjectRefC::StaticRtti())
-          {
-            detail::ClassMap_by_Rtti::iterator iter = TMData::Get().m_ClassMap.get<0>().find(iRtti.GetFather());
-            if(iter != TMData::Get().m_ClassMap.get<0>().end())
-            {
-              ParentRttiClass = iter->classType;
-              err = Err::Success;
-            }
-          }
-          else
-          {
-            err = Err::Success;
-          }
-          if(err)
-          {
-            detail::ClassTypeEntry newEntry;
-            newEntry.rtti = &iRtti;
-              
-            if(iRtti.IsKindOf(RttiObjectRefC::StaticRtti()))
-            {
-              ClassType const* transientType = eXl_NEW ClassTypeRttiObject(TypeName("TransientTypeFor"+iRtti.GetName()),iRtti,ParentRttiClass,nullptr);
-              newEntry.classType = transientType;
-
-              ObjectPtrType* newPtrType = eXl_NEW ObjectPtrType(iRtti);
-              newEntry.SetPtrType(newPtrType);
-            }
-            //else if(iRtti.IsKindOf(Resource::StaticRtti()))
-            //{
-            //  ClassType const* transientType = eXl_NEW TransientClassType("TransientTypeFor"+iRtti.GetName(),iRtti,ParentRttiClass);
-            //  newEntry.classType = transientType;
-            //
-            //  ResourceHandleType* newHandleType = eXl_NEW ResourceHandleType(iRtti);
-            //  newEntry.SetHandleType(newHandleType);
-            //  newHandleType->FinishResource(iCont);
-            //}
-            else
-            {
-              err = Err::Failure;
-            }
-            if(err)
-            {
-              TMData::Get().m_ClassMap.insert(newEntry);
-            }
-          }
-        }
-      }
-      return err;
-    }
-
-    Err RegisterClassForRtti(Rtti const& iRtti, ClassType const* iType)
-    {
-      if(&iRtti != &RttiObject::StaticRtti()
-        && &iRtti != &RttiObjectRefC::StaticRtti())
-      {
-        detail::ClassMap_by_Rtti::iterator iter = TMData::Get().m_ClassMap.get<0>().find(&iRtti);
-        if(iter == TMData::Get().m_ClassMap.get<0>().end())
-        {
-          detail::ClassTypeEntry newEntry;
-          newEntry.classType = iType;
-          newEntry.rtti = &iRtti;
-          if(iRtti.IsKindOf(RttiObjectRefC::StaticRtti()))
-          {
-            ObjectPtrType* newPtrType = eXl_NEW ObjectPtrType(iRtti);
-            newEntry.classPtrType = newPtrType;
-          }
-          //else if(iRtti.IsKindOf(Resource::StaticRtti()))
-          //{
-          //  ResourceHandleType* newHandleType = eXl_NEW ResourceHandleType(iRtti);
-          //  newEntry.SetHandleType(newHandleType);
-          //  newHandleType->FinishResource(iCont);
-          //}
-
-          TMData::Get().m_ClassMap.insert(newEntry);
-          RETURN_SUCCESS;
-        }
-      }
-      RETURN_FAILURE;
-    }
-#endif
-    ClassType const* GetClassForRtti(Rtti const& iRtti)
-    {
-      detail::ClassMap_by_Rtti::iterator iter = TMData::Get().m_ClassMap.get<0>().find(&iRtti);
-      if(iter != TMData::Get().m_ClassMap.get<0>().end())
-      {
-        return iter->classType;
-      }
-      return nullptr;
-    }
-
-    ObjectPtrType const* GetObjectPtrForRtti(Rtti const& iRtti)
-    {
-      detail::ClassMap_by_Rtti::iterator iter = TMData::Get().m_ClassMap.get<0>().find(&iRtti);
-      if(iter != TMData::Get().m_ClassMap.get<0>().end())
-      {
-        return iter->GetPtrType();
-      }
-      return nullptr;
-    }
-
     namespace detail
     {
       void _TMClear()
       {
         TMData::Get().Clear();
       }
-#if 0
-      ClassTypeRegImpl* BeginClassRegistration(Rtti const& iRtti, RttiObject* (*iObjectFactory)())
-      {
-        if(&iRtti == &RttiObject::StaticRtti()
-          || &iRtti == &RttiObjectRefC::StaticRtti())
-        {
-          return nullptr;
-        }
-
-        detail::ClassMap_by_Rtti::iterator iter = TMData::Get().m_ClassMap.get<0>().find(&iRtti);
-        if(iter != TMData::Get().m_ClassMap.get<0>().end())
-        {
-          return nullptr;
-        }
-
-        return eXl_NEW ClassTypeRegImpl(iRtti,iObjectFactory);
-      }
-#endif
-      //void AddProperty(ClassTypeRegImpl* iImpl, Type const* iType, std::string const& iName, void (*GetterFun)(Type const*, void const* iObj, void* oProp), void //(*SetterFun)(Type const*, void* iObj, void const* iProp))
-      //{
-      //  if(iImpl)
-      //  {
-      //    iImpl->AddProperty(iType,iName,GetterFun,SetterFun);
-      //  }
-      //}
-#if 0
-      ClassType const* EndClassReg(ClassTypeRegImpl* iRegImpl)
-      {
-        ClassType const* newType = nullptr;
-        if(iRegImpl)
-        {
-          Rtti const* parentRtti = iRegImpl->m_Rtti.GetFather();
-          if(parentRtti != nullptr)
-          {
-            ClassType const* ParentRttiClass = GetClassForRtti(*parentRtti);
-            if((ParentRttiClass != nullptr && (ClassTypeRttiObject::DynamicCast(ParentRttiClass) != nullptr) )
-            || *parentRtti == RttiObject::StaticRtti()
-            || *parentRtti == RttiObjectRefC::StaticRtti())
-            {
-              ClassType const* newType = eXl_NEW ClassTypeRttiObject(
-                TypeName("ClassTypeFor" + iRegImpl->m_Rtti.GetName()),
-                iRegImpl->m_Rtti,
-                ParentRttiClass,
-                //iRegImpl->m_Properties,
-                iRegImpl->m_ObjectFactory);
-
-              ClassTypeEntry newEntry;
-              newEntry.classType = newType;
-              newEntry.rtti = &iRegImpl->m_Rtti;
-              if(iRegImpl->m_Rtti.IsKindOf(RttiObjectRefC::StaticRtti()))
-              {
-                ObjectPtrType* newPtrType = eXl_NEW ObjectPtrType(iRegImpl->m_Rtti);
-                newEntry.classPtrType = newPtrType;
-              }
-              //else if(iRegImpl->m_Rtti.IsKindOf(Resource::StaticRtti()))
-              //{
-              //  ResourceHandleType* newHandleType = eXl_NEW ResourceHandleType(iRegImpl->m_Rtti);
-              //  newEntry.SetHandleType(newHandleType);
-              //  newHandleType->FinishResource(iCont);
-              //}
-
-              TMData::Get().m_ClassMap.insert(newEntry);
-              
-            }
-          }
-          eXl_DELETE iRegImpl;
-        }
-        return newType;
-      }
-#endif
     }
-
   }
 }
