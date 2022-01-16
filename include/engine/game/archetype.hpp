@@ -67,6 +67,10 @@ namespace eXl
     {
       return m_Properties;
     }
+    bool HasProperty(PropertySheetName iName) const
+    {
+      return m_Properties.count(iName) > 0;
+    }
 
     void AddComponent(ComponentName iName, ComponentManifest const& iManifest, PropertiesManifest const& iPropDesc);
     void RemoveComponent(ComponentName iName);

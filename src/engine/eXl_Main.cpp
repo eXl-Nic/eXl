@@ -61,6 +61,7 @@ extern "C"
 #include "sdlkeytranslator.hpp"
 #include "debugpanel.hpp"
 #include "debugviews.hpp"
+#include "navigatorbench.hpp"
 #include <engine/common/debugtool.hpp>
 #include <engine/common/menumanager.hpp>
 #include <engine/common/app.hpp>
@@ -332,6 +333,7 @@ namespace eXl
         .AddOpenPanelCommand("Debug Visualizer", [this] {return eXl_NEW DebugVisualizerPanel(m_DebugVisState); })
         //.AddOpenPanelCommand("Console", [this] {return eXl_NEW LuaConsolePanel(m_Console); })
         .EndMenu();
+      NavigatorBench::AddNavigatorBenchMenu(menuMgr, m_World->GetWorld());
 #endif
 
       m_World->GetCamera().view.viewportSize = viewportSize;

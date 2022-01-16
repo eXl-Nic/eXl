@@ -240,5 +240,5 @@ namespace eXl
 
   EXL_ENGINE_API GameDataView<GfxSpriteComponent::Desc>* GetSpriteComponentView(World& iWorld);
 
-	typedef ObjectTable<GfxSpriteComponent> SpriteComponents;
+	//typedef ObjectTable<GfxSpriteComponent> SpriteComponents;
 }

@@ -212,6 +212,7 @@ namespace eXl
       if (iter != m_StateAssoc.end())
       {
         m_CurStateUpToDate = true;
+        m_CurrentState = iter->second;
         return iter->second;
       }
 

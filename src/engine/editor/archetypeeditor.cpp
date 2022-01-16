@@ -578,12 +578,13 @@ namespace eXl
 
   void ArchetypeEditor::Impl::RecreateObject()
   {
+    World& world = m_World.GetWorld();
     if (m_ArchetypeObject.IsAssigned())
     {
-      m_World.GetWorld().DeleteObject(m_ArchetypeObject);
+      world.DeleteObject(m_ArchetypeObject);
+      //m_World.Tick();
     }
     
-    World& world = m_World.GetWorld();
     world.GetSystem<GameDatabase>()->ForgetArchetype(*m_Archetype);
     m_ArchetypeObject = world.CreateObject();
     m_Archetype->Instantiate(m_ArchetypeObject, world, nullptr);

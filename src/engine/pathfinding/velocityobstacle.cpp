@@ -453,6 +453,8 @@ namespace eXl
 
 }
 
+#define PRECISE_VO
+
 #include <fstream>
 #include <core/stream/jsonstreamer.hpp>
 
@@ -486,7 +488,7 @@ namespace eXl
     }
 
     BestVelocity velocities(m_PureAvoidance ? 0.0 : 0.5);
-#if 1
+#ifndef PRECISE_VO
     Vector<Vector2f> const& pts = GetSamples();
 
     for (int32_t i = -1; i<(int32_t)pts.size(); ++i)
@@ -631,7 +633,7 @@ namespace eXl
       }
     }
 
-#if 0
+#ifdef PRECISE_VO
     m_HalfSeg.clear();
     m_ObstacleSegs.clear();
 

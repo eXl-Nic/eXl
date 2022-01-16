@@ -15,6 +15,15 @@ namespace eXl
 {
   namespace NavigatorBench
   {
+    struct Data
+    {
+      UniquePtr<Random> m_Rand;
+      Vector<ObjectHandle> m_Agents;
+      ProbaTable m_ProbaTable;
+      uint32_t m_Component;
+      bool m_StepAgents = false;
+    };
+
     Vector2f PickRandomPosInBox(AABB2Df const& iBox, Random& iRand)
     {
       AABB2Df trimmedFace = iBox;
@@ -38,6 +47,10 @@ namespace eXl
     Vector3f PickRandomDest(Vector3f const& iCurPos, NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand, NavigatorBench::ProbaTable const& iProbaTable)
     {
       auto faceIdx = iNavMesh.FindFace(Vector2f(iCurPos.X(), iCurPos.Y()));
+      if (!faceIdx)
+      {
+        return iCurPos;
+      }
       uint32_t destFaceIdx = faceIdx->m_Face;
       if (iNavMesh.GetFaces(iComponent).size() > 1)
       {
@@ -57,7 +70,7 @@ namespace eXl
     };
 
 
-    Data BuildCrossingTest(World& iWorld, CharacterSystem::Desc& ioBaseDesc, NavMesh const& iNavMesh, uint32_t iComponent)
+    void BuildCrossingTest(World& iWorld, Archetype const& iArch, CharacterSystem::Desc& ioBaseDesc, NavMesh const& iNavMesh, uint32_t iComponent, Data& ioData)
     {
       auto const& faces = iNavMesh.GetFaces(iComponent);
       float curScore = -FLT_MAX;
@@ -89,9 +102,9 @@ namespace eXl
       auto& phSys = *iWorld.GetSystem<PhysicsSystem>();
       auto& navigator = *iWorld.GetSystem<NavigatorSystem>();
 
+
       ioBaseDesc.kind = CharacterSystem::PhysicKind::Simulated;
       ioBaseDesc.controlKind = CharacterSystem::ControlKind::Navigation;
-      ioBaseDesc.size = 1.0;
       ioBaseDesc.maxSpeed = 10.0;
 
       for (unsigned int i = 0; i < numActors / 2; ++i)
@@ -101,22 +114,22 @@ namespace eXl
 
         ObjectHandle truc = CharacterSystem::Build(iWorld, curPos, ioBaseDesc);
         navigator.SetDestination(truc, destPos);
+        iArch.Instantiate(truc, iWorld, nullptr);
 
         ObjectHandle truc2 = CharacterSystem::Build(iWorld, destPos, ioBaseDesc);
         navigator.SetDestination(truc2, curPos);
+        iArch.Instantiate(truc2, iWorld, nullptr);
 
         autonomousAgents.push_back(truc);
         autonomousAgents.push_back(truc2);
       }
 
-      Data outData;
-      outData.m_Agents = std::move(autonomousAgents);
-      outData.m_Component = iComponent;
-
-      return outData;
+      ioData.m_Agents = std::move(autonomousAgents);
+      ioData.m_Component = iComponent;
+      ioData.m_StepAgents = false;
     }
 
-    Data NavigatorBench::BuildFullScaleTest(World& iWorld, CharacterSystem::Desc& ioBaseDesc, uint32_t iNumNavAgents, NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand)
+    void NavigatorBench::BuildFullScaleTest(World& iWorld, Archetype const& iArch, CharacterSystem::Desc& ioBaseDesc, uint32_t iNumNavAgents, NavMesh const& iNavMesh, uint32_t iComponent, Data& ioData)
     {
       Vector<ObjectHandle> autonomousAgents;
       auto& transforms = *iWorld.GetSystem<Transforms>();
@@ -126,7 +139,6 @@ namespace eXl
 
       ioBaseDesc.kind = CharacterSystem::PhysicKind::Simulated;
       ioBaseDesc.controlKind = CharacterSystem::ControlKind::Navigation;
-      ioBaseDesc.size = 1.0;
       ioBaseDesc.maxSpeed = 10.0;
 
       ProbaTable probaTable;
@@ -160,24 +172,26 @@ namespace eXl
       {
         //auto curPos = PickRandomPos(iNavMesh, iComponent, iRand);
 
-        uint32_t faceIdx = iRand.Generate() % iNavMesh.GetFaces(iComponent).size();
+        uint32_t faceIdx = ioData.m_Rand->Generate() % iNavMesh.GetFaces(iComponent).size();
         AABB2Df curFace = iNavMesh.GetFaces(iComponent)[faceIdx].m_Box;
-        Vector2f randPos = PickRandomPosInBox(curFace, iRand);
+        Vector2f randPos = PickRandomPosInBox(curFace, *ioData.m_Rand);
         auto curPos = Vector3f(randPos.X(), randPos.Y(), 0.0);
 
-        auto destPos = PickRandomDest(curPos, iNavMesh, iComponent, iRand, probaTable);
+        auto destPos = PickRandomDest(curPos, iNavMesh, iComponent, *ioData.m_Rand, probaTable);
       
         ObjectHandle truc = CharacterSystem::Build(iWorld, curPos, ioBaseDesc);
-        navigator.SetDestination(truc, destPos);
+        iArch.Instantiate(truc, iWorld, nullptr);
+        if (curPos != destPos)
+        {
+          navigator.SetDestination(truc, destPos);
+        }
         autonomousAgents.push_back(truc);
       }
+      ioData.m_Agents = std::move(autonomousAgents);
+      ioData.m_Component = iComponent;
+      ioData.m_ProbaTable = std::move(probaTable);
+      ioData.m_StepAgents = true;
 
-      Data outData;
-      outData.m_Agents = std::move(autonomousAgents);
-      outData.m_Component = iComponent;
-      outData.m_ProbaTable = std::move(probaTable);
-
-      return outData;
     }
 
     ObjectHandle CreateProjectile(World& iWorld, Archetype const& iArch, Vector3f const& iPos, Vector3f const& iDir)
@@ -207,15 +221,19 @@ namespace eXl
       return projectile;
     }
 
-    void StepFullScaleTest(World& world, float iDelta, NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand, Data& iData)
+    void StepFullScaleTest(World& world, float iDelta, NavMesh const& iNavMesh, uint32_t iComponent, Data& iData)
     {
+      if (!iData.m_StepAgents)
+      {
+        return;
+      }
       auto& transforms = *world.GetSystem<Transforms>();
       auto& navigator = *world.GetSystem<NavigatorSystem>();
       for (auto evt : navigator.DispatchEvents())
       {
         Matrix4f transform = transforms.GetWorldTransform(evt.m_Object);
         Vector3f const& curPos = *reinterpret_cast<Vector3f*>(transform.m_Data + 12);
-        navigator.SetDestination(evt.m_Object, PickRandomDest(curPos, iNavMesh, iComponent, iRand, iData.m_ProbaTable));
+        navigator.SetDestination(evt.m_Object, PickRandomDest(curPos, iNavMesh, iComponent, *iData.m_Rand, iData.m_ProbaTable));
       }
     }
   }
@@ -226,6 +244,8 @@ namespace eXl
 #include <engine/game/scenariobase.hpp>
 #include <imgui.h>
 
+#include <core/resource/resourcemanager.hpp>
+
 namespace eXl
 {
   namespace NavigatorBench
@@ -235,33 +255,135 @@ namespace eXl
     public:
       NavigatorBenchPanel(World& iWorld) : m_World(iWorld)
       {
-
+        m_Data.reset(new Data);
+        m_Data->m_Rand.reset(Random::CreateDefaultRNG(0));
+        for (auto const& rsc : ResourceManager::ListResources())
+        {
+          if (rsc.m_LoaderName == Archetype::StaticLoaderName())
+          {
+            m_Archetypes.push_back(rsc);
+          }
+        }
+        m_World.AddTick(World::PostPhysics, [dataRef = m_Data](World& iWorld, float iDelta)
+          {
+            Engine_Application& app = Engine_Application::GetAppl();
+            if (Scenario_Base* scenario = Scenario_Base::DynamicCast(app.GetScenario()))
+            {
+              StepFullScaleTest(iWorld, iDelta, *scenario->GetMapData().navMesh, 0, *dataRef);
+            }
+          });
+      }
+      ~NavigatorBenchPanel()
+      {
+        Clear();
       }
     private:
 
       void Clear()
       {
-        for (auto obj : m_Data.m_Agents)
+        for (auto obj : m_Data->m_Agents)
         {
           m_World.DeleteObject(obj);
         }
-        m_Data.m_Agents.clear();
-        m_Data.m_ProbaTable.clear();
+        m_Data->m_Agents.clear();
+        m_Data->m_ProbaTable.clear();
       }
 
       void Display() override
       {
-        if (ImGui::Button("Crossing Test"))
+        char const* selRsc("<none>");
+        if (m_SelectedArch != -1)
         {
-          Clear();
-          Engine_Application& app = Engine_Application::GetAppl();
-          Scenario* scenario = app.GetScenario();
-          BuildCrossingTest(m_World, );
+          selRsc = m_Archetypes[m_SelectedArch].m_ResourceName.c_str();
+        }
+        if (ImGui::BeginCombo("Agent Archetype", selRsc))
+        {
+          int32_t selected = m_SelectedArch;
+          for (int32_t option = 0; option < m_Archetypes.size(); ++option)
+          {
+            if (ImGui::Selectable(m_Archetypes[option].m_ResourceName.c_str(), m_SelectedArch == option))
+            {
+              selected = option;
+            }
+          }
+          ImGui::EndCombo();
+          m_SelectedArch = selected;
+        }
+
+        if (ImGui::Button("Crossing Test") && m_SelectedArch != -1)
+        {
+          Archetype const* arch = ResourceManager::Load<Archetype>(m_Archetypes[m_SelectedArch].m_ResourceId);
+          if (arch != nullptr && arch->HasProperty(EngineCommon::ObjectShapeData::PropertyName()))
+          {
+            Clear();
+            Engine_Application& app = Engine_Application::GetAppl();
+            if (Scenario_Base* scenario = Scenario_Base::DynamicCast(app.GetScenario()))
+            {
+              CharacterSystem::Desc agentDesc;
+
+              ConstDynObject const& obj = arch->GetProperty(EngineCommon::ObjectShapeData::PropertyName());
+              if (obj.IsValid())
+              {
+                agentDesc.size = obj.CastBuffer<EngineCommon::ObjectShapeData>()->ComputeBoundingCircle2DRadius();
+              }
+              else
+              {
+                agentDesc.size = 1.0;
+              }
+
+              agentDesc.animation = &scenario->GetDefaultAnimation();
+              BuildCrossingTest(m_World, *arch, agentDesc, *scenario->GetMapData().navMesh, 0, *m_Data);
+            }
+          }
+        }
+
+        ImGui::DragInt("# of agents", &m_NumAgents);
+
+        if (ImGui::Button("FullScale Test") && m_SelectedArch != -1)
+        {
+          Archetype const* arch = ResourceManager::Load<Archetype>(m_Archetypes[m_SelectedArch].m_ResourceId);
+          if (arch != nullptr && arch->HasProperty(EngineCommon::ObjectShapeData::PropertyName()))
+          {
+            Clear();
+            Engine_Application& app = Engine_Application::GetAppl();
+            if (Scenario_Base* scenario = Scenario_Base::DynamicCast(app.GetScenario()))
+            {
+              CharacterSystem::Desc agentDesc;
+
+              ConstDynObject const& obj = arch->GetProperty(EngineCommon::ObjectShapeData::PropertyName());
+              if (obj.IsValid())
+              {
+                agentDesc.size = obj.CastBuffer<EngineCommon::ObjectShapeData>()->ComputeBoundingCircle2DRadius();
+              }
+              else
+              {
+                agentDesc.size = 1.0;
+              }
+
+              agentDesc.animation = &scenario->GetDefaultAnimation();
+              BuildFullScaleTest(m_World, *arch, agentDesc, m_NumAgents, *scenario->GetMapData().navMesh, 0, *m_Data);
+            }
+          }
         }
       }
+      
+      Vector<Resource::Header> m_Archetypes;
+      int32_t m_SelectedArch = -1;
+#ifdef _DEBUG
+      int32_t m_NumAgents = 10;
+#else
+      int32_t m_NumAgents = 100;
+#endif
 
       World& m_World;
-      Data m_Data;
+      std::shared_ptr<Data> m_Data;
     };
+
+    void AddNavigatorBenchMenu(MenuManager& iMenus, World& iWorld)
+    {
+      iMenus.AddMenu("Navigator")
+        .AddOpenPanelCommand("Benchmark", [&iWorld]() { return eXl_NEW NavigatorBenchPanel(iWorld); })
+        .EndMenu();
+    }
   }
 }

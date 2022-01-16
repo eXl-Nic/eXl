@@ -135,8 +135,8 @@ namespace eXl
       mutableHandle = Alloc();
       if (archetypeHandle.IsAssigned() && m_Type)
       {
-        void* mutableCopy = m_ObjectData.Get(m_ObjectHandles[iSlot]);
-        void const* archetypeData = m_ObjectData.Get(m_ObjectHandles[iSlot]);
+        void* mutableCopy = m_ObjectData.Get(mutableHandle);
+        void const* archetypeData = m_ObjectData.Get(archetypeHandle);
         m_Type->Copy(archetypeData, mutableCopy);
       }
       return mutableHandle;

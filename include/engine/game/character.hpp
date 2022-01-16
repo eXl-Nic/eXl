@@ -42,7 +42,7 @@ namespace eXl
 
     struct Desc
     {
-      CharacterAnimation* animation = nullptr;
+      CharacterAnimation const* animation = nullptr;
       ControlKind controlKind;
       float maxSpeed = 1.0;
       float size = 1.0;
@@ -75,7 +75,7 @@ namespace eXl
       Desc m_Desc;
       uint32_t m_CurState = 0;
       KinematicEntryHandle m_KinematicEntry;
-      CharacterAnimation* m_Animation;
+      CharacterAnimation const* m_Animation;
     };
 
     Optional<DenseGameDataStorage<Entry>> m_Characters;

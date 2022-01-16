@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/menumanager.hpp>
 #include <core/heapobject.hpp>
 
-#ifndef EXL_OGL
+#ifndef EXL_WITH_OGL
 #define DISABLE_IMGUI
 #endif
 

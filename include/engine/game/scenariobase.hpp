@@ -16,10 +16,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  class CharacterAnimation;
+
   class EXL_ENGINE_API Scenario_Base : public Scenario
   {
     DECLARE_RTTI(Scenario_Base, Scenario);
   public:
+
+    Scenario_Base();
+    Scenario_Base(Scenario_Base const&) = delete;
+    ~Scenario_Base();
 
     void Init(World& iWorld) override;
 
@@ -41,6 +47,11 @@ namespace eXl
 
     MapResource::InstanceData const& GetMapData() { return m_InstatiatedMap; }
 
+    CharacterAnimation const& GetDefaultAnimation()
+    {
+      return *m_DefaultAnim;
+    }
+
   protected:
 
     ResourceHandle<MapResource> m_Map;
@@ -51,6 +62,8 @@ namespace eXl
 
     ObjectHandle SpawnCharacter(World& iWorld, Network::NetRole iRole);
     Vector2f m_SpawnPos;
+
+    UniquePtr<CharacterAnimation> m_DefaultAnim;
 
     void ProcessInputs(World& iWorld);
     uint32_t dirMask = 0;

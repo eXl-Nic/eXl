@@ -29,8 +29,15 @@ namespace eXl
 {
   IMPLEMENT_RTTI(Scenario_Base);
 
+
+  Scenario_Base::Scenario_Base() = default;
+  Scenario_Base::~Scenario_Base() = default;
+
   void Scenario_Base::Init(World& iWorld)
   {
+    m_DefaultAnim = std::make_unique<CharacterAnimation>();
+    m_DefaultAnim->Register(iWorld);
+
     Engine_Application& appl = static_cast<Engine_Application&>(Application::GetAppl());
 
     auto& transforms = *iWorld.GetSystem<Transforms>();
@@ -66,15 +73,12 @@ namespace eXl
 
   ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld, Network::NetRole iRole)
   {
-    static CharacterAnimation s_DefaultAnim;
-    s_DefaultAnim.Register(iWorld);
-
     auto& charSys = *iWorld.GetSystem<CharacterSystem>();
     auto& abilitySys = *iWorld.GetSystem<AbilitySystem>();
 
     CharacterSystem::Desc defaultDesc;
     defaultDesc.kind = CharacterSystem::PhysicKind::Kinematic;
-    defaultDesc.animation = &s_DefaultAnim;
+    defaultDesc.animation = m_DefaultAnim.get();
     defaultDesc.controlKind = CharacterSystem::ControlKind::Predicted;
     defaultDesc.size = 1.0;
     defaultDesc.maxSpeed = 10.0;
@@ -203,12 +207,15 @@ namespace eXl
         }
       }
 
-      
-        if (dirMask == 0)
-        {
-          abilities.StopUsingAbility(m_MainChar, WalkAbility::Name());
-        }
-        
+      if (dirMask == 0)
+      {
+        abilities.StopUsingAbility(m_MainChar, WalkAbility::Name());
+      }
+      else
+      {
+        WalkAbility::SetWalkDirection(&abilities, m_MainChar, MathTools::As2DVec(dir));
+        abilities.UseAbility(m_MainChar, WalkAbility::Name());
+      }
       keyChanged = false;
     }
 

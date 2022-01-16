@@ -135,7 +135,7 @@ namespace eXl
     s_DataTable.reset();
   }
 
-  void CharacterAnimation::UpdateAnimation(ObjectHandle iObj, CharacterAnimEntry& iEntry)
+  void CharacterAnimation::UpdateAnimation(ObjectHandle iObj, CharacterAnimEntry& iEntry) const
   {
 #ifdef EXL_WITH_OGL
     uint32_t stateBits = (uint32_t)iEntry.m_CurDir;
@@ -202,7 +202,7 @@ namespace eXl
 #endif
   }
 
-  void CharacterAnimation::OnWalkingStateChange(ObjectHandle iObj, uint32_t iNewState)
+  void CharacterAnimation::OnWalkingStateChange(ObjectHandle iObj, uint32_t iNewState) const
   {
     auto objectIter = m_Objects.find(iObj);
     if (objectIter == m_Objects.end())
@@ -215,7 +215,7 @@ namespace eXl
     UpdateAnimation(iObj, entry);
   }
 
-  void CharacterAnimation::OnCueChange(ObjectHandle iObject, GameCueChange const& iChange)
+  void CharacterAnimation::OnCueChange(ObjectHandle iObject, GameCueChange const& iChange) const
   {
     auto objectIter = m_Objects.find(iObject);
     if (objectIter == m_Objects.end())
@@ -256,7 +256,7 @@ namespace eXl
 
   }
 
-  void CharacterAnimation::AddCharacter(ObjectHandle iObject)
+  void CharacterAnimation::AddCharacter(ObjectHandle iObject) const
   {
     if (m_Objects.count(iObject) != 0)
     {
@@ -281,7 +281,7 @@ namespace eXl
 #endif
   }
 
-  void CharacterAnimation::RemoveCharacter(ObjectHandle iObject)
+  void CharacterAnimation::RemoveCharacter(ObjectHandle iObject) const
   {
     auto objectIter = m_Objects.find(iObject);
     if(objectIter == m_Objects.end())

@@ -74,8 +74,8 @@ namespace eXl
       // private data
       AABB2Df m_CurFace;
       int m_CurPathStep = -1;
-      unsigned int m_CurComponent;
-      unsigned int m_CurFaceIdx;
+      uint32_t m_CurComponent = -1;
+      uint32_t m_CurFaceIdx;
       NavMesh::Path m_CurrentPath;
 
       // Anti-stuck mechanism

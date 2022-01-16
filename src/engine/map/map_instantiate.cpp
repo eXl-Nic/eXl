@@ -177,7 +177,10 @@ namespace eXl
                 texGroup.m_VtxScaling = scale;
                 texGroup.m_Tiling = scale;
 
-                tilesByLayer.resize(tile.m_Layer + 1);
+                if (tilesByLayer.size() <= tile.m_Layer)
+                {
+                  tilesByLayer.resize(tile.m_Layer + 1);
+                }
 
                 Vector<float>& curGroup = tilesByLayer[tile.m_Layer].GetGroup(texGroup);
 
@@ -333,6 +336,8 @@ namespace eXl
       AABB2DPolygoni::Merge(entry.second);
     }
 
+    Vector<AABB2Di> tileObstacles;
+
     if (PhysicsSystem* physics = iWorld.GetSystem<PhysicsSystem>())
     {
       for (auto const& entry : components)
@@ -348,6 +353,7 @@ namespace eXl
             {
               ObjectHandle terrainPhysics = iWorld.CreateObject();
               allObjects.terrain.push_back(terrainPhysics);
+              tileObstacles.push_back(box);
 
               PhysicInitData phData;
               phData.SetCategory(terrainDesc.m_PhysicCategory, terrainDesc.m_PhysicFilter);
@@ -383,8 +389,6 @@ namespace eXl
     {
       auto view = database->GetView<EngineCommon::PhysicBodyData>(EngineCommon::PhysicBodyData::PropertyName());
       auto shapeView = database->GetView<EngineCommon::ObjectShapeData>(EngineCommon::ObjectShapeData::PropertyName());
-
-      Vector<AABB2Di> tileObstacles;
 
       auto extractNavMeshBox = [&tileObstacles, view, trans, shapeView](ObjectHandle obj)
       {

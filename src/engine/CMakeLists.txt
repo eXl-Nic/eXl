@@ -185,6 +185,7 @@ set( MAIN_SOURCES
 	console.cpp
 	debugviews.cpp
 	sdlkeytranslator.cpp
+    navigatorbench.cpp
     ${EXL_ROOT}/modules/imgui/backends/imgui_impl_sdl.cpp
 )
 

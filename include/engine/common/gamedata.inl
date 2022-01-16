@@ -120,7 +120,8 @@ T* DenseGameDataView<T>::Get(ObjectHandle iObject)
 template <typename T>
 T const* DenseGameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
 {
-  if (!this->m_World.IsObjectBeingDestroyed(iObject))
+  if (!this->m_World.IsObjectValid(iObject)
+    && !this->m_World.IsObjectBeingDestroyed(iObject))
   {
     return nullptr;
   }
@@ -205,7 +206,8 @@ T* SparseGameDataView<T>::Get(ObjectHandle iObject)
 template <typename T>
 T const* SparseGameDataView<T>::GetDataForDeletion(ObjectHandle iObject)
 {
-  if (!this->m_World.IsObjectBeingDestroyed(iObject))
+  if (!this->m_World.IsObjectValid(iObject)
+    && !this->m_World.IsObjectBeingDestroyed(iObject))
   {
     return nullptr;
   }

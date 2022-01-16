@@ -33,10 +33,20 @@ namespace eXl
   {
     bool TestBoxSegmentExcept(AABB2Df const& iBox, Segmentf const& iSeg, Segmentf const& iSegToExclude, float iTrim)
     {
+      Vector2f segToExcludeDir = iSegToExclude.m_Ext2 - iSegToExclude.m_Ext1;
+      segToExcludeDir.Normalize();
+
       // Trim box for allowance.
-      AABB2Df trimmedBox = iBox;
-      trimmedBox.m_Data[0] += Vector2f::ONE * iTrim;
-      trimmedBox.m_Data[1] -= Vector2f::ONE * iTrim;
+      //AABB2Df trimmedBox = iBox;
+      //trimmedBox.m_Data[0] += Vector2f::ONE * iTrim;
+      //trimmedBox.m_Data[1] -= Vector2f::ONE * iTrim;
+      //
+      //Segmentf trimmedSegs[] = {
+      //  {trimmedBox.m_Data[0], Vector2f(trimmedBox.m_Data[0].X(), trimmedBox.m_Data[1].Y())},
+      //  {trimmedBox.m_Data[0], Vector2f(trimmedBox.m_Data[1].X(), trimmedBox.m_Data[0].Y())},
+      //  {trimmedBox.m_Data[1], Vector2f(trimmedBox.m_Data[0].X(), trimmedBox.m_Data[1].Y())},
+      //  {trimmedBox.m_Data[1], Vector2f(trimmedBox.m_Data[1].X(), trimmedBox.m_Data[0].Y())}
+      //};
 
       Segmentf segs[] = {
         {iBox.m_Data[0], Vector2f(iBox.m_Data[0].X(), iBox.m_Data[1].Y())},
@@ -49,6 +59,10 @@ namespace eXl
       {
         Vector2f segDir = seg.m_Ext2 - seg.m_Ext1;
         float segLength = segDir.Normalize();
+        if (Segmentf::Cross(segDir, segToExcludeDir) < Mathf::ZERO_TOLERANCE)
+        {
+          continue;
+        }
 
         Vector2f interPt;
         auto intersectRes = iSeg.Intersect(seg, interPt);
@@ -427,16 +441,16 @@ namespace eXl
           agent.m_CurFaceIdx = faceIdx->m_Face;
           agent.m_CurFace = m_NavMesh->GetFaces(faceIdx->m_Component)[faceIdx->m_Face].m_Box;
         }
-        //else
-        //{
-        //  eXl_ASSERT(false);
-        //  // path invalid
-        //  return;
-        //}
+        else
+        {
+          agent.m_CurComponent = -1;
+        }
       }
-
-      agent.m_TreadmillDir = GetNavMesh()->GetFaces(agent.m_CurComponent)[agent.m_CurFaceIdx].GetTreadmillDir(curPos2D);
-      agent.m_TreadmillDir *= m_Timestamp % 10000 > 5000 ? -1.0 : 1.0;
+      if (agent.m_CurComponent != -1)
+      {
+        agent.m_TreadmillDir = GetNavMesh()->GetFaces(agent.m_CurComponent)[agent.m_CurFaceIdx].GetTreadmillDir(curPos2D);
+        agent.m_TreadmillDir *= m_Timestamp % 10000 > 5000 ? -1.0 : 1.0;
+      }
     });
 
     m_Agents.Iterate([this, iTime](Agent& agent, Agents::Handle)
@@ -467,7 +481,8 @@ namespace eXl
 
   void NavigatorSystem::HandleAgentPathfinding(Agent& agent, float iTime)
   {
-    if (!(agent.m_HasDest || agent.m_EnableAvoidance))
+    if (!(agent.m_HasDest || agent.m_EnableAvoidance)
+      || agent.m_CurComponent == -1)
     {
       return;
     }
@@ -666,7 +681,8 @@ namespace eXl
 
   void NavigatorSystem::HandleAgentAvoidance(NeighborhoodExtraction& iNeigh, VelocityObstacle& vo, RVO::ORCAAgent&, Agent& agent, float iTime)
   {
-    if (!(agent.m_HasDest || agent.m_EnableAvoidance))
+    if (!(agent.m_HasDest || agent.m_EnableAvoidance)
+      || agent.m_CurComponent == -1)
     {
       return;
     }

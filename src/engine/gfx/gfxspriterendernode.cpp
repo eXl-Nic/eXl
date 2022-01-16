@@ -29,6 +29,7 @@ namespace eXl
     OGLSpriteAlgo::Init(iSys.GetSemanticManager());
 
     m_SpriteProgram.reset(OGLSpriteAlgo::CreateSpriteProgram(iSys.GetSemanticManager()));
+    m_SpriteComp.emplace(iSys.GetWorld());
   }
 
   SpriteDataTable::Handle GfxSpriteRenderNode::GetSpriteData(GfxSpriteComponent& iComp)
@@ -71,6 +72,7 @@ namespace eXl
 
       if (descData == nullptr)
       {
+        m_SpriteData.Release(comp->m_SpriteData);
         continue;
       }
 
@@ -282,8 +284,7 @@ namespace eXl
       SparseGameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(GetWorld())->GetSparseView();
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects, ++iTransforms)
       {
-        SpriteComponents::Handle objHandle = m_ObjectToSpriteComp[iObjects->GetId()];
-        if (auto* obj = m_SpriteComp.TryGet(objHandle))
+        if (auto* obj = m_SpriteComp->Get(*iObjects))
         {
           SpriteDataTable::Handle dataHandle = GetSpriteData(*obj);
           if (dataHandle.IsAssigned())
@@ -328,11 +329,7 @@ namespace eXl
 
   GfxSpriteComponent* GfxSpriteRenderNode::GetComponent(ObjectHandle iObject)
   {
-    if(iObject.GetId() < m_ObjectToSpriteComp.size())
-    {
-      return &m_SpriteComp.Get(m_ObjectToSpriteComp[iObject.GetId()]);
-    }
-    return nullptr;
+    return m_SpriteComp->Get(iObject);
   }
 
 
@@ -344,30 +341,32 @@ namespace eXl
 
   void GfxSpriteRenderNode::AddObject(ObjectHandle iObject)
   {
-    SpriteComponents::Handle compHandle = m_SpriteComp.Alloc();
-    GfxSpriteComponent& newComp = m_SpriteComp.Get(compHandle);
+    GfxSpriteComponent& newComp = m_SpriteComp->GetOrCreate(iObject);
 
     newComp.m_RenderNode = this;
     newComp.m_Object = iObject;
-    m_DirtyComponents.insert(&newComp);
 
-    while (m_ObjectToSpriteComp.size() <= iObject.GetId())
+    GameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(GetWorld());
+    if (spriteDescView->Get(iObject) == nullptr)
     {
-      m_ObjectToSpriteComp.push_back(SpriteComponents::Handle());
+      //Ensure a description exists.
+      if (!newComp.Mutate())
+      {
+        m_SpriteComp->Erase(iObject);
+        eXl_FAIL_MSG_RET("Unexpected failure to ensure the existence of a GfxSpriteDesc", void());
+      }
     }
-    m_ObjectToSpriteComp[iObject.GetId()] = compHandle;
 
+    m_DirtyComponents.insert(&newComp);
     GfxRenderNode::AddObject(iObject);
   }
 
   void GfxSpriteRenderNode::RemoveObject(ObjectHandle iObject)
   {
-    eXl_ASSERT_REPAIR_RET(iObject.GetId() < m_ObjectToSpriteComp.size() && m_SpriteComp.IsValid(m_ObjectToSpriteComp[iObject.GetId()]), void());
-    auto compHandle = m_ObjectToSpriteComp[iObject.GetId()];
-      
-    GfxSpriteComponent* sprite = &m_SpriteComp.Get(compHandle);
+    GfxSpriteComponent const* sprite = m_SpriteComp->GetDataForDeletion(iObject);
+    eXl_ASSERT_REPAIR_RET(sprite != nullptr, void());
+    
     m_SpriteData.Release(sprite->m_SpriteData);
-    m_DirtyComponents.erase(sprite);
-    m_SpriteComp.Release(compHandle);
+    m_DirtyComponents.erase(const_cast<GfxSpriteComponent*>(sprite));
   }
 }

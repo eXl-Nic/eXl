@@ -321,6 +321,10 @@ namespace eXl
 #ifdef EXL_WITH_OGL
         if (GfxSystem* gfx = iWorld.GetSystem<GfxSystem>())
         {
+          if (gfx->GetSpriteComponent(iObject) != nullptr)
+          {
+            return;
+          }
           GfxSpriteComponent& spriteComp = gfx->CreateSpriteComponent(iObject);
         }
 #endif
@@ -329,6 +333,12 @@ namespace eXl
       auto createPhysicsFactory = [](World& iWorld, ObjectHandle iObject)
       {
         PhysicsSystem& ph = *iWorld.GetSystem<PhysicsSystem>();
+
+        if (ph.GetCompImpl(iObject) != nullptr)
+        {
+          return;
+        }
+
         GameDatabase& gameDb = *iWorld.GetSystem<GameDatabase>();
         ObjectShapeData const* shapeDesc = gameDb.GetData<ObjectShapeData>(iObject, ObjectShapeData::PropertyName());
         PhysicBodyData const* phDesc = gameDb.GetData<PhysicBodyData>(iObject, PhysicBodyData::PropertyName());
@@ -389,6 +399,7 @@ namespace eXl
       auto createTriggerFactory = [](World& iWorld, ObjectHandle iObject)
       {
         ScriptTriggerSystem* triggerSys = iWorld.GetSystem<ScriptTriggerSystem>();
+
         PhysicsSystem* phSys = iWorld.GetSystem<PhysicsSystem>();
         LuaScriptSystem* scriptSys = iWorld.GetSystem<LuaScriptSystem>();
         if (!triggerSys || !phSys || !scriptSys)

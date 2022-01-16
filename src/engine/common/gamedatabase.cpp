@@ -170,53 +170,54 @@ namespace eXl
 
       if(SparseDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
       {
-        bool instanced = entry.second.instanced;
         uint32_t slot = sparseAlloc->GetSlot(iObject);
 
         ObjectTableHandle_Base existingHandle;
 
         if (slot == -1)
         {
-          slot = sparseAlloc->AllocateSlot(iObject);
+          slot = sparseAlloc->AllocateSlot_Inl(iObject);
         }
         else if(sparseAlloc)
         {
           existingHandle = sparseAlloc->m_ObjectHandles[slot];
         }
 
-        if (!instanced 
-          && sparseAlloc
-          && (sparseAlloc->m_ArchetypeHandle[slot] != existingHandle))
+        if (sparseAlloc->m_ArchetypeHandle[slot] != existingHandle)
         {
           sparseAlloc->Release(existingHandle);
         }
 
-        if (sparseAlloc)
+        sparseAlloc->m_ArchetypeHandle[slot] = entry.second.handle;
+
+        if (iCusto && iCusto->m_PropertyCustomization.count(propertySheet) > 0)
         {
-          sparseAlloc->m_ArchetypeHandle[slot] = entry.second.handle;
-
-          if (instanced)
+          if (!existingHandle.IsAssigned())
           {
-            if (iCusto && iCusto->m_PropertyCustomization.count(propertySheet) > 0)
-            {
-              if (!existingHandle.IsAssigned())
-              {
-                existingHandle = sparseAlloc->Alloc();
-                sparseAlloc->m_ObjectHandles[slot] = existingHandle;
-              }
-
-              void* sheetData = sparseAlloc->m_ObjectData.Get(existingHandle);
-              void const* archetypeData = sparseAlloc->m_ObjectData.Get(entry.second.handle);
-              sparseAlloc->m_Type->Copy(archetypeData, sheetData);
-
-              DynObject data(sparseAlloc->m_Type, sheetData);
-              iCusto->ApplyCustomization(propertySheet, data);
-            }
+            existingHandle = sparseAlloc->Alloc();
+            sparseAlloc->m_ObjectHandles[slot] = existingHandle;
           }
-          else
-          {
-            sparseAlloc->m_ObjectHandles[slot] = entry.second.handle;
-          }
+
+          void* sheetData = sparseAlloc->m_ObjectData.Get(existingHandle);
+          void const* archetypeData = sparseAlloc->m_ObjectData.Get(entry.second.handle);
+          sparseAlloc->m_Type->Copy(archetypeData, sheetData);
+
+          DynObject data(sparseAlloc->m_Type, sheetData);
+          iCusto->ApplyCustomization(propertySheet, data);
+        }
+      }
+      else
+      {
+        DenseDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator;
+        ObjectTableHandle_Base handle = denseAlloc->GetDataFromSlot_Inl(denseAlloc->AllocateSlot_Inl(iObject));
+        void* sheetData = denseAlloc->m_ObjectData.Get(handle);
+
+        void const* archetypeData = denseAlloc->m_ObjectData.Get(entry.second.handle);
+        denseAlloc->m_Type->Copy(archetypeData, sheetData);
+        if (iCusto && iCusto->m_PropertyCustomization.count(propertySheet) > 0)
+        {
+          DynObject data(denseAlloc->m_Type, sheetData);
+          iCusto->ApplyCustomization(propertySheet, data);
         }
       }
     }

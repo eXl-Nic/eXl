@@ -151,6 +151,7 @@ namespace eXl
         {
           m_Selection->m_Position.X() = iNewValue;
           UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
+          emit onEditDone();
         }
       });
 
@@ -160,8 +161,19 @@ namespace eXl
         {
           m_Selection->m_Position.Y() = iNewValue;
           UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
+          emit onEditDone();
         }
       });
+
+      QObject::connect(m_SelectionLayer, &LayerWidget::onLayerChanged, [this](int32_t iValue)
+        {
+          if (m_Selection == nullptr)
+          {
+            return;
+          }
+          m_Selection->m_Layer = iValue;
+          emit onEditDone();
+        });
 
       QWidget* posWidget = new QWidget(m_SelectionSettings);
       QHBoxLayout* posWidgetLayout = new QHBoxLayout(posWidget);
@@ -173,14 +185,6 @@ namespace eXl
       posWidgetLayout->addWidget(m_SelectionY);
 
       selectionLayout->addWidget(posWidget);
-
-      QObject::connect(m_SelectionLayer, &LayerWidget::onLayerChanged, [this](int32_t iValue)
-      {
-        if (m_Selection == nullptr)
-        {
-          return;
-        }
-      });
 
       m_SelectionSettings->setEnabled(false);
 

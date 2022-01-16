@@ -37,8 +37,9 @@ namespace eXl
     void PrepareSprites();
 
     SpriteDataTable m_SpriteData;
-    SpriteComponents m_SpriteComp;
-    Vector<SpriteComponents::Handle> m_ObjectToSpriteComp;
+    //SpriteComponents m_SpriteComp;
+    //Vector<SpriteComponents::Handle> m_ObjectToSpriteComp;
+    Optional<DenseGameDataStorage<GfxSpriteComponent>> m_SpriteComp;
     UnorderedSet<GfxSpriteComponent*> m_DirtyComponents;
     UnorderedMap<Vector3f, IntrusivePtr<GeometryInfo>> m_SpriteGeomCache;
 

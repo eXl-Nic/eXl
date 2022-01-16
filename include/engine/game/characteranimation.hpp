@@ -31,20 +31,20 @@ namespace eXl
   {
   public:
 
-    void OnWalkingStateChange(ObjectHandle iObj, uint32_t iNewState);
-    void OnCueChange(ObjectHandle iObject, GameCueChange const& iChange);
+    void OnWalkingStateChange(ObjectHandle iObj, uint32_t iNewState) const;
+    void OnCueChange(ObjectHandle iObject, GameCueChange const& iChange) const;
 
     void Register(World& iWorld);
     void Tick(World& iWorld);
 
-    void AddCharacter(ObjectHandle);
-    void RemoveCharacter(ObjectHandle);
+    void AddCharacter(ObjectHandle) const;
+    void RemoveCharacter(ObjectHandle) const;
 
   private:
-    void UpdateAnimation(ObjectHandle iObj, CharacterAnimEntry&);
+    void UpdateAnimation(ObjectHandle iObj, CharacterAnimEntry&) const;
 
-    UnorderedMap<ObjectHandle, CharacterAnimHandle> m_Objects;
-    CharacterAnimTable m_Entries;
+    mutable UnorderedMap<ObjectHandle, CharacterAnimHandle> m_Objects;
+    mutable CharacterAnimTable m_Entries;
     World* m_World = nullptr;
   };
 }
