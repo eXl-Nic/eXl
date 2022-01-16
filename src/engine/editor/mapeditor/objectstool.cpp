@@ -563,10 +563,7 @@ namespace eXl
 		Transforms& trans = *m_World.GetSystem<Transforms>();
 		GfxSystem& gfx = *m_World.GetSystem<GfxSystem>();
 
-		Matrix4f worldTrans;
-		worldTrans.MakeIdentity();
-		MathTools::GetPosition(worldTrans) = iObject.m_Position;
-		trans.AddTransform(iHandle, &worldTrans);
+		trans.AddTransform(iHandle, Matrix4f::FromPosition(iObject.m_Position));
 
     auto const& data = iObject.m_Archetype.GetOrLoad()->GetProperties();
     auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());

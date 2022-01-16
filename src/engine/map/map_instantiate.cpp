@@ -134,7 +134,7 @@ namespace eXl
           }
           ObjectHandle layerView = iWorld.CreateObject();
           allObjects.terrain.push_back(layerView);
-          trans->AddTransform(layerView, &iPos);
+          trans->AddTransform(layerView, iPos);
           batcher.Finalize(*gfx, layerView, layerIdx);
         }
       }
@@ -206,8 +206,7 @@ namespace eXl
               {
                 ObjectHandle animatedSprite = iWorld.CreateObject();
                 allObjects.tiles.push_back(animatedSprite);
-                Matrix4f objTrans = iPos * Matrix4f::FromPosition(MathTools::To3DVec(tilePos));
-                trans->AddTransform(animatedSprite, &objTrans);
+                trans->AddTransform(animatedSprite, iPos* Matrix4f::FromPosition(MathTools::To3DVec(tilePos)));
                 GfxSpriteComponent& spriteComp = gfx->CreateSpriteComponent(animatedSprite);
                 spriteComp.SetFlat(true);
                 spriteComp.SetTileset(tileset);
@@ -239,8 +238,7 @@ namespace eXl
       allObjects.objects.push_back(newObject);
       if (trans != nullptr)
       {
-        Matrix4f objTrans = iPos * Matrix4f::FromPosition(object.m_Header.m_Position);
-        trans->AddTransform(newObject, &objTrans);
+        trans->AddTransform(newObject, iPos * Matrix4f::FromPosition(object.m_Header.m_Position));
       }
     }
 
@@ -365,7 +363,7 @@ namespace eXl
               Vector3f orig = MathTools::To3DVec(tilePos, terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
               Matrix4f boxPos = iPos;
               MathTools::GetPosition(boxPos) += orig;
-              trans->AddTransform(terrainPhysics, &boxPos);
+              trans->AddTransform(terrainPhysics, boxPos);
               physics->CreateComponent(terrainPhysics, phData);
             }
           }
@@ -380,7 +378,7 @@ namespace eXl
         auto& layer = tilesByLayer[layerIdx];
         ObjectHandle layerView = iWorld.CreateObject();
         allObjects.tiles.push_back(layerView);
-        trans->AddTransform(layerView, &iPos);
+        trans->AddTransform(layerView, iPos);
         layer.Finalize(*gfx, layerView, layerIdx);
       }
     }

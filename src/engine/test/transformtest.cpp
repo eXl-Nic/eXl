@@ -55,7 +55,7 @@ TEST(DunAtk, TransformsTest)
   for (uint32_t i = 0; i < 5; ++i)
   {
     MathTools::GetPosition(testTrans) = Vector3f::UNIT_X * pos[i];
-    transforms->AddTransform(objs[i], nullptr);
+    transforms->AddTransform(objs[i]);
     transforms->UpdateTransform(objs[i], testTrans);
   }
 

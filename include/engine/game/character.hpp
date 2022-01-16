@@ -62,6 +62,7 @@ namespace eXl
     uint32_t GetCurrentState(ObjectHandle iObj);
     static uint32_t GetStateFromDir(Vector3f const& iDir, bool iMoving);
     Vector3f GetCurrentFacingDirection(ObjectHandle iObj);
+    Desc const* GetDesc(ObjectHandle iObj);
 
     bool GrabObject(ObjectHandle iGrabber, ObjectHandle iGrabbed);
     bool ReleaseObject(ObjectHandle iGrabber, ObjectHandle iGrabbed);

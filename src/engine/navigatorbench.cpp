@@ -98,8 +98,6 @@ namespace eXl
 
       Vector<ObjectHandle> autonomousAgents;
       auto& transforms = *iWorld.GetSystem<Transforms>();
-      auto& gfxSys = *iWorld.GetSystem<GfxSystem>();
-      auto& phSys = *iWorld.GetSystem<PhysicsSystem>();
       auto& navigator = *iWorld.GetSystem<NavigatorSystem>();
 
 
@@ -112,11 +110,13 @@ namespace eXl
         Vector3f curPos(Mathf::Cos(i * increment) * radius + center.X(), Mathf::Sin(i * increment) * radius + center.Y(), 0.0);
         Vector3f destPos(Mathf::Cos(i * increment + Mathf::PI) * radius + center.X(), Mathf::Sin(i * increment + Mathf::PI) * radius + center.Y(), 0.0);
 
-        ObjectHandle truc = CharacterSystem::Build(iWorld, curPos, ioBaseDesc);
+        ObjectHandle truc = iWorld.CreateObject();
+        transforms.AddTransform(truc, Matrix4f::FromPosition(curPos));
         navigator.SetDestination(truc, destPos);
         iArch.Instantiate(truc, iWorld, nullptr);
 
-        ObjectHandle truc2 = CharacterSystem::Build(iWorld, destPos, ioBaseDesc);
+        ObjectHandle truc2 = iWorld.CreateObject();
+        transforms.AddTransform(truc2, Matrix4f::FromPosition(destPos));
         navigator.SetDestination(truc2, curPos);
         iArch.Instantiate(truc2, iWorld, nullptr);
 
@@ -179,8 +179,11 @@ namespace eXl
 
         auto destPos = PickRandomDest(curPos, iNavMesh, iComponent, *ioData.m_Rand, probaTable);
       
-        ObjectHandle truc = CharacterSystem::Build(iWorld, curPos, ioBaseDesc);
+        ObjectHandle truc = iWorld.CreateObject();
+        transforms.AddTransform(truc, Matrix4f::FromPosition(curPos));
+        navigator.SetDestination(truc, destPos);
         iArch.Instantiate(truc, iWorld, nullptr);
+
         if (curPos != destPos)
         {
           navigator.SetDestination(truc, destPos);
@@ -313,7 +316,7 @@ namespace eXl
         if (ImGui::Button("Crossing Test") && m_SelectedArch != -1)
         {
           Archetype const* arch = ResourceManager::Load<Archetype>(m_Archetypes[m_SelectedArch].m_ResourceId);
-          if (arch != nullptr && arch->HasProperty(EngineCommon::ObjectShapeData::PropertyName()))
+          if (arch != nullptr && arch->HasComponent(EngineCommon::CharacterComponentName()))
           {
             Clear();
             Engine_Application& app = Engine_Application::GetAppl();
@@ -342,7 +345,7 @@ namespace eXl
         if (ImGui::Button("FullScale Test") && m_SelectedArch != -1)
         {
           Archetype const* arch = ResourceManager::Load<Archetype>(m_Archetypes[m_SelectedArch].m_ResourceId);
-          if (arch != nullptr && arch->HasProperty(EngineCommon::ObjectShapeData::PropertyName()))
+          if (arch != nullptr && arch->HasComponent(EngineCommon::CharacterComponentName()))
           {
             Clear();
             Engine_Application& app = Engine_Application::GetAppl();

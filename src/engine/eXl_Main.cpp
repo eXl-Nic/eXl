@@ -649,7 +649,14 @@ int eXl_Main::Start(int argc, char const* const argv[])
       mapRef.Set(mapRsc);
       scenario->SetMap(mapRef);
     }
+
+    ResourceHandle<Archetype> mainCharHandle;
+    Resource::UUID id({ 3468735788, 1397163633, 3260533381, 1200720967 });
+    mainCharHandle.SetUUID(id);
+    scenario->SetMainChar(mainCharHandle);
+
     app.SetScenario(std::move(scenario));
+
   }
 
   app.Start_SDLApp();

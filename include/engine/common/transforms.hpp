@@ -33,7 +33,7 @@ namespace eXl
     Transforms();
     ~Transforms();
 
-    Err AddTransform(ObjectHandle iObj, Matrix4f const* iTrans);
+    Err AddTransform(ObjectHandle iObj, Optional<Matrix4f> const& iTrans = {});
     void UpdateTransform(ObjectHandle, Matrix4f const& iTransform);
     void DeleteComponent(ObjectHandle) override;
 

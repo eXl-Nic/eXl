@@ -40,11 +40,6 @@ namespace eXl
 
     Engine_Application& appl = static_cast<Engine_Application&>(Application::GetAppl());
 
-    auto& transforms = *iWorld.GetSystem<Transforms>();
-    //auto& phSys = *iWorld.GetSystem<PhysicsSystem>();
-    auto& charSys = *iWorld.GetSystem<CharacterSystem>();
-    auto& navigator = *iWorld.GetSystem<NavigatorSystem>();
-    auto* gfxSys = iWorld.GetSystem<GfxSystem>();
     auto& abilitySys = *iWorld.GetSystem<AbilitySystem>();
     abilitySys.RegisterAbility(new WalkAbility);
 
@@ -73,6 +68,31 @@ namespace eXl
 
   ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld, Network::NetRole iRole)
   {
+    Archetype const* toSpawn = nullptr;
+    if ((toSpawn = m_MainCharacter.GetOrLoad()) == nullptr
+      || !toSpawn->HasComponent(EngineCommon::CharacterComponentName()))
+    {
+      return ObjectHandle();
+    }
+    Vector3f pos = MathTools::To3DVec(m_SpawnPos);
+
+    EngineCommon::CharacterDesc charDesc;
+
+    charDesc = *toSpawn->GetProperty(EngineCommon::CharacterDesc::PropertyName()).CastBuffer<EngineCommon::CharacterDesc>();
+    charDesc.m_Control = EngineCommon::CharacterControlKind::PlayerControl;
+
+    DynObject var;
+    var.SetType(TypeManager::GetType<EngineCommon::CharacterControlKind>(), &charDesc.m_Control);
+
+    CustomizationData customData;
+    customData.m_PropertyCustomization = { {EngineCommon::CharacterDesc::PropertyName(),
+      CustomizationData::FieldsMap({ {TypeFieldName("m_Control"), var } })} };
+
+    ObjectHandle newChar = iWorld.CreateObject();
+    Transforms& trans = *iWorld.GetSystem<Transforms>();
+    trans.AddTransform(newChar, Matrix4f::FromPosition(pos));
+    toSpawn->Instantiate(newChar, iWorld, &customData);
+#if 0
     auto& charSys = *iWorld.GetSystem<CharacterSystem>();
     auto& abilitySys = *iWorld.GetSystem<AbilitySystem>();
 
@@ -106,7 +126,7 @@ namespace eXl
       abilitySys.CreateComponent(newChar);
       abilitySys.AddAbility(newChar, WalkAbility::Name());
     }
-
+#endif
     return newChar;
   }
 

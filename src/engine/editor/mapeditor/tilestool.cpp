@@ -511,10 +511,9 @@ namespace eXl
     Transforms& trans = *m_World.GetSystem<Transforms>();
     GfxSystem& gfx = *m_World.GetSystem<GfxSystem>();
 
-    Matrix4f worldTrans;
-    worldTrans.MakeIdentity();
-    MathTools::GetPosition2D(worldTrans) = Vector2f(iTile.m_Position.X(), iTile.m_Position.Y()) / EngineCommon::s_WorldToPixel;
-    trans.AddTransform(iHandle, &worldTrans);
+    Vector2f tilePos(iTile.m_Position.X(), iTile.m_Position.Y());
+    tilePos /= EngineCommon::s_WorldToPixel;
+    trans.AddTransform(iHandle, Matrix4f::FromPosition(MathTools::To3DVec(tilePos)));
 
     GfxSpriteComponent& gfxComp = gfx.CreateSpriteComponent(iHandle);
     gfxComp.SetTileset(iTile.m_Tileset.GetOrLoad());

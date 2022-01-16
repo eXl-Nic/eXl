@@ -115,4 +115,95 @@ namespace eXl
     return 0;
   }
 
+  void TilingGroup::AddWangPatterns(UnorderedMap<PatternName, TilingPattern>& oMap)
+  {
+    oMap = UnorderedMap<PatternName, TilingPattern>({
+      { PatternName("TR_InnerCorner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,1)}}))
+      },
+      { PatternName("TL_InnerCorner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::OtherGroup
+          ,TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(0,1)}}))
+      },
+      { PatternName("BL_InnerCorner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::OtherGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(0,0)}}))
+      },
+      { PatternName("BR_InnerCorner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::SameGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,0)}}))
+      },
+      { PatternName("BL_Corner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::Undefined, TilingGroupLocConstraint::OtherGroup
+          ,TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::SameGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,1)}}))
+      },
+      { PatternName("TL_Corner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::Undefined, TilingGroupLocConstraint::OtherGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,0)}}))
+      },
+      { PatternName("BR_Corner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::Undefined
+          ,TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::OtherGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(0,1)}}))
+      },
+      { PatternName("TR_Corner"),
+        TilingPattern(Vector2i(2,2), Vector2i(1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::OtherGroup
+          ,TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::Undefined}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(0,0)}}))
+      },
+      { PatternName("L_Border"),
+        TilingPattern(Vector2i(2,3), Vector2i(1,-1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::Undefined, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::Undefined, TilingGroupLocConstraint::SameGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,1)}}))
+      },
+      { PatternName("R_Border"),
+        TilingPattern(Vector2i(2,3), Vector2i(1,-1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::Undefined
+          ,TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::OtherGroup
+          ,TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::Undefined}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(0,1)}}))
+      },
+      { PatternName("T_Border"),
+        TilingPattern(Vector2i(3,2), Vector2i(-1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup
+          ,TilingGroupLocConstraint::Undefined,TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::Undefined}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,0)}}))
+      },
+      { PatternName("B_Border"),
+        TilingPattern(Vector2i(3,2), Vector2i(-1,1),
+        Vector<TilingGroupLocConstraint>(
+          {TilingGroupLocConstraint::Undefined,TilingGroupLocConstraint::OtherGroup, TilingGroupLocConstraint::Undefined,
+          TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup, TilingGroupLocConstraint::SameGroup}),
+          Vector<TilingDrawElement>({TilingDrawElement{TileName(), Vector2i(1,1)}}))
+      },
+      });
+  }
 }

@@ -32,9 +32,7 @@ namespace eXl
 
     ObjectHandle newObject = iWorld.CreateObject();
 
-    Matrix4f navTrans = Matrix4f::IDENTITY;
-    MathTools::GetPosition2D(navTrans) = MathTools::As2DVec(iPosition);
-    transforms->AddTransform(newObject, &navTrans);
+    transforms->AddTransform(newObject, Matrix4f::FromPosition(iPosition));
 
     PhysicInitData desc;
     uint32_t flags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity | PhysicFlags::AddSensor;
@@ -292,6 +290,15 @@ namespace eXl
     }
 
     return dir;
+  }
+
+  CharacterSystem::Desc const* CharacterSystem::GetDesc(ObjectHandle iObj)
+  {
+    if (Entry* entry = m_Characters->Get(iObj))
+    {
+      return &entry->m_Desc;
+    }
+    return nullptr;
   }
 
 	void CharacterSystem::SetCurDir(ObjectHandle iObj, Vector3f const& iDir)

@@ -588,7 +588,7 @@ namespace eXl
     world.GetSystem<GameDatabase>()->ForgetArchetype(*m_Archetype);
     m_ArchetypeObject = world.CreateObject();
     m_Archetype->Instantiate(m_ArchetypeObject, world, nullptr);
-    world.GetSystem<Transforms>()->AddTransform(m_ArchetypeObject, nullptr);
+    world.GetSystem<Transforms>()->AddTransform(m_ArchetypeObject);
 
     m_World.Tick();
   }

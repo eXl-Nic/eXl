@@ -244,6 +244,13 @@ namespace eXl
       }
     });
 
+    groupCollectionTool->addAction("Bootstrap Wang", [this]
+      {
+        m_Impl->m_Group->m_Patterns.clear();
+        TilingGroup::AddWangPatterns(m_Impl->m_Group->m_Patterns);
+        m_Impl->m_GroupCollectionModel->Reset(m_Impl->m_Group->m_Patterns);
+      });
+
 		m_Impl->m_GroupDataView = new QTreeView(this);
     m_Impl->m_GroupDataView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_Impl->m_GroupDataView->setItemDelegate(new ObjectDelegate);

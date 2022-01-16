@@ -96,7 +96,7 @@ namespace eXl
         .def(luabind::self == ObjectHandle()),
 
         luabind::class_<Transforms>("Transforms")
-        .def("AddTransform", &Transforms::AddTransform)
+        //.def("AddTransform", &Transforms::AddTransform)
         .def("GetLocalTransform", &Transforms::GetLocalTransform)
         .def("GetWorldTransform", &Transforms::GetWorldTransform)
         .def("HasTransform", &Transforms::HasTransform)

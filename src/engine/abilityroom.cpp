@@ -519,16 +519,11 @@ namespace eXl
     auto& phSys = *iWorld.GetSystem<PhysicsSystem>();
     auto& archSys = *iWorld.GetSystem<GameDatabase>();
 
-    Matrix4f trans;
-    trans.MakeIdentity();
-
     ObjectHandle pressurePlate = iWorld.CreateObject();
-    MathTools::GetPosition(trans) = iPos;
-    transSys.AddTransform(pressurePlate, &trans);
+    transSys.AddTransform(pressurePlate, Matrix4f::FromPosition(iPos));
 
     ObjectHandle emitter = iWorld.CreateObject();
-    MathTools::GetPosition(trans) = iEmitterPos;
-    transSys.AddTransform(emitter, &trans);
+    transSys.AddTransform(emitter, Matrix4f::FromPosition(iEmitterPos));
 
     TileName emitterTile("Beast2_L");
     if (iDir.Dot(Vector3f::UNIT_X))
@@ -677,10 +672,8 @@ return TriggerScriptXJKPQJDI
     auto& navSys = *iWorld.GetSystem<NavigatorSystem>();
 
     ObjectHandle crateObject = iWorld.CreateObject();
-
-    Matrix4f objTrans = Matrix4f::IDENTITY;
-    MathTools::GetPosition2D(objTrans) = MathTools::As2DVec(iPos);
-    transforms.AddTransform(crateObject, &objTrans);
+    Matrix4f objTrans = Matrix4f::FromPosition(iPos);
+    transforms.AddTransform(crateObject, objTrans);
 
     PhysicInitData desc;
     uint32_t flags = /*PhysicFlags::NeedContactNotify |*/ PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation;

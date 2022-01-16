@@ -58,6 +58,7 @@ namespace eXl
     EXL_ENGINE_API ComponentName GfxSpriteComponentName();
     EXL_ENGINE_API ComponentName PhysicsComponentName();
     EXL_ENGINE_API ComponentName TriggerComponentName();
+    EXL_ENGINE_API ComponentName CharacterComponentName();
     EXL_ENGINE_API PropertySheetName VelocityName();
     EXL_ENGINE_API PropertySheetName GfxSpriteDescName();
 
@@ -166,6 +167,21 @@ namespace eXl
       ResourceHandle<LuaScriptBehaviour> m_Script;
     };
 
+    enum class CharacterControlKind
+    {
+      Navigation,
+      PlayerControl,
+      Remote
+    };
+
+    struct EXL_ENGINE_API CharacterDesc
+    {
+      EXL_REFLECT_PROPERTY;
+
+      CharacterControlKind m_Control = CharacterControlKind::Navigation;
+      float m_MaxSpeed = 10;
+    };
+
     struct EXL_ENGINE_API TerrainCarver
     {
       TerrainTypeName m_TerrainType;
@@ -179,6 +195,7 @@ namespace eXl
   EXL_REFLECT_ENUM(EngineCommon::PhysicsType, eXl__EngineCommon__PhysicsType, EXL_ENGINE_API);
   EXL_REFLECT_ENUM(EngineCommon::PhysicsShapeType, eXl__EngineCommon__PhysicsShapeType, EXL_ENGINE_API);
   EXL_REFLECT_ENUM(EngineCommon::PhysicsCollisionCategory, eXl__EngineCommon__PhysicsCollisionCategory, EXL_ENGINE_API);
+  EXL_REFLECT_ENUM(EngineCommon::CharacterControlKind, eXl__EngineCommon__CharacterControlKind, EXL_ENGINE_API);
 }
 
 #include <engine/physics/physicsdef.hpp>

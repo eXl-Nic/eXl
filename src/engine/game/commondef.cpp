@@ -10,6 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/game/commondef.hpp>
 #include <engine/script/luascriptsystem.hpp>
+#include <math/mathtools.hpp>
 
 namespace eXl
 {
@@ -52,5 +53,58 @@ namespace eXl
     TriggerComponentDesc::~TriggerComponentDesc() = default;
     TriggerComponentDesc::TriggerComponentDesc(const TriggerComponentDesc&) = default;
     TriggerComponentDesc::TriggerComponentDesc(TriggerComponentDesc&&) = default;
+  }
+
+  namespace EngineCommon
+  {
+    AABB2Df PhysicsShape::Compute2DBox() const
+    {
+      if (m_Type == PhysicsShapeType::Box)
+      {
+        return AABB2Df(MathTools::As2DVec(m_Offset - m_Dims * 0.5)
+          , MathTools::As2DVec(m_Dims));
+      }
+      return AABB2Df(m_Offset.X() - m_Dims.X(), m_Offset.Y() - m_Dims.X()
+        , m_Offset.Y() - m_Dims.X(), m_Offset.Y() - m_Dims.X());
+    }
+
+    float PhysicsShape::ComputeBoundingCircle2DRadius() const
+    {
+      if (m_Type == PhysicsShapeType::Box)
+      {
+        return MathTools::As2DVec(m_Offset + m_Dims * 0.5).Length();
+      }
+      return m_Offset.Length() + m_Dims.X();
+    }
+
+    AABB2Df ObjectShapeData::Compute2DBox() const
+    {
+      if (m_Shapes.empty())
+      {
+        return AABB2Df();
+      }
+      AABB2Df box = m_Shapes[0].Compute2DBox();
+      for (uint32_t i = 1; i < m_Shapes.size(); ++i)
+      {
+        box.Absorb(m_Shapes[i].Compute2DBox());
+      }
+      return box;
+    }
+
+    float ObjectShapeData::ComputeBoundingCircle2DRadius() const
+    {
+      if (m_Shapes.empty())
+      {
+        return 0;
+      }
+      float maxRadius = m_Shapes[0].ComputeBoundingCircle2DRadius();
+      for (uint32_t i = 1; i < m_Shapes.size(); ++i)
+      {
+        float radius = m_Shapes[i].ComputeBoundingCircle2DRadius();
+        maxRadius = Mathf::Max(radius, maxRadius);
+      }
+
+      return maxRadius;
+    }
   }
 }

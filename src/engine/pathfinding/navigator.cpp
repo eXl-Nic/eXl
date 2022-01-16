@@ -417,6 +417,10 @@ namespace eXl
 
   void NavigatorSystem::Tick(float iTime, NeighborhoodExtraction& iNeigh)
   {
+    if (m_NavMesh == nullptr)
+    {
+      return;
+    }
     VelocityObstacle vo(*m_Rand);
     RVO::ORCAAgent orca;
 

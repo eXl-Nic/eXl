@@ -29,15 +29,16 @@ namespace eXl
 
     void Init(World& iWorld) override;
 
-    void StartServer(World& iWorld);
-
-    void StartClient(World& iWorld, String const& iURL);
-
     void StartLocal(World& iWorld);
 
     void SetMap(ResourceHandle<MapResource> iMap)
     {
       m_Map = iMap;
+    }
+
+    void SetMainChar(ResourceHandle<Archetype> iChar)
+    {
+      m_MainCharacter = iChar;
     }
 
     ObjectHandle GetMainChar()
@@ -55,6 +56,7 @@ namespace eXl
   protected:
 
     ResourceHandle<MapResource> m_Map;
+    ResourceHandle<Archetype> m_MainCharacter;
     MapResource::InstanceData m_InstatiatedMap;
 
     ObjectHandle m_MainChar;

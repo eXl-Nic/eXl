@@ -29,7 +29,7 @@ namespace eXl
     }
   }
 
-  Err Transforms::AddTransform(ObjectHandle iObj, Matrix4f const* iTrans)
+  Err Transforms::AddTransform(ObjectHandle iObj, Optional<Matrix4f> const& iTrans)
   {
     if(!GetWorld().IsObjectValid(iObj))
     {

@@ -34,9 +34,7 @@ namespace eXl
 
     ObjectHandle newObject = iWorld.CreateObject();
 
-    Matrix4f navTrans = Matrix4f::IDENTITY;
-    MathTools::GetPosition2D(navTrans) = MathTools::As2DVec(iPosition);
-    transforms->AddTransform(newObject, &navTrans);
+    transforms->AddTransform(newObject, Matrix4f::FromPosition(iPosition));
 
     PhysicInitData desc;
     uint32_t flags = PhysicFlags::NeedContactNotify | PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity;

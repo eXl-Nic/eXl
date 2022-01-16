@@ -19,6 +19,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/map/mcmcmodelrsc.hpp>
 #include <engine/common/project.hpp>
 #include <engine/game/archetype.hpp>
+#include <engine/game/characteranimation.hpp>
+#include <engine/pathfinding/navigator.hpp>
 #include <engine/gui/fontresource.hpp>
 
 #include <engine/gfx/gfxsystem.hpp>
@@ -40,59 +42,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  namespace EngineCommon
-  {
-    AABB2Df PhysicsShape::Compute2DBox() const
-    {
-      if (m_Type == PhysicsShapeType::Box)
-      {
-        return AABB2Df(MathTools::As2DVec(m_Offset - m_Dims * 0.5)
-          , MathTools::As2DVec(m_Dims));
-      }
-      return AABB2Df(m_Offset.X() - m_Dims.X(), m_Offset.Y() - m_Dims.X()
-        , m_Offset.Y() - m_Dims.X(), m_Offset.Y() - m_Dims.X());
-    }
-
-    float PhysicsShape::ComputeBoundingCircle2DRadius() const
-    {
-      if (m_Type == PhysicsShapeType::Box)
-      {
-        return MathTools::As2DVec(m_Offset + m_Dims * 0.5).Length();
-      }
-      return m_Offset.Length() + m_Dims.X();
-    }
-
-    AABB2Df ObjectShapeData::Compute2DBox() const
-    {
-      if (m_Shapes.empty())
-      {
-        return AABB2Df();
-      }
-      AABB2Df box = m_Shapes[0].Compute2DBox();
-      for (uint32_t i = 1; i < m_Shapes.size(); ++i)
-      {
-        box.Absorb(m_Shapes[i].Compute2DBox());
-      }
-      return box;
-    }
-
-    float ObjectShapeData::ComputeBoundingCircle2DRadius() const
-    {
-      if (m_Shapes.empty())
-      {
-        return 0;
-      }
-      float maxRadius = m_Shapes[0].ComputeBoundingCircle2DRadius();
-      for (uint32_t i = 1; i < m_Shapes.size(); ++i)
-      {
-        float radius = m_Shapes[i].ComputeBoundingCircle2DRadius();
-        maxRadius = Mathf::Max(radius, maxRadius);
-      }
-
-      return maxRadius;
-    }
-  }
-
+  
   void CharacterAnimation_StaticInit();
   void CharacterAnimation_StaticDestroy();
   void Script_StaticInit();
@@ -225,6 +175,11 @@ namespace eXl
   ComponentName EngineCommon::GfxSpriteComponentName() { return s_NameRegistry->m_GfxSpriteComponentName; }
   ComponentName EngineCommon::PhysicsComponentName() { return s_NameRegistry->m_PhysicsComponentName; }
   ComponentName EngineCommon::TriggerComponentName() { return s_NameRegistry->m_TriggerComponentName; }
+  ComponentName EngineCommon::CharacterComponentName() 
+  { 
+    static ComponentName s_Name("Character");
+    return s_Name;
+  }
   PropertySheetName EngineCommon::VelocityName() { return s_NameRegistry->m_VelocityName; }
 
   PropertySheetName EngineCommon::GrabData::PropertyName() { return s_NameRegistry->m_GrabDataName; }
@@ -251,6 +206,12 @@ namespace eXl
     return s_Name;
   }
 
+  PropertySheetName EngineCommon::CharacterDesc::PropertyName()
+  {
+    static PropertySheetName s_Name("CharacterDescription");
+    return s_Name;
+  }
+
 
   void Register_ENGINE_Types();
   LUA_REG_FUN(BindDunatk);
@@ -272,6 +233,7 @@ namespace eXl
     baseManifest.RegisterPropertySheet<ObjectShapeData>(ObjectShapeData::PropertyName());
     baseManifest.RegisterPropertySheet<PhysicBodyData>(PhysicBodyData::PropertyName());
     baseManifest.RegisterPropertySheet<TriggerComponentDesc>(TriggerComponentDesc::PropertyName());
+    baseManifest.RegisterPropertySheet<CharacterDesc>(CharacterDesc::PropertyName());
 
     baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
 
@@ -446,11 +408,100 @@ namespace eXl
         scriptSys->AddBehaviour(iObject, *script);
       };
 
+      auto createCharacterFactory = [](World& iWorld, ObjectHandle iObject)
+      {
+        static CharacterAnimation s_Anim;
+        s_Anim.Register(iWorld);
+
+        CharacterSystem& charSys = *iWorld.GetSystem<CharacterSystem>();
+
+        if (charSys.GetDesc(iObject) != nullptr)
+        {
+          return;
+        }
+
+        GameDatabase& gameDb = *iWorld.GetSystem<GameDatabase>();
+        ObjectShapeData const* shapeDesc = gameDb.GetData<ObjectShapeData>(iObject, ObjectShapeData::PropertyName());
+        CharacterDesc const* charDesc = gameDb.GetData<CharacterDesc>(iObject, CharacterDesc::PropertyName());
+
+        AbilitySystem& abilitySys = *iWorld.GetSystem<AbilitySystem>();
+
+        PhysicsSystem* phSys = iWorld.GetSystem<PhysicsSystem>();
+        NavigatorSystem* navSys = iWorld.GetSystem<NavigatorSystem>();
+
+        CharacterSystem::Desc systemDesc;
+        systemDesc.kind = CharacterSystem::PhysicKind::Kinematic;
+        systemDesc.animation = &s_Anim;
+        systemDesc.size = shapeDesc->ComputeBoundingCircle2DRadius();
+        systemDesc.maxSpeed = charDesc->m_MaxSpeed;
+
+        switch (charDesc->m_Control)
+        {
+        case CharacterControlKind::Navigation:
+          systemDesc.controlKind = CharacterSystem::ControlKind::Navigation;
+          systemDesc.kind = CharacterSystem::PhysicKind::Simulated;
+          break;
+        case CharacterControlKind::PlayerControl:
+          systemDesc.controlKind = CharacterSystem::ControlKind::Predicted;
+          systemDesc.kind = CharacterSystem::PhysicKind::Kinematic;
+          break;
+        case CharacterControlKind::Remote:
+          systemDesc.controlKind = CharacterSystem::ControlKind::Remote;
+          systemDesc.kind = CharacterSystem::PhysicKind::KinematicAbsolute;
+          break;
+        }
+
+        PhysicInitData desc;
+        uint32_t flags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity | PhysicFlags::AddSensor;
+
+        if (systemDesc.controlKind == CharacterSystem::ControlKind::Remote)
+        {
+          flags |= (PhysicFlags::IsGhost | PhysicFlags::Kinematic);
+        }
+        else
+        {
+          if (systemDesc.kind == CharacterSystem::PhysicKind::Ghost
+            || systemDesc.kind == CharacterSystem::PhysicKind::GhostAbsolute)
+          {
+            flags |= PhysicFlags::IsGhost;
+          }
+          if (systemDesc.kind == CharacterSystem::PhysicKind::Kinematic
+            || systemDesc.kind == CharacterSystem::PhysicKind::KinematicAbsolute)
+          {
+            flags |= PhysicFlags::Kinematic;
+          }
+        }
+
+        desc.SetFlags(flags);
+        desc.AddSphere(systemDesc.size);
+        desc.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
+
+        phSys->CreateComponent(iObject, desc);
+
+        if (navSys)
+        {
+          phSys->GetNeighborhoodExtraction().AddObject(iObject, systemDesc.size, true);
+          if (systemDesc.controlKind == CharacterSystem::ControlKind::Navigation)
+          {
+            navSys->AddNavigator(iObject, systemDesc.size, systemDesc.maxSpeed);
+          }
+          else
+          {
+            navSys->AddObstacle(iObject, systemDesc.size);
+          }
+        }
+        charSys.AddCharacter(iObject, systemDesc);
+
+        abilitySys.CreateComponent(iObject);
+        abilitySys.AddAbility(iObject, WalkAbility::Name());
+      };
+
       s_EngineCommonManifest.emplace();
 
       s_EngineCommonManifest->RegisterComponent(GfxSpriteComponentName(), createGfxSpriteFactory, { GfxSpriteDescName() });
       s_EngineCommonManifest->RegisterComponent(PhysicsComponentName(), createPhysicsFactory, {ObjectShapeData::PropertyName(), PhysicBodyData::PropertyName()});
       s_EngineCommonManifest->RegisterComponent(TriggerComponentName(), createTriggerFactory, {ObjectShapeData::PropertyName(), TriggerComponentDesc::PropertyName() });
+      s_EngineCommonManifest->RegisterComponent(CharacterComponentName(), createCharacterFactory, { ObjectShapeData::PropertyName(), CharacterDesc::PropertyName() });
       
 #ifdef EXL_LUA
       BehaviourDesc desc;

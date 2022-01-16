@@ -41,6 +41,14 @@ namespace eXl
       pattern.push_back(TilingGroupLocConstraint::Undefined);
     }
 
+    TilingPattern(Vector2i iPatternSize, Vector2i iAnchor,
+      Vector<TilingGroupLocConstraint> iPattern, Vector<TilingDrawElement> iDrawElement)
+      : patternSize(iPatternSize)
+      , anchor(iAnchor)
+      , pattern(std::move(iPattern))
+      , drawElement(std::move(iDrawElement))
+    {}
+
     Vector2i patternSize = Vector2i::ONE;
     Vector2i anchor;
     Vector<TilingGroupLocConstraint> pattern;
@@ -72,6 +80,8 @@ namespace eXl
 
     TileName m_DefaultTile; // <== gives default size
     UnorderedMap<PatternName, TilingPattern> m_Patterns;
+
+    static void AddWangPatterns(UnorderedMap<PatternName, TilingPattern>& oMap);
 
     void SetTileset(Tileset const& iTileset);
     void SetTilesetId(Tileset::UUID const& iId);

@@ -426,9 +426,7 @@ namespace eXl
 
     m_ImageHandle = m_World.CreateObject();
 
-    Matrix4f imagePosition = Matrix4f::IDENTITY;
-    MathTools::GetPosition(imagePosition) = -Vector3f::UNIT_Z;
-    m_Transforms->AddTransform(m_ImageHandle, &imagePosition);
+    m_Transforms->AddTransform(m_ImageHandle, Matrix4f::FromPosition(-Vector3f::UNIT_Z));
     m_Gfx->CreateComponent(m_ImageHandle);
 
     {
@@ -448,11 +446,11 @@ namespace eXl
     reinterpret_cast<Vector3f&>(animPosition.m_Matrix[0]) = -Vector3f::UNIT_X;
     reinterpret_cast<Vector3f&>(animPosition.m_Matrix[1]) =  Vector3f::UNIT_Y;
     reinterpret_cast<Vector3f&>(animPosition.m_Matrix[2]) = -Vector3f::UNIT_Z;
-    MathTools::GetPosition(animPosition) = Vector3f::UNIT_Z;
 
-    m_Transforms->AddTransform(m_AnimHandle, &animPosition);
+    m_Transforms->AddTransform(m_AnimHandle, Matrix4f::FromPosition(Vector3f::UNIT_Z));
     GfxSpriteComponent& gfxComp = m_Gfx->CreateSpriteComponent(m_AnimHandle);
     gfxComp.SetTileset(m_Tileset);
+    gfxComp.SetRotateSprite(true);
   }
 
   void TilesetEditor::Impl::UpdateTile(QModelIndex iIndex)

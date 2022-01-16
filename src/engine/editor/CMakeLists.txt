@@ -127,6 +127,7 @@ ${QTAppl_MOC_HEADERS}
 OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
 
 add_executable(eXl_Editor ${QTAppl_MOC_HEADERS} ${QTAppl_SRCS} ${QTAppl_MOC_SRC} ${HEADERS})
+add_dependencies(eXl_Editor eXl_Player)
 
 set(HEADERS_TO_PARSE 
   ${CMAKE_CURRENT_SOURCE_DIR}/mapeditor/mapitemdata.hpp

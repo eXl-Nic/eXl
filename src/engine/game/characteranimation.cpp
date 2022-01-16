@@ -139,6 +139,15 @@ namespace eXl
   {
 #ifdef EXL_WITH_OGL
     uint32_t stateBits = (uint32_t)iEntry.m_CurDir;
+    if (iEntry.m_GfxComp == nullptr)
+    {
+      GfxSystem* gfxSys = m_World->GetSystem<GfxSystem>();
+      iEntry.m_GfxComp = gfxSys->GetSpriteComponent(iObj);
+      if (iEntry.m_GfxComp == nullptr)
+      {
+        return;
+      }
+    }
 
     if (!iEntry.m_CurrentActionCue)
     {
@@ -266,17 +275,11 @@ namespace eXl
     GfxSystem* gfxSys = m_World->GetSystem<GfxSystem>();
     if (gfxSys)
     {
-      GfxSpriteComponent* comp = gfxSys->GetSpriteComponent(iObject);
-      if (comp == nullptr)
-      {
-        return;
-      }
-
       auto newHandle = m_Entries.Alloc();
       auto& newEntry = m_Entries.Get(newHandle);
       m_Objects.insert(std::make_pair(iObject, newHandle));
 
-      newEntry.m_GfxComp = comp;
+      newEntry.m_GfxComp = nullptr;
     }
 #endif
   }

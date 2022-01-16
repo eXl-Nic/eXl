@@ -316,10 +316,7 @@ namespace eXl
 
     cameraObj = iWorld.CreateObject();
 
-    Matrix4f camOffset;
-    camOffset.MakeIdentity();
-    MathTools::GetPosition(camOffset) = view.pos;
-    transforms.AddTransform(cameraObj, &camOffset);
+    transforms.AddTransform(cameraObj, Matrix4f::FromPosition(view.pos));
 
     {
       PhysicInitData desc;

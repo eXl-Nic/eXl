@@ -107,6 +107,11 @@ namespace eXl
       if (Tile const* tile = tileset->Find(descData->m_TileName))
       {
         data.m_Texture = tileset->GetTexture(tile->m_ImageName);
+        if (data.m_Texture == nullptr)
+        {
+          LOG_WARNING << "Used unknown tile " << tile->m_ImageName;
+          continue;
+        }
         data.m_TextureData.~OGLShaderData();
         new(&data.m_TextureData) OGLShaderData();
         data.m_TextureData.AddTexture(OGLBaseAlgo::GetDiffuseTexture(), data.m_Texture);

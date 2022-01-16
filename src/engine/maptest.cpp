@@ -221,11 +221,7 @@ namespace eXl
       MapTiler::ComputeGfxForBlock(batcher, fullSpace.GetAABB(), floorBlock);
 
       ObjectHandle mapHandle = world.CreateObject();
-
-      Matrix4f mapTrans;
-      mapTrans.MakeIdentity();
-      MathTools::GetPosition(mapTrans) = MathTools::To3DVec(Vector2f(fullSize.X(), fullSize.Y()) * -0.5);
-      transforms.AddTransform(mapHandle, &mapTrans);
+      transforms.AddTransform(mapHandle, Matrix4f::FromPosition(MathTools::To3DVec(Vector2f(fullSize.X(), fullSize.Y()) * -0.5)));
 
       batcher.Finalize(gfxSys, mapHandle, 0);
     }
@@ -234,11 +230,7 @@ namespace eXl
       MapTiler::ComputeGfxForBlock(batcher, fullSpace.GetAABB(), wallBlock);
 
       ObjectHandle mapHandle = world.CreateObject();
-
-      Matrix4f mapTrans;
-      mapTrans.MakeIdentity();
-      MathTools::GetPosition(mapTrans) = MathTools::To3DVec(Vector2f(fullSize.X(), fullSize.Y()) * -0.5);
-      transforms.AddTransform(mapHandle, &mapTrans);
+      transforms.AddTransform(mapHandle, Matrix4f::FromPosition(MathTools::To3DVec(Vector2f(fullSize.X(), fullSize.Y()) * -0.5)));
 
       batcher.Finalize(gfxSys, mapHandle, 0);
     }
