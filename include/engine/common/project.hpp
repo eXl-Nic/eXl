@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 { 
+  class Archetype;
   class ProjectLoader;
   class PropertiesManifest;
 
@@ -44,6 +45,7 @@ namespace eXl
       SERIALIZE_METHODS;
     };
 
+    ResourceHandle<Archetype> m_PlayerArchetype;
     UnorderedMap<TypeName, Typedecl> m_Types;
 
     struct ProjectTypes
@@ -52,6 +54,7 @@ namespace eXl
     };
     void FillProperties(ProjectTypes& oTypes, PropertiesManifest& oManifest) const;
 
+    ~Project();
   protected:
 
     Err Stream_Data(Streamer& iStreamer) const override;

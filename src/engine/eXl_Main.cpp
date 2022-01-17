@@ -611,6 +611,8 @@ int eXl_Main::Start(int argc, char const* const argv[])
   PropertiesManifest appManifest = EngineCommon::GetBaseProperties();
   app.m_Manifest = &appManifest;
 
+  Project* project = nullptr;
+
   if (!projectPath.empty())
   {
     Path projectDir = projectPath.parent_path();
@@ -620,7 +622,7 @@ int eXl_Main::Start(int argc, char const* const argv[])
     ResourceManager::BootstrapDirectory(projectDir, true);
 #endif
 
-    Project* project = ResourceManager::Load<Project>(projectPath);
+    project = ResourceManager::Load<Project>(projectPath);
     if (!project)
     {
       return -1;
@@ -636,8 +638,6 @@ int eXl_Main::Start(int argc, char const* const argv[])
   ResourceManager::BootstrapAssetsFromManifest(String());
 #endif
 
-  //ResourceManager::Bake(Path("D:/eXlBakedProject"));
-
   if (!app.GetScenario() && !app.GetMapPath().empty())
   {
     std::unique_ptr<Scenario_Base> scenario = std::make_unique<Scenario_Base>();
@@ -650,13 +650,9 @@ int eXl_Main::Start(int argc, char const* const argv[])
       scenario->SetMap(mapRef);
     }
 
-    ResourceHandle<Archetype> mainCharHandle;
-    Resource::UUID id({ 3468735788, 1397163633, 3260533381, 1200720967 });
-    mainCharHandle.SetUUID(id);
-    scenario->SetMainChar(mainCharHandle);
+    scenario->SetMainChar(project->m_PlayerArchetype);
 
     app.SetScenario(std::move(scenario));
-
   }
 
   app.Start_SDLApp();

@@ -454,6 +454,7 @@ namespace eXl
 }
 
 #define PRECISE_VO
+#define OPTIMISTIC_PREAMBLE
 
 #include <fstream>
 #include <core/stream/jsonstreamer.hpp>
@@ -484,14 +485,20 @@ namespace eXl
 
     if(m_Obstacles.empty())
     {
-      return m_CasterDesiredDir * m_MaxVelocity;
+      return m_PureAvoidance ? Vector2f::ZERO : m_CasterDesiredDir * m_MaxVelocity;
     }
 
     BestVelocity velocities(m_PureAvoidance ? 0.0 : 0.5);
-#ifndef PRECISE_VO
+
     Vector<Vector2f> const& pts = GetSamples();
 
-    for (int32_t i = -1; i<(int32_t)pts.size(); ++i)
+#if !defined(PRECISE_VO) || defined(OPTIMISTIC_PREAMBLE) 
+    int32_t const numPts = pts.size();
+#else
+    int32_t const numPts = 0;
+#endif
+
+    for (int32_t i = -1; i<numPts; ++i)
     {
       bool valid = true;
       Vector2f point = (i >= 0 
@@ -551,7 +558,6 @@ namespace eXl
         drawer->DrawLine(MathTools::To3DVec(center) + Vector3f(1.0, -1.0, 0.0) * 0.25, MathTools::To3DVec(center) + Vector3f(-1.0, 1.0, 0.0) * 0.25, color);
       }
     }
-#endif
 
     float* bestScore = std::max_element(velocities.curScore, velocities.curScore + 4);
     uint32_t priority = bestScore - velocities.curScore;

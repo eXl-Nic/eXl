@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/resource/resourcemanager.hpp>
 
 #include <engine/common/gamedatabase.hpp>
+#include <engine/game/archetype.hpp>
 #include <core/type/typemanager.hpp>
 #include <core/type/tupletypestruct.hpp>
 
@@ -96,6 +97,8 @@ namespace eXl
 
   }
 
+  Project::~Project() = default;
+
   Err Project::Stream_Data(Streamer& iStreamer) const
   {
     return const_cast<Project*>(this)->Serialize(Serializer(iStreamer));
@@ -109,8 +112,11 @@ namespace eXl
   Err Project::Serialize(Serializer iSerializer)
   {
     iSerializer.BeginStruct();
+    iSerializer.PushKey("PlayerArchetype");
+    iSerializer &= m_PlayerArchetype;
+    iSerializer.PopKey();
     iSerializer.PushKey("ProjectTypes");
-    iSerializer.HandleMap(m_Types);
+    iSerializer.HandleMapSorted(m_Types);
     iSerializer.PopKey();
     iSerializer.EndStruct();
 

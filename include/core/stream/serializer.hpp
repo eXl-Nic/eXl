@@ -165,6 +165,111 @@ private: \
       }
     }
 
+    template <typename T, 
+      typename Predicate = std::less<typename T::value_type::first_type>>
+    inline Err HandleMapSorted(T& iMap, Predicate iPred = Predicate())
+    {
+      using entry_type = typename T::value_type;
+      using name_type = typename std::remove_const<typename entry_type::first_type>::type;
+      using value_type = typename entry_type::second_type;
+      if (IsReading())
+      {
+        Err SequencePresent = m_Unstreamer->BeginSequence();
+        if (SequencePresent)
+        {
+          do
+          {
+            name_type key;
+            m_Unstreamer->BeginStruct();
+            m_Unstreamer->PushKey("Key");
+            m_Unstreamer->Read(&key);
+            m_Unstreamer->PopKey();
+
+            value_type value;
+            m_Unstreamer->PushKey("Value");
+            m_Unstreamer->Read(&value);
+            m_Unstreamer->PopKey();
+            m_Unstreamer->EndStruct();
+
+            iMap.insert(std::make_pair(std::move(key), std::move(value)));
+          } while (m_Unstreamer->NextSequenceElement());
+        }
+        return SequencePresent != Err::Error ? Err::Success : SequencePresent;
+      }
+      else
+      {
+        Err SequenceStarted = m_Streamer->BeginSequence();
+        if (SequenceStarted)
+        {
+          Vector<entry_type const*> sortedEntries;
+          for (auto const& entry : iMap)
+          {
+            sortedEntries.push_back(&entry);
+          }
+
+          std::sort(sortedEntries.begin(), sortedEntries.end(), [&]
+          (entry_type const* iEntry1, entry_type const* iEntry2)
+            {
+              return iPred(iEntry1->first, iEntry2->first);
+            });
+
+          for(entry_type const* entry : sortedEntries)
+          {
+            m_Streamer->BeginStruct();
+            m_Streamer->PushKey("Key");
+            m_Streamer->Write(&entry->first);
+            m_Streamer->PopKey();
+            m_Streamer->PushKey("Value");
+            m_Streamer->Write(&entry->second);
+            m_Streamer->PopKey();
+            m_Streamer->EndStruct();
+          }
+          return m_Streamer->EndSequence();
+        }
+        return SequenceStarted;
+      }
+    }
+
+    template <typename T,
+      typename Predicate = std::less<T>>
+      inline Err HandleArraySorted(Vector<T> const& iArray, Predicate iPred = Predicate())
+    {
+      eXl_ASSERT_REPAIR_RET(IsWriting(), Err::Error);
+
+      Vector<T const*> sortedValues;
+      for (auto const& value : iArray)
+      {
+        sortedValues.push_back(&value);
+      }
+
+      std::sort(sortedValues.begin(), sortedValues.end(), [&]
+      (T const* iVal1, T const* iVal2)
+        {
+          return iPred(*iVal1, *iVal2);
+        });
+
+      for (T const* value : sortedValues)
+      {
+        m_Streamer->Write(value);
+      }
+
+      return Err::Success;
+    }
+
+    template <typename T,
+      typename Predicate = std::less<T>>
+    inline Err HandleArraySorted(Vector<T>& iArray, Predicate iPred = Predicate())
+    {
+      if (IsReading())
+      {
+        return m_Unstreamer->Read(&iArray);
+      }
+      else
+      {
+        return HandleArraySorted(const_cast<Vector<T> const&>(iArray), iPred);
+      }
+    }
+
     template <class T, typename FunctorRead, typename FunctorWrite>
     inline Err HandleSequence(T& iObj, FunctorRead const& iFunR, FunctorWrite const& iFunW)
     {

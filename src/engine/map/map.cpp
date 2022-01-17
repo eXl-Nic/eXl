@@ -228,7 +228,10 @@ namespace eXl
     iStreamer.PopKey();
 
     iStreamer.PushKey("Objects");
-    iStreamer &= m_Objects;
+    iStreamer.HandleArraySorted(m_Objects, [](Object const& iObj1, Object const& iObj2)
+      {
+        return iObj1.m_Header.m_ObjectId < iObj2.m_Header.m_ObjectId;
+      });
     iStreamer.PopKey();
 
     iStreamer.EndStruct();

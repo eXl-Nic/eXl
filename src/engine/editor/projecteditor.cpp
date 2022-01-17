@@ -10,6 +10,7 @@
 #include <core/type/typemanager.hpp>
 
 #include <engine/common/project.hpp>
+#include <engine/game/archetype.hpp>
 
 #include <QTabWidget>
 #include <QTableWidget>
@@ -119,6 +120,8 @@ namespace eXl
     TypeName m_CurrentEditedSheetName;
     Project::Typedecl m_CurrentEditedType;
     
+    QComboBox* m_PlayerSelector;
+
     ProjectEditor* m_Editor;
     Project* m_Project;
     QStringList m_TypeNames;
@@ -143,6 +146,47 @@ namespace eXl
     m_Impl->m_PropsCollectionModel = PropertySheetDeclCollectionModel::Create(this, m_Impl->m_Project);
 
     QSplitter* rootSplitter = new QSplitter(Qt::Vertical, this);
+
+    QWidget* projectSettings = new QWidget(this);
+    QVBoxLayout* settingsLayout = new QVBoxLayout(projectSettings);
+    QWidget* playerSelWidget = new QWidget(this);
+    QHBoxLayout* playerSelLayout = new QHBoxLayout(playerSelWidget);
+    playerSelWidget->setLayout(playerSelLayout);
+    projectSettings->setLayout(settingsLayout);
+    settingsLayout->addWidget(playerSelWidget);
+
+    m_Impl->m_PlayerSelector = new QComboBox(playerSelWidget);
+    playerSelLayout->addWidget(new QLabel("Player Archetype : "));
+    playerSelLayout->addWidget(m_Impl->m_PlayerSelector);
+    
+    auto* archetypesModel = EditorState::GetState()->GetProjectResourcesModel()->MakeFilteredModel(m_Impl->m_PlayerSelector, Archetype::StaticLoaderName(), true);
+    m_Impl->m_PlayerSelector->setModel(archetypesModel);
+
+    QObject::connect(m_Impl->m_PlayerSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, archetypesModel](int iIndex)
+      {
+        Resource::UUID const* resourceId = archetypesModel->GetResourceIDFromIndex(archetypesModel->index(iIndex, 0, QModelIndex()));
+
+        if (resourceId != nullptr && *resourceId != m_Impl->m_Project->m_PlayerArchetype.GetUUID())
+        {
+          m_Impl->m_Project->m_PlayerArchetype.SetUUID(*resourceId);
+          ModifyResource();
+        }
+      });
+
+    {
+      Resource::UUID const& archetypeUUID = m_Impl->m_Project->m_PlayerArchetype.GetUUID();
+      if (archetypeUUID.IsValid())
+      {
+        QModelIndex index = archetypesModel->GetIndexFromUUID(archetypeUUID);
+        if (index.isValid())
+        {
+          m_Impl->m_PlayerSelector->setCurrentIndex(index.row());
+        }
+      }
+    }
+
+    rootSplitter->addWidget(projectSettings);
+
     QSplitter* dataSplitter = new QSplitter(Qt::Horizontal, this);
     {
       QWidget* propCollection = new QWidget(this);

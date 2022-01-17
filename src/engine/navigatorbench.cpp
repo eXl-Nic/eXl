@@ -112,13 +112,13 @@ namespace eXl
 
         ObjectHandle truc = iWorld.CreateObject();
         transforms.AddTransform(truc, Matrix4f::FromPosition(curPos));
-        navigator.SetDestination(truc, destPos);
         iArch.Instantiate(truc, iWorld, nullptr);
+        navigator.SetDestination(truc, destPos);
 
         ObjectHandle truc2 = iWorld.CreateObject();
         transforms.AddTransform(truc2, Matrix4f::FromPosition(destPos));
-        navigator.SetDestination(truc2, curPos);
         iArch.Instantiate(truc2, iWorld, nullptr);
+        navigator.SetDestination(truc2, curPos);
 
         autonomousAgents.push_back(truc);
         autonomousAgents.push_back(truc2);

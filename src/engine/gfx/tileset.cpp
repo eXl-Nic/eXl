@@ -369,33 +369,34 @@ namespace eXl
     iStreamer.BeginStruct();
 
     iStreamer.PushKey("Tiles");
-    iStreamer.HandleSequence(m_Tiles, 
-      [](UnorderedMap<TileName, Tile>& oMap, Unstreamer& iStreamer)
-    {
-      String tempStr;
-      Tile tempTile;
-      iStreamer.BeginStruct();
-      iStreamer.PushKey("Name");
-      iStreamer.Read(&tempStr);
-      iStreamer.PopKey();
-      iStreamer.PushKey("TileData");
-      iStreamer.Read(&tempTile);
-      iStreamer.PopKey();
-      iStreamer.EndStruct();
-
-      oMap.insert(std::make_pair(TileName(tempStr), std::move(tempTile)));
-    },
-      [](UnorderedMap<TileName, Tile>::value_type const& iEntry, Streamer& iStreamer)
-    {
-      iStreamer.BeginStruct();
-      iStreamer.PushKey("Name");
-      iStreamer.Write(&iEntry.first);
-      iStreamer.PopKey();
-      iStreamer.PushKey("TileData");
-      iStreamer.Write(&iEntry.second);
-      iStreamer.PopKey();
-      iStreamer.EndStruct();
-    });
+    iStreamer.HandleMapSorted(m_Tiles);
+    //iStreamer.HandleSequence(m_Tiles, 
+    //  [](UnorderedMap<TileName, Tile>& oMap, Unstreamer& iStreamer)
+    //{
+    //  String tempStr;
+    //  Tile tempTile;
+    //  iStreamer.BeginStruct();
+    //  iStreamer.PushKey("Name");
+    //  iStreamer.Read(&tempStr);
+    //  iStreamer.PopKey();
+    //  iStreamer.PushKey("TileData");
+    //  iStreamer.Read(&tempTile);
+    //  iStreamer.PopKey();
+    //  iStreamer.EndStruct();
+    //
+    //  oMap.insert(std::make_pair(TileName(tempStr), std::move(tempTile)));
+    //},
+    //  [](UnorderedMap<TileName, Tile>::value_type const& iEntry, Streamer& iStreamer)
+    //{
+    //  iStreamer.BeginStruct();
+    //  iStreamer.PushKey("Name");
+    //  iStreamer.Write(&iEntry.first);
+    //  iStreamer.PopKey();
+    //  iStreamer.PushKey("TileData");
+    //  iStreamer.Write(&iEntry.second);
+    //  iStreamer.PopKey();
+    //  iStreamer.EndStruct();
+    //});
     iStreamer.PopKey();
 
     if (GetHeader().m_Flags & BakedResource)
