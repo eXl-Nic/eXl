@@ -24,12 +24,17 @@ namespace eXl
       bool m_StepAgents = false;
     };
 
-    Vector2f PickRandomPosInBox(AABB2Df const& iBox, Random& iRand)
+    Optional<Vector2f> PickRandomPosInBox(AABB2Df const& iBox, Random& iRand)
     {
+      Vector2f size = iBox.GetSize();
+      if (size.X() <= 4 || size.Y() <= 4)
+      {
+        return {};
+      }
       AABB2Df trimmedFace = iBox;
       trimmedFace.m_Data[0] += Vector2f::ONE * 2.0;
       trimmedFace.m_Data[1] -= Vector2f::ONE * 2.0;
-      Vector2f size = trimmedFace.GetSize();
+      size = trimmedFace.GetSize();
 
       return trimmedFace.m_Data[0] + Vector2f(
         size.X() * (iRand.Generate() % 1000) / 1000.0, 
@@ -38,10 +43,15 @@ namespace eXl
 
     Vector3f PickRandomPos(NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand)
     {
-      uint32_t faceIdx = iRand.Generate() % iNavMesh.GetFaces(iComponent).size();
-      AABB2Df curFace = iNavMesh.GetFaces(iComponent)[faceIdx].m_Box;
-      Vector2f randPos = PickRandomPosInBox(curFace, iRand);
-      return Vector3f(randPos.X(), randPos.Y(), 0.0);
+      Optional<Vector2f> randPos;
+      while(!randPos)
+      {
+        uint32_t faceIdx = iRand.Generate() % iNavMesh.GetFaces(iComponent).size();
+        AABB2Df curFace = iNavMesh.GetFaces(iComponent)[faceIdx].m_Box;
+        randPos = PickRandomPosInBox(curFace, iRand);
+      }
+      
+      return Vector3f(randPos->X(), randPos->Y(), 0.0);
     };
 
     Vector3f PickRandomDest(Vector3f const& iCurPos, NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand, NavigatorBench::ProbaTable const& iProbaTable)
@@ -51,6 +61,7 @@ namespace eXl
       {
         return iCurPos;
       }
+      Vector2f randPos;
       uint32_t destFaceIdx = faceIdx->m_Face;
       if (iNavMesh.GetFaces(iComponent).size() > 1)
       {
@@ -60,12 +71,18 @@ namespace eXl
           float sample = float(iRand.Generate() % 10000) / 10000;
           auto iter = std::lower_bound(iProbaTable.begin(), iProbaTable.end(), std::make_pair(sample, 0u));
           destFaceIdx = iter == iProbaTable.end() ? iProbaTable.back().second : iter->second;
+
+          if (auto potentialPos = PickRandomPosInBox(iNavMesh.GetFaces(iComponent)[destFaceIdx].m_Box, iRand))
+          {
+            randPos = *potentialPos;
+          }
+          else
+          {
+            destFaceIdx = faceIdx->m_Face;
+          }
+
         } while (destFaceIdx == faceIdx->m_Face);
       }
-
-      AABB2Df destFace = iNavMesh.GetFaces(iComponent)[destFaceIdx].m_Box;
-
-      Vector2f randPos = PickRandomPosInBox(destFace, iRand);
       return Vector3f(randPos.X(), randPos.Y(), 0.0);
     };
 
@@ -148,6 +165,10 @@ namespace eXl
         auto const& Face = iNavMesh.GetFaces(iComponent)[i];
         Vector2f size = Face.m_Box.GetSize();
         float area = size.X() * size.Y();
+        if (area < 36)
+        {
+          continue;
+        }
         totalArea += area;
         probaTable.push_back(std::make_pair(area, i));
       }
@@ -157,12 +178,6 @@ namespace eXl
       float accum = 0;
       for (auto& entry : probaTable)
       {
-        if (entry.first < 36)
-        {
-          totalArea -= entry.first;
-          entry.first = 0;
-          continue;
-        }
         float curProba = accum / totalArea;
         accum += entry.first;
         entry.first = curProba;
@@ -174,7 +189,7 @@ namespace eXl
 
         uint32_t faceIdx = ioData.m_Rand->Generate() % iNavMesh.GetFaces(iComponent).size();
         AABB2Df curFace = iNavMesh.GetFaces(iComponent)[faceIdx].m_Box;
-        Vector2f randPos = PickRandomPosInBox(curFace, *ioData.m_Rand);
+        Vector3f randPos = PickRandomPos(iNavMesh, iComponent, *ioData.m_Rand);
         auto curPos = Vector3f(randPos.X(), randPos.Y(), 0.0);
 
         auto destPos = PickRandomDest(curPos, iNavMesh, iComponent, *ioData.m_Rand, probaTable);

@@ -534,7 +534,7 @@ namespace eXl
   ObjectHandle ObjectsTool::AddAt(Archetype const* iArchetype, Vector2i iPixelPos)
 	{
     ObjectHandle newObjectHandle = m_World.CreateObject();
-    MapResource::ObjectHeader newObject = m_ObjectsView.GetOrCreate(newObjectHandle);
+    MapResource::ObjectHeader& newObject = m_ObjectsView.GetOrCreate(newObjectHandle);
     PlacedObject& custoData = m_ObjectsEditorData.GetOrCreate(newObjectHandle);
 		newObject.m_Position = MathTools::To3DVec(MathTools::ToFVec(iPixelPos / EngineCommon::s_WorldToPixel));
     newObject.m_Archetype.Set(m_SelectedArchetype);
