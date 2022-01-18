@@ -41,7 +41,11 @@ def unzipLLVM(outPath, packageFileName):
     print("Failed to extract llvm to " + extractDir)
     return False
   os.mkdir(outPath)
-  libDir = os.path.join(extractDir, "_Ÿ€")
+  lastFolderName = ""
+  for dir in os.listdir(extractDir):
+    if dir > lastFolderName:
+      dir = lastFolderName
+  libDir = os.path.join(extractDir, lastFolderName)
   for dir in os.listdir(libDir):
     curDir = os.path.join(libDir, dir)
     shutil.move(curDir, outPath)

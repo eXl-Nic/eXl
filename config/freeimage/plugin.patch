@@ -1,43 +1,26 @@
-*** D:/eXlProject_Restart/package/freeimage/FreeImage/Source/FreeImage/Plugin - Copie.cpp	Thu Jan 06 12:13:25 2022
---- D:/eXlProject_Restart/package/freeimage/FreeImage/Source/FreeImage/Plugin.cpp	Thu Jan 06 15:55:42 2022
-***************
-*** 261,279 ****
-  			s_plugins->AddNode(InitXBM);
-  			s_plugins->AddNode(InitXPM);
-  			s_plugins->AddNode(InitDDS);
-! 	        s_plugins->AddNode(InitGIF);
-! 	        s_plugins->AddNode(InitHDR);
-  			s_plugins->AddNode(InitG3);
-  			s_plugins->AddNode(InitSGI);
-! 			s_plugins->AddNode(InitEXR);
-  			s_plugins->AddNode(InitJ2K);
-  			s_plugins->AddNode(InitJP2);
-  			s_plugins->AddNode(InitPFM);
-  			s_plugins->AddNode(InitPICT);
-! 			s_plugins->AddNode(InitRAW);
-! 			s_plugins->AddNode(InitWEBP);
-  #if !(defined(_MSC_VER) && (_MSC_VER <= 1310))
-! 			s_plugins->AddNode(InitJXR);
-  #endif // unsupported by MS Visual Studio 2003 !!!
-  			
-  			// external plugin initialization
---- 261,279 ----
-  			s_plugins->AddNode(InitXBM);
-  			s_plugins->AddNode(InitXPM);
-  			s_plugins->AddNode(InitDDS);
-! 			s_plugins->AddNode(InitGIF);
-! 			//s_plugins->AddNode(InitHDR);
-  			s_plugins->AddNode(InitG3);
-  			s_plugins->AddNode(InitSGI);
-! 			//s_plugins->AddNode(InitEXR);
-  			s_plugins->AddNode(InitJ2K);
-  			s_plugins->AddNode(InitJP2);
-  			s_plugins->AddNode(InitPFM);
-  			s_plugins->AddNode(InitPICT);
-! 			//s_plugins->AddNode(InitRAW);
-! 			//s_plugins->AddNode(InitWEBP);
-  #if !(defined(_MSC_VER) && (_MSC_VER <= 1310))
-! 			//s_plugins->AddNode(InitJXR);
-  #endif // unsupported by MS Visual Studio 2003 !!!
-  			
-  			// external plugin initialization
+--- D:/eXlProject/package/FreeImage3180/FreeImage/Source/FreeImage/Plugin.cpp	Sat Feb 18 14:09:28 2017
++++ D:/eXlProject_Restart/package/freeimage/FreeImage/Source/FreeImage/Plugin.cpp	Tue Jan 18 22:25:10 2022
+@@ -262,18 +262,18 @@
+ 			s_plugins->AddNode(InitXPM);
+ 			s_plugins->AddNode(InitDDS);
+ 	        s_plugins->AddNode(InitGIF);
+-	        s_plugins->AddNode(InitHDR);
++			//s_plugins->AddNode(InitHDR);
+ 			s_plugins->AddNode(InitG3);
+ 			s_plugins->AddNode(InitSGI);
+-			s_plugins->AddNode(InitEXR);
++			//s_plugins->AddNode(InitEXR);
+ 			s_plugins->AddNode(InitJ2K);
+ 			s_plugins->AddNode(InitJP2);
+ 			s_plugins->AddNode(InitPFM);
+ 			s_plugins->AddNode(InitPICT);
+-			s_plugins->AddNode(InitRAW);
+-			s_plugins->AddNode(InitWEBP);
++			//s_plugins->AddNode(InitRAW);
++			//s_plugins->AddNode(InitWEBP);
+ #if !(defined(_MSC_VER) && (_MSC_VER <= 1310))
+-			s_plugins->AddNode(InitJXR);
++			//s_plugins->AddNode(InitJXR);
+ #endif // unsupported by MS Visual Studio 2003 !!!
+ 			
+ 			// external plugin initialization

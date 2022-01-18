@@ -1,40 +1,24 @@
-*** D:/eXlProject_Restart/package/freeimage/FreeImage/Source/FreeImage/MultiPage.cpp	Fri Jan 07 09:19:48 2022
---- D:/eXlProject_Restart/package/freeimage/FreeImage/Source/FreeImage/MultiPage - Copie.cpp	Thu Jan 06 16:14:01 2022
-***************
-*** 271,278 ****
-  					}
-  				}
-  
-! 				std::unique_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
-! 				std::unique_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
-  				header->m_filename = filename;
-  				// io is default
-  				header->node = node;
---- 271,278 ----
-  					}
-  				}
-  
-! 				std::auto_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
-! 				std::auto_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
-  				header->m_filename = filename;
-  				// io is default
-  				header->node = node;
-***************
-*** 337,344 ****
-  				PluginNode *node = list->FindNodeFromFIF(fif);
-  			
-  				if (node) {
-! 					std::unique_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
-! 					std::unique_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
-  					header->io = *io;
-  					header->node = node;
-  					header->fif = fif;
---- 337,344 ----
-  				PluginNode *node = list->FindNodeFromFIF(fif);
-  			
-  				if (node) {
-! 					std::auto_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
-! 					std::auto_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
-  					header->io = *io;
-  					header->node = node;
-  					header->fif = fif;
+--- D:/eXlProject/package/FreeImage3180/FreeImage/Source/FreeImage/MultiPage.cpp	Mon Aug 08 11:11:16 2016
++++ D:/eXlProject_Restart/package/freeimage/FreeImage/Source/FreeImage/MultiPage.cpp	Fri Jan 07 09:19:48 2022
+@@ -271,8 +271,8 @@
+ 					}
+ 				}
+ 
+-				std::auto_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
+-				std::auto_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
++				std::unique_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
++				std::unique_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
+ 				header->m_filename = filename;
+ 				// io is default
+ 				header->node = node;
+@@ -337,8 +337,8 @@
+ 				PluginNode *node = list->FindNodeFromFIF(fif);
+ 			
+ 				if (node) {
+-					std::auto_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
+-					std::auto_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
++					std::unique_ptr<FIMULTIBITMAP> bitmap (new FIMULTIBITMAP);
++					std::unique_ptr<MULTIBITMAPHEADER> header (new MULTIBITMAPHEADER);
+ 					header->io = *io;
+ 					header->node = node;
+ 					header->fif = fif;
