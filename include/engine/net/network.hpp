@@ -18,10 +18,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/world.hpp>
 
 #define CUR_CLASS std::remove_pointer<decltype(this)>::type
-#define DECLARE_CLIENT_RELIABLE_COMMAND(Function) DeclareCommand(NetRole::Client, #Function, &CUR_CLASS::Function, true)
-#define DECLARE_CLIENT_UNRELIABLE_COMMAND(Function) DeclareCommand(NetRole::Client, #Function, &CUR_CLASS::Function, false)
-#define DECLARE_SERVER_RELIABLE_COMMAND(Function) DeclareCommand(NetRole::Server, #Function, &CUR_CLASS::Function, true)
-#define DECLARE_SERVER_UNRELIABLE_COMMAND(Function) DeclareCommand(NetRole::Server, #Function, &CUR_CLASS::Function, false)
+#define DECLARE_CLIENT_RELIABLE_COMMAND(Function) DeclareClientCommand(#Function, Function, true)
+#define DECLARE_CLIENT_UNRELIABLE_COMMAND(Function) DeclareClientCommand(#Function, Function, false)
+#define DECLARE_SERVER_RELIABLE_COMMAND(Function) DeclareServerCommand(#Function, Function, true)
+#define DECLARE_SERVER_UNRELIABLE_COMMAND(Function) DeclareServerCommand(#Function, Function, false)
 
 namespace eXl
 {
@@ -37,41 +37,28 @@ namespace eXl
     struct ClientId
     {
       uint64_t id;
-      inline bool operator == (ClientId const& iOther) const
-      {
-        return id == iOther.id;
-      }
-      inline bool operator != (ClientId const& iOther) const
-      {
-        return !(*this == iOther);
-      }
+      bool operator == (ClientId const& iOther) const;
+      bool operator != (ClientId const& iOther) const;
+      Err Stream(Streamer& iStreamer) const;
+      Err Unstream(Unstreamer& iStreamer);
     };
 
     struct ObjectId
     {
       uint64_t id;
-      inline bool operator == (ObjectId const& iOther) const
-      {
-        return id == iOther.id;
-      }
-      inline bool operator != (ObjectId const& iOther) const
-      {
-        return !(*this == iOther);
-      }
+      bool operator == (ObjectId const& iOther) const;
+      bool operator != (ObjectId const& iOther) const;
+      Err Stream(Streamer& iStreamer) const;
+      Err Unstream(Unstreamer& iStreamer);
     };
 
-    inline size_t hash_value(ClientId const& iId)
-    {
-      return static_cast<size_t>(iId.id);
-    }
+    size_t hash_value(ClientId const& iId);
+    size_t hash_value(ObjectId const& iId);
 
-    inline size_t hash_value(ObjectId const& iId)
+    struct EXL_ENGINE_API ClientInputData
     {
-      return static_cast<size_t>(iId.id);
-    }
+      EXL_REFLECT
 
-    struct ClientInputData
-    {
       bool m_Moving = false;
       Vector3f m_Dir;
     };
@@ -104,45 +91,37 @@ namespace eXl
 
     MAKE_NAME_DECL(CommandName);
 
+    using CommandCallback = std::function<void(uint64_t, ConstDynObject const&, DynObject&) >;
     struct CommandDesc
     {
+      CommandDesc() = default;
+      CommandDesc(CommandDesc const&) = delete;
+      CommandDesc(CommandDesc&&);
+      CommandName m_Name;
       FunDesc m_FunDesc;
       NetRole m_Executor;
       bool m_Reliable;
       Optional<ArgsBuffer> m_Args;
+      CommandCallback m_Callback;
     };
 
     template<typename RetType, typename... Args>
-    struct CallRetTypeDispatcher
+    struct CallRetTypeDispatcher;
+
+    struct CommandCallData
     {
-      template <typename Function>
-      static void Execute(Function const& iFun, ConstDynObject& iArgsBuffer, DynObject& oOutput)
-      {
-        Type const* retType = TypeManager::GetType<RetType>();
-        oOutput.SetType(retType, retType->Build(), true);
-        *oOutput.CastBuffer<RetType>() = Invoker<Args...>:: template Call<RetType>(iFun, iArgsBuffer);
-      }
+      NetRole m_Executor;
+      void* m_CommandPtr;
+      DynObject m_Args;
+      std::function<void(ConstDynObject const&)> m_CompletionCallback;
     };
 
-    template<typename... Args>
-    struct CallRetTypeDispatcher<void, Args...>
-    {
-      template <typename Function>
-      static void Execute(Function const& iFun, ConstDynObject& iArgsBuffer, DynObject& oOutput)
-      {
-        Invoker<Args...>::template Call<void>(iFun, iArgsBuffer);
-      }
-    };
+    struct CommandDictionary;
 
-    class NetDriver
+    class EXL_ENGINE_API NetDriver
     {
+      friend CommandDictionary;
     public:
-      using CommandCallback = std::function<void(ConstDynObject& iArgs, DynObject& oOutput) >;
-      struct CommandEntry
-      {
-        CommandDesc m_Desc;
-        CommandCallback m_Callback;
-      };
 
       template<typename RetType, typename... Args>
       struct CommandCaller
@@ -156,45 +135,42 @@ namespace eXl
 
         [[nodiscard]] CommandCaller& WithCompletionCallback(std::function<void(CallbackArgsType)> iCompletionCallback);
         [[nodiscard]] CommandCaller& WithArgs(Args&&... iArgs);
-        void Send();
+        Err Send();
       protected:
         friend NetDriver;
         CommandCaller(NetDriver& iDriver, NetRole iExecutor, void* iCommandPtr, uint64_t iClientId);
         NetDriver& m_Driver;
-        NetRole m_Executor;
-        void* m_CommandPtr;
+        CommandDesc const* m_Command = nullptr;
         uint64_t m_ClientId;
-        DynObject m_Args;
-        CommandEntry const* m_Command = nullptr;
-        std::function<void(ConstDynObject const&)> m_CompletionCallback;
+        CommandCallData m_Data;
       };
 
       template<typename RetType, typename... Args>
-      [[nodiscard]] CommandCaller<RetType, Args...> CallClientCommand(ClientId iClient, RetType(*iFun)(NetDriver*, Args...))
+      [[nodiscard]] CommandCaller<RetType, Args...> CallClientCommand(ClientId iClient, std::function<RetType(uint32_t, Args...)>& iFun)
       {
-        return CommandCaller<RetType, Args...>(*this, NetRole::Client, iFun, iClient.id);
+        return CommandCaller<RetType, Args...>(*this, NetRole::Client, &iFun, iClient.id);
       }
 
       template<typename RetType, typename... Args>
-      [[nodiscard]] CommandCaller<RetType, Args...> CallServerCommand(uint32_t iLocalClient, RetType(*iFun)(NetDriver*, Args...))
+      [[nodiscard]] CommandCaller<RetType, Args...> CallServerCommand(uint32_t iLocalClient, std::function<RetType(ClientId, Args...)>& iFun)
       {
-        return CommandCaller<RetType, Args...>(*this, NetRole::Client, iFun, iLocalClient);
+        return CommandCaller<RetType, Args...>(*this, NetRole::Server, &iFun, iLocalClient);
       }
 
     protected:
 
       template<typename RetType, typename... Args>
-      void DeclareCommand(NetRole iExecutor, CommandName iName, RetType(*iFun)(NetDriver*, Args...), bool iReliable);
+      void DeclareClientCommand(CommandName iName, std::function<RetType(uint32_t, Args...)>& iFun, bool iReliable);
 
-      void DeclareCommand(CommandName iName, void* iCommandPtr, CommandCallback iCallback, CommandDesc iSettings);
+      template<typename RetType, typename... Args>
+      void DeclareServerCommand(CommandName iName, std::function<RetType(ClientId, Args...)>& iFun, bool iReliable);
 
-      NetDriver(NetCtx& iCtx)
-        : m_Ctx(iCtx)
-      {}
+      NetDriver(NetCtx& iCtx);
+      NetDriver(NetDriver const&) = delete;
 
     private:
-
-      Vector<CommandEntry> m_Commands;
+      void DeclareCommand(NetRole iExecutor, CommandName iName, CommandCallback iCb, FunDesc iArgs, void* iCommandPtr, bool iReliable);
+      Vector<CommandDesc> m_Commands;
       UnorderedMap<CommandName, uint32_t> m_CommandsByName;
       UnorderedMap<void*, uint32_t> m_CommandsByPtr;
       NetCtx& m_Ctx;
@@ -202,21 +178,15 @@ namespace eXl
 
     struct ClientEvents
     {
-      virtual void OnNewObject(uint32_t, ObjectId, ClientData const&) = 0;
-      virtual void OnObjectDeleted(uint32_t, ObjectId) = 0;
-      virtual void OnObjectUpdated(uint32_t, ObjectId, ClientData const&) = 0;
-
-      virtual void OnAssignPlayer(uint32_t, ObjectId) = 0;
-
-      //virtual void OnServerCommand() = 0;
+      std::function<void(uint32_t, ObjectId, ClientData const&)> OnNewObject;
+      std::function<void(uint32_t, ObjectId)> OnObjectDeleted;
+      std::function<void(uint32_t, ObjectId, ClientData const&)> OnObjectUpdated;
     };
 
     struct ServerEvents
     {
-      virtual void OnClientConnected(ClientId) = 0;
-      virtual void OnClientDisconnected(ClientId) = 0;
-
-      virtual void OnClientCommand(ClientId, ClientInputData const&) = 0;
+      std::function<void(ClientId)> OnClientConnected;
+      std::function<void(ClientId)> OnClientDisconnected;
     };
 
     class Server;
@@ -231,8 +201,8 @@ namespace eXl
       uint16_t const m_ServerPort;
 
       NetDriver* m_NetDriver = nullptr;
-      ClientEvents* m_ClientEvents = nullptr;
-      ServerEvents* m_ServerEvents = nullptr;
+      ClientEvents m_ClientEvents;
+      ServerEvents m_ServerEvents;
 
       std::unique_ptr<Server> m_Server;
       Vector<std::unique_ptr<Client>> m_Clients;
@@ -251,7 +221,7 @@ namespace eXl
       void Tick();
       void Flush();
 
-      void SetClientInput(ClientInputData const& iInput);
+      Err SendServerCommand(CommandCallData&& iCall);
 
       uint32_t GetLocalIndex() const;
       Client_Impl& GetImpl() { return *m_Impl; }
@@ -301,7 +271,7 @@ namespace eXl
       void CreateObject(ClientId, ObjectId, ClientData const& iData);
       void UpdateObject(ClientId, ObjectId, ClientData const& iData);
 
-      void AssignPlayer(ClientId, ObjectId);
+      Err SendClientCommand(CommandCallData&& iCall, ClientId iId);
 
       Server_Impl& GetImpl() { return *m_Impl; }
       ServerDispatcher& GetDispatcher() { return m_Dispatcher; }
@@ -315,77 +285,9 @@ namespace eXl
       ServerDispatcher m_Dispatcher;
     };
 
-    template<typename RetType, typename... Args>
-    void NetDriver::DeclareCommand(NetRole iExecutor, CommandName iName, RetType(*iFun)(NetDriver*, Args...), bool iReliable)
-    {
-      static_assert(sizeof(iFun) == sizeof(void*), "Invalid function ptr size");
-      CommandDesc desc;
-      desc.m_FunDesc = FunDesc::Create<RetType(Args...)>();
-      desc.m_Args.emplace(desc.m_FunDesc.arguments);
-      desc.m_Executor = iExecutor;
-      desc.m_Reliable = iReliable;
-      auto callback = [this, iFun](ConstDynObject& iArgsBuffer, DynObject& oOutput)
-      {
-        CallRetTypeDispatcher<RetType, Args...>::Execute([this, iFun](Args... iArgs)
-          {
-            return (*iFun)(this, std::forward<Args>(iArgs)...);
-          }, iArgsBuffer, oOutput);
-      };
-      DeclareCommand(iName, iFun, callback, desc);
-    }
 
-    template<typename RetType, typename... Args>
-    NetDriver::CommandCaller<RetType, Args...>::CommandCaller(NetDriver& iDriver, NetRole iExecutor, void* iCommandPtr, uint64_t iClientId)
-      : m_Driver(iDriver)
-      , m_Executor(iExecutor)
-      , m_CommandPtr(iCommandPtr)
-      , m_ClientId(iClientId)
-    {
-      auto iter = m_Driver.m_CommandsByPtr.find(iCommandPtr);
-      if (iter == m_Driver.m_CommandsByPtr.end())
-      {
-        return;
-      }
-      CommandEntry const& desc = m_Driver.m_Commands[iter->second];
-      if (desc.m_Desc.m_Executor != iExecutor)
-      {
-        return;
-      }
-      m_Command = &desc;      
-    }
-
-    template<typename RetType, typename... Args>
-    NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithCompletionCallback(std::function<void(CallbackArgsType)> iCompletionCallback)
-    {
-      if (m_Command != nullptr 
-        && iCompletionCallback)
-      {
-        m_CompletionCallback = [userCallback = std::move(iCompletionCallback)](ConstDynObject const& iResBuffer)
-        {
-          userCallback(iResBuffer.CastBuffer<RetType>());
-        };
-      }
-      return *this;
-    }
-
-    template<typename RetType, typename... Args>
-    NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithArgs(Args&&... iArgs)
-    {
-      if (m_Command != nullptr)
-      {
-        Err res = m_Command->m_Desc.m_FunDesc.PopulateArgBuffer(*m_Command->m_Desc.m_Args, m_Args, std::forward<Args>(iArgs)...);
-        eXl_ASSERT(res);
-      }
-      return *this;
-    }
-
-    template<typename RetType, typename... Args>
-    void NetDriver::CommandCaller<RetType, Args...>::Send()
-    {
-      if (m_Command != nullptr)
-      {
-
-      }
-    }
+#include "network.inl"
   }
+  DEFINE_ENGINE_TYPE_EX(Network::ClientId, NetClientId);
+  DEFINE_ENGINE_TYPE_EX(Network::ObjectId, NetObjectId);
 }

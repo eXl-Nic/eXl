@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/utils/mphf.hpp>
 #include <functional>
 #include <xxhash.h>
+#include <intrin.h>
 
 namespace eXl
 {
@@ -225,5 +226,10 @@ namespace eXl
     m_Seeds[0] = iRand.Generate();
     m_Seeds[1] = iRand.Generate();
     m_Seeds[2] = iRand.Generate();
+  }
+
+  uint32_t StringMPH::RandomInit()
+  {
+    return __rdtsc();
   }
 }

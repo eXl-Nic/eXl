@@ -41,7 +41,14 @@ namespace eXl
     Engine_Application& appl = static_cast<Engine_Application&>(Application::GetAppl());
 
     auto& abilitySys = *iWorld.GetSystem<AbilitySystem>();
+<<<<<<< HEAD
     abilitySys.RegisterAbility(new WalkAbility);
+=======
+
+    abilitySys.RegisterAbility(new WalkAbility);
+
+    auto* gfxSys = iWorld.GetSystem<GfxSystem>();
+>>>>>>> ab6ad68... Name impl change + start network command declaration
 
     if (MapResource const* map = m_Map.GetOrLoad())
     {
@@ -63,7 +70,13 @@ namespace eXl
       ProcessInputs(iWorld);
     });
 
+<<<<<<< HEAD
     StartLocal(iWorld);
+=======
+    m_MainChar = SpawnCharacter(iWorld);
+
+    transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
+>>>>>>> ab6ad68... Name impl change + start network command declaration
   }
 
   ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld)
@@ -92,28 +105,81 @@ namespace eXl
     Transforms& trans = *iWorld.GetSystem<Transforms>();
     trans.AddTransform(newChar, Matrix4f::FromPosition(pos));
     toSpawn->Instantiate(newChar, iWorld, &customData);
+#if 0
+    auto& charSys = *iWorld.GetSystem<CharacterSystem>();
+    auto& abilitySys = *iWorld.GetSystem<AbilitySystem>();
 
+    CharacterSystem::Desc defaultDesc;
+    defaultDesc.kind = CharacterSystem::PhysicKind::Kinematic;
+<<<<<<< HEAD
+    defaultDesc.animation = m_DefaultAnim.get();
+    defaultDesc.controlKind = CharacterSystem::ControlKind::Predicted;
+=======
+    defaultDesc.animation = &s_DefaultAnim;
+    defaultDesc.controlKind = CharacterSystem::ControlKind::Predicted;
+
+>>>>>>> ab6ad68... Name impl change + start network command declaration
+    defaultDesc.size = 1.0;
+    defaultDesc.maxSpeed = 10.0;
+
+    ObjectHandle newChar = iWorld.CreateObject();
+    CharacterSystem::Build(iWorld, newChar, MathTools::To3DVec(m_SpawnPos), defaultDesc);
+    {
+      if (auto* gfxSys = iWorld.GetSystem<GfxSystem>())
+      {
+        Tileset const* characterTileset = []
+        {
+          ResourceHandle<Tileset> tilesetHandle;
+          Resource::UUID id({ 2191849209, 2286785320, 240566463, 373114736 });
+          tilesetHandle.SetUUID(id);
+          tilesetHandle.Load();
+          return tilesetHandle.Get();
+        }();
+
+        GfxSpriteComponent& gfxComp = gfxSys->CreateSpriteComponent(newChar);
+        gfxComp.SetTileset(characterTileset);
+      }
+      //gfxComp.SetTint(Vector4f(1.0, 0.0, 0.0, 1.0));
+
+      charSys.AddCharacter(newChar, defaultDesc);
+
+      abilitySys.CreateComponent(newChar);
+      abilitySys.AddAbility(newChar, WalkAbility::Name());
+<<<<<<< HEAD
+    }
+#endif
     return newChar;
   }
 
   void Scenario_Base::StartLocal(World& iWorld)
   {
-    m_MainChar = SpawnCharacter(iWorld);
+    m_CurMode = Network::NetRole::None;
+    m_MainChar = SpawnCharacter(iWorld, Network::NetRole::None);
 
     auto& transforms = *iWorld.GetSystem<Transforms>();
     transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
+=======
+      //abilitySys.AddAbility(newChar, SwordAbility::Name());
+    }
+
+    return newChar;
+>>>>>>> ab6ad68... Name impl change + start network command declaration
   }
 
   void Scenario_Base::ProcessInputs(World& iWorld)
   {
     Engine_Application& app = Engine_Application::GetAppl();
+    auto& abilities = *iWorld.GetSystem<AbilitySystem>();
     InputSystem& iInputs = app.GetInputSystem();
 
     GfxSystem* gfxSys = iWorld.GetSystem<GfxSystem>();
     Vector2i vptSize = gfxSys ? gfxSys->GetViewportSize() : Vector2i::ONE;
 
+<<<<<<< HEAD
     AbilitySystem& abilities = *iWorld.GetSystem<AbilitySystem>();
     
+=======
+>>>>>>> ab6ad68... Name impl change + start network command declaration
     if (m_MainChar.IsAssigned())
     {
       for (int i = 0; i < (int)iInputs.m_KeyEvts.size(); ++i)
@@ -173,6 +239,10 @@ namespace eXl
         }
       }
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> ab6ad68... Name impl change + start network command declaration
     if (keyChanged)
     {
       static const Vector3f dirs[] =
@@ -191,6 +261,7 @@ namespace eXl
         }
       }
 
+<<<<<<< HEAD
       if (dirMask == 0)
       {
         abilities.StopUsingAbility(m_MainChar, WalkAbility::Name());
@@ -199,6 +270,13 @@ namespace eXl
       {
         WalkAbility::SetWalkDirection(&abilities, m_MainChar, MathTools::As2DVec(dir));
         abilities.UseAbility(m_MainChar, WalkAbility::Name());
+=======
+      {
+        if (dirMask == 0)
+        {
+          abilities.StopUsingAbility(m_MainChar, WalkAbility::Name());
+        }
+>>>>>>> ab6ad68... Name impl change + start network command declaration
       }
       keyChanged = false;
     }

@@ -7,6 +7,31 @@
 #include <engine/common/transforms.hpp>
 #include <engine/net/network.hpp>
 
+struct WorldState;
+
+namespace eXl
+{
+  namespace Network
+  {
+    class TestNetDriver : public NetDriver
+    {
+    public:
+
+      std::function<void(uint32_t iParam1, float iParam2, String const& iParam3)> TestCommand;
+      std::function<void(uint32_t iLocalClient, ObjectId iObject)> AssignPlayer;
+      std::function<void(ClientId iClientId, ClientInputData const& iData)> SetPlayerInput;
+
+      TestNetDriver(NetCtx& iCtx)
+        : NetDriver(iCtx)
+      {
+        DECLARE_CLIENT_RELIABLE_COMMAND(TestCommand);
+        DECLARE_CLIENT_RELIABLE_COMMAND(AssignPlayer);
+        DECLARE_SERVER_RELIABLE_COMMAND(SetPlayerInput);
+      }
+    };
+  }
+}
+
 using namespace eXl;
 
 struct WorldState
@@ -39,35 +64,28 @@ struct WorldState
   }
 };
 
-struct TestClientEvents : Network::ClientEvents
+struct TestClientEvents
 {
-  void OnNewObject(uint32_t iLocalClient, Network::ObjectId iObject, Network::ClientData const& iData) override
+  static void OnNewObject(WorldState& iWorld, Network::ObjectId iObject, Network::ClientData const& iData)
   {
-    auto insertRes = m_World[iLocalClient].m_Objects.insert(std::make_pair(iObject, iData));
+    auto insertRes = iWorld.m_Objects.insert(std::make_pair(iObject, iData));
     ASSERT_TRUE(insertRes.second);
   }
 
-  void OnObjectDeleted(uint32_t iLocalClient, Network::ObjectId iObject) override
+  static void OnObjectDeleted(WorldState& iWorld, Network::ObjectId iObject)
   {
-    ASSERT_EQ(m_World[iLocalClient].m_Objects.erase(iObject), 1);
+    ASSERT_EQ(iWorld.m_Objects.erase(iObject), 1);
   }
 
-  void OnObjectUpdated(uint32_t iLocalClient, Network::ObjectId iObject, Network::ClientData const& iData) override
+  static void OnObjectUpdated(WorldState& iWorld, Network::ObjectId iObject, Network::ClientData const& iData)
   {
-    auto iterObj = m_World[iLocalClient].m_Objects.find(iObject);
-    ASSERT_TRUE(iterObj != m_World[iLocalClient].m_Objects.end());
+    auto iterObj = iWorld.m_Objects.find(iObject);
+    ASSERT_TRUE(iterObj != iWorld.m_Objects.end());
     iterObj->second = iData;
   }
-
-  void OnAssignPlayer(uint32_t, Network::ObjectId)
-  {
-
-  }
-
-  Vector<WorldState> m_World;
 };
 
-struct TestServerEvents : Network::ServerEvents
+struct TestServerEvents
 {
   void OnClientConnected(Network::ClientId iClient)
   {
@@ -146,10 +164,16 @@ struct TestServerEvents : Network::ServerEvents
 struct NetworkSim
 {
   Network::NetCtx ctx;
+  Network::TestNetDriver driver;
   Clock timer;
 
   static uint16_t const serverPort = 16987;
-  NetworkSim() : ctx(serverPort){}
+  NetworkSim() 
+    : ctx(serverPort)
+    , driver(ctx)
+  {
+
+  }
 
   void Tick(float iTimeout, std::function<bool()> iWaitCondition = [] { return false; })
   {
@@ -183,12 +207,14 @@ TEST(Network, BasicConnect)
 {
   String const serverAddress("127.0.0.1");
 
-  TestClientEvents clientEvents;
   TestServerEvents serverEvents;
 
   NetworkSim net;
-  net.ctx.m_ServerEvents = &serverEvents;
-  net.ctx.m_ClientEvents = &clientEvents;
+  net.ctx.m_ServerEvents.OnClientConnected = [&](Network::ClientId iClient)
+  { serverEvents.OnClientConnected(iClient); };
+  net.ctx.m_ServerEvents.OnClientDisconnected = [&](Network::ClientId iClient)
+  { serverEvents.OnClientDisconnected(iClient); };
+  
 
   Network::Server::Start(net.ctx, serverAddress);
 
@@ -228,18 +254,36 @@ TEST(Network, BasicRepl)
 {
   String const serverAddress("127.0.0.1");
 
-  TestClientEvents clientEvents;
-  TestServerEvents serverEvents;
-
   NetworkSim net;
-  net.ctx.m_ServerEvents = &serverEvents;
-  net.ctx.m_ClientEvents = &clientEvents;
+  TestServerEvents serverEvents;
+  net.ctx.m_ServerEvents.OnClientConnected = [&](Network::ClientId iClient)
+  { serverEvents.OnClientConnected(iClient); };
+  net.ctx.m_ServerEvents.OnClientDisconnected = [&](Network::ClientId iClient)
+  { serverEvents.OnClientDisconnected(iClient); };
+
+  WorldState clientWorlds[2];
+  net.ctx.m_ClientEvents.OnNewObject = [&](uint32_t iLocalClient, Network::ObjectId iObject, Network::ClientData const& iData)
+  {
+    TestClientEvents::OnNewObject(clientWorlds[iLocalClient], iObject, iData);
+  };
+  net.ctx.m_ClientEvents.OnObjectUpdated = [&](uint32_t iLocalClient, Network::ObjectId iObject, Network::ClientData const& iData)
+  {
+    TestClientEvents::OnObjectUpdated(clientWorlds[iLocalClient], iObject, iData);
+  };
+  net.ctx.m_ClientEvents.OnObjectDeleted = [&](uint32_t iLocalClient, Network::ObjectId iObject)
+  {
+    TestClientEvents::OnObjectDeleted(clientWorlds[iLocalClient], iObject);
+  };
+
+  net.driver.SetPlayerInput = [&](Network::ClientId iClientId, Network::ClientInputData const& iData)
+  {
+    serverEvents.OnClientCommand(iClientId, iData);
+  };
 
   Network::Server::Start(net.ctx, serverAddress);
 
   ASSERT_TRUE(net.ctx.m_Server != nullptr);
 
-  clientEvents.m_World.push_back(WorldState());
   auto localIdx = Network::Client::ConnectLoopback(net.ctx/*, serverAddress*/);
   ASSERT_TRUE(localIdx);
 
@@ -258,34 +302,34 @@ TEST(Network, BasicRepl)
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
-  ASSERT_TRUE(clientEvents.m_World[*localIdx].m_Objects.size() > 0);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.size() > 0);
 
   Network::ClientInputData input;
   input.m_Moving = true;
   input.m_Dir = Vector3f::UNIT_X;
-  client1->SetClientInput(input);
+  net.driver.CallServerCommand(0, net.driver.SetPlayerInput).WithArgs(input).Send();
+  //client1->SetClientInput(input);
 
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
   // Server just received client's packet.
-  ASSERT_TRUE(clientEvents.m_World[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::ZERO);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::ZERO);
 
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
 
   // Server ticked once.
-  ASSERT_TRUE(clientEvents.m_World[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X);
 
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
 
   // Server ticked twice.
-  ASSERT_TRUE(clientEvents.m_World[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X * 2);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X * 2);
 
-  clientEvents.m_World.push_back(WorldState());
   localIdx = Network::Client::ConnectLoopback(net.ctx/*, serverAddress*/);
   ASSERT_TRUE(localIdx);
   auto client2 = net.ctx.m_Clients[*localIdx].get();
@@ -303,7 +347,7 @@ TEST(Network, BasicRepl)
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
-  ASSERT_EQ(clientEvents.m_World[client1Idx].m_Objects.size(), 2);
+  ASSERT_EQ(clientWorlds[client1Idx].m_Objects.size(), 2);
 
   input.m_Moving = false;
   

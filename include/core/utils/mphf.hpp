@@ -73,7 +73,7 @@ namespace eXl
       static_cast<Derived const*>(this)->Hash(iValue, oHashes);
     }
 
-    uint32_t Compute(T const& iValue)
+    uint32_t Compute(T const& iValue) const
     {
       if (m_Data.m_AssignmentTable.empty())
       {
@@ -85,6 +85,11 @@ namespace eXl
     }
 
     MPHF_Data const& GetData() const
+    {
+      return m_Data;
+    }
+
+    MPHF_Data& GetData()
     {
       return m_Data;
     }
@@ -120,7 +125,7 @@ namespace eXl
     template <typename Iter>
     Err Build(Iter const& iBegin, Iter const& iEnd)
     {
-      std::unique_ptr<Random> rand(Random::CreateDefaultRNG(__rdtsc()));
+      std::unique_ptr<Random> rand(Random::CreateDefaultRNG(RandomInit()));
       UpdateSeeds(*rand);
       for (uint32_t i = 0; i < 64; ++i)
       {
@@ -141,7 +146,14 @@ namespace eXl
       std::copy(m_Seeds, ArrayEnd(m_Seeds), oSeeds);
     }
 
+    void SetSeeds(uint32_t const(&oSeeds)[3])
+    {
+      std::copy(oSeeds, ArrayEnd(oSeeds), m_Seeds);
+    }
+
   private:
+
+    uint32_t RandomInit();
     void UpdateSeeds(Random& iRand);
 
     uint32_t m_Seeds[3];

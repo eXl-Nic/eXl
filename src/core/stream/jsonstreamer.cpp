@@ -124,10 +124,6 @@ namespace eXl
     WriteIndent();
     WriteStaticString(m_OutStream,"}");
     m_PendingPopKey = false;
-    if(CurLevelInSequence())
-    {
-      m_PendingSeqElem.back() = true;
-    }
     return ElementEpilogue();
   }
 

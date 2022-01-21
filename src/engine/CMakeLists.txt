@@ -117,7 +117,9 @@ map/map_instantiate.cpp
 map/mcmcmodelrsc.cpp
 
 net/network.cpp
-net/network_yojimbo.cpp
+net/network_internal.hpp
+net/yojimbo/network_yojimbo.cpp
+net/yojimbo/streamer_yojimbo.hpp
 net/dispatcher.cpp
 
 #net/spatial/network_spatial.cpp

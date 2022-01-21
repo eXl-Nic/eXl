@@ -5,6 +5,9 @@
 #include <yojimbo.h>
 #include <netcode.io/netcode.h>
 
+#include "../network_internal.hpp"
+#include "streamer_yojimbo.hpp"
+
 namespace eXl
 {
   namespace Network
@@ -17,12 +20,14 @@ namespace eXl
 
       enum GameMessageType
       {
+        SEND_MANIFEST,
         CLIENT_COMMAND,
         SERVER_COMMAND,
+        CLIENT_REPLY,
+        SERVER_REPLY,
         OBJECT_CREATE,
         OBJECT_DELETE,
         OBJECT_UPDATE,
-        ASSIGN_PLAYER,
         MESSAGES_COUNT
       };
 
@@ -47,23 +52,140 @@ namespace eXl
         }
       };
 
+      class ManifestMessage : public yojimbo::BlockMessage
+      {
+      public:
+        uint32_t seeds[3];
+        uint32_t arraySize;
+        uint32_t hashLen;
+        uint32_t hashMask;
+
+        template <typename Stream>
+        bool Serialize(Stream& stream)
+        {
+          if (Stream::IsWriting)
+          {
+            SerializationContext const& ctx = *reinterpret_cast<SerializationContext const*>(stream.GetContext());
+            ctx.m_CmdDictionary.m_CommandsHash.GetSeeds(seeds);
+            arraySize = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.size();
+            hashLen = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_HashLen;
+            hashMask = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_Mask;
+          }
+          bool good = true;
+          good &= stream.SerializeBits(seeds[0], 32);
+          good &= stream.SerializeBits(seeds[1], 32);
+          good &= stream.SerializeBits(seeds[2], 32);
+          good &= stream.SerializeBits(arraySize, 32);
+          good &= stream.SerializeBits(hashLen, 32);
+          good &= stream.SerializeBits(hashMask, 32);
+          if (Stream::IsReading)
+          {
+            SerializationContext& ctx = *reinterpret_cast<SerializationContext*>(stream.GetContext());
+            ctx.m_CmdDictionary.m_CommandsHash.SetSeeds(seeds);
+            ctx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.resize(arraySize);
+            ctx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.resize(arraySize);
+            ctx.m_CmdDictionary.m_CommandsHash.GetData().m_HashLen = hashLen;
+            ctx.m_CmdDictionary.m_CommandsHash.GetData().m_Mask = hashMask;
+          }
+          return good;
+        }
+
+        YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
+      };
 
       class CommandMessage : public yojimbo::Message
       {
       public:
-        ClientInputData m_Data;
+        uint32_t m_CommandId;
+        uint64_t m_QueryId = 0;
+        DynObject m_Args;
 
-        template <typename Stream>
-        bool Serialize(Stream& stream) 
-        {
-          serialize_bool(stream, m_Data.m_Moving);
-          serialize_float(stream, m_Data.m_Dir.X());
-          serialize_float(stream, m_Data.m_Dir.Y());
-          serialize_float(stream, m_Data.m_Dir.Z());
+        bool SerializeInternal(yojimbo::ReadStream& stream) 
+        { 
+          if (!stream.SerializeBits(m_CommandId, 32))
+            return false;
+          if (!yojimbo::serialize_uint64_internal(stream, m_QueryId))
+            return false;
+
+          SerializationContext const& ctx = *reinterpret_cast<SerializationContext const*>(stream.GetContext());
+          auto iter = ctx.m_CmdDictionary.m_Commands.find(m_CommandId);
+          if (iter == ctx.m_CmdDictionary.m_Commands.end())
+          {
+            return false;
+          }
+          CommandDesc const& cmd = *iter->second;
+          m_Args.SetType(&(*cmd.m_Args), cmd.m_Args->Alloc(), true);
+
+          Yo_Unstreamer unstreamer(stream);
+          if (!unstreamer.Begin())
+          {
+            return false;
+          }
+          cmd.m_Args->Unstream_Uninit(m_Args.GetBuffer(), &unstreamer);
+          if (!unstreamer.m_Good)
+          {
+            return false;
+          }
+          unstreamer.End();
           return true;
-        }
+        };
 
-        YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
+        bool SerializeInternal(yojimbo::WriteStream& stream) 
+        { 
+          if (!stream.SerializeBits(m_CommandId, 32))
+            return false;
+          if (!yojimbo::serialize_uint64_internal(stream, m_QueryId))
+            return false;
+
+          SerializationContext const& ctx = *reinterpret_cast<SerializationContext const*>(stream.GetContext());
+          auto iter = ctx.m_CmdDictionary.m_Commands.find(m_CommandId);
+          if (iter == ctx.m_CmdDictionary.m_Commands.end())
+          {
+            return false;
+          }
+          CommandDesc const& cmd = *iter->second;
+          Yo_Streamer<yojimbo::WriteStream> streamer(stream);
+          if (!streamer.Begin())
+          {
+            return false;
+          }
+          cmd.m_Args->Stream(m_Args.GetBuffer(), &streamer);
+          if (!streamer.m_Good)
+          {
+            return false;
+          }
+          streamer.End();
+          return true;
+        };
+
+        bool SerializeInternal(yojimbo::MeasureStream& stream)
+        {
+          if (!stream.SerializeBits(m_CommandId, 32))
+            return false;
+          if (!yojimbo::serialize_uint64_internal(stream, m_QueryId))
+            return false;
+
+          SerializationContext const& ctx = *reinterpret_cast<SerializationContext const*>(stream.GetContext());
+          auto iter = ctx.m_CmdDictionary.m_Commands.find(m_CommandId);
+          if (iter == ctx.m_CmdDictionary.m_Commands.end())
+          {
+            return false;
+          }
+          CommandDesc const& cmd = *iter->second;
+          Yo_Streamer<yojimbo::MeasureStream> streamer(stream);
+          if (!streamer.Begin())
+          {
+            return false;
+          }
+          cmd.m_Args->Stream(m_Args.GetBuffer(), &streamer);
+          if (!streamer.m_Good)
+          {
+            return false;
+          }
+          streamer.End();
+
+          return true;
+        };
       };
 
       class UpdateMessage : public yojimbo::Message
@@ -90,12 +212,14 @@ namespace eXl
       };
 
       YOJIMBO_MESSAGE_FACTORY_START(GameMessageFactory, GameMessageType::MESSAGES_COUNT);
+      YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::SEND_MANIFEST, ManifestMessage);
       YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::CLIENT_COMMAND, CommandMessage);
       YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::SERVER_COMMAND, CommandMessage);
+      YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::CLIENT_REPLY, CommandMessage);
+      YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::SERVER_REPLY, CommandMessage);
       YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::OBJECT_CREATE, UpdateMessage);
       YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::OBJECT_UPDATE, UpdateMessage);
       YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::OBJECT_DELETE, UpdateMessage);
-      YOJIMBO_DECLARE_MESSAGE_TYPE(GameMessageType::ASSIGN_PLAYER, UpdateMessage);
       YOJIMBO_MESSAGE_FACTORY_FINISH();
 
       class NetAlloc : public yojimbo::Allocator
@@ -168,15 +292,19 @@ namespace eXl
       Client_Impl(uint32_t iLocalIndex)
         : m_Client(GetNetAllocator(), yojimbo::Address("0.0.0.0"), GameConnectionConfig(), *this, 0.0)
         , m_LocalIndex(iLocalIndex)
+        , m_Commands(m_SerializationCtx.m_CmdDictionary)
       {
         m_TimeStart = Clock::GetTimestamp();
+        m_Client.SetContext(&m_SerializationCtx);
       }
 
       Client_Impl(uint32_t iLocalIndex, yojimbo::Address iAddr)
         : m_Client(GetNetAllocator(), yojimbo::Address("0.0.0.0"), GameConnectionConfig(), *this, 0.0)
         , m_LocalIndex(iLocalIndex)
+        , m_Commands(m_SerializationCtx.m_CmdDictionary)
       {
         m_TimeStart = Clock::GetTimestamp();
+        m_Client.SetContext(&m_SerializationCtx);
         uint64_t clientId;
         yojimbo::random_bytes((uint8_t*)&clientId, 8);
         m_Client.InsecureConnect(DEFAULT_PRIVATE_KEY, clientId, iAddr);
@@ -201,10 +329,15 @@ namespace eXl
       void Tick();
       void ProcessMessage(yojimbo::Message const& iMessage);
 
+      Err SendServerCommand(CommandCallData&& iCall);
+
       Client* m_eXlClient;
       uint32_t m_LocalIndex;
       uint64_t m_TimeStart;
       yojimbo::Client m_Client;
+
+      SerializationContext m_SerializationCtx;
+      CommandHandler m_Commands;
     };
 
     class Server_Impl : public GameAdapter
@@ -214,6 +347,7 @@ namespace eXl
         : m_Server(GetNetAllocator(), DEFAULT_PRIVATE_KEY, std::move(iAddr), GameConnectionConfig(), *this, 0.0)
       {
         m_TimeStart = Clock::GetTimestamp();
+        m_Server.SetContext(&m_SerializationCtx);
         for (auto& gen : m_ClientSlotGeneration)
         {
           gen = 1;
@@ -228,12 +362,37 @@ namespace eXl
 
       void OnServerClientConnected(int clientIndex) override
       {
-        m_eXlServer->m_Ctx.m_ServerEvents->OnClientConnected(AllocateClientId(clientIndex, m_ClientSlotGeneration));
+        while (m_ClientCmdQueues.size() <= clientIndex)
+        {
+          m_ClientCmdQueues.emplace_back(m_SerializationCtx.m_CmdDictionary);
+        }
+        ManifestMessage* message = (ManifestMessage*)m_Server.CreateMessage(clientIndex, GameMessageType::SEND_MANIFEST);
+        uint32_t const arraySize = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.size();
+        size_t const blockSize = arraySize * (sizeof(uint32_t) + sizeof(uint64_t));
+        uint8_t* data = m_Server.AllocateBlock(clientIndex, blockSize);
+        m_Server.AttachBlockToMessage(clientIndex, message, data, blockSize);
+
+        memcpy(data, m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data(), arraySize * sizeof(uint64_t));
+        data += arraySize * sizeof(uint64_t);
+        memcpy(data, m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data(), arraySize * sizeof(uint32_t));
+
+        m_Server.SendMessage(clientIndex, GameChannel::RELIABLE, message);
+
+        auto& cb = m_eXlServer->m_Ctx.m_ServerEvents.OnClientConnected;
+        if (cb)
+        {
+          cb(AllocateClientId(clientIndex, m_ClientSlotGeneration));
+        }
       }
 
       void OnServerClientDisconnected(int clientIndex) override
       {
-        m_eXlServer->m_Ctx.m_ServerEvents->OnClientDisconnected(GetClientId(clientIndex, m_ClientSlotGeneration));
+        auto& cb = m_eXlServer->m_Ctx.m_ServerEvents.OnClientDisconnected;
+        if (cb)
+        {
+          cb(GetClientId(clientIndex, m_ClientSlotGeneration));
+        }
+        m_ClientCmdQueues[clientIndex].Clear();
         ReleaseClientId(clientIndex, m_ClientSlotGeneration);
       }
 
@@ -244,17 +403,22 @@ namespace eXl
       }
 
       void Tick();
+      void Flush();
       void ProcessMessage(uint32_t iClientIndex, yojimbo::Message const& iMessage);
       bool IsValidClientId(ClientId);
 
       void CreateObject(ClientId, ObjectId, ClientData const& iData);
       void UpdateObject(ClientId, ObjectId, ClientData const& iData);
-      void AssignPlayer(ClientId iClient, ObjectId iObject);
+
+      Err SendClientCommand(CommandCallData&& iCall, ClientId iClient);
 
       uint32_t m_ClientSlotGeneration[MAX_PLAYERS];
       Server* m_eXlServer;
       uint64_t m_TimeStart;
       yojimbo::Server m_Server;
+
+      SerializationContext m_SerializationCtx;
+      Vector<CommandHandler> m_ClientCmdQueues;
     };
 
     void Client_Impl::ClientSendLoopbackPacket(int clientIndex, const uint8_t* packetData, int packetBytes, uint64_t packetSequence)
@@ -321,6 +485,7 @@ namespace eXl
       , m_Impl(std::move(iImpl))
     {
       m_Impl->m_eXlServer = this;
+      m_Impl->m_SerializationCtx.m_CmdDictionary.Build(*m_Ctx.m_NetDriver);
     }
 
     void Client::Tick()
@@ -358,39 +523,91 @@ namespace eXl
         eXl_ASSERT(false);
         break;
       }
+      case GameMessageType::SEND_MANIFEST:
+      {
+        ManifestMessage const& message = static_cast<ManifestMessage const&>(iMessage);
+        uint8_t const* data = message.GetBlockData();
+        uint64_t* assignmentData = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data();
+        memcpy(assignmentData, data, sizeof(uint64_t) * message.arraySize);
+        data += sizeof(uint64_t) * message.arraySize;
+
+        uint32_t* rankData = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.data();
+        memcpy(assignmentData, data, sizeof(uint32_t) * message.arraySize);
+
+        m_SerializationCtx.m_CmdDictionary.Build_Client(*m_eXlClient->m_Ctx.m_NetDriver);
+        break;
+      }
       case GameMessageType::SERVER_COMMAND:
       {
-        
+        CommandMessage const& cmd = static_cast<CommandMessage const&>(iMessage);
+        DynObject result;
+        m_SerializationCtx.m_CmdDictionary.ReceiveCommand(m_LocalIndex, cmd.m_CommandId, cmd.m_Args, result);
+
+        if (cmd.m_QueryId != 0)
+        {
+          CommandMessage* message = (CommandMessage*)m_Client.CreateMessage(GameMessageType::CLIENT_REPLY);
+          message->m_CommandId = cmd.m_CommandId;
+          message->m_QueryId = cmd.m_QueryId;
+          message->m_Args = std::move(result);
+          m_Client.SendMessage(GameChannel::RELIABLE, message);
+        }
         break;
+      }
+      case GameMessageType::SERVER_REPLY:
+      {
+        CommandMessage const& cmd = static_cast<CommandMessage const&>(iMessage);
+        m_Commands.ReceiveResponse(cmd.m_QueryId, cmd.m_Args);
       }
       case GameMessageType::OBJECT_CREATE:
       {
         UpdateMessage const& update = static_cast<UpdateMessage const&>(iMessage);
-        m_eXlClient->m_Ctx.m_ClientEvents->OnNewObject(m_LocalIndex, update.m_Object, update.m_Data);
+        auto& cb = m_eXlClient->m_Ctx.m_ClientEvents.OnNewObject;
+        if (cb)
+        {
+          cb(m_LocalIndex, update.m_Object, update.m_Data);
+        }
       }
       break;
       case GameMessageType::OBJECT_UPDATE:
       {
         UpdateMessage const& update = static_cast<UpdateMessage const&>(iMessage);
-        m_eXlClient->m_Ctx.m_ClientEvents->OnObjectUpdated(m_LocalIndex, update.m_Object, update.m_Data);
+        auto& cb = m_eXlClient->m_Ctx.m_ClientEvents.OnObjectUpdated;
+        if (cb)
+        {
+          cb(m_LocalIndex, update.m_Object, update.m_Data);
+        }
       }
       break;
       case GameMessageType::OBJECT_DELETE:
       {
         UpdateMessage const& update = static_cast<UpdateMessage const&>(iMessage);
-        m_eXlClient->m_Ctx.m_ClientEvents->OnObjectDeleted(m_LocalIndex, update.m_Object);
+        auto& cb = m_eXlClient->m_Ctx.m_ClientEvents.OnObjectDeleted;
+        if (cb)
+        {
+          cb(m_LocalIndex, update.m_Object);
+        }
       }
       break;
-      case GameMessageType::ASSIGN_PLAYER:      
-      {
-        UpdateMessage const& update = static_cast<UpdateMessage const&>(iMessage);
-        m_eXlClient->m_Ctx.m_ClientEvents->OnAssignPlayer(m_LocalIndex, update.m_Object);
-      }
-      break;
+      
       default:
         eXl_ASSERT_MSG(false, "Unrecognized message");
         break;
       }
+    }
+
+    Err Client_Impl::SendServerCommand(CommandCallData&& iCall)
+    {
+      m_Commands.Enqueue(std::move(iCall));
+      m_Commands.ProcessQueue([&](uint32_t iCmdId, DynObject iArgs, uint64_t iQueryId, bool iIsReliable)
+        {
+          CommandMessage* message = (CommandMessage*)m_Client.CreateMessage(GameMessageType::CLIENT_COMMAND);
+          message->m_CommandId = iCmdId;
+          message->m_QueryId = iQueryId;
+          message->m_Args = std::move(iArgs);
+          m_Client.SendMessage(iIsReliable ? GameChannel::RELIABLE : GameChannel::UNRELIABLE, message);
+        });
+
+      return Err::Success;
     }
 
     void Client::Flush()
@@ -423,12 +640,9 @@ namespace eXl
       return ClientState::Unknown;
     }
 
-    void Client::SetClientInput(ClientInputData const& iInput)
+    Err Client::SendServerCommand(CommandCallData&& iCall)
     {
-      eXl_ASSERT_REPAIR_RET(m_Impl->m_Client.IsConnected(), void());
-      CommandMessage* message = (CommandMessage*)m_Impl->m_Client.CreateMessage(GameMessageType::CLIENT_COMMAND);
-      message->m_Data = iInput;
-      m_Impl->m_Client.SendMessage(GameChannel::RELIABLE, message);
+      return m_Impl->SendServerCommand(std::move(iCall));
     }
 
     void Server::Tick()
@@ -467,7 +681,23 @@ namespace eXl
       case GameMessageType::CLIENT_COMMAND:
       {
         CommandMessage const& cmd = static_cast<CommandMessage const&>(iMessage);
-        m_eXlServer->m_Ctx.m_ServerEvents->OnClientCommand(GetClientId(iClientIndex, m_ClientSlotGeneration), cmd.m_Data);
+        DynObject result;
+        m_SerializationCtx.m_CmdDictionary.ReceiveCommand(GetClientId(iClientIndex, m_ClientSlotGeneration).id, cmd.m_CommandId, cmd.m_Args, result);
+
+        if (cmd.m_QueryId != 0)
+        {
+          CommandMessage* message = (CommandMessage*)m_Server.CreateMessage(iClientIndex, GameMessageType::SERVER_REPLY);
+          message->m_CommandId = cmd.m_CommandId;
+          message->m_QueryId = cmd.m_QueryId;
+          message->m_Args = std::move(result);
+          m_Server.SendMessage(iClientIndex, GameChannel::RELIABLE, message);
+        }
+        break;
+      }
+      case GameMessageType::CLIENT_REPLY:
+      {
+        CommandMessage const& cmd = static_cast<CommandMessage const&>(iMessage);
+        m_ClientCmdQueues[iClientIndex].ReceiveResponse(cmd.m_QueryId, cmd.m_Args);
       }
       break;
       default:
@@ -498,20 +728,46 @@ namespace eXl
       m_Server.SendMessage(clientIndex, GameChannel::RELIABLE, message);
     }
 
-    void Server_Impl::AssignPlayer(ClientId iClient, ObjectId iObject)
+    Err Server_Impl::SendClientCommand(CommandCallData&& iCall, ClientId iClient)
     {
-      eXl_ASSERT_REPAIR_RET(IsValidClientId(iClient), void());
+      if (!IsValidClientId(iClient))
+      {
+        return Err::Failure;
+      }
 
-      uint32_t clientIndex = GetClientIndexFromId(iClient);
-      UpdateMessage* message = (UpdateMessage*)m_Server.CreateMessage(clientIndex, GameMessageType::ASSIGN_PLAYER);
-      message->m_Object = iObject;
-      m_Server.SendMessage(clientIndex, GameChannel::RELIABLE, message);
+      m_ClientCmdQueues[GetClientIndexFromId(iClient)].Enqueue(std::move(iCall));
+      return Err::Success;
+    }
+
+    Err Server::SendClientCommand(CommandCallData&& iCall, ClientId iClient)
+    {
+      return m_Impl->SendClientCommand(std::move(iCall), iClient);
+    }
+
+    void Server_Impl::Flush()
+    {
+      for (int i = 0; i < MAX_PLAYERS; i++)
+      {
+        if (m_Server.IsClientConnected(i))
+        {
+          m_ClientCmdQueues[i].ProcessQueue([&](uint32_t iCmdId, DynObject iArgs, uint64_t iQueryId, bool iIsReliable)
+            {
+              CommandMessage* message = (CommandMessage*)m_Server.CreateMessage(i, GameMessageType::SERVER_COMMAND);
+              message->m_CommandId = iCmdId;
+              message->m_QueryId = iQueryId;
+              message->m_Args = std::move(iArgs);
+              m_Server.SendMessage(i, iIsReliable ? GameChannel::RELIABLE : GameChannel::UNRELIABLE, message);
+            });
+        }
+      }
+
+      m_Server.SendPackets();
     }
 
     void Server::Flush()
     {
       m_Dispatcher.Flush(*this);
-      m_Impl->m_Server.SendPackets();
+      m_Impl->Flush();
     }
 
     void Server::CreateObject(ClientId iClient, ObjectId iObject, ClientData const& iData)
@@ -524,14 +780,9 @@ namespace eXl
       m_Impl->UpdateObject(iClient, iObject, iData);
     }
 
-    void Server::AssignPlayer(ClientId iClient, ObjectId iObject)
-    {
-      m_Impl->AssignPlayer(iClient, iObject);
-    }
-
     boost::optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iURL)
     {
-      eXl_ASSERT_REPAIR_RET(iCtx.m_ClientEvents != nullptr, {});
+      eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});
 
       yojimbo::Address serverAddress(iURL.c_str(), iCtx.m_ServerPort);
 
@@ -554,7 +805,8 @@ namespace eXl
     boost::optional<uint32_t> Client::ConnectLoopback(NetCtx& iCtx)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_Server != nullptr, {});
-      eXl_ASSERT_REPAIR_RET(iCtx.m_ClientEvents != nullptr, {});
+      eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});
+
       std::unique_ptr<Client_Impl> client = std::make_unique<Client_Impl>(iCtx.m_Clients.size());
       uint32_t const localIndex = client->m_LocalIndex;
 
@@ -592,8 +844,8 @@ namespace eXl
 
     Server* Server::Start(NetCtx& iCtx, String const& iURL)
     {
-      eXl_ASSERT_REPAIR_RET(iCtx.m_ServerEvents != nullptr, nullptr);
       eXl_ASSERT_REPAIR_RET(iCtx.m_Server == nullptr, nullptr);
+      eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, nullptr);
 
       yojimbo::Address serverAddress(iURL.c_str(), iCtx.m_ServerPort);
 

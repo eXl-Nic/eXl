@@ -72,7 +72,6 @@ namespace eXl
         {
           iServer.CreateObject(newClient.first, object.first, object.second);
         }
-        iServer.AssignPlayer(newClient.first, newClient.second);
         m_ConnectedClients.insert(newClient);
       }
       m_NewClients.clear();

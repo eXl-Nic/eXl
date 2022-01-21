@@ -75,7 +75,10 @@ namespace eXl
 
   Err TupleType::Unstream_Uninit(void* oData, Unstreamer* iUnstreamer) const
   {
-    Construct(oData);
+    if (!IsPOD())
+    {
+      Construct(oData);
+    }
 
     Err err = iUnstreamer->BeginStruct();
 
@@ -93,13 +96,20 @@ namespace eXl
           err = iUnstreamer->PushKey(StringUtil::FromASCII(fieldName));
           if(err)
           {
-            err = fieldType->Unstream_Uninit(fieldData,iUnstreamer);
+            if (IsPOD())
+            {
+              err = fieldType->Unstream_Uninit(fieldData, iUnstreamer);
+            }
+            else
+            {
+              err = fieldType->Unstream(fieldData, iUnstreamer);
+            }
             if(err)
             {
               err = iUnstreamer->PopKey();
             }
           }
-          else
+          else if(IsPOD())
           {
             fieldType->Construct(fieldData);
           }
@@ -258,6 +268,35 @@ namespace eXl
         }
       }
       return err;
+    }
+  }
+
+  void* TupleType::Construct(void* iObj) const
+  {
+    eXl_ASSERT(IsPOD());
+    if (iObj != nullptr)
+    {
+      for (uint32_t i = 0; i < GetNumField(); ++i)
+      {
+        Type const* fieldType;
+        void* fieldPtr = GetField(iObj, i, fieldType);
+        fieldType->Construct(fieldPtr);
+      }
+    }
+    return iObj;
+  }
+
+  void TupleType::Destruct(void* iObj) const
+  {
+    eXl_ASSERT(IsPOD());
+    if (iObj != nullptr)
+    {
+      for (uint32_t i = 0; i < GetNumField(); ++i)
+      {
+        Type const* fieldType;
+        void* fieldPtr = GetField(iObj, i, fieldType);
+        fieldType->Destruct(fieldPtr);
+      }
     }
   }
 }

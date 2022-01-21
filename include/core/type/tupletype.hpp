@@ -129,6 +129,10 @@ namespace eXl
 
     Err Assign_Uninit(Type const* inputType, void const* iData, void* oData) const override;
 
+    void* Construct(void* iObj) const override;
+
+    void Destruct(void* iObj) const override;
+
   protected:
     TupleType(TypeName iName,size_t iId,size_t iSize,unsigned int iFlags);
     

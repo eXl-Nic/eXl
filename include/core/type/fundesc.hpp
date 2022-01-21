@@ -157,7 +157,7 @@ namespace eXl
     }
 
     template <typename... Args>
-    Err PopulateArgBuffer(ArgsBuffer const& iType, DynObject& oBuffer, Args... iArgs) const
+    Err PopulateArgBuffer(ArgsBuffer const& iType, DynObject& oBuffer, Args&&... iArgs) const
     {
       if (!ValidateArgList<Args...>::Validate(0, arguments))
       {
@@ -182,7 +182,8 @@ namespace eXl
     static void Populate(ArgsBuffer const& iType, DynObject& oData, Arg&& iArg, Args&&... iArgs)
     {
       Type const* fieldType;
-      new(iType.GetField(oData.GetBuffer(), Step, fieldType)) Arg(std::forward<Arg>(iArg));
+      using ConcreteType = typename std::remove_const<typename std::remove_reference<Arg>::type>::type;
+      new(iType.GetField(oData.GetBuffer(), Step, fieldType)) ConcreteType(std::forward<Arg>(iArg));
       BufferPopulator<Step + 1, Args...>::Populate(iType, oData, std::forward<Args>(iArgs)...);
     }
   };

@@ -56,8 +56,8 @@ namespace eXl
     bool CurLevelInSequence();
     bool ConsumeKey();
 
-    std::vector<unsigned int> m_SequenceLevel;
-    std::vector<bool>         m_PendingSeqElem;
+    Vector<unsigned int> m_SequenceLevel;
+    Vector<bool>         m_PendingSeqElem;
 
     bool m_PendingPushKey;
     bool m_PendingPopKey;

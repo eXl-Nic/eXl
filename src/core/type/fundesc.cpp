@@ -13,7 +13,7 @@ namespace eXl
   }
 
   ArgsBuffer::ArgsBuffer(Vector<Type const*> const& iArgs)
-    : TupleType("", 0, ComputeSize(iArgs), 0)
+    : TupleType("", 0, ComputeSize(iArgs), Type_Is_POD)
     , m_Args(iArgs)
   {
     size_t offset = 0;
@@ -156,5 +156,4 @@ namespace eXl
   {
 
   }
-
 }
