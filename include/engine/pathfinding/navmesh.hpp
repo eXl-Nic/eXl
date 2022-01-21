@@ -46,7 +46,7 @@ namespace eXl
 
     struct Edge
     {
-      boost::optional<uint32_t> CommonFace(Edge const& iOther) const;
+      Optional<uint32_t> CommonFace(Edge const& iOther) const;
 
       uint32_t face1;
       uint32_t face2;
@@ -89,7 +89,7 @@ namespace eXl
       uint32_t m_Face;
     };
 
-    boost::optional<FoundFace> FindFace(Vector2f const& iPos) const;
+    Optional<FoundFace> FindFace(Vector2f const& iPos) const;
 
     struct Path
     {
@@ -99,7 +99,7 @@ namespace eXl
       Vector<Vector2f> m_EdgeDirs;
     };
 
-    boost::optional<Path> FindPath(Vector2f const& iStart, Vector2f const& iEnd) const;
+    Optional<Path> FindPath(Vector2f const& iStart, Vector2f const& iEnd) const;
 
   protected:
 

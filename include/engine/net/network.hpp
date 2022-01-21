@@ -212,8 +212,8 @@ namespace eXl
     {
     public:
 
-      static boost::optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL);
-      static boost::optional<uint32_t> ConnectLoopback(NetCtx& iCtx);
+      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL);
+      static Optional<uint32_t> ConnectLoopback(NetCtx& iCtx);
 
       ClientState GetState();
 

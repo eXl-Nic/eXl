@@ -169,7 +169,7 @@ namespace eXl
     return iterPath->second;
   }
 
-  boost::optional<ImageName> Tileset::ImageNameFromImagePath(Path const& iImagePath)
+  Optional<ImageName> Tileset::ImageNameFromImagePath(Path const& iImagePath)
   {
     Path resourcePath = ResourceManager::GetPath(GetHeader().m_ResourceId);
 

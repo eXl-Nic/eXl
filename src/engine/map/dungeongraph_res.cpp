@@ -451,7 +451,7 @@ namespace eXl
           return desc1->GetSize() + boost::degree(iNode1, m_Graph) < desc2->GetSize() + boost::degree(iNode2, m_Graph);
         };
 
-        boost::optional<Graph::vertex_descriptor> dest = boost::none;
+        Optional<Graph::vertex_descriptor> dest = {};
 
         getDests(false);
         std::sort(moveDests.begin(), moveDests.end(), sortBySizeAndDegree);
@@ -462,7 +462,7 @@ namespace eXl
         }
         else
         {
-          dest = [&]() -> boost::optional<Graph::vertex_descriptor>
+          dest = [&]() -> Optional<Graph::vertex_descriptor>
           {
             for(auto dest : moveDests)
             {
@@ -473,7 +473,7 @@ namespace eXl
                 return dest;
               }
             }
-            return boost::none;
+            return {};
           }();
         }
 

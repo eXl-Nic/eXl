@@ -12,6 +12,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 // +++ disable warnings +++
 
+#ifdef _MSC_VER
+
 #pragma warning(disable : 4595)
 
 // float to double
@@ -23,19 +25,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 // forcing value to bool true or false
 #pragma warning(disable : 4800)
 
-
+// undefined template function during instantiation
+#pragma warning(disable : 4661)
 
 // --- disable warnings ---
-
-
-
+// 
 // +++ warnings as errors +++
 
 // BGL does not like it...
 // Returning reference to local variable or temporary.
 //#pragma warning(error : 4172)
 
+// Not all control path return a value
+#pragma warning(error : 4715)
+ 
 // --- warnings as errors ---
+#endif
 
 #include <core/corelibexp.hpp>
 #include <core/memorymanager.hpp>
@@ -57,6 +62,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define eXl_TO_STR(s) eXl_TO_STR_(s)
 #define eXl_CONCAT(s,r) s##r
 #define eXl_FORMAT(s, ...) (::eXl::StringUtil::Format(s, __VA_ARGS__).c_str())
+#if !defined(_MSC_VER)
+#define eXl_TEMPLATE_EXTERN extern
+#else
+#define eXl_TEMPLATE_EXTERN
+#endif
 
 namespace eXl
 {

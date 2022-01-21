@@ -286,12 +286,12 @@ namespace eXl
 
       Vector2Q m_Start;
       Vector2Q m_End;
-      boost::optional<QType> m_Slope;
+      Optional<QType> m_Slope;
       uint32_t m_OrigSeg;
     };
 
     void CheckIntersection(Event const& iEvt, OrderedSeg const& iSeg1, OrderedSeg const& iSeg2);
-    bool CheckIntersection(Event const& iEvt, OrderedSeg const& iSeg1, OrderedSeg const& iSeg2, boost::optional<Event>& outSeg);
+    bool CheckIntersection(Event const& iEvt, OrderedSeg const& iSeg1, OrderedSeg const& iSeg2,Optional<Event>& outSeg);
 
     void InsertEvent(Event&& iEvt);
 

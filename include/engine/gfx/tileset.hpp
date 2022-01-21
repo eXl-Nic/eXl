@@ -64,7 +64,7 @@ namespace eXl
 
 #ifndef EXL_IS_BAKED_PLATFORM
     static Tileset* Create(Path const& iDir, String const& iName);
-    boost::optional<ImageName> ImageNameFromImagePath(Path const& iImagePath);
+    Optional<ImageName> ImageNameFromImagePath(Path const& iImagePath);
     Path GetSrcImagePath(ImageName iImage) const;
 #endif
 

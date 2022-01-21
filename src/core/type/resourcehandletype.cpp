@@ -63,35 +63,13 @@ namespace eXl
   
   Err ResourceHandleType::Unstream_Uninit(void* oData, Unstreamer* iUnstreamer)const
   {
-    Err err = iUnstreamer->BeginStruct();
-    if(err)
-      err = iUnstreamer->PushKey("ResourceType");
-    String tempVal;
-    if(err)
-      err = iUnstreamer->ReadString(&tempVal);
-    if(StringUtil::ToASCII(tempVal) != m_Rtti.GetName())
-    {
-      LOG_ERROR<<"Wrong resource type : " << tempVal <<" expected "<<m_Rtti.GetName() <<"\n";
-      err = Err::Error;
-    }
-    if(err)
-      err = iUnstreamer->PopKey();
-
-    if(err)
-      err = iUnstreamer->PushKey("ResourceID");
+    Resource::UUID ID;
+    Err err = UnstreamResourceHandle(ID, m_Rtti, *iUnstreamer);
 
     if (err)
     {
       TypeTraits::DefaultCTor<ResourceHandle<Resource>>(oData);
-      Resource::UUID ID;
-      err = ID.Unstream(*iUnstreamer);
-      if (err)
-      {
-        reinterpret_cast<ResourceHandle<Resource>*>(oData)->SetUUID(ID);
-        err = iUnstreamer->PopKey();
-      }
-      if (err)
-        err = iUnstreamer->EndStruct();
+      reinterpret_cast<ResourceHandle<Resource>*>(oData)->SetUUID(ID);
     }
 
     return err;
@@ -101,23 +79,7 @@ namespace eXl
   {
     ResourceHandle<Resource> const* handle = reinterpret_cast<ResourceHandle<Resource> const*>(iData);
     
-    Err err = iStreamer->BeginStruct();
-    if(err)
-      err = iStreamer->PushKey("ResourceType");
-    if(err)
-      err = iStreamer->WriteString(m_Rtti.GetName());
-    if(err)
-      err = iStreamer->PopKey();    
-    if(err)
-      err = iStreamer->PushKey("ResourceID");
-    if(err)
-      err = handle->GetUUID().Stream(*iStreamer);
-    if(err)
-      err = iStreamer->PopKey();
-    if(err)
-      err = iStreamer->EndStruct();
-
-    return err;
+    return StreamResourceHandle(handle->GetUUID(), m_Rtti, *iStreamer);
   }
 
   Resource::UUID const& ResourceHandleType::GetUUID(void const* iData) const

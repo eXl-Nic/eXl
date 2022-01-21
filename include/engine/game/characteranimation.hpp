@@ -20,7 +20,7 @@ namespace eXl
   {
     GfxSpriteComponent* m_GfxComp = nullptr;
     CharacterSystem::StateFlags m_CurDir;
-    boost::optional<GameCueName> m_CurrentActionCue;
+    Optional<GameCueName> m_CurrentActionCue;
     bool m_Walking;
   };
 

@@ -74,7 +74,7 @@ namespace eXl
     };
   }
 
-  boost::optional<BehaviourRegistry> s_Registry;
+  Optional<BehaviourRegistry> s_Registry;
 
   void Script_StaticInit()
   {

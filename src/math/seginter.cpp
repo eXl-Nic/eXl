@@ -10,7 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <math/seginter.hpp>
 #include <math/mathtools.hpp>
-#include <boost/optional.hpp>
 
 namespace eXl
 {
@@ -118,7 +117,7 @@ namespace eXl
     }
   }
 
-  bool Intersector::CheckIntersection(Event const& iEvt, OrderedSeg const& iSeg1, OrderedSeg const& iSeg2, boost::optional<Event>& outSeg)
+  bool Intersector::CheckIntersection(Event const& iEvt, OrderedSeg const& iSeg1, OrderedSeg const& iSeg2, Optional<Event>& outSeg)
   {
     uint32_t seg1Idx = &iSeg1 - m_Segments.data();
     uint32_t seg2Idx = &iSeg2 - m_Segments.data();
@@ -228,7 +227,7 @@ namespace eXl
 
   void Intersector::CheckIntersection(Event const& iEvt, OrderedSeg const& iSeg1, OrderedSeg const& iSeg2)
   {
-    boost::optional<Event> evt;
+    Optional<Event> evt;
     CheckIntersection(iEvt, iSeg1, iSeg2, evt);
     if(evt && evt->m_Point != iEvt.m_Point)
     {
@@ -586,7 +585,7 @@ namespace eXl
         int32_t lowerSegIdx = -1;
         int32_t higherSegIdx = -1;
 
-        boost::optional<Event> evts[2];
+        Optional<Event> evts[2];
 
         bool acceptSegment = true;
 

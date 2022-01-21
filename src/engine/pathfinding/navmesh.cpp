@@ -74,7 +74,7 @@ namespace eXl
   };
 
   template <typename Real>
-  boost::optional<Segment<Real>> Touch(AABB2D<Real> const& iBox1, AABB2D<Real> const& iBox2)
+  Optional<Segment<Real>> Touch(AABB2D<Real> const& iBox1, AABB2D<Real> const& iBox2)
   {
     Segment<Real> res;
 
@@ -118,7 +118,7 @@ namespace eXl
       }
     }
 
-    return boost::none;
+    return {};
   }
 
   NavMesh NavMesh::MakeFromAABB2DPoly(Vector<AABB2DPolygoni> const& iPolys)
@@ -435,7 +435,7 @@ namespace eXl
     return result;
   }
 
-  boost::optional<NavMesh::FoundFace> NavMesh::FindFace(Vector2f const& iPos) const
+  Optional<NavMesh::FoundFace> NavMesh::FindFace(Vector2f const& iPos) const
   {
     Vector<BoxIndexEntry> results;
     AABB2Df queryBox;
@@ -459,7 +459,7 @@ namespace eXl
       }
     }
 
-    return boost::none;
+    return {};
   }
 
   namespace 
@@ -525,7 +525,7 @@ namespace eXl
     };
   }
 
-  boost::optional<uint32_t> NavMesh::Edge::CommonFace(Edge const& iOther) const
+  Optional<uint32_t> NavMesh::Edge::CommonFace(Edge const& iOther) const
   {
     if(face1 == iOther.face1
     || face1 == iOther.face2)
@@ -538,7 +538,7 @@ namespace eXl
     {
       return face2;
     }
-    return boost::none;
+    return {};
   }
 
   Vector2f GetDirToFace(AABB2Df const& iOrigFace, AABB2Df const& iDestFace)
@@ -565,10 +565,10 @@ namespace eXl
     }
   }
 
-  boost::optional<NavMesh::Path> NavMesh::FindPath(Vector2f const& iStart, Vector2f const& iEnd) const
+  Optional<NavMesh::Path> NavMesh::FindPath(Vector2f const& iStart, Vector2f const& iEnd) const
   {
-    boost::optional<FoundFace> faceStartId = FindFace(iStart);
-    boost::optional<FoundFace> faceEndId = FindFace(iEnd);
+    Optional<FoundFace> faceStartId = FindFace(iStart);
+    Optional<FoundFace> faceEndId = FindFace(iEnd);
 
     if(faceStartId && faceEndId)
     {
@@ -579,7 +579,7 @@ namespace eXl
 
       if (faceStartId->m_Component != faceEndId->m_Component)
       {
-        return boost::none;
+        return {};
       }
 
       Component const& component = m_Components[faceStartId->m_Component];
@@ -587,7 +587,7 @@ namespace eXl
       Face const& faceStart = component.m_Faces[faceStartId->m_Face];
       Face const& faceEnd = component.m_Faces[faceEndId->m_Face];
 
-      eXl_ASSERT_REPAIR_RET(!faceStart.m_Edges.empty() && !faceStart.m_Edges.empty(), boost::none)
+      eXl_ASSERT_REPAIR_RET(!faceStart.m_Edges.empty() && !faceStart.m_Edges.empty(), {})
       {
         IndexMap<Graph> outIndex(component.m_Graph);
 
@@ -612,10 +612,10 @@ namespace eXl
           {
             res.m_Edges.push_back(v);
 
-            eXl_ASSERT_REPAIR_RET(v < component.m_FaceEdges.size(), boost::none);
+            eXl_ASSERT_REPAIR_RET(v < component.m_FaceEdges.size(), {});
 
             auto const& edgeDesc = component.m_FaceEdges[v];
-            //eXl_ASSERT_REPAIR_RET(edgeDesc != component.m_FaceEdges.end(), boost::none)
+            //eXl_ASSERT_REPAIR_RET(edgeDesc != component.m_FaceEdges.end(), {})
             {
               uint32_t prevFaceId = edgeDesc.face1 == curFaceId ? edgeDesc.face2 : edgeDesc.face1;
 
@@ -655,7 +655,7 @@ namespace eXl
 
             auto commonFaceIdx = edge1.CommonFace(edge2);
 
-            eXl_ASSERT_REPAIR_RET(!(!commonFaceIdx), boost::none);
+            eXl_ASSERT_REPAIR_RET(!(!commonFaceIdx), {});
             {
               if(*commonFaceIdx == faceStartId->m_Face)
               {
@@ -672,7 +672,7 @@ namespace eXl
 
             auto commonFaceIdx = edge1.CommonFace(edge2);
 
-            eXl_ASSERT_REPAIR_RET(!(!commonFaceIdx), boost::none);
+            eXl_ASSERT_REPAIR_RET(!(!commonFaceIdx), {});
             {
               if(*commonFaceIdx == faceEndId->m_Face)
               {
@@ -687,6 +687,6 @@ namespace eXl
       }
     }
 
-    return boost::none;
+    return {};
   }
 }

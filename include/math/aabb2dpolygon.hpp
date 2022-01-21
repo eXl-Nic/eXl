@@ -120,17 +120,16 @@ namespace eXl
 }
 
 #if defined(EXL_SHARED_LIBRARY)
-#if defined(WIN32) || 1
 namespace eXl
 {
-  extern template class EXL_MATH_API AABB2DPolygon<int>;
+
+  eXl_TEMPLATE_EXTERN template class EXL_MATH_API AABB2DPolygon<int>;
   //template class EXL_MATH_API AABB2DPolygon<float>;
   //template class EXL_MATH_API AABB2DPolygon<double>;
 }
 
 #else
 #include <math/aabb2dpolygon.inl>
-#endif
 #endif 
 
 namespace eXl

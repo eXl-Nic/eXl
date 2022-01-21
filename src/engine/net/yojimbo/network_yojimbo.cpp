@@ -780,7 +780,7 @@ namespace eXl
       m_Impl->UpdateObject(iClient, iObject, iData);
     }
 
-    boost::optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iURL)
+    Optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iURL)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});
 
@@ -802,7 +802,7 @@ namespace eXl
       return localIndex;
     }
 
-    boost::optional<uint32_t> Client::ConnectLoopback(NetCtx& iCtx)
+    Optional<uint32_t> Client::ConnectLoopback(NetCtx& iCtx)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_Server != nullptr, {});
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});

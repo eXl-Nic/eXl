@@ -35,31 +35,131 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  IMPLEMENT_TYPE(Vector4f)
-  IMPLEMENT_TYPE(Vector3f)
-  IMPLEMENT_TYPE(Vector2f)
-  IMPLEMENT_TYPE(Vector4i)
-  IMPLEMENT_TYPE(Vector3i)
-  IMPLEMENT_TYPE(Vector2i)
-  IMPLEMENT_TYPE(Quaternionf)
+  Type const* Get_Vector4f_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Vector4f>("Vector4f")
+        .AddField("X", &Vector4f::m_X)
+        .AddField("Y", &Vector4f::m_Y)
+        .AddField("Z", &Vector4f::m_Z)
+        .AddField("W", &Vector4f::m_W)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_Vector3f_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Vector3f>("Vector3f")
+        .AddField("X", &Vector3f::m_X)
+        .AddField("Y", &Vector3f::m_Y)
+        .AddField("Z", &Vector3f::m_Z)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_Vector2f_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Vector2f>("Vector2f")
+        .AddField("X", &Vector2f::m_X)
+        .AddField("Y", &Vector2f::m_Y)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_Vector4i_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Vector4i>("Vector4i")
+        .AddField("X", &Vector4i::m_X)
+        .AddField("Y", &Vector4i::m_Y)
+        .AddField("Z", &Vector4i::m_Z)
+        .AddField("W", &Vector4i::m_W)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_Vector3i_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Vector3i>("Vector3i")
+        .AddField("X", &Vector3i::m_X)
+        .AddField("Y", &Vector3i::m_Y)
+        .AddField("Z", &Vector3i::m_Z)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_Vector2i_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Vector2i>("Vector2i")
+        .AddField("X", &Vector2i::m_X)
+        .AddField("Y", &Vector2i::m_Y)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_Quaternionf_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<Quaternionf>("Quaternionf")
+        .AddField("X", &Quaternionf::m_X)
+        .AddField("Y", &Quaternionf::m_Y)
+        .AddField("Z", &Quaternionf::m_Z)
+        .AddField("W", &Quaternionf::m_W)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_AABB2Di_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<AABB2Di>("AABB2Di")
+        .AddField("Min", &AABB2Di::m_Min)
+        .AddField("Max", &AABB2Di::m_Max)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
+  Type const* Get_AABB2Df_NativeType()
+  {
+    static Type const* s_Type = []
+    {
+      return TypeManager::BeginNativeTypeRegistration<AABB2Df>("AABB2Df")
+        .AddField("Min", &AABB2Df::m_Min)
+        .AddField("Max", &AABB2Df::m_Max)
+        .EndRegistration();
+    }();
+    return s_Type;
+  }
+
   IMPLEMENT_TYPE(Matrix4f)
   IMPLEMENT_TYPE(AABB2DPolygoni)
-
-  IMPLEMENT_TYPE(AABB2Di)
-  IMPLEMENT_TYPE(AABB2Df)
 
   void DeclareMath()
   {
 #if EXL_TYPE_ENABLED
 
-    TypeManager::RegisterCoreType<Vector4i>();
-    TypeManager::RegisterCoreType<Vector3i>();
-    TypeManager::RegisterCoreType<Vector2i>();
+    TypeManager::RegisterCoreType<AABB2DPolygoni>();
     TypeManager::RegisterCoreType<Matrix4f>();
-    TypeManager::RegisterCoreType<Vector4f>();
-    TypeManager::RegisterCoreType<Vector3f>();
-    TypeManager::RegisterCoreType<Vector2f>();
-    TypeManager::RegisterCoreType<Quaternionf>();
     
 #endif
   }

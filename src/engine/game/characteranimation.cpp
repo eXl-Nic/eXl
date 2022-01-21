@@ -123,7 +123,7 @@ namespace eXl
     };
   }
 
-  boost::optional<DataTable> s_DataTable;
+  Optional<DataTable> s_DataTable;
 
   void CharacterAnimation_StaticInit()
   {

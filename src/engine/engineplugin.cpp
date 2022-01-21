@@ -140,7 +140,7 @@ namespace eXl
       }
     };
 
-    boost::optional<NameRegistry> s_NameRegistry;
+    Optional<NameRegistry> s_NameRegistry;
   }
 
   ImageName Tile::EmptyName() { return s_NameRegistry->m_EmptyImage; }
@@ -218,11 +218,11 @@ namespace eXl
   void Register_ENGINE_Types();
   LUA_REG_FUN(BindDunatk);
 
-  boost::optional<ComponentManifest> s_EngineCommonManifest;
+  Optional<ComponentManifest> s_EngineCommonManifest;
 
   using namespace EngineCommon;
 
-  ComponentManifest const& EngineCommon::GetComponents() { return s_EngineCommonManifest.get(); }
+  ComponentManifest const& EngineCommon::GetComponents() { return *s_EngineCommonManifest; }
   PropertiesManifest EngineCommon::GetBaseProperties()
   {
     PropertiesManifest baseManifest;

@@ -162,6 +162,10 @@ namespace eXl
     }
   };
 
+
+  EXL_CORE_API Err UnstreamResourceHandle(Resource::UUID& oUUID, Rtti const& iRtti, Unstreamer& iUnstreamer);
+  EXL_CORE_API Err StreamResourceHandle(Resource::UUID const& oUUID, Rtti const& iRtti, Streamer& iStreamer);
+
   template <typename T>
   class ResourceHandle
   {
@@ -215,13 +219,13 @@ namespace eXl
 
     Err Stream(Streamer& iStreamer) const
     {
-      return iStreamer.Write(&m_ResourceUUID);
+      return StreamResourceHandle(m_ResourceUUID, T::StaticRtti(), iStreamer);
     }
 
     Err Unstream(Unstreamer& iStreamer)
     {
       Resource::UUID id;
-      Err res = iStreamer.Read(&id);
+      Err res = UnstreamResourceHandle(id, T::StaticRtti(), iStreamer);
       if (res)
       {
         SetUUID(id);

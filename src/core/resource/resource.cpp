@@ -152,4 +152,53 @@ namespace eXl
   {
 
   }
+
+  Err UnstreamResourceHandle(Resource::UUID& oUUID, Rtti const& iRtti, Unstreamer& iUnstreamer)
+  { 
+    Err err = Err::Failure;
+    if (err = iUnstreamer.BeginStruct())
+    {
+      if (err = iUnstreamer.PushKey("ResourceType"))
+      {
+        String tempVal;
+        err = iUnstreamer.ReadString(&tempVal);
+        if (StringUtil::ToASCII(tempVal) != iRtti.GetName())
+        {
+          LOG_ERROR << "Wrong resource type : " << tempVal << " expected " << iRtti.GetName() << "\n";
+          err = Err::Error;
+        }
+        iUnstreamer.PopKey();
+      }
+      if (err && (err = iUnstreamer.PushKey("ResourceID")))
+      {
+        err = oUUID.Unstream(iUnstreamer);  
+        iUnstreamer.PopKey();
+      }
+
+      iUnstreamer.EndStruct();
+    }
+
+    return err;
+  }
+
+  Err StreamResourceHandle(Resource::UUID const& oUUID, Rtti const& iRtti, Streamer& iStreamer)
+  {
+    Err err = iStreamer.BeginStruct();
+    if (err)
+      err = iStreamer.PushKey("ResourceType");
+    if (err)
+      err = iStreamer.WriteString(iRtti.GetName());
+    if (err)
+      err = iStreamer.PopKey();
+    if (err)
+      err = iStreamer.PushKey("ResourceID");
+    if (err)
+      err = oUUID.Stream(iStreamer);
+    if (err)
+      err = iStreamer.PopKey();
+    if (err)
+      err = iStreamer.EndStruct();
+
+    return err;
+  }
 }

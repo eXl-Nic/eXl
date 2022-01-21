@@ -232,6 +232,3 @@ SETUP_EXL_TARGET(eXl_Player DEPENDENCIES eXl_Main)
 if(${EXL_BUILD_TESTS})
 add_subdirectory(test)
 endif()
-
-add_executable(Navigator_Sample main_navigator.cpp navigatorbench.cpp navigatorbench.hpp maptest.cpp maptest.hpp)
-SETUP_EXL_TARGET(Navigator_Sample DEPENDENCIES eXl_Main)

@@ -105,7 +105,7 @@ namespace eXl
       bool iCanBounce, 
       Vector3f& ioNextPos, 
       std::function<bool(PhysicComponent_Impl*)>& iIgnore,
-      boost::optional<Vector3f>& oCollideNormal);
+      Optional<Vector3f>& oCollideNormal);
     void Step(PhysicsSystem* iSys, float iTime) override;
   };
 }

@@ -227,9 +227,9 @@ namespace eXl
 #if defined(WIN32) || 1
 namespace eXl
 {
-  extern template class EXL_MATH_API Polygon<int>;
-  extern template class EXL_MATH_API Polygon<float>;
-  extern template class EXL_MATH_API Polygon<double>;
+  eXl_TEMPLATE_EXTERN template class EXL_MATH_API Polygon<int>;
+  eXl_TEMPLATE_EXTERN template class EXL_MATH_API Polygon<float>;
+  eXl_TEMPLATE_EXTERN template class EXL_MATH_API Polygon<double>;
 }
 #else
 #include <math/polygon.inl>

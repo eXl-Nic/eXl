@@ -73,7 +73,7 @@ namespace eXl
     template <typename Ret, typename... Args>
     struct Caller
     {
-      static boost::optional<Ret> Call(LuaScriptSystem& iSys, ObjectHandle iHandle, Name iBehaviour, Name iFunction, Args&&... iArgs)
+      static Optional<Ret> Call(LuaScriptSystem& iSys, ObjectHandle iHandle, Name iBehaviour, Name iFunction, Args&&... iArgs)
       {
         if (!iSys.ValidateCall<Ret, Args...>(iBehaviour, iFunction))
         {
@@ -92,7 +92,7 @@ namespace eXl
           return {};
         }
 
-        boost::optional<Ret> res;
+        Optional<Ret> res;
         {
           auto call = stateHandle.PrepareCall(function);
           call.Push(scriptObject);
@@ -157,7 +157,7 @@ namespace eXl
     };
 
     template <typename Ret, typename... Args, typename std::enable_if<!std::is_same<Ret, void>::value, bool>::type = true>
-    boost::optional<Ret> CallBehaviour(ObjectHandle iHandle, Name iBehaviour, Name iFunction, Args&&... iArgs)
+    Optional<Ret> CallBehaviour(ObjectHandle iHandle, Name iBehaviour, Name iFunction, Args&&... iArgs)
     {
       return Caller<Ret, Args...>::Call(*this, iHandle, iBehaviour, iFunction, std::forward<Args>(iArgs)...);
     }

@@ -103,7 +103,7 @@ namespace eXl
 
     QImage::Format imageFormat;
 
-    boost::optional<Image> converted;
+    Optional<Image> converted;
 
     switch (iImage.GetComponents())
     {

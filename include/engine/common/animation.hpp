@@ -120,7 +120,7 @@ namespace eXl
     struct TimelineEntry : public TimelineBehaviour
     {
       double startTime;
-      boost::optional<float> loopTime;
+      Optional<float> loopTime;
       float curTime;
     };
 

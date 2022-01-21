@@ -145,10 +145,10 @@ namespace eXl
     GameWidget* m_TilePreview;
     GridPainter* m_GridPainter;
 
-    boost::optional<ImageName> m_CurrentDisplayedImage;
+    Optional<ImageName> m_CurrentDisplayedImage;
     //AspectRatioWidget* m_RatioWidgetImage;
 
-    boost::optional<TileName> m_CurrentDisplayedTile;
+    Optional<TileName> m_CurrentDisplayedTile;
     AspectRatioWidget* m_RatioWidgetTile;
 
     Tileset* m_Tileset;

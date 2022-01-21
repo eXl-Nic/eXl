@@ -113,11 +113,11 @@ namespace eXl
     }
   }
 
-  boost::optional<uint32_t> PolyMesh::InsertEdge(Segmenti const& iSeg, Segmentf const& iFltSeg, int32_t edgeIdx)
+  Optional<uint32_t> PolyMesh::InsertEdge(Segmenti const& iSeg, Segmentf const& iFltSeg, int32_t edgeIdx)
   {
     if(iSeg.m_Ext1 == iSeg.m_Ext2)
     {
-      return boost::none;
+      return {};
     }
 
     auto insertRes = pointMap.insert(std::make_pair(iSeg.m_Ext1, static_cast<uint32_t>(vertices.size())));
@@ -154,7 +154,7 @@ namespace eXl
 
     if(!goodEdge)
     {
-      return boost::none;
+      return {};
     }
 
     edges.push_back(PolyHalfEdge());

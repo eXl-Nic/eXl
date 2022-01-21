@@ -68,7 +68,7 @@ namespace eXl
     UnorderedMap<Vector2i, uint32_t> pointMap;
 
     // leftmost/bottom most point
-    boost::optional<std::pair<Vector2i, uint32_t>> smallerPoint;
+    Optional<std::pair<Vector2i, uint32_t>> smallerPoint;
 
     void UpdateSmallerPoint(std::pair<Vector2i, uint32_t> const& iNewPoint);
 
@@ -76,7 +76,7 @@ namespace eXl
 
     bool FindInsertionPoint(uint32_t srcVtx, uint32_t dstVtx, uint32_t firstEdge, Vector2f const& iOutgoingDir, int32_t& prevInsertPt, int32_t& nextInsertPt) const;
 
-    boost::optional<uint32_t> InsertEdge(Segmenti const& iSeg, Segmentf const& iFltSeg, int32_t edgeId = -1);
+    Optional<uint32_t> InsertEdge(Segmenti const& iSeg, Segmentf const& iFltSeg, int32_t edgeId = -1);
 
     void Clear();
   };

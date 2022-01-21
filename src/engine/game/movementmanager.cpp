@@ -168,7 +168,7 @@ namespace eXl
     bool iCanBounce,
     Vector3f& ioNextPos, 
     std::function<bool(PhysicComponent_Impl*)>& iIgnore,
-    boost::optional<Vector3f>& oCollideNormal)
+    Optional<Vector3f>& oCollideNormal)
   {
     bool originalMoveSucceeded = true;
     CollisionData collision;
@@ -315,7 +315,7 @@ namespace eXl
             return false;
           };
 
-          boost::optional<Vector3f> collideNormal;
+          Optional<Vector3f> collideNormal;
           if (!entry.IsGhost())
           {
             Vector3f nextPos = curPos + candidateMove;
