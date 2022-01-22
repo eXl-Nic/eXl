@@ -118,13 +118,13 @@ map/mcmcmodelrsc.cpp
 
 net/network.cpp
 net/network_internal.hpp
-net/yojimbo/network_yojimbo.cpp
+net/yojimbo/network_yojimbo.hpp
+net/yojimbo/streamer_yojimbo.cpp
 net/yojimbo/streamer_yojimbo.hpp
+net/yojimbo/client_yojimbo.cpp
+net/yojimbo/server_yojimbo.cpp
+net/yojimbo/protocol_yojimbo.cpp
 net/dispatcher.cpp
-
-#net/spatial/network_spatial.cpp
-#net/spatial/spatialos_world.hpp
-#net/spatial/spatialos_world.cpp
 
 gui/fontresource.cpp
 

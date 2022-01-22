@@ -212,8 +212,8 @@ namespace eXl
     {
     public:
 
-      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL);
-      static Optional<uint32_t> ConnectLoopback(NetCtx& iCtx);
+      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL, String const& iClientId);
+      static Optional<uint32_t> ConnectLoopback(NetCtx& iCtx, String const& iClientId);
 
       ClientState GetState();
 
@@ -275,6 +275,8 @@ namespace eXl
 
       Server_Impl& GetImpl() { return *m_Impl; }
       ServerDispatcher& GetDispatcher() { return m_Dispatcher; }
+
+      String GetExternalClientId(ClientId iClient);
 
     protected:
       friend Server_Impl;
