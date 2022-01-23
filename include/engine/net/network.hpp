@@ -134,7 +134,7 @@ namespace eXl
           void>::type;
 
         [[nodiscard]] CommandCaller& WithCompletionCallback(std::function<void(CallbackArgsType)> iCompletionCallback);
-        [[nodiscard]] CommandCaller& WithArgs(Args&&... iArgs);
+        [[nodiscard]] CommandCaller& WithArgs(Args... iArgs);
         Err Send();
       protected:
         friend NetDriver;
@@ -245,6 +245,7 @@ namespace eXl
       void DeleteObject(ObjectId);
 
       void AddClient(ClientId, ObjectId);
+      void RemoveClient(ClientId iClient);
 
       void Flush(Server& iServer);
 
@@ -270,6 +271,7 @@ namespace eXl
 
       void CreateObject(ClientId, ObjectId, ClientData const& iData);
       void UpdateObject(ClientId, ObjectId, ClientData const& iData);
+      void DeleteObject(ClientId, ObjectId);
 
       Err SendClientCommand(CommandCallData&& iCall, ClientId iId);
 

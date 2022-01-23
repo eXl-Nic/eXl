@@ -62,6 +62,7 @@ namespace eXl
   public:
 
     PhysicsSystem_Impl(PhysicsSystem& iSys);
+    ~PhysicsSystem_Impl();
 
     //BulletRootComp                          m_Comp;
     btAlignedObjectArray<btCollisionShape*> m_collisionShapes;

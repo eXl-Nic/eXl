@@ -449,6 +449,11 @@ namespace eXl
     m_dynamicsWorld->setGravity(btVector3(0,-10,0));
   }
 
+  PhysicsSystem_Impl::~PhysicsSystem_Impl()
+  {
+    Cleanup();
+  }
+
   void PhysicsSystem_Impl::Cleanup()
   {
     for(auto comp : m_ToDelete)

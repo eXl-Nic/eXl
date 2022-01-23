@@ -46,6 +46,11 @@ namespace eXl
     {
       return ObjectCreationInfo{iDebugName, s_AutoNamedFlag};
     }
+
+    static ObjectCreationInfo Named(uint64_t iId, String const& iDebugName = String())
+    {
+      return ObjectCreationInfo{ iDebugName, iId };
+    }
   };
 
   typedef ObjectTable<ObjectInfo> WorldObjects;

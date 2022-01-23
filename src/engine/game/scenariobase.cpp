@@ -10,7 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/game/scenariobase.hpp>
 
-#include <engine/game/character.hpp>
 #include <engine/game/characteranimation.hpp>
 #include <engine/game/ability.hpp>
 #include <engine/game/walkability.hpp>
@@ -66,7 +65,7 @@ namespace eXl
     StartLocal(iWorld);
   }
 
-  ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld)
+  ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld, Vector3f const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo)
   {
     Archetype const* toSpawn = nullptr;
     if ((toSpawn = m_MainCharacter.GetOrLoad()) == nullptr
@@ -74,23 +73,17 @@ namespace eXl
     {
       return ObjectHandle();
     }
-    Vector3f pos = MathTools::To3DVec(m_SpawnPos);
-
-    EngineCommon::CharacterDesc charDesc;
-
-    charDesc = *toSpawn->GetProperty(EngineCommon::CharacterDesc::PropertyName()).CastBuffer<EngineCommon::CharacterDesc>();
-    charDesc.m_Control = EngineCommon::CharacterControlKind::PlayerControl;
 
     DynObject var;
-    var.SetType(TypeManager::GetType<EngineCommon::CharacterControlKind>(), &charDesc.m_Control);
+    var.SetType(TypeManager::GetType<EngineCommon::CharacterControlKind>(), &iControl);
 
     CustomizationData customData;
     customData.m_PropertyCustomization = { {EngineCommon::CharacterDesc::PropertyName(),
-      CustomizationData::FieldsMap({ {TypeFieldName("m_Control"), var } })} };
+      CustomizationData::FieldsMap({ {eXl_FIELD_NAME(EngineCommon::CharacterDesc, m_Control), var } })} };
 
-    ObjectHandle newChar = iWorld.CreateObject();
+    ObjectHandle newChar = iWorld.CreateObject(iInfo);
     Transforms& trans = *iWorld.GetSystem<Transforms>();
-    trans.AddTransform(newChar, Matrix4f::FromPosition(pos));
+    trans.AddTransform(newChar, Matrix4f::FromPosition(iPos));
     toSpawn->Instantiate(newChar, iWorld, &customData);
 
     return newChar;
@@ -98,7 +91,7 @@ namespace eXl
 
   void Scenario_Base::StartLocal(World& iWorld)
   {
-    m_MainChar = SpawnCharacter(iWorld);
+    m_MainChar = SpawnCharacter(iWorld, MathTools::To3DVec(m_SpawnPos), EngineCommon::CharacterControlKind::PlayerControl);
 
     auto& transforms = *iWorld.GetSystem<Transforms>();
     transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);

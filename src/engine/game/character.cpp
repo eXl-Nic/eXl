@@ -213,7 +213,7 @@ namespace eXl
 
   void CharacterSystem::DeleteComponent(ObjectHandle iObj)
   {
-    if (Entry*entry = m_Characters->Get(iObj))
+    if (Entry const* entry = m_Characters->GetDataForDeletion(iObj))
     {
       if (entry->m_KinematicEntry.IsAssigned())
       {

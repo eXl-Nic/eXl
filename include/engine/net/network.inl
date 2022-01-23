@@ -88,7 +88,7 @@ void NetDriver::DeclareClientCommand(CommandName iName, std::function<RetType(ui
         return iFun(iClient, std::forward<Args>(iArgs)...);
       }, iArgsBuffer, oOutput);
   };
-  DeclareCommand(NetRole::Server, iName, std::move(cb), FunDesc::Create<RetType(Args...)>(), &iFun, iReliable);
+  DeclareCommand(NetRole::Client, iName, std::move(cb), FunDesc::Create<RetType(Args...)>(), &iFun, iReliable);
 }
 
 template<typename RetType, typename... Args>
@@ -144,7 +144,7 @@ NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Ar
 }
 
 template<typename RetType, typename... Args>
-NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithArgs(Args&&... iArgs)
+NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithArgs(Args... iArgs)
 {
   if (m_Command != nullptr)
   {

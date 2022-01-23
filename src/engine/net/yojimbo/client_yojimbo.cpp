@@ -1,5 +1,5 @@
-
 #include "network_yojimbo.hpp"
+#include <thread>
 
 namespace eXl
 {
@@ -25,6 +25,8 @@ namespace eXl
       m_Client.SetContext(&m_SerializationCtx);
       m_Client.InsecureConnect(yojimbo::DEFAULT_PRIVATE_KEY, m_ClientId, iAddr);
     }
+
+    Client_Impl::~Client_Impl() = default;
 
     void Client_Impl::ClientSendLoopbackPacket(int clientIndex, const uint8_t* packetData, int packetBytes, uint64_t packetSequence)
     {
@@ -67,12 +69,15 @@ namespace eXl
       {
         ManifestMessage const& message = static_cast<ManifestMessage const&>(iMessage);
         uint8_t const* data = message.GetBlockData();
-        uint64_t* assignmentData = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data();
-        memcpy(assignmentData, data, sizeof(uint64_t) * message.arraySize);
-        data += sizeof(uint64_t) * message.arraySize;
-
-        uint32_t* rankData = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.data();
-        memcpy(assignmentData, data, sizeof(uint32_t) * message.arraySize);
+        {
+          uint64_t* assignmentData = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data();
+          memcpy(assignmentData, data, sizeof(uint64_t) * message.arraySize);
+          data += sizeof(uint64_t) * message.arraySize;
+        }
+        {
+          uint32_t* rankData = m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.data();
+          memcpy(rankData, data, sizeof(uint32_t) * message.arraySize);
+        }
 
         m_SerializationCtx.m_CmdDictionary.Build_Client(*m_eXlClient->m_Ctx.m_NetDriver);
         break;
@@ -97,6 +102,7 @@ namespace eXl
       {
         CommandMessage const& cmd = static_cast<CommandMessage const&>(iMessage);
         m_Commands.ReceiveResponse(cmd.m_QueryId, cmd.m_Args);
+        break;
       }
       case GameMessageType::OBJECT_CREATE:
       {

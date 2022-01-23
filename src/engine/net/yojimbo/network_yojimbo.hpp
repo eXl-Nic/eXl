@@ -153,6 +153,8 @@ namespace yojimbo
   {
   public:
 
+    GameAdapter();
+
     virtual Allocator* CreateAllocator(Allocator& allocator, void* memory, size_t bytes)
     {
       // Uses the TLSF allocator.
@@ -314,9 +316,7 @@ namespace eXl
       Client_Impl(uint32_t iLocalIndex, uint64_t iClientId);
       Client_Impl(uint32_t iLocalIndex, yojimbo::Address iAddr, uint64_t iClientId);
 
-      ~Client_Impl()
-      {
-      }
+      ~Client_Impl();
 
       void OnServerClientConnected(int clientIndex) override
       {
@@ -366,6 +366,7 @@ namespace eXl
 
       void CreateObject(ClientId, ObjectId, ClientData const& iData);
       void UpdateObject(ClientId, ObjectId, ClientData const& iData);
+      void DeleteObject(ClientId, ObjectId);
 
       Err SendClientCommand(CommandCallData&& iCall, ClientId iClient);
 

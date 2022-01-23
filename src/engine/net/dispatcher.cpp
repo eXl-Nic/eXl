@@ -28,7 +28,7 @@ namespace eXl
 
     void ServerDispatcher::DeleteObject(ObjectId iId)
     {
-
+      m_DeletedObjects.insert(iId);
     }
 
     void ServerDispatcher::AddClient(ClientId iClient, ObjectId iObject)
@@ -38,8 +38,25 @@ namespace eXl
       m_NewClients.insert(std::make_pair(iClient, iObject));
     }
 
+    void ServerDispatcher::RemoveClient(ClientId iClient)
+    {
+      eXl_ASSERT_REPAIR_RET(m_ConnectedClients.count(iClient) != 0, void());
+      m_ConnectedClients.erase(iClient);
+    }
+
     void ServerDispatcher::Flush(Server& iServer)
     {
+      for (auto const& obj : m_DeletedObjects)
+      {
+        m_Objects.erase(obj);
+        m_PendingUpdates.erase(obj);
+        for (auto client : m_ConnectedClients)
+        {
+          iServer.DeleteObject(client.first , obj);
+        }
+      }
+      m_DeletedObjects.clear();
+
       for (auto const& update : m_PendingUpdates)
       {
         auto dataIter = m_Objects.find(update.first);

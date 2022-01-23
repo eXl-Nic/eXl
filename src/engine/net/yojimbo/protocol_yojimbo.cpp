@@ -2,10 +2,45 @@
 #include "network_yojimbo.hpp"
 #include "streamer_yojimbo.hpp"
 
+#include <cstdarg>
+
 namespace yojimbo
 {
   const uint8_t DEFAULT_PRIVATE_KEY[KeyBytes] = { 0 };
   const uint64_t s_ProtocolId = 0xE816CB0010000001;
+
+  thread_local char s_YoPrintBuffer[4096];
+
+  int YojimboLog(const char* iFmt, ...)
+  {
+    va_list args;
+    va_start(args, iFmt);
+    int res = vsnprintf(s_YoPrintBuffer, eXl::ArrayLength(s_YoPrintBuffer), iFmt, args);
+    va_end(args);
+
+    if (res > 0)
+    {
+      eXl::Log_Manager::Log(eXl::CoreLog::INFO_STREAM).write(s_YoPrintBuffer);
+    }
+    return res;
+  }
+
+  void YojimboAssert(const char* iTest, const char* iMsg, const char* file, int line)
+  {
+    eXl::AssertionError(iTest, iMsg, file, line, false);
+  }
+
+  GameAdapter::GameAdapter()
+  {
+    static bool s_StaticInit = false;
+    if (!s_StaticInit)
+    {
+      yojimbo_set_printf_function(&YojimboLog);
+      yojimbo_set_assert_function(&YojimboAssert);
+      yojimbo_log_level(YOJIMBO_LOG_LEVEL_DEBUG);
+      s_StaticInit = true;
+    }
+  }
 
   using namespace eXl::Network;
 

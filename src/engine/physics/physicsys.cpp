@@ -41,7 +41,17 @@ namespace eXl
   }
 
   PhysicsSystem::~PhysicsSystem()
-  {}
+  {
+    for (auto& comp : m_Components)
+    {
+      if (comp)
+      {
+        m_Impl->m_ToDelete.insert(comp);
+      }
+    }
+    m_Impl->Cleanup();
+    m_Components.clear();
+  }
 
   class BulletDebugDraw : public btIDebugDraw, public HeapObject
   {

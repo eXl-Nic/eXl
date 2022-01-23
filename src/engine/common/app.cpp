@@ -43,7 +43,7 @@ namespace eXl
 
     PropertiesManifest m_Manifest;
     Transforms* transforms;
-    GfxSystem* gfxSys;
+    GfxSystem* gfxSys = nullptr;
     PhysicsSystem* phSys;
     CharacterSystem* characters;
     NavigatorSystem* navigator;

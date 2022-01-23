@@ -14,6 +14,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/typetraits.hpp>
 #include <core/type/fielddesc.hpp>
 
+#define eXl_FIELD_NAME(Type, Field) ::eXl::GetFieldName(&Type::Field, #Field)
+
 namespace luabind
 {
   struct null_type;
@@ -21,6 +23,12 @@ namespace luabind
 
 namespace eXl
 {
+  template <typename T, typename F>
+  TypeFieldName GetFieldName(F T::* iPtr, KString iStr)
+  {
+    return TypeFieldName(iStr);
+  }
+
   class Type;
   class ClassType;
   class ObjectPtrType;

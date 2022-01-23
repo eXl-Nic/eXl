@@ -136,6 +136,7 @@ namespace eXl
     Err ConvertFromLua_Uninit(lua_State* iState, unsigned int& ioIndex, void* oObj) const override;
     void RegisterLua(lua_State* iState) const override;
 #endif
+    size_t GetOffset(uint32_t iField) const { return m_Offsets[iField]; }
   protected:
     Vector<Type const*> const& m_Args;
     Vector<size_t> m_Offsets;
@@ -183,7 +184,7 @@ namespace eXl
     {
       Type const* fieldType;
       using ConcreteType = typename std::remove_const<typename std::remove_reference<Arg>::type>::type;
-      new(iType.GetField(oData.GetBuffer(), Step, fieldType)) ConcreteType(std::forward<Arg>(iArg));
+      new(((uint8_t*)oData.GetBuffer()) + iType.GetOffset(Step)) ConcreteType(std::forward<Arg>(iArg));
       BufferPopulator<Step + 1, Args...>::Populate(iType, oData, std::forward<Args>(iArgs)...);
     }
   };

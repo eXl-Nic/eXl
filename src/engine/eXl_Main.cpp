@@ -431,7 +431,7 @@ namespace eXl
           SDL_WindowEvent& winEvt = reinterpret_cast<SDL_WindowEvent&>(curEvent);
           if (winEvt.event == SDL_WINDOWEVENT_CLOSE)
           {
-            exit(0);
+            Application::GetAppl().Stop();
           }
           if (winEvt.event == SDL_WINDOWEVENT_RESIZED)
           {
@@ -449,7 +449,7 @@ namespace eXl
         }
         if (curEvent.type == SDL_QUIT)
         {
-          exit(0);
+          Application::GetAppl().Stop();
         }
       }
     }
@@ -588,9 +588,9 @@ int eXl_Main::Start(int argc, char const* const argv[])
 #if defined(WIN32) && !defined(USE_BAKED)
 
   ResourceManager::SetTextFileReadFactory([](char const* iFilePath)
-  {
-    return std::unique_ptr<TextReader>(FileTextReader::Create(iFilePath));
-  });
+    {
+      return std::unique_ptr<TextReader>(FileTextReader::Create(iFilePath));
+    });
 #endif
 
 #if defined(__ANDROID__) || defined(USE_BAKED)
@@ -638,21 +638,30 @@ int eXl_Main::Start(int argc, char const* const argv[])
   ResourceManager::BootstrapAssetsFromManifest(String());
 #endif
 
-  if (!app.GetScenario() && !app.GetMapPath().empty())
+  if (!app.GetScenario())
   {
     std::unique_ptr<Scenario_Base> scenario = std::make_unique<Scenario_Base>();
-    
-    MapResource const* mapRsc = ResourceManager::Load<MapResource>(app.GetMapPath());
-    if (mapRsc)
-    {
-      ResourceHandle<MapResource> mapRef;
-      mapRef.Set(mapRsc);
-      scenario->SetMap(mapRef);
-    }
-
-    scenario->SetMainChar(project->m_PlayerArchetype);
 
     app.SetScenario(std::move(scenario));
+  }
+
+  if (Scenario_Base* scenario = Scenario_Base::DynamicCast(app.GetScenario()))
+  {
+    if (!app.GetMapPath().empty() && !scenario->GetMapHandle().GetUUID().IsValid())
+    {
+      MapResource const* mapRsc = ResourceManager::Load<MapResource>(app.GetMapPath());
+      if (mapRsc)
+      {
+        ResourceHandle<MapResource> mapRef;
+        mapRef.Set(mapRsc);
+        scenario->SetMap(mapRef);
+      }
+    }
+
+    if (!scenario->GetMainCharHandle().GetUUID().IsValid())
+    {
+      scenario->SetMainChar(project->m_PlayerArchetype);
+    }
   }
 
   app.Start_SDLApp();

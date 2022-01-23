@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/common/app.hpp>
 #include <engine/map/map.hpp>
+#include <engine/game/character.hpp>
 
 namespace eXl
 {
@@ -52,6 +53,9 @@ namespace eXl
       return *m_DefaultAnim;
     }
 
+    ResourceHandle<MapResource> const& GetMapHandle() const { return m_Map; }
+    ResourceHandle<Archetype> const& GetMainCharHandle() const { return m_MainCharacter; }
+
   protected:
 
     ResourceHandle<MapResource> m_Map;
@@ -60,7 +64,7 @@ namespace eXl
 
     ObjectHandle m_MainChar;
 
-    ObjectHandle SpawnCharacter(World& iWorld);
+    ObjectHandle SpawnCharacter(World& iWorld, Vector3f const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo = ObjectCreationInfo());
     Vector2f m_SpawnPos;
 
     UniquePtr<CharacterAnimation> m_DefaultAnim;

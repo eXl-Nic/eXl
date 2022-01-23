@@ -33,7 +33,7 @@ namespace eXl
 
       memcpy(data, m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data(), arraySize * sizeof(uint64_t));
       data += arraySize * sizeof(uint64_t);
-      memcpy(data, m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.data(), arraySize * sizeof(uint32_t));
+      memcpy(data, m_SerializationCtx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.data(), arraySize * sizeof(uint32_t));
 
       m_Server.SendMessage(clientIndex, GameChannel::RELIABLE, message);
 
@@ -157,6 +157,17 @@ namespace eXl
       m_Server.SendMessage(clientIndex, GameChannel::RELIABLE, message);
     }
 
+    void Server_Impl::DeleteObject(ClientId iClient, ObjectId iObject)
+    {
+      using namespace yojimbo;
+      eXl_ASSERT_REPAIR_RET(IsValidClientId(iClient), void());
+
+      uint32_t clientIndex = GetClientIndexFromId(iClient);
+      UpdateMessage* message = (UpdateMessage*)m_Server.CreateMessage(clientIndex, GameMessageType::OBJECT_DELETE);
+      message->m_Object = iObject;
+      m_Server.SendMessage(clientIndex, GameChannel::RELIABLE, message);
+    }
+
     Err Server_Impl::SendClientCommand(CommandCallData&& iCall, ClientId iClient)
     {
       if (!IsValidClientId(iClient))
@@ -224,6 +235,11 @@ namespace eXl
     void Server::UpdateObject(ClientId iClient, ObjectId iObject, ClientData const& iData)
     {
       m_Impl->UpdateObject(iClient, iObject, iData);
+    }
+
+    void Server::DeleteObject(ClientId iClient, ObjectId iObject)
+    {
+      m_Impl->DeleteObject(iClient, iObject);
     }
 
     String Server::GetExternalClientId(ClientId iClient)

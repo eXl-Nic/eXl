@@ -62,6 +62,10 @@ namespace eXl
         numVtx.push_back(group.size() / 5);
         totNumVtx += group.size() / 5;
       }
+      if (totNumVtx == 0)
+      {
+        return;
+      }
 #ifdef EXL_WITH_OGL
       OGLBuffer* buffer;
       OGLVAssembly assembly;
