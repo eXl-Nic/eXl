@@ -1,3 +1,4 @@
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config/yojimbo ${OUT_DIR}/modules/yojimbo)
-set_target_properties(yojimbo PROPERTIES FOLDER Dependencies)
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/yojimbo)
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/yojimbo)
+
 SET(YOJIMBO_INCLUDE_DIR ${YOJIMBO_ROOT})

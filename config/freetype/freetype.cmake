@@ -1,3 +1,4 @@
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modules/freetype ${OUT_DIR}/modules/freetype)
-set_target_properties(freetype PROPERTIES FOLDER Dependencies)
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/modules/freetype)
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/freetype)
+
 SET(FREETYPE_INCLUDE_DIR ${FREETYPE_ROOT}/include)

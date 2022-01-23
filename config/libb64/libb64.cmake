@@ -1,3 +1,4 @@
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${LIBB64_ROOT})
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/libb64)
+
 SET(LIBB64_INCLUDE_DIR ${LIBB64_ROOT}/include)
-add_subdirectory(${LIBB64_ROOT} ${OUT_DIR}/modules/libb64)
-set_target_properties(libb64 PROPERTIES FOLDER Dependencies)

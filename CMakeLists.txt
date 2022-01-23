@@ -40,34 +40,12 @@ set(GTEST_ROOT "${EXL_ROOT}/modules/gtest")
 set(UTF8_ROOT "${EXL_ROOT}/modules/utf8")
 set(YOJIMBO_ROOT "${EXL_ROOT}/modules/yojimbo")
 
-include(config/eXl/eXlSetupBuildPath.cmake)
-include(config/eXl/eXlconfig.cmake)
-include(config/eXl/eXlMacros.cmake)
-
-include(config/libclang/libclang.cmake)
-include(config/boost/boost.cmake)
-include(config/lua/lua.cmake)
-include(config/freeimage/freeimage.cmake)
-include(config/xxhash/xxhash.cmake)
-
-include(config/ogl/ogl.cmake)
-include(config/imgui/imgui.cmake)
-
-include(config/armadillo/armadillo.cmake)
-include(config/voropp/voropp.cmake)
-include(config/libsvm/libsvm.cmake)
-include(config/lbfgs/lbfgs.cmake)
-
-include(config/sdl/sdl.cmake)
-include(config/libb64/libb64.cmake)
-include(config/gtest/gtest.cmake)
-include(config/bullet/bullet.cmake)
-include(config/freetype/freetype.cmake)
-include(config/utf8/utf8.cmake)
-include(config/yojimbo/yojimbo.cmake)
+include(${EXL_ROOT}/config/eXl/eXlSetupBuildPath.cmake)
+include(${EXL_ROOT}/config/eXl/eXlconfig.cmake)
+include(${EXL_ROOT}/config/eXl/eXlMacros.cmake)
+include(${EXL_ROOT}/config/eXl/eXlAddDependencies.cmake)
 
 SET(LAYOUT_INCLUDE_DIR ${LAYOUT_ROOT})
-SET(YOJIMBO_INCLUDE_DIR ${YOJIMBO_ROOT})
 
 add_subdirectory(src/core ${OUT_DIR}/eXl/core)
 add_subdirectory(src/math ${OUT_DIR}/eXl/math)

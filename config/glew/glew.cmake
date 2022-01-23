@@ -11,5 +11,5 @@ SET(GLEW_DEFINES ${GLEW_DEFINES} -DGLEW_STATIC)
 endif()
 endif()
 
-add_subdirectory(config/glew)
-set_target_properties(glew PROPERTIES FOLDER Dependencies)
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/glew)
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/glew)

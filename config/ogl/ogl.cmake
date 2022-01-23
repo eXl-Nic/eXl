@@ -5,7 +5,7 @@ if(${EXL_BUILD_OGL})
 	endif()
 	
 	if(${WIN32})
-    include(${CMAKE_CURRENT_SOURCE_DIR}/config/glew/glew.cmake)
+        include(${EXL_ROOT}/config/glew/glew.cmake)
 		SET(OGL_LIBRARIES opengl32 ${GLEW_LIBRARY})
 	endif()
 

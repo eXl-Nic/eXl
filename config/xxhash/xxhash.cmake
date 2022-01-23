@@ -1,4 +1,6 @@
 set(XXHASH_BUILD_XXHSUM OFF CACHE BOOL "Build the xxhsum binary" FORCE)
-add_subdirectory(${XXHASH_ROOT}/cmake_unofficial ${OUT_DIR}/modules/xxhash)
-set_target_properties(xxhash PROPERTIES FOLDER Dependencies)
+
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${XXHASH_ROOT}/cmake_unofficial)
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/xxhash)
+
 SET(XXHASH_INCLUDE_DIR ${XXHASH_ROOT})

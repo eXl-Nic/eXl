@@ -1,18 +1,21 @@
 if(${EXL_BUILD_WITH_LUA})
-  set(LUABIND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua/luabind)
+  set(LUABIND_INCLUDE_DIR ${EXL_ROOT}/include/core/lua/luabind)
   set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_LUA)
   
 if(${EXL_BUILD_SHARED})
 	set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DLUABIND_DYNAMIC_LINK)
 endif()
 
-  set (LUA_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/modules/lua)
-  set (LUA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules/lua)
+  set (LUA_ROOT ${EXL_ROOT}/modules/lua)
+  set (LUA_INCLUDE_DIR ${EXL_ROOT}/modules/lua)
   set (LUA_LIBRARIES lua)
 
   set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE}
     ${LUA_INCLUDE_DIR} 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/core/lua
-  )
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config/lua ${OUT_DIR}/modules/lua)
+    ${EXL_ROOT}/include/core/lua
+    )
+
+  set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/lua)
+  set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/lua)
+  
 endif()

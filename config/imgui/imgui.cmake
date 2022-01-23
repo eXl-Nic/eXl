@@ -1,8 +1,8 @@
 if(${EXL_BUILD_OGL})
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config/imgui ${OUT_DIR}/modules/imgui)
-SET(IMGUI_INCLUDE_DIR ${IMGUI_ROOT})
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/imgui)
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/imgui)
 
-set_target_properties(imgui PROPERTIES FOLDER Dependencies)
+SET(IMGUI_INCLUDE_DIR ${IMGUI_ROOT})
 
 endif()

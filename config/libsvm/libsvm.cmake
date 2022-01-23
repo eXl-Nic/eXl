@@ -1,2 +1,4 @@
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config/libsvm ${OUT_DIR}/modules/libsvm)
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/libsvm)
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/libsvm)
+
 SET(LIBSVM_INCLUDE_DIR ${LIBSVM_ROOT})

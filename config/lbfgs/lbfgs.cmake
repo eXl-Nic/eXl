@@ -1,3 +1,4 @@
-add_subdirectory(${LBFGS_ROOT} ${OUT_DIR}/modules/lbfgs)
-set_target_properties(lbfgs_lib PROPERTIES FOLDER Dependencies)
+set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${LBFGS_ROOT})
+set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/lbfgs)
+
 SET(LBFGS_INCLUDE_DIR ${LBFGS_ROOT}/include)

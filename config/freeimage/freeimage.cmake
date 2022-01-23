@@ -1,7 +1,7 @@
 
 if(${EXL_BUILD_WITH_FREEIMAGE})
-  add_subdirectory(${EXL_ROOT}/config/freeimage ${OUT_DIR}/modules/freeimage)
-  set_target_properties(FreeImage PROPERTIES FOLDER Dependencies)
+  set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/freeimage)
+  set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/freeimage)
   SET(ENABLE_FREEIMAGE ON)
   SET(FREEIMAGE_INCLUDE_DIR ${FREEIMAGE_ROOT}/Source)
   SET(FREEIMAGE_LIBRARIES FreeImage)
