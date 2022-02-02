@@ -1,15 +1,34 @@
-function (add_exl_dependencies)
+include_guard(GLOBAL)
 
-  set(EXL_ADDING_DEPENDENCIES ON)
+function(filter_deps_folder name filterRes)
+    set(${filterRes} ON PARENT_SCOPE)
+    get_target_property(TARGET_SOURCE_DIR ${name} SOURCE_DIR)
 
-  function (add_library name)
-    _add_library (${ARGV})
-
-    if(NOT ${EXL_ADDING_DEPENDENCIES})
+    if(${TARGET_SOURCE_DIR} MATCHES "${DEPS_ROOT_DIR}/modules/*")
         return()
     endif()
 
-    if(${name} MATCHES "eXl_*")
+    if(${TARGET_SOURCE_DIR} MATCHES "${DEPS_ROOT_DIR}/package/*")
+        return()
+    endif()
+
+    if(${TARGET_SOURCE_DIR} MATCHES "${DEPS_ROOT_DIR}/config/*")
+        return()
+    endif()
+
+    if(${TARGET_SOURCE_DIR} MATCHES "${DEPS_ROOT_DIR}/contrib/*")
+        return()
+    endif()
+    
+    set(${filterRes} OFF PARENT_SCOPE)
+  endfunction()
+
+  function (add_library name)
+    _add_library (${ARGV})
+    
+    filter_deps_folder(${name} is_filtered)
+
+    if(NOT ${is_filtered})
         return()
     endif()
 
@@ -21,6 +40,7 @@ function (add_exl_dependencies)
     if(_aliased)
         return()
     endif()
+
     set_target_properties(${name}
         PROPERTIES
         FOLDER "Dependencies"
@@ -30,11 +50,9 @@ function (add_exl_dependencies)
   function (add_executable name)
     _add_executable (${ARGV})
 
-    if(NOT ${EXL_ADDING_DEPENDENCIES})
-        return()
-    endif()
-    
-    if(${name} MATCHES "eXl_*")
+    filter_deps_folder(${name} is_filtered)
+
+    if(NOT ${is_filtered})
         return()
     endif()
 
@@ -42,38 +60,40 @@ function (add_exl_dependencies)
     if(_aliased)
         return()
     endif()
+
     set_target_properties(${name}
         PROPERTIES
         FOLDER "Dependencies"
     )
   endfunction()
 
+  function (add_custom_target name)
+    _add_custom_target (${ARGV})
+
+    filter_deps_folder(${name} is_filtered)
+
+    if(NOT ${is_filtered})
+        return()
+    endif()
+
+    get_target_property(_aliased ${name} ALIASED_TARGET)
+    if(_aliased)
+        return()
+    endif()
+
+    set_target_properties(${name}
+        PROPERTIES
+        FOLDER "Dependencies"
+    )
+  endfunction()
+
+
+function (add_exl_dependencies)
+
+  SET(DEPS_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  
   foreach(project targetFolder IN ZIP_LISTS EXL_SUBMODULE_PROJECTS EXL_SUBMODULE_TARGETS)
     add_subdirectory(${project} ${targetFolder})
   endforeach()
-  
-  set(EXL_ADDING_DEPENDENCIES OFF)
+
 endfunction()
-
-add_exl_dependencies()
-
-if(${EXL_BUILD_TESTS})
-#Override gtest's opinionated folders to have something working out of the box
-    if (TARGET gtest)
-        set_target_properties(gtest
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
-            LIBRARY_OUTPUT_DIRECTORY ${OUT_DIR}
-            ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}
-            PDB_OUTPUT_DIRECTORY ${OUT_DIR})
-    endif()
-
-    if (TARGET gtest_main)
-        set_target_properties(gtest_main
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
-            LIBRARY_OUTPUT_DIRECTORY ${OUT_DIR}
-            ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}
-            PDB_OUTPUT_DIRECTORY ${OUT_DIR})
-    endif()
-endif()

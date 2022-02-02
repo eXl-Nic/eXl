@@ -32,7 +32,7 @@ namespace eXl
     Err Begin();
     Err End();
 
-    Err PushKey(String const& iKey);
+    Err PushKey(KString iKey);
     Err PopKey();
 
     Err BeginStruct();
@@ -41,12 +41,14 @@ namespace eXl
     Err BeginSequence();
     Err NextSequenceElement();
 
+    Err ReadBool(bool* oBoolean);
     Err ReadInt(int * oInt);
     Err ReadUInt(unsigned int * oUInt);
     Err ReadUInt64(uint64_t * oUInt);
     Err ReadFloat(float * oFloat);
     Err ReadDouble(double * oFloat);
     Err ReadString(String* oStr);
+    Err ReadBinary(Vector<uint8_t>* oData);
 
   protected:
 
@@ -83,7 +85,7 @@ namespace eXl
           eXl_DELETE elem.second;
         }
       }
-      Map<String, ElementDesc*> m_Fields;
+      UnorderedMap<KString, ElementDesc*> m_Fields;
     };
 
     struct ElemSequence : ElementDesc
@@ -109,6 +111,7 @@ namespace eXl
 
     Vector<BrowseStack>      m_Stack;
     Vector<Char>             m_Cache;
+    NameAllocHolder          m_KeysAlloc;
     ElementDesc*             m_Root;
     int                      m_CurrentSeqIdx;
     IStream*                 m_InStream;

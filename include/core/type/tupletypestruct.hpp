@@ -50,8 +50,6 @@ namespace eXl
     typedef Vector<FieldDesc> FieldVector;
 
     static size_t S_GetNumField(FieldVector const& iVect);
-
-    static Err S_ResolveFieldPath(FieldVector const& iVect, AString const& iPath, unsigned int& oOffset, Type const*& oType);
     
     //Make sure iObj outlives the returned DynObject :), like holding a ptr to a struct
     static void* S_GetField (FieldVector const& iVect, void* iObj,unsigned int,Type const*& oType);
@@ -102,7 +100,6 @@ namespace eXl
 
     void RegisterLua(lua_State* iState) const override;
 #endif
-    Err ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType) const override;
     
     //Make sure iObj outlives the returned DynObject :), like holding a ptr to a struct
     void* GetField (void* iObj,unsigned int,Type const*& oType) const override;
@@ -169,7 +166,6 @@ namespace eXl
 
     void RegisterLua(lua_State* iState) const override;
 #endif
-    Err ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType) const override;
 
     void* GetField (void* iObj,unsigned int,Type const*& oType) const override;
 

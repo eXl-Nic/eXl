@@ -62,7 +62,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define eXl_TO_STR(s) eXl_TO_STR_(s)
 #define eXl_CONCAT(s,r) s##r
 #define eXl_FORMAT(s, ...) (::eXl::StringUtil::Format(s, __VA_ARGS__).c_str())
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) || !defined(EXL_BUILD_SHARED)
 #define eXl_TEMPLATE_EXTERN extern
 #else
 #define eXl_TEMPLATE_EXTERN
@@ -119,17 +119,22 @@ namespace eXl
 
     }
 
-    bool operator == (Code const iOtherCode)
+    bool operator == (Code const iOtherCode) const
     {
       return m_code == iOtherCode;
     }
 
-    bool operator != (Code const iOtherCode)
+    bool operator != (Code const iOtherCode) const
     {
       return m_code != iOtherCode;
     }
 
     explicit operator bool()
+    {
+      return Succeeded();
+    }
+
+    bool Succeeded() const
     {
       return m_code == Success;
     }
@@ -225,22 +230,22 @@ do \
   }while(false)
 
 #define eXl_ASSERT_REPAIR_BEGIN(exp)                                    \
-  if(!::eXl::TestAssertion(exp, #exp, "Assertion failed", __FILE__, __LINE__, true))
+  if(!::eXl::TestAssertion(!(!(exp)), #exp, "Assertion failed", __FILE__, __LINE__, true))
 
 #define eXl_ASSERT_REPAIR_RET(exp, ret)                                 \
-  if(!::eXl::TestAssertion(exp, #exp, "Assertion failed", __FILE__, __LINE__, true)) \
+  if(!::eXl::TestAssertion(!(!(exp)), #exp, "Assertion failed", __FILE__, __LINE__, true)) \
   {                                                                     \
     return ret; \
   }
 
 #define eXl_ASSERT_MSG_REPAIR_RET(exp, msg, ret)                                 \
-  if(!::eXl::TestAssertion(exp, #exp, msg, __FILE__, __LINE__, true)) \
+  if(!::eXl::TestAssertion(!(!(exp)), #exp, msg, __FILE__, __LINE__, true)) \
   {                                                                     \
     return ret; \
   }
 
 #define eXl_ASSERT_MSG_REPAIR_BEGIN(exp,msg)                            \
-  if(!::eXl::TestAssertion(exp, #exp, msg,__FILE__,__LINE__,true))                                              
+  if(!::eXl::TestAssertion(!(!(exp)), #exp, msg,__FILE__,__LINE__,true))                                              
 
 #ifdef MSVC_COMPILER
 #define FUN_STR __FUNCTION__

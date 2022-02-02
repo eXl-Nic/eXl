@@ -4,11 +4,15 @@
 #include <core/resource/resourcemanager.hpp>
 #include <core/stream/inputstream.hpp>
 
+#ifdef EXL_WITH_OGL
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_SYSTEM_H
 #include FT_GLYPH_H
 #include FT_BITMAP_H
+
+#endif
 
 namespace eXl
 {
@@ -167,6 +171,7 @@ namespace eXl
 
   struct FontResource::Impl
   {
+#ifdef EXL_WITH_OGL
     static unsigned long FT_IoFunc(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count)
     {
       InputStream* memStream = (InputStream*)stream->descriptor.pointer;
@@ -203,12 +208,13 @@ namespace eXl
     FT_Face m_Face;
     UniquePtr<InputStream> m_FileHandle;
     UnorderedMap<uint32_t, Font::GlyphDesc> m_GlyphMap;
+#endif
   };
 
   void FontResource::PostLoad()
   {
     m_Impl = std::make_unique<Impl>();
-
+#ifdef EXL_WITH_OGL
     if (GetHeader().m_Flags & Resource::BakedResource)
     {
       m_Impl->m_FileHandle.reset(eXl_NEW BinaryInputStream(m_FontFile.data(), m_FontFile.size()));
@@ -236,10 +242,12 @@ namespace eXl
     eXl_ASSERT(error != FT_Err_Unknown_File_Format);
     eXl_ASSERT(!error);
     FT_Select_Charmap(m_Impl->m_Face, FT_ENCODING_UNICODE);
+#endif
   }
 
   Font::GlyphDesc FontResource::RenderGlyph(uint32_t iChar, uint32_t iSize, RenderCallback iRender) const
   {
+#ifdef EXL_WITH_OGL
     auto iter = m_Impl->m_GlyphMap.find(iChar);
     if (iter != m_Impl->m_GlyphMap.end() && !iRender)
     {
@@ -277,5 +285,8 @@ namespace eXl
     }
 
     return newDesc;
+#else
+    return Font::GlyphDesc();
+#endif
   }
 }

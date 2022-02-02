@@ -12,6 +12,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/physics/trigger.hpp>
 
+#ifdef EXL_LUA
+
 namespace eXl
 {
   class LuaScriptSystem;
@@ -42,3 +44,4 @@ namespace eXl
     TriggerCallbackHandle m_Handle;
   };
 }
+#endif

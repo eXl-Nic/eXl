@@ -365,3 +365,89 @@ TEST(DunAtk, ObjectTableAlign)
   ASSERT_EQ(((ptrdiff_t)obj2) % 16, 0);
   ASSERT_EQ(((ptrdiff_t)obj3) % 16, 0);
 }
+
+#include <engine/common/world.hpp>
+#include <engine/common/transforms.hpp>
+#include <engine/physics/physicsys.hpp>
+#include <engine/game/character.hpp>
+#include <thread>
+
+TEST(DunAtk, DBG)
+{
+  PropertiesManifest manifest = EngineCommon::GetBaseProperties();
+  ComponentManifest compManifest = EngineCommon::GetComponents();
+  World world(compManifest);
+  
+  world.AddSystem(std::make_unique<GameDatabase>(manifest));
+  world.AddSystem(std::make_unique<Transforms>());
+
+  Transforms& transforms = *world.GetSystem<Transforms>();
+  world.AddSystem(std::make_unique<PhysicsSystem>(transforms));
+  PhysicsSystem& phSys = *world.GetSystem<PhysicsSystem>();
+  world.AddSystem(std::make_unique<CharacterSystem>());
+  CharacterSystem& chars = *world.GetSystem<CharacterSystem>();
+
+  phSys.AddKinematicController(&chars);
+
+  ProfilingState pf;
+
+  world.Tick(pf);
+  std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+  auto MakeObject = [&]
+  {
+    ObjectHandle obj = world.CreateObject();
+    transforms.AddTransform(obj);
+
+    CharacterSystem::Desc systemDesc;
+    systemDesc.kind = CharacterSystem::PhysicKind::Kinematic;
+    systemDesc.size = 1.0;
+    systemDesc.maxSpeed = 10.0;
+    systemDesc.controlKind = CharacterSystem::ControlKind::Predicted;
+
+    PhysicInitData desc;
+    uint32_t flags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity | PhysicFlags::AddSensor;
+
+    if (systemDesc.kind == CharacterSystem::PhysicKind::Kinematic
+      || systemDesc.kind == CharacterSystem::PhysicKind::KinematicAbsolute)
+    {
+      flags |= PhysicFlags::Kinematic;
+    }
+
+    desc.SetFlags(flags);
+    desc.AddSphere(systemDesc.size);
+    desc.SetCategory(EngineCommon::s_CharacterCategory, EngineCommon::s_CharacterMask);
+
+    phSys.CreateComponent(obj, desc);
+
+    chars.AddCharacter(obj, systemDesc);
+    chars.SetCurDir(obj, Vector3f::UNIT_X);
+    chars.SetSpeed(obj, 10.0);
+    return obj;
+  };
+
+  auto obj1 = MakeObject();
+  auto obj2 = MakeObject();
+  auto obj3 = MakeObject();
+
+  world.Tick(pf);
+  std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+  world.DeleteObject(obj2);
+  world.DeleteObject(obj3);
+
+  world.Tick(pf);
+  std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+  obj2 = MakeObject();
+  obj3 = MakeObject();
+
+  world.Tick(pf);
+  std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+  world.DeleteObject(obj2);
+  world.DeleteObject(obj3);
+
+  world.Tick(pf);
+  std::this_thread::sleep_for(std::chrono::milliseconds(16));
+}

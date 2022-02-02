@@ -46,7 +46,7 @@ public:
 
 TEST(Core, MPHF)
 {
-  uint32_t const numKeys = 10000;
+  uint32_t const numKeys = 100/*00*/;
 
   std::unique_ptr<Random> rand(Random::CreateDefaultRNG(0));
   UnorderedSet<String> keysDict;
@@ -69,7 +69,7 @@ TEST(Core, MPHF)
     } while (true);
   }
 
-  uint32_t const numQueries = 25000000;
+  uint32_t const numQueries = 2500/*0000*/;
   if(1)
   {
     UnorderedMap<String, uint32_t> classicMap;

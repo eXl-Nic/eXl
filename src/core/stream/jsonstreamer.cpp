@@ -11,6 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/stream/jsonstreamer.hpp>
 #include <core/log.hpp>
 
+#define BUFFERSIZE 256
+#include <b64/encode.h>
+#include <b64/decode.h>
+#undef BUFFERSIZE
+
 #define FAIL_STREAM do {m_StreamFailed = true; return Err::Error;} while(false)
 #define CHECK_FAIL_STATUS do { if(m_StreamFailed) return Err::Error;} while(false)
 
@@ -69,7 +74,7 @@ namespace eXl
     return err;
   }
 
-  Err JSONStreamer::PushKey(String const& iKey)
+  Err JSONStreamer::PushKey(KString iKey)
   {
     CHECK_FAIL_STATUS;
 
@@ -94,7 +99,7 @@ namespace eXl
     }
     WriteIndent();
     WriteStaticString(m_OutStream,"\"");
-    m_OutStream->write(iKey.c_str(), iKey.size());
+    m_OutStream->write(iKey.data(), iKey.size());
     WriteStaticString(m_OutStream,"\"");
     WriteStaticString(m_OutStream," : ");
     m_PendingPushKey = true;
@@ -315,6 +320,11 @@ namespace eXl
 
   void JSONStreamer::WriteChar(Char iChar)
   {
+    if (iChar == 0)
+    {
+      return;
+    }
+
     static Char charToEscape[8] = {'\"','\\','/','\b','\f','\n','\r','\t'};
     static Char charToAppend[8] = {'\"','\\','/','b','f','n','r','t'};
 
@@ -332,5 +342,36 @@ namespace eXl
     {
       m_OutStream->write(&iChar, 1);
     }
+  }
+
+  Err JSONStreamer::WriteBinary(std::istream * iStream, Optional<size_t> iLen)
+  {
+    size_t const inputBufferSize = 128;
+    char inputBuffer[inputBufferSize];
+    size_t const encodeBufferSize = 256;
+    char encodeBuffer[encodeBufferSize];
+
+    base64::base64_encodestate state;
+    base64::base64_init_encodestate(&state);
+
+    Vector<char> tempStr;
+    tempStr.reserve(2 * (iLen ? *iLen + 1 : inputBufferSize));
+    
+    iStream->read(inputBuffer, inputBufferSize);
+    size_t readSize = iStream->gcount();
+    while (readSize > 0)
+    {
+      size_t encodeSize = base64::base64_encode_block(inputBuffer, readSize, encodeBuffer, &state);
+      tempStr.insert(tempStr.end(), encodeBuffer, encodeBuffer + encodeSize);
+
+      iStream->read(inputBuffer, inputBufferSize);
+      readSize = iStream->gcount();
+    }
+    size_t encodeSize = base64::base64_encode_blockend(encodeBuffer, &state);
+    tempStr.insert(tempStr.end(), encodeBuffer, encodeBuffer + encodeSize);
+
+    //tempStr.push_back(0);
+
+    return WriteString(KString(tempStr.data(), tempStr.size()));
   }
 }

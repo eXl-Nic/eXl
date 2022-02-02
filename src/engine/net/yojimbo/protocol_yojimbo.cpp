@@ -2,12 +2,27 @@
 #include "network_yojimbo.hpp"
 #include "streamer_yojimbo.hpp"
 
+#include <core/stream/jsonstreamer.hpp>
+
 #include <cstdarg>
 
 namespace yojimbo
 {
   const uint8_t DEFAULT_PRIVATE_KEY[KeyBytes] = { 0 };
   const uint64_t s_ProtocolId = 0xE816CB0010000001;
+
+  GameConnectionConfig::GameConnectionConfig()
+  {
+    numChannels = CHANNELS_COUNT;
+    protocolId = s_ProtocolId;
+    channel[GameChannel::RELIABLE].type = CHANNEL_TYPE_RELIABLE_ORDERED;
+    channel[GameChannel::UNRELIABLE].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
+#ifdef _DEBUG
+    timeout = -1;
+#else
+    timeout = 15;
+#endif
+  }
 
   thread_local char s_YoPrintBuffer[4096];
 
@@ -20,7 +35,7 @@ namespace yojimbo
 
     if (res > 0)
     {
-      eXl::Log_Manager::Log(eXl::CoreLog::INFO_STREAM).write(s_YoPrintBuffer);
+      eXl::Log_Manager::Log(eXl::CoreLog::ERROR_STREAM).write(s_YoPrintBuffer);
     }
     return res;
   }
@@ -37,7 +52,7 @@ namespace yojimbo
     {
       yojimbo_set_printf_function(&YojimboLog);
       yojimbo_set_assert_function(&YojimboAssert);
-      yojimbo_log_level(YOJIMBO_LOG_LEVEL_DEBUG);
+      yojimbo_log_level(YOJIMBO_LOG_LEVEL_ERROR);
       s_StaticInit = true;
     }
   }
@@ -46,6 +61,30 @@ namespace yojimbo
 
   bool CommandMessage::SerializeInternal(ReadStream& stream)
   { 
+#ifdef YO_BIN_DEBUG
+    base64::base64_encodestate state;
+    base64::base64_init_encodestate(&state);
+    
+    size_t const inputBufferSize = 128;
+    size_t const encodeBufferSize = 256;
+    char encodeBuffer[encodeBufferSize]; 
+    
+    eXl::Vector<char> tempStr;
+    uint32_t numWrites = eXl::Mathi::Max(1, stream.m_reader.m_numBytes / inputBufferSize);
+    for (uint32_t block = 0; block < numWrites; ++block)
+    {
+      uint32_t readSize = block == numWrites - 1 && stream.m_reader.m_numBytes % inputBufferSize != 0
+        ? stream.m_reader.m_numBytes % inputBufferSize
+        : inputBufferSize;
+    
+      size_t encodeSize = base64::base64_encode_block((char*)stream.m_reader.m_data + block * inputBufferSize, readSize, encodeBuffer, &state);
+      tempStr.insert(tempStr.end(), encodeBuffer, encodeBuffer + encodeSize);
+    }
+    size_t encodeSize = base64::base64_encode_blockend(encodeBuffer, &state);
+    
+    LOG_INFO << "Received message binary" << eXl::KString(tempStr.data(), tempStr.size());
+#endif
+
     if (!stream.SerializeBits(m_CommandId, 32))
       return false;
     if (!yojimbo::serialize_uint64_internal(stream, m_QueryId))
@@ -71,6 +110,15 @@ namespace yojimbo
       return false;
     }
     unstreamer.End();
+#ifdef YO_ARGS_DEBUG
+    std::stringstream sstream;
+    eXl::JSONStreamer dbgStreamer(&sstream);
+    
+    dbgStreamer.Begin();
+    cmd.m_Args->Stream(m_Args.GetBuffer(), &dbgStreamer);
+    dbgStreamer.End();
+    LOG_INFO << "Received message " << cmd.m_Name.c_str() << " with payload " << sstream.str();
+#endif
     return true;
   }
 
@@ -130,6 +178,51 @@ namespace yojimbo
 
     return true;
   }
+
+  template <typename Stream>
+  bool ManifestMessage::Serialize(Stream& stream)
+  {
+    if (Stream::IsWriting)
+    {
+      eXl::Network::SerializationContext const& ctx = *reinterpret_cast<eXl::Network::SerializationContext const*>(stream.GetContext());
+      ctx.m_CmdDictionary.m_CommandsHash.GetSeeds(seeds);
+      arraySize = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.size();
+      hashLen = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_HashLen;
+      hashMask = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_Mask;
+    }
+    bool good = true;
+    good &= stream.SerializeBits(seeds[0], 32);
+    good &= stream.SerializeBits(seeds[1], 32);
+    good &= stream.SerializeBits(seeds[2], 32);
+    good &= stream.SerializeBits(arraySize, 32);
+    good &= stream.SerializeBits(hashLen, 32);
+    good &= stream.SerializeBits(hashMask, 32);
+    if (Stream::IsReading)
+    {
+      eXl::Network::SerializationContext& ctx = *reinterpret_cast<eXl::Network::SerializationContext*>(stream.GetContext());
+      ctx.m_CmdDictionary.m_CommandsHash.SetSeeds(seeds);
+      ctx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.resize(arraySize);
+      ctx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.resize(arraySize);
+      ctx.m_CmdDictionary.m_CommandsHash.GetData().m_HashLen = hashLen;
+      ctx.m_CmdDictionary.m_CommandsHash.GetData().m_Mask = hashMask;
+    }
+    return good;
+  }
+
+  bool ManifestMessage::SerializeInternal(yojimbo::ReadStream& stream)
+  {
+    return Serialize(stream);
+  }
+
+  bool ManifestMessage::SerializeInternal(yojimbo::WriteStream& stream)
+  {
+    return Serialize(stream);
+  }
+
+  bool ManifestMessage::SerializeInternal(yojimbo::MeasureStream& stream)
+  {
+    return Serialize(stream);
+  }
 }
 
 namespace eXl
@@ -140,61 +233,6 @@ namespace eXl
     {
       static yojimbo::NetAlloc s_Alloc;
       return s_Alloc;
-    }
-
-    Optional<uint64_t> HexToUint64(KString iStr)
-    {
-      uint64_t outId = 0;
-      uint32_t counter = 0;
-      for (auto digit : iStr)
-      {
-        outId <<= 4;
-        if (counter >= 16)
-        {
-          return {};
-        }
-        if (digit >= '0' && digit <= '9')
-        {
-          outId += (digit - '0');
-        }
-        else if (digit >= 'a' && digit <= 'f')
-        {
-          outId += 10 + (digit - 'a');
-        }
-        else if (digit >= 'A' && digit <= 'F')
-        {
-          outId += 10 + (digit - 'A');
-        }
-        else
-        {
-          return {};
-        }
-        ++counter;
-      }
-      return outId;
-    }
-
-    String Uint64ToHex(uint64_t iId)
-    {
-      if (iId == 0)
-      {
-        return "0";
-      }
-      String str;
-      while (iId != 0)
-      {
-        char digit = iId % 16;
-        if (digit >= 0 && digit <= 9)
-        {
-          str += ('0' + digit);
-        }
-        else
-        {
-          str += ('A' + digit);
-        }
-        iId >>= 4;
-      }
-      return str;
     }
   }
 }

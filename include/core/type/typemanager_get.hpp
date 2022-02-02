@@ -85,10 +85,10 @@ namespace eXl
     template<typename T>
     struct SmallVectorStaticSize;
 
-    template<typename T, uint32_t S>
+    template<typename T, size_t S>
     struct SmallVectorStaticSize<SmallVector<T, S>>
     {
-      static constexpr uint32_t value = S;
+      static constexpr size_t value = S;
     };
 
     template<class T, typename std::enable_if<IsSmallVectorType<T>::s_Value, bool>::type = true>

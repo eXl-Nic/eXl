@@ -28,7 +28,7 @@ namespace eXl
     Err Begin();
     Err End();
 
-    Err PushKey(String const& iKey);
+    Err PushKey(KString iKey);
     Err PopKey();
 
     Err BeginSequence(/*unsigned int iSize*/);
@@ -37,6 +37,10 @@ namespace eXl
     Err BeginStruct();
     Err EndStruct();
 
+    Err WriteBool(bool const* iBoolean)
+    {
+      return WriteString(*iBoolean ? "true" : "false");
+    }
     Err WriteInt(int const* iInt);
     Err WriteUInt(unsigned int const* iUInt);
     Err WriteUInt64(uint64_t const* iUInt);
@@ -44,6 +48,11 @@ namespace eXl
     Err WriteDouble(double const* oDouble);
     Err WriteString(Char const* iStr);
     Err WriteString(KString const& iStr);
+    Err WriteBinary(uint8_t const* iData, size_t iSize)
+    {
+      return Streamer::WriteBinary(iData, iSize);
+    }
+    Err WriteBinary(std::istream* iStream, Optional<size_t> iLen);
 
   protected:
 

@@ -517,7 +517,7 @@ namespace eXl
           return (edgeCenter - m_GoalPt).Length();
         }
 
-        return FLT_MAX;
+        return Mathf::MAX_REAL;
       }
     private:
       NavMesh::EdgeMap const& m_Edges;

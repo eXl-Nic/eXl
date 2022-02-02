@@ -220,7 +220,7 @@ TEST(Network, BasicConnect)
 
   ASSERT_TRUE(net.ctx.m_Server != nullptr);
 
-  auto localIdx = Network::Client::Connect(net.ctx, serverAddress);
+  auto localIdx = Network::Client::Connect(net.ctx, serverAddress, "FEDCBA987654321");
   ASSERT_TRUE(localIdx);
 
   auto client1 = net.ctx.m_Clients[*localIdx].get();
@@ -234,7 +234,7 @@ TEST(Network, BasicConnect)
 
   ASSERT_TRUE(client1->GetState() == Network::ClientState::Connected);
 
-  localIdx = Network::Client::Connect(net.ctx, serverAddress);
+  localIdx = Network::Client::Connect(net.ctx, serverAddress, "2");
   ASSERT_TRUE(localIdx);
 
   auto client2 = net.ctx.m_Clients[*localIdx].get();
@@ -284,7 +284,7 @@ TEST(Network, BasicRepl)
 
   ASSERT_TRUE(net.ctx.m_Server != nullptr);
 
-  auto localIdx = Network::Client::ConnectLoopback(net.ctx/*, serverAddress*/);
+  auto localIdx = Network::Client::ConnectLoopback(net.ctx, "1");
   ASSERT_TRUE(localIdx);
 
   auto client1 = net.ctx.m_Clients[*localIdx].get();
@@ -330,7 +330,7 @@ TEST(Network, BasicRepl)
   // Server ticked twice.
   ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X * 2);
 
-  localIdx = Network::Client::ConnectLoopback(net.ctx/*, serverAddress*/);
+  localIdx = Network::Client::ConnectLoopback(net.ctx, "2");
   ASSERT_TRUE(localIdx);
   auto client2 = net.ctx.m_Clients[*localIdx].get();
   ASSERT_TRUE(client2 != nullptr);

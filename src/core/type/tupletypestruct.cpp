@@ -58,62 +58,7 @@ namespace eXl
     return iVect.size();
   }
 
-  Err TupleTypeAdapter::S_ResolveFieldPath(FieldVector const& iVect, AString const& iPath, unsigned int& oOffset, Type const*& oType)
-  {
-    String::size_type pos = iPath.find(".");
-    if(pos != String::npos)
-    {
-      AString suffix = iPath.substr(pos+1);
-      AString prefix = iPath.substr(0,pos);
-      if(suffix.size() == 0)
-      {
-        LOG_WARNING << "Ill-formed path" << "\n";
-        RETURN_FAILURE;
-      }
-      unsigned int i = 0;
-      for(; i<iVect.size();++i)
-      {
-        if(iVect[i].GetName() == prefix)
-          break;
-      }
-      if(i == iVect.size())
-      {
-        LOG_WARNING << "Prefix "<< prefix <<" not found" << "\n";
-        RETURN_FAILURE;
-      }
-      TupleType const* tupleType = iVect[i].GetType()->IsTuple();
-      if(tupleType == nullptr)
-      {
-        LOG_WARNING << "Field "<< iVect[i].GetName() <<"is not a tuple" << "\n";
-        RETURN_FAILURE;
-      }
-      Err err = tupleType->ResolveFieldPath(suffix,oOffset,oType);
-      if(err)
-      {
-        oOffset += iVect[i].GetOffset();
-        RETURN_SUCCESS;
-      }
-      else
-        return err;
-    }
-    else
-    {
-      unsigned int i = 0;
-      for(; i<iVect.size();++i)
-      {
-        if(iVect[i].GetName() == iPath)
-          break;
-      }
-      if(i == iVect.size())
-      {
-        LOG_WARNING << "Field "<< iPath << " not found"<< "\n";
-        RETURN_FAILURE;
-      }
-      oOffset = iVect[i].GetOffset();
-      oType = iVect[i].GetType();
-      RETURN_SUCCESS;
-    }
-  }
+  
     
   void* TupleTypeAdapter::S_GetField (FieldVector const& iVect, void* iObj,unsigned int iField,Type const*& oType)
   {
@@ -558,13 +503,4 @@ namespace eXl
   }
 
 #endif
-  Err TupleTypeStruct::ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType)const
-  {
-    
-    {
-      FieldVector const& fields = m_Data;
-      return TupleTypeAdapter::S_ResolveFieldPath(fields,iPath,oOffset,oType);
-    }
-    RETURN_FAILURE;
-  }
 }

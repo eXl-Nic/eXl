@@ -37,16 +37,7 @@ namespace yojimbo
 
   struct GameConnectionConfig : ClientServerConfig
   {
-    GameConnectionConfig()
-    {
-      numChannels = CHANNELS_COUNT;
-      protocolId = s_ProtocolId;
-      channel[GameChannel::RELIABLE].type = CHANNEL_TYPE_RELIABLE_ORDERED;
-      channel[GameChannel::UNRELIABLE].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
-#ifdef _DEBUG
-      timeout = -1;
-#endif
-    }
+    GameConnectionConfig();
   };
 
   class ManifestMessage : public BlockMessage
@@ -58,36 +49,11 @@ namespace yojimbo
     uint32_t hashMask;
 
     template <typename Stream>
-    bool Serialize(Stream& stream)
-    {
-      if (Stream::IsWriting)
-      {
-        eXl::Network::SerializationContext const& ctx = *reinterpret_cast<eXl::Network::SerializationContext const*>(stream.GetContext());
-        ctx.m_CmdDictionary.m_CommandsHash.GetSeeds(seeds);
-        arraySize = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.size();
-        hashLen = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_HashLen;
-        hashMask = ctx.m_CmdDictionary.m_CommandsHash.GetData().m_Mask;
-      }
-      bool good = true;
-      good &= stream.SerializeBits(seeds[0], 32);
-      good &= stream.SerializeBits(seeds[1], 32);
-      good &= stream.SerializeBits(seeds[2], 32);
-      good &= stream.SerializeBits(arraySize, 32);
-      good &= stream.SerializeBits(hashLen, 32);
-      good &= stream.SerializeBits(hashMask, 32);
-      if (Stream::IsReading)
-      {
-        eXl::Network::SerializationContext& ctx = *reinterpret_cast<eXl::Network::SerializationContext*>(stream.GetContext());
-        ctx.m_CmdDictionary.m_CommandsHash.SetSeeds(seeds);
-        ctx.m_CmdDictionary.m_CommandsHash.GetData().m_AssignmentTable.resize(arraySize);
-        ctx.m_CmdDictionary.m_CommandsHash.GetData().m_RankTable.resize(arraySize);
-        ctx.m_CmdDictionary.m_CommandsHash.GetData().m_HashLen = hashLen;
-        ctx.m_CmdDictionary.m_CommandsHash.GetData().m_Mask = hashMask;
-      }
-      return good;
-    }
+    bool Serialize(Stream& stream);
 
-    YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
+    bool SerializeInternal(yojimbo::ReadStream& stream);
+    bool SerializeInternal(yojimbo::WriteStream& stream);
+    bool SerializeInternal(yojimbo::MeasureStream& stream);
   };
 
   class CommandMessage : public yojimbo::Message
@@ -202,26 +168,26 @@ namespace eXl
       return iClientGen[GetClientIndexFromId(iClientId)] == clientGen;
     }
 
-    Optional<uint64_t> HexToUint64(KString iStr);
-    String Uint64ToHex(uint64_t iId);
-
     struct Control
     {
       static uint32_t constexpr s_StructureEnd = 2;
       static uint32_t constexpr s_Sequence_Next = 1;
       static uint32_t constexpr s_Sequence_End = 0;
 
+      static uint32_t constexpr s_EmptySequence = 14;
+      static uint32_t constexpr s_Sequence = 13;
 
-      static uint32_t constexpr s_EmptySequence = 12;
-      static uint32_t constexpr s_Sequence = 11;
-      static uint32_t constexpr s_Structure = 10;
-      static uint32_t constexpr s_Key = 9;
-      static uint32_t constexpr s_Integer = 8;
-      static uint32_t constexpr s_UInteger = 7;
-      static uint32_t constexpr s_UInt64 = 6;
-      static uint32_t constexpr s_Float = 5;
-      static uint32_t constexpr s_Double = 4;
-      static uint32_t constexpr s_String = 3;
+      static uint32_t constexpr s_Structure = 12;
+      static uint32_t constexpr s_Key = 11;
+
+      static uint32_t constexpr s_Integer = 10;
+      static uint32_t constexpr s_UInteger = 9;
+      static uint32_t constexpr s_UInt64 = 8;
+      static uint32_t constexpr s_Float = 7;
+      static uint32_t constexpr s_Double = 6;
+      static uint32_t constexpr s_String = 5;
+      static uint32_t constexpr s_Boolean = 4;
+      static uint32_t constexpr s_Binary = 3;
 
       static uint32_t constexpr s_ControlBitSize = 4;
     };
@@ -235,7 +201,9 @@ namespace eXl
       UInt64,
       String,
       Float,
-      Double
+      Double,
+      Boolean,
+      Binary
     };
 
     struct ReadAlloc
@@ -264,12 +232,15 @@ namespace eXl
         uint32_t elem;
       };
       uint8_t strReadBuffer[1028];
+      Vector<uint8_t> binReadBuffer;
       Vector<int32_t> ints;
       Vector<uint32_t> uints;
       Vector<uint64_t> uints64;
       Vector<float> flts;
       Vector<double> dbls;
       Vector<String> strings;
+      Vector<bool> booleans;
+      Vector<Vector<uint8_t>> binaries;
       Vector<Seq> seqs;
       Vector<uint32_t> seqElem;
       Vector<Struct> structs;
@@ -343,6 +314,7 @@ namespace eXl
 
       SerializationContext m_SerializationCtx;
       CommandHandler m_Commands;
+      bool m_HasManifest = false;
     };
 
     class Server_Impl : public yojimbo::GameAdapter

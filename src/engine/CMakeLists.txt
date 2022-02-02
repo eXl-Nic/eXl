@@ -137,7 +137,6 @@ ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.hpp
 target_include_directories(eXl_Engine PRIVATE 
   ${BULLET_INCLUDE_DIR} 
   ${IMGUI_INCLUDE_DIR} 
-  ${LIBB64_INCLUDE_DIR} 
   ${FREETYPE_INCLUDE_DIR}
   ${UTF8_INCLUDE_DIR}
   ${YOJIMBO_INCLUDE_DIR}
@@ -164,8 +163,6 @@ set( PREREQS_PRIV
   BulletDynamics
   BulletCollision
   LinearMath
-  libb64
-  freetype
   yojimbo
 )
 
@@ -173,6 +170,7 @@ if(${EXL_BUILD_OGL})
 set( PREREQS_PRIV
   ${PREREQS_PRIV}
   imgui
+  freetype
   ${OGL_LIBRARIES}
   )
 endif()

@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/plugin.hpp>
 #include <core/log.hpp>
 #include <core/corelib.hpp>
+#include <core/type/typemanager.hpp>
 
 #include <engine/game/commondef.hpp>
 
@@ -47,8 +48,11 @@ namespace eXl
   
   void CharacterAnimation_StaticInit();
   void CharacterAnimation_StaticDestroy();
+
+#ifdef EXL_LUA
   void Script_StaticInit();
   void Script_StaticDestroy();
+#endif
 
   namespace
   {
@@ -216,7 +220,9 @@ namespace eXl
 
 
   void Register_ENGINE_Types();
-  LUA_REG_FUN(BindDunatk);
+#ifdef EXL_LUA
+  LUA_REG_FUN(BindEngine);
+#endif
 
   Optional<ComponentManifest> s_EngineCommonManifest;
 
@@ -259,7 +265,6 @@ namespace eXl
     {
       s_NameRegistry.emplace();
       CharacterAnimation_StaticInit();
-      Script_StaticInit();
 
       Tileset::Init();
       TilingGroup::Init();
@@ -269,13 +274,14 @@ namespace eXl
       MCMCModelRsc::Init();
       FontResource::Init();
       //CharacterAnimation::Init();
-#ifdef EXL_LUA
       LuaScriptBehaviour::Init();
+#ifdef EXL_LUA
+      Script_StaticInit();
 #endif
 
       Register_ENGINE_Types();
 #ifdef EXL_LUA
-      LuaManager::AddRegFun(&BindDunatk);
+      LuaManager::AddRegFun(&BindEngine);
 #endif
 
       TypeManager::RegisterCoreType<ObjectHandle>();
@@ -360,6 +366,7 @@ namespace eXl
         ph.CreateComponent(iObject, initData);
       };
 
+#ifdef EXL_LUA
       auto createTriggerFactory = [](World& iWorld, ObjectHandle iObject)
       {
         ScriptTriggerSystem* triggerSys = iWorld.GetSystem<ScriptTriggerSystem>();
@@ -409,6 +416,7 @@ namespace eXl
         phSys->AddTrigger(iObject, def, triggerSys->GetScriptCallbackhandle());
         scriptSys->AddBehaviour(iObject, *script);
       };
+#endif
 
       auto createCharacterFactory = [](World& iWorld, ObjectHandle iObject)
       {
@@ -502,7 +510,9 @@ namespace eXl
 
       s_EngineCommonManifest->RegisterComponent(GfxSpriteComponentName(), createGfxSpriteFactory, { GfxSpriteDescName() });
       s_EngineCommonManifest->RegisterComponent(PhysicsComponentName(), createPhysicsFactory, {ObjectShapeData::PropertyName(), PhysicBodyData::PropertyName()});
+#ifdef EXL_LUA
       s_EngineCommonManifest->RegisterComponent(TriggerComponentName(), createTriggerFactory, {ObjectShapeData::PropertyName(), TriggerComponentDesc::PropertyName() });
+#endif
       s_EngineCommonManifest->RegisterComponent(CharacterComponentName(), createCharacterFactory, { ObjectShapeData::PropertyName(), CharacterDesc::PropertyName() });
       
 #ifdef EXL_LUA
@@ -520,7 +530,9 @@ namespace eXl
     void _Unload()
     {
       ShutdownYojimbo();
+#ifdef EXL_LUA
       Script_StaticDestroy();
+#endif
       CharacterAnimation_StaticDestroy();
       s_NameRegistry.reset();
       s_EngineCommonManifest.reset();

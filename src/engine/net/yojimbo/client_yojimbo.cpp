@@ -37,21 +37,36 @@ namespace eXl
     {
       double totalTime = double(Clock::GetTimestamp() - m_TimeStart) / Clock::GetTicksPerSecond();
       m_Client.AdvanceTime(totalTime);
-      m_Client.ReceivePackets();
-
-      if (m_Client.IsConnected())
+      bool hadManifest;
+      do
       {
-        for (int i = 0; i < yojimbo::GameConnectionConfig().numChannels; i++)
+        hadManifest = m_HasManifest;
+        if (!m_HasManifest)
         {
-          yojimbo::Message* message = m_Client.ReceiveMessage(i);
-          while (message != NULL)
+          if (!m_Client.PollPacket())
           {
-            ProcessMessage(*message);
-            m_Client.ReleaseMessage(message);
-            message = m_Client.ReceiveMessage(i);
+            return;
           }
         }
-      }
+        else
+        {
+          m_Client.ReceivePackets();
+        }
+
+        if (m_Client.IsConnected())
+        {
+          for (int i = 0; i < yojimbo::GameConnectionConfig().numChannels; i++)
+          {
+            yojimbo::Message* message = m_Client.ReceiveMessage(i);
+            while (message != NULL)
+            {
+              ProcessMessage(*message);
+              m_Client.ReleaseMessage(message);
+              message = m_Client.ReceiveMessage(i);
+            }
+          }
+        }
+      } while (!hadManifest);
     }
 
     void Client_Impl::ProcessMessage(yojimbo::Message const& iMessage)
@@ -80,6 +95,9 @@ namespace eXl
         }
 
         m_SerializationCtx.m_CmdDictionary.Build_Client(*m_eXlClient->m_Ctx.m_NetDriver);
+
+        m_HasManifest = true;
+
         break;
       }
       case GameMessageType::SERVER_COMMAND:
@@ -160,6 +178,10 @@ namespace eXl
 
     Client::~Client()
     {
+      if (!m_Impl->m_Client.IsConnected())
+      {
+        return;
+      }
       if (m_Impl->m_Client.IsLoopback())
       {
         if (m_Ctx.m_Server)
@@ -234,11 +256,11 @@ namespace eXl
       return m_Impl->SendServerCommand(std::move(iCall));
     }
 
-    Optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iURL, String const& iClientId)
+    Optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iURL, String const& iClientId, Optional<uint16_t> iPort)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});
 
-      yojimbo::Address serverAddress(iURL.c_str(), iCtx.m_ServerPort);
+      yojimbo::Address serverAddress(iURL.c_str(), iPort ? *iPort : iCtx.m_ServerPort);
 
       Optional<uint64_t> clientId = HexToUint64(iClientId);
 

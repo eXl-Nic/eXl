@@ -38,12 +38,34 @@ set(FREETYPE_ROOT "${EXL_ROOT}/modules/freetype")
 set(LAYOUT_ROOT "${EXL_ROOT}/modules/layout")
 set(GTEST_ROOT "${EXL_ROOT}/modules/gtest")
 set(UTF8_ROOT "${EXL_ROOT}/modules/utf8")
-set(YOJIMBO_ROOT "${EXL_ROOT}/modules/yojimbo")
 
 include(${EXL_ROOT}/config/eXl/eXlSetupBuildPath.cmake)
 include(${EXL_ROOT}/config/eXl/eXlconfig.cmake)
 include(${EXL_ROOT}/config/eXl/eXlMacros.cmake)
 include(${EXL_ROOT}/config/eXl/eXlAddDependencies.cmake)
+
+add_exl_dependencies()
+
+if(${EXL_BUILD_TESTS})
+    #Override gtest's opinionated folders to have something working out of the box
+    if (TARGET gtest)
+        set_target_properties(gtest
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${OUT_DIR}
+            ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}
+            PDB_OUTPUT_DIRECTORY ${OUT_DIR})
+    endif()
+
+    if (TARGET gtest_main)
+        set_target_properties(gtest_main
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${OUT_DIR}
+            ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}
+            PDB_OUTPUT_DIRECTORY ${OUT_DIR})
+    endif()
+endif()
 
 SET(LAYOUT_INCLUDE_DIR ${LAYOUT_ROOT})
 

@@ -45,123 +45,138 @@ namespace eXl
 
 #else
 
-  struct NameAllocHolder
+  NameAllocHolder::NameAllocHolder()
   {
+    AllocPage(0);
+  }
 
-    NameAllocHolder()
+  uint32_t NameAllocHolder::AllocPage(size_t iSize)
+  {
+    size_t const defaultPageSize = 4096;
+    uint32_t pageIdx = m_Pages.size();
+    if (iSize > defaultPageSize / 2)
     {
-      AllocPage(0);
+      m_Pages.emplace_back(iSize);
+      if (m_Pages.size() > 1)
+      {
+        --pageIdx;
+        m_Pages[pageIdx].Swap(m_Pages[pageIdx + 1]);
+      }
     }
-    NameAllocHolder(NameAllocHolder const&) = delete;
-    NameAllocHolder& operator = (NameAllocHolder const&) = delete;
-
-    uint32_t AllocPage(size_t iSize)
+    else
     {
-      size_t const defaultPageSize = 4096;
-      uint32_t pageIdx = m_Pages.size() - 1;
-      if (iSize > defaultPageSize / 2)
-      {
-        m_Pages.emplace_back(iSize);
-        if (m_Pages.size() > 1)
-        {
-          --pageIdx;
-          m_Pages[pageIdx].Swap(m_Pages[pageIdx + 1]);
-        }
-      }
-      else
-      {
-        m_Pages.emplace_back(defaultPageSize);     
-      }
-
-      return pageIdx;
+      m_Pages.emplace_back(defaultPageSize);     
     }
 
-    struct Page
+    return pageIdx;
+  }
+
+  NameAllocHolder::Page::Page(size_t iSize)
+  {
+    m_Alloc = (char*)eXl_ALLOC(iSize);
+    m_Available = iSize;
+    m_Cur = m_Alloc;
+  }
+  NameAllocHolder::Page::~Page()
+  {
+    eXl_FREE(m_Alloc);
+  }
+
+  NameAllocHolder::Page::Page(Page&& iMoved)
+  {
+    m_Alloc = iMoved.m_Alloc;
+    m_Available = iMoved.m_Available;
+    m_Cur = iMoved.m_Cur;
+    iMoved.m_Alloc = nullptr;
+  }
+
+  void NameAllocHolder::Page::Swap(Page& iOther)
+  {
+    Char* tempAlloc = iOther.m_Alloc;
+    size_t tempAvailable = iOther.m_Available;
+    Char* tempCur = iOther.m_Cur;
+
+    iOther.m_Alloc = m_Alloc;
+    iOther.m_Available = m_Available;
+    iOther.m_Cur = m_Cur;
+
+    m_Alloc = tempAlloc;
+    m_Available = tempAvailable;
+    m_Cur = tempCur;
+  }
+
+  Optional<KString> NameAllocHolder::GetExistingString(KString iStr)
+  {
+    auto iter = m_Strings.find(iStr);
+    if (iter != m_Strings.end())
     {
-      Page(size_t iSize)
-      {
-        m_Alloc = (char*)eXl_ALLOC(iSize);
-        m_Available = iSize;
-        m_Cur = m_Alloc;
-      }
-      ~Page()
-      {
-        eXl_FREE(m_Alloc);
-      }
+      return *iter;
+    }
 
-      Page(Page&& iMoved)
-      {
-        m_Alloc = iMoved.m_Alloc;
-        m_Available = iMoved.m_Available;
-        m_Cur = iMoved.m_Cur;
-        iMoved.m_Alloc = nullptr;
-      }
-      Page(Page const&) = delete;
-      Page& operator=(Page const&) = delete;
+    return {};
+  }
 
-      void Swap(Page& iOther)
-      {
-        Char* tempAlloc = iOther.m_Alloc;
-        size_t tempAvailable = iOther.m_Available;
-        Char* tempCur = iOther.m_Cur;
+  KString NameAllocHolder::InsertString(KString iStr)
+  {
+    size_t strSize = iStr.size() + 1;
+    uint32_t const pageIdx = (m_Pages.back().m_Available < strSize) ?
+      AllocPage(strSize) : m_Pages.size() - 1;
 
-        iOther.m_Alloc = m_Alloc;
-        iOther.m_Available = m_Available;
-        iOther.m_Cur = m_Cur;
+    Page& page = m_Pages[pageIdx];
+    char* insertPos = page.m_Cur;
+    KString newStr(insertPos, iStr.size());
+    memcpy(insertPos, iStr.data(), iStr.size());
+    insertPos += iStr.size();
+    insertPos[0] = 0;
+    insertPos++;
 
-        m_Alloc = tempAlloc;
-        m_Available = tempAvailable;
-        m_Cur = tempCur;
-      }
+    auto insertRes = m_Strings.insert(newStr);
+    if (insertRes.second)
+    {
+      page.m_Available -= strSize;
+      page.m_Cur = insertPos;
+    }
+      
+    return *(insertRes.first);
+  }
 
-      Char* m_Alloc;
-      size_t m_Available;
-      Char* m_Cur;
-    };
+  KString NameAllocHolder::Get(KString iStr)
+  {
+    auto res = GetExistingString(iStr);
+    if (res)
+    {
+      return *res;
+    }
 
+    return InsertString(iStr);
+  }
+
+  struct TSNameAllocHolder : private NameAllocHolder
+  {
     using ReadLock = std::shared_lock<std::shared_mutex>;
     using WriteLock = std::unique_lock<std::shared_mutex>;
 
-    KString Get(KString iStr)
-    {
-      {
-        ReadLock lock(m_Mutex);
-        auto iter = m_Strings.find(iStr);
-        if (iter != m_Strings.end())
-        {
-          return *iter;
-        }
-      }
-
-      WriteLock lock(m_Mutex);
-      uint32_t const pageIdx = (m_Pages.back().m_Available < iStr.size() + 1) ?
-        AllocPage(iStr.size() + 1) : m_Pages.size() - 1;
-
-      Page& page = m_Pages[pageIdx];
-      char* insertPos = page.m_Cur;
-      KString newStr(insertPos, iStr.size());
-      memcpy(insertPos, iStr.data(), iStr.size());
-      insertPos += iStr.size();
-      insertPos[0] = 0;
-      insertPos++;
-
-      auto insertRes = m_Strings.insert(newStr);
-      if (insertRes.second)
-      {
-        page.m_Available -= iStr.size() + 1;
-        page.m_Cur = insertPos;
-      }
-      
-      return *(insertRes.first);
-    }
-    
-
-    UnorderedSet<KString> m_Strings;
-    Vector<Page> m_Pages;
+    KString Get(KString iStr);
+  private:
     std::shared_mutex m_Mutex;
   };
 
-  Optional<NameAllocHolder> s_Names;
+  KString TSNameAllocHolder::Get(KString iStr)
+  {
+    {
+      ReadLock lock(m_Mutex);
+      auto res = GetExistingString(iStr);
+      if (res)
+      {
+        return *res;
+      }
+    }
+    WriteLock lock(m_Mutex);
+
+    return InsertString(iStr);
+  }
+
+  Optional<TSNameAllocHolder> s_Names;
 
   void Name_Init()
   {

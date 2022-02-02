@@ -98,7 +98,10 @@ set(SOURCES ${SOURCES}
 
 endif()
 
-SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} xxhash)
+SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} 
+  xxhash
+  libb64
+)
 
 if(${ENABLE_FREEIMAGE})
   set(SOURCES ${SOURCES}
@@ -141,10 +144,14 @@ if(${UNIX})
   SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} dl)
 endif()
 
-target_include_directories(eXl_Core PRIVATE ${XXHASH_INCLUDE_DIR})
+target_include_directories(eXl_Core PRIVATE 
+  ${XXHASH_INCLUDE_DIR} 
+  ${LIBB64_INCLUDE_DIR} 
+)
 target_include_directories(eXl_Core PRIVATE ${EXL_ROOT}/modules/cxxopts/include)
 target_link_libraries(eXl_Core LINK_PUBLIC ${CORE_LIBS})
 target_link_libraries(eXl_Core LINK_PRIVATE ${CORE_LIBS_PRIVATE})
+target_precompile_headers(eXl_Core PUBLIC ${INCLUDE_DIR}/coredef.hpp)
 
 if(${ANDROID})
 else()

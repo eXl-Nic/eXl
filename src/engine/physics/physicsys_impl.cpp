@@ -706,6 +706,11 @@ namespace eXl
 
   void NeighborhoodExtractionImpl::Run(btDbvt& iTree, Vector3f const& iForwardOffset, float iRadiusSearch)
   {
+    if (iTree.m_root == nullptr)
+    {
+      return;
+    }
+
     Vector<uint32_t> objects;
     objects.reserve(m_Objects.size());
     {

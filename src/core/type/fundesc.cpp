@@ -137,6 +137,8 @@ namespace eXl
     return GetField(iObj, StringUtil::ToUInt(numStr), oType);
   }
 
+#ifdef EXL_LUA
+
   Err ArgsBuffer::ConvertFromLuaRaw_Uninit(lua_State* iState, unsigned int& ioIndex, void* oObj)const
   {
     return Err::Undefined;
@@ -156,4 +158,5 @@ namespace eXl
   {
 
   }
+#endif
 }

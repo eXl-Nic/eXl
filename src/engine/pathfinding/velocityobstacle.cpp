@@ -775,7 +775,7 @@ namespace eXl
       uint32_t testVtxId = m_PolyMesh.edges[firstEdge].dstVtx;
       Vector2f testVtxPos = m_PolyMesh.vertices[testVtxId].positionf;
 
-      float minDist = FLT_MAX;
+      float minDist = Mathf::MAX_REAL;
 
       while (checkCounter != 0 && (curFace.second == 0 || curEdge != firstEdge))
       {
@@ -801,7 +801,7 @@ namespace eXl
         checkCounter--;
       }
 
-      if(minDist < FLT_MAX && !culledFace)
+      if(minDist < Mathf::MAX_REAL && !culledFace)
       {
         PolyHalfEdge const& curPolyEdge = m_PolyMesh.edges[firstEdge];
         uint32_t nextEdge = curPolyEdge.nextEdge;
@@ -950,7 +950,7 @@ namespace eXl
 
     bestScore = std::max_element(velocities.curScore, velocities.curScore + 4);
     priority = bestScore - velocities.curScore;
-    if(*bestScore > -FLT_MIN)
+    if(*bestScore > -1.0/Mathf::MAX_REAL)
     //for (uint32_t priority = 0; priority < 4; ++priority)
     {
       //if (velocities.curScore[priority] > )

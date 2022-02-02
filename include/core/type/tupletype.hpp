@@ -65,7 +65,7 @@ namespace eXl
     **********************************************************************/
     virtual const Type* GetFieldDetails(TypeFieldName iFieldName,unsigned int& oNumField)const=0;
 
-    virtual Err ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType)const=0;
+    virtual Err ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType)const;
 
     /**
        Check if the type is a user type, that is to say a type created through the type manager.

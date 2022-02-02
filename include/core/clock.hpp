@@ -14,22 +14,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <cstdint>
 
-class EXL_CORE_API Clock
+namespace eXl
 {
-  
-public:
-  Clock();
-  ~Clock();
-  
-  float GetTime();
-  float PeekTime()const;
-  static uint64_t GetTicksPerSecond();
-  static uint64_t GetTimestamp();
+  class EXL_CORE_API Clock
+  {
 
-private:
-  void Initialize();
-  uint64_t Time0,Time1;
-};
+  public:
+    Clock();
+    ~Clock();
+
+    float GetTime();
+    float PeekTime()const;
+    static uint64_t GetTicksPerSecond();
+    static uint64_t GetTimestamp();
+
+  private:
+    void Initialize();
+    uint64_t Time0, Time1;
+  };
+}
 
  
 

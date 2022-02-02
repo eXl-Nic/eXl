@@ -9,6 +9,85 @@ namespace eXl
   IMPLEMENT_TYPE_EX(Network::ObjectId, NetObjectId);
   namespace Network
   {
+    Optional<uint64_t> HexToUint64(KString iStr)
+    {
+      uint64_t out;
+      size_t readBytes = HexToBytes(iStr, (uint8_t*)&out, sizeof(out));
+      if (readBytes <= sizeof(out))
+      {
+        return out;
+      }
+      return {};
+    }
+
+    size_t HexToBytes(KString iStr, uint8_t* oBuffer, size_t iBufferSize)
+    {
+      memset(oBuffer, 0, iBufferSize);
+      uint32_t maxBytes = (iStr.size() + 1) / 2;
+      if (maxBytes == 0)
+      {
+        return 0;
+      }
+      if (maxBytes > iBufferSize)
+      {
+        return -1;
+      }
+      oBuffer += (maxBytes - 1);
+      size_t counter = iStr.size();
+      for (auto digit : iStr)
+      {
+        uint8_t outByte = counter % 2 == 1 ? *oBuffer : 0;
+        outByte <<= 4;
+        if (digit >= '0' && digit <= '9')
+        {
+          outByte += (digit - '0');
+        }
+        else if (digit >= 'a' && digit <= 'f')
+        {
+          outByte += 10 + (digit - 'a');
+        }
+        else if (digit >= 'A' && digit <= 'F')
+        {
+          outByte += 10 + (digit - 'A');
+        }
+        else
+        {
+          return -1;
+        }
+
+        *oBuffer = outByte;
+        --counter;
+        if (counter % 2 == 0)
+        {
+          --oBuffer;
+        }
+      }
+      return maxBytes;
+    }
+
+    String Uint64ToHex(uint64_t iId)
+    {
+      if (iId == 0)
+      {
+        return "0";
+      }
+      String str;
+      str.reserve(16);
+      while (iId != 0)
+      {
+        char digit = iId % 16;
+        if (digit >= 0 && digit <= 9)
+        {
+          str += ('0' + digit);
+        }
+        else
+        {
+          str += ('A' + digit);
+        }
+        iId >>= 4;
+      }
+      return str;
+    }
 
     Type const* ClientInputData::GetType()
     {
@@ -48,6 +127,7 @@ namespace eXl
       desc.m_Executor = iExecutor;
       desc.m_Reliable = iReliable;
       desc.m_Callback = std::move(iCb);
+      desc.m_Name = iName;
 
       uint32_t commandNum = m_Commands.size();
       m_Commands.push_back(std::move(desc));

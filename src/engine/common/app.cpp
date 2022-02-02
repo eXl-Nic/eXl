@@ -287,11 +287,11 @@ namespace eXl
     phSys->AddKinematicController(characters);
     phSys->AddKinematicController(projectiles);
     phSys->AddKinematicController(&navigator->GetController());
-
+#ifdef EXL_LUA
     world.AddSystem(std::make_unique<ScriptTriggerSystem>());
+#endif
 
     //world.AddTick(World::PrePhysics, [this](World&, float iDelta) { navigator->Tick(iDelta, phSys->GetNeighborhoodExtraction()); });
-    world.AddTick(World::PostPhysics, [this](World&, float iDelta) { characters->Tick(iDelta); });
     world.AddTick(World::PostPhysics, [this](World&, float iDelta) { projectiles->Tick(iDelta); });
   }
 

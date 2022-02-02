@@ -9,6 +9,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <engine/game/scripttrigger.hpp>
+
+#ifdef EXL_LUA
+
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/physics/physicsys.hpp>
 
@@ -49,3 +52,5 @@ namespace eXl
     m_Handle = phSys->AddTriggerCallback(std::make_unique<ScriptTrigger>(iWorld));
   }
 }
+
+#endif

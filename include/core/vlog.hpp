@@ -140,6 +140,20 @@ namespace eXl
     void write(WString const& tolog,unsigned int stream);
     void write(const char* tolog,unsigned int stream);
     void write(const wchar_t* tolog,unsigned int stream);
+
+    const LogObject& operator << (const LogObject& , const int );
+    const LogObject& operator << (const LogObject& , const unsigned int );
+    const LogObject& operator << (const LogObject& , const void* );
+    const LogObject& operator << (const LogObject& , const float );
+    const LogObject& operator <<(const LogObject& , const AString& );
+    const LogObject& operator <<(const LogObject& , const KString& );
+    const LogObject& operator << (const LogObject& , const char* );
+#if defined(_WIN64) || defined (__LP64__)
+    const LogObject& operator << (const LogObject& , const size_t tolog);
+#endif
+#ifdef EXL_SHARED_LIBRARY
+    const LogObject& operator <<(const LogObject& , const std::string& tolog);
+#endif
   };
 
   namespace detail

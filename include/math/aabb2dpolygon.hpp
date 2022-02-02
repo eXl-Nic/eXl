@@ -119,7 +119,7 @@ namespace eXl
   DEFINE_MATH_TYPE_EX(AABB2DPolygon<int>, AABB2DPolygoni)
 }
 
-#if defined(EXL_SHARED_LIBRARY)
+#if 1 || defined(EXL_SHARED_LIBRARY)
 namespace eXl
 {
 

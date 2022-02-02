@@ -299,4 +299,68 @@ namespace eXl
       }
     }
   }
+
+  Err TupleType::ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType) const
+  {
+    String::size_type pos = iPath.find(".");
+    if (pos != String::npos)
+    {
+      AString suffix = iPath.substr(pos + 1);
+      AString prefix = iPath.substr(0, pos);
+      if (suffix.size() == 0)
+      {
+        LOG_WARNING << "Ill-formed path" << "\n";
+        RETURN_FAILURE;
+      }
+      Type const* fieldType = nullptr;
+      TypeFieldName fieldName;
+      unsigned int i = 0;
+      for (; i < GetNumField(); ++i)
+      {
+        fieldType = GetFieldDetails(i, fieldName);
+        if (fieldType && fieldName == prefix)
+          break;
+      }
+      if (i == GetNumField())
+      {
+        LOG_WARNING << "Prefix " << prefix << " not found" << "\n";
+        RETURN_FAILURE;
+      }
+      TupleType const* tupleType = fieldType->IsTuple();
+      if (tupleType == nullptr)
+      {
+        LOG_WARNING << "Field " << fieldName << "is not a tuple" << "\n";
+        RETURN_FAILURE;
+      }
+      Err err = tupleType->ResolveFieldPath(suffix, oOffset, oType);
+      if (err)
+      {
+        ptrdiff_t curOffset = (ptrdiff_t)GetField((void const*)(1), i, fieldType) - 1;
+        oOffset += curOffset;
+        RETURN_SUCCESS;
+      }
+      else
+        return err;
+    }
+    else
+    {
+      Type const* fieldType = nullptr;
+      TypeFieldName fieldName;
+      unsigned int i = 0;
+      for (; i < GetNumField(); ++i)
+      {
+        fieldType = GetFieldDetails(i, fieldName);
+        if (fieldType && fieldName == iPath)
+          break;
+      }
+      if (i == GetNumField())
+      {
+        LOG_WARNING << "Field " << iPath << " not found" << "\n";
+        RETURN_FAILURE;
+      }
+      oOffset = (ptrdiff_t)GetField((void const*)(1), i, fieldType) - 1;
+      oType = fieldType;
+      RETURN_SUCCESS;
+    }
+  }
 }

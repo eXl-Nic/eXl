@@ -9,6 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <engine/script/luascriptsystem.hpp>
+
 #include <engine/script/luascriptbehaviour.hpp>
 
 #include <core/resource/resourceloader.hpp>
@@ -18,7 +19,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   IMPLEMENT_RTTI(LuaScriptBehaviour);
-  IMPLEMENT_RTTI(LuaScriptSystem);
 
   using LuaScriptBehaviourLoader = LuaScriptLoader_T<LuaScriptBehaviour>;
 
@@ -65,6 +65,9 @@ namespace eXl
   {
 
   }
+#ifdef EXL_LUA
+
+  IMPLEMENT_RTTI(LuaScriptSystem);
 
   namespace
   {
@@ -298,4 +301,5 @@ namespace eXl
     oScriptObj = iterScript->second.m_ScriptData;
     return iterFunction->second;
   }
+#endif
 }

@@ -156,12 +156,6 @@ Err CoreTupleType<T>::ConvertFromLuaRaw_Uninit(lua_State* iState,unsigned int& i
 }
 
 template <class T>
-Err CoreTupleType<T>::ResolveFieldPath(AString const& iPath, unsigned int& oOffset, Type const*& oType)const
-{
-  return TupleTypeAdapter::S_ResolveFieldPath(m_Fields,iPath,oOffset,oType);
-}
-
-template <class T>
 void CoreTupleType<T>::RegisterLua(lua_State* iState) const
 {
   luabind::class_<T> newClass(GetName().c_str());

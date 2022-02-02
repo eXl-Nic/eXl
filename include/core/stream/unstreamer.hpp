@@ -29,7 +29,7 @@ namespace eXl
     virtual Err Begin();
     virtual Err End();
 
-    virtual Err PushKey(String const& iKey) = 0;
+    virtual Err PushKey(KString iKey) = 0;
     virtual Err PopKey() = 0;
 
     virtual Err BeginStruct() = 0;
@@ -48,12 +48,14 @@ namespace eXl
     virtual Err BeginSequence() = 0;
     virtual Err NextSequenceElement() = 0;
 
+    virtual Err ReadBool(bool* oBoolean) = 0;
     virtual Err ReadInt(int * oInt) = 0;
     virtual Err ReadUInt(unsigned int * oUInt) = 0;
     virtual Err ReadUInt64(uint64_t * oUInt) = 0;
     virtual Err ReadFloat(float * oFloat) = 0;
     virtual Err ReadDouble(double * oDouble) = 0;
     virtual Err ReadString(String* oStr) = 0;
+    virtual Err ReadBinary(Vector<uint8_t>* oData) = 0;
   };
 
   template <typename T>
@@ -176,17 +178,7 @@ namespace eXl
   template <>
   inline Err Unstreamer::Read<bool>(bool* oObj)
   {
-    String tempStr;
-    if(ReadString(&tempStr))
-    {
-      if(tempStr == "true")
-        *oObj = true;
-      else if(tempStr == "false")
-        *oObj = false;
-      else
-        return Err::Failure;
-    }
-    return Err::Success;
+    return ReadBool(oObj);
   }
 
   template <>

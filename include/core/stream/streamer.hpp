@@ -41,9 +41,10 @@ namespace eXl
     virtual Err BeginStruct() = 0;
     virtual Err EndStruct() = 0;
 
-    virtual Err PushKey(String const& iKey) = 0;
+    virtual Err PushKey(KString iKey) = 0;
     virtual Err PopKey() = 0;
 
+    virtual Err WriteBool(bool const* iBoolean) = 0;
     virtual Err WriteInt(int const* iInt) = 0;
     virtual Err WriteUInt(unsigned int const* iUInt) = 0;
     virtual Err WriteUInt64(uint64_t const* iUInt) = 0;
@@ -53,6 +54,8 @@ namespace eXl
     virtual Err WriteString(KString const& iStr) = 0;
     inline  Err WriteString(String const& iStr)
     {return WriteString(iStr.c_str());}
+    virtual Err WriteBinary(uint8_t const*, size_t iSize);
+    virtual Err WriteBinary(std::istream* iStream, Optional<size_t> iLen = {}) = 0;
   };
 
   template <typename T>
@@ -167,10 +170,7 @@ namespace eXl
   template <>
   inline Err Streamer::Write<bool>(bool const* iObj)
   {
-    if(*iObj)
-      return WriteString("true");
-    else
-      return WriteString("false");
+    return WriteBool(iObj);
   }
 
   template <>

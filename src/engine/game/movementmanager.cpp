@@ -120,7 +120,7 @@ namespace eXl
     {
       return;
     }
-
+    
     auto childEntry = parentEntry->m_AttachedObjects.find(&iChild);
     if(childEntry == parentEntry->m_AttachedObjects.end())
     {

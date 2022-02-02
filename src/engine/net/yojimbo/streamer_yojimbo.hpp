@@ -36,7 +36,7 @@ namespace eXl
 
       Err BeginStruct() override;
       Err EndStruct() override;
-      Err PushKey(String const& iKey) override;
+      Err PushKey(KString iKey) override;
       Err PopKey() override;
 
       Err ReadInt(int* iInt) override;
@@ -45,6 +45,8 @@ namespace eXl
       Err ReadFloat(float* iFloat) override;
       Err ReadDouble(double* iDouble) override;
       Err ReadString(String* iStr) override;
+      Err ReadBool(bool* iBool) override;
+      Err ReadBinary(Vector<uint8_t>* iStr) override;
     };
 
     template <typename T>
@@ -120,7 +122,7 @@ namespace eXl
         return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
       }
 
-      Err PushKey(String const& iKey) override
+      Err PushKey(KString iKey) override
       {
         CHECK_STREAM_GOOD;
 
@@ -148,7 +150,7 @@ namespace eXl
         CHECK_STREAM_GOOD;
         m_Good = m_YoStream.SerializeBits(s_Integer, s_ControlBitSize);
         CHECK_STREAM_GOOD;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)iInt, sizeof(int32_t));
+        m_Good = m_YoStream.SerializeBits(*reinterpret_cast<uint32_t const*>(iInt), 32);
 
         return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
       }
@@ -160,7 +162,7 @@ namespace eXl
         CHECK_STREAM_GOOD;
         m_Good = m_YoStream.SerializeBits(s_UInteger, s_ControlBitSize);
         CHECK_STREAM_GOOD;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)iUInt, sizeof(uint32_t));
+        m_Good = m_YoStream.SerializeBits(*iUInt, 32);
 
         return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
       }
@@ -172,7 +174,9 @@ namespace eXl
         CHECK_STREAM_GOOD;
         m_Good = m_YoStream.SerializeBits(s_UInt64, s_ControlBitSize);
         CHECK_STREAM_GOOD;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)iUInt, sizeof(uint64_t));
+        m_Good = m_YoStream.SerializeBits(static_cast<uint32_t>(*iUInt), 32);
+        CHECK_STREAM_GOOD;
+        m_Good = m_YoStream.SerializeBits(static_cast<uint32_t>(*iUInt >> 32), 32);
 
         return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
       }
@@ -184,7 +188,7 @@ namespace eXl
         CHECK_STREAM_GOOD; 
         m_Good = m_YoStream.SerializeBits(s_Float, s_ControlBitSize);
         CHECK_STREAM_GOOD;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)iFloat, sizeof(float));
+        m_Good = m_YoStream.SerializeBits(*reinterpret_cast<uint32_t const*>(iFloat), 32);
 
         return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
       }
@@ -225,6 +229,60 @@ namespace eXl
         m_Good = m_YoStream.SerializeBytes((uint8_t*)iStr.data(), iStr.size());
 
         return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
+      }
+
+      Err WriteBool(bool const* iBool) override
+      {
+        CHECK_STREAM_GOOD;
+        m_Good = !(!m_Alloc.ElementPrologue(m_YoStream));
+        CHECK_STREAM_GOOD;
+        m_Good = m_YoStream.SerializeBits(s_Boolean, s_ControlBitSize);
+        CHECK_STREAM_GOOD;
+        uint32_t boolVal = *iBool ? 1 : 0;
+        m_Good = m_YoStream.SerializeBits(boolVal, 1);
+        
+        return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
+      }
+
+      Err WriteBinary(uint8_t const* iData, size_t iSize) override
+      {
+        eXl_ASSERT_REPAIR_RET(iSize < (1 << 12) - 1, Err::Error);
+
+        CHECK_STREAM_GOOD;
+        m_Good = !(!m_Alloc.ElementPrologue(m_YoStream));
+        CHECK_STREAM_GOOD;
+        m_Good = m_YoStream.SerializeBits(s_Binary, s_ControlBitSize);
+        CHECK_STREAM_GOOD;
+        m_Good = m_YoStream.SerializeBits(iSize, 12);
+        if (!m_Good)
+        {
+          return Err::Error;
+        }
+        m_Good = m_YoStream.SerializeBytes(iData, iSize);
+
+        return m_Good ? m_Alloc.ElementEpilogue() : Err::Failure;
+      }
+
+      Err WriteBinary(std::istream* iStream, Optional<size_t> iLen) override
+      {
+        CHECK_STREAM_GOOD;
+
+        char readBuff[256];
+        Vector<char> data;
+
+        data.reserve(iLen ? *iLen : sizeof(readBuff));
+
+        iStream->read(readBuff, sizeof(readBuff));
+        size_t readSize = iStream->gcount();
+        while (readSize > 0)
+        {
+          data.insert(data.end(), readBuff, readBuff + readSize);
+
+          iStream->read(readBuff, sizeof(readBuff));
+          readSize = iStream->gcount();
+        }
+
+        return WriteBinary((uint8_t const*)data.data(), data.size());
       }
       
     };

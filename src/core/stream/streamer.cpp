@@ -10,6 +10,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/stream/streamer.hpp>
 
+#include <streambuf>
+#include <istream>
+
 namespace eXl
 {
 
@@ -26,5 +29,20 @@ namespace eXl
   Err Streamer::End()
   {
     return Err::Success;
+  }
+
+  struct BufferAdapter : public std::streambuf
+  {
+    BufferAdapter(uint8_t const* s, std::size_t n)
+    {
+      setg((char*)s, (char*)s, (char*)s + n);
+    }
+  };
+
+  Err Streamer::WriteBinary(uint8_t const* iData, size_t iSize)
+  {
+    BufferAdapter buffer(iData, iSize);
+    std::istream stream(&buffer);
+    return WriteBinary(&stream, iSize);
   }
 }

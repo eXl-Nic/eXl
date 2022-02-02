@@ -81,8 +81,9 @@ namespace eXl
   {
     ComponentManager::Register(iWorld);
     m_Characters.emplace(iWorld);
-  }
 
+    iWorld.AddTick(World::PostPhysics, [this](World&, float iDelta) { Tick(iDelta); });
+  }
 
   uint32_t CharacterSystem::GetStateFromDir(Vector3f const& iDir, bool iMoving)
   {

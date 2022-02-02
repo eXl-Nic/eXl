@@ -27,6 +27,10 @@ namespace eXl
 {
   namespace Network
   {
+    size_t HexToBytes(KString iStr, uint8_t* oBuffer, size_t iBufferSize);
+    Optional<uint64_t> HexToUint64(KString iStr);
+    String Uint64ToHex(uint64_t iId);
+
     enum class NetRole
     {
       None,
@@ -128,12 +132,9 @@ namespace eXl
       {
       public:
 
-        using CallbackArgsType = typename std::conditional<
-          !std::is_same<RetType, void>::value, 
-          typename std::add_lvalue_reference<typename std::add_const<RetType>::type>::type, 
-          void>::type;
-
-        [[nodiscard]] CommandCaller& WithCompletionCallback(std::function<void(CallbackArgsType)> iCompletionCallback);
+        template <typename T, typename std::enable_if<std::is_convertible<RetType, T>::value, bool >::type = true >
+        [[nodiscard]] CommandCaller& WithCompletionCallback(std::function<void(T)> iCompletionCallback);
+        [[nodiscard]] CommandCaller& WithCompletionCallback(std::function<void()> iCompletionCallback);
         [[nodiscard]] CommandCaller& WithArgs(Args... iArgs);
         Err Send();
       protected:
@@ -212,7 +213,7 @@ namespace eXl
     {
     public:
 
-      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL, String const& iClientId);
+      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL, String const& iClientId, Optional<uint16_t> iPort = {});
       static Optional<uint32_t> ConnectLoopback(NetCtx& iCtx, String const& iClientId);
 
       ClientState GetState();

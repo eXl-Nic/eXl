@@ -330,6 +330,7 @@ ObjectTableHandle_Base DensePropertySheetAllocator<T>::Alloc()
   else
   {
     new(m_ObjectData.Get(handle)) T;
+    m_ObjectData.m_Ids.Get();
   }
   return handle;
 }

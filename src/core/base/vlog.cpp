@@ -353,7 +353,7 @@ namespace eXl
       m_Out.push_back('\n');
     }
     m_Out.push_back(0);
-    m_Stream.Prefix().write(m_Out.data());
+    m_Stream.write(m_Out.data());
 #ifdef EXL_THREADAWARE
     auto locStorage = s_tlsLogStorage.get();
     locStorage->m_InUse = false;

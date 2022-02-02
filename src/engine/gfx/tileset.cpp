@@ -25,10 +25,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "../dummysprites.hpp"
 
-#define BUFFERSIZE 256
-#include <b64/encode.h>
-#include <b64/decode.h>
-#undef BUFFERSIZE
+
 
 namespace eXl
 {
@@ -493,31 +490,9 @@ namespace eXl
         iStreamer.PopKey();
         iStreamer.EndStruct();
 #else
-        String base64String;
-        iStreamer.ReadString(&base64String);
 
-        Vector<char> imageData;
-        imageData.reserve(base64String.size());
-
-        base64::base64_decodestate state;
-        base64::base64_init_decodestate(&state);
-
-        size_t const decodeBufferSize = 256;
-        char decodeBuffer[decodeBufferSize];
-
-        char const* dataIter = base64String.data();
-        char const* endIter = dataIter + base64String.size();
-        size_t const inputSize = 128;
-        do
-        {
-          size_t readSize = dataIter + inputSize < endIter ? inputSize : endIter - dataIter;
-          size_t outSize = base64::base64_decode_block(dataIter, readSize, decodeBuffer, &state);
-
-          imageData.insert(imageData.end(), decodeBuffer, decodeBuffer + outSize);
-
-          dataIter += readSize;
-
-        } while (dataIter != endIter);
+        Vector<uint8_t> imageData;
+        iStreamer.ReadBinary(&imageData);
 #ifdef EXL_IMAGESTREAMER_ENABLED
         std::unique_ptr<Image> imagePtr(ImageStreamer::Load((uint8_t*)imageData.data(), imageData.size()));
         Image::Size imageSize = imagePtr ? imagePtr->GetSize() : Image::Size(0, 0);
@@ -611,31 +586,7 @@ namespace eXl
         std::ifstream fileStream(imgPath.c_str(), std::ios::binary);
         if (fileStream.is_open())
         {
-          size_t const inputBufferSize = 128;
-          char inputBuffer[inputBufferSize];
-          size_t const encodeBufferSize = 256;
-          char encodeBuffer[encodeBufferSize];
-
-          base64::base64_encodestate state;
-          base64::base64_init_encodestate(&state);
-
-          Vector<char> tempStr;
-
-          fileStream.read(inputBuffer, inputBufferSize);
-          size_t readSize = fileStream.gcount();
-          while (readSize > 0)
-          {
-            size_t encodeSize = base64::base64_encode_block(inputBuffer, readSize, encodeBuffer, &state);
-            tempStr.insert(tempStr.end(), encodeBuffer, encodeBuffer + encodeSize);
-
-            fileStream.read(inputBuffer, inputBufferSize);
-            readSize = fileStream.gcount();
-          }
-          size_t encodeSize = base64::base64_encode_blockend(encodeBuffer, &state);
-          tempStr.insert(tempStr.end(), encodeBuffer, encodeBuffer + encodeSize);
-
-          tempStr.push_back(0);
-          iStreamer.WriteString(tempStr.data());
+          iStreamer.WriteBinary(&fileStream);
         }
 
         iStreamer.PopKey();

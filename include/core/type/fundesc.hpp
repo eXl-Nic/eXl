@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/type/typemanager.hpp>
 #include <core/type/tupletype.hpp>
+#include <core/type/dynobject.hpp>
 
 namespace eXl
 {
@@ -182,7 +183,6 @@ namespace eXl
   {
     static void Populate(ArgsBuffer const& iType, DynObject& oData, Arg&& iArg, Args&&... iArgs)
     {
-      Type const* fieldType;
       using ConcreteType = typename std::remove_const<typename std::remove_reference<Arg>::type>::type;
       new(((uint8_t*)oData.GetBuffer()) + iType.GetOffset(Step)) ConcreteType(std::forward<Arg>(iArg));
       BufferPopulator<Step + 1, Args...>::Populate(iType, oData, std::forward<Args>(iArgs)...);

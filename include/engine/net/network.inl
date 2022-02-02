@@ -53,6 +53,7 @@ inline CommandDesc::CommandDesc(CommandDesc&& iDesc)
   iDesc.m_Args.reset();
   m_FunDesc = std::move(iDesc.m_FunDesc);
   m_Args.emplace(m_FunDesc.arguments);
+  m_Reliable = iDesc.m_Reliable;
 }
 
 template<typename RetType, typename... Args>
@@ -128,7 +129,8 @@ NetDriver::CommandCaller<RetType, Args...>::CommandCaller(NetDriver& iDriver, Ne
 }
 
 template<typename RetType, typename... Args>
-NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithCompletionCallback(std::function<void(CallbackArgsType)> iCompletionCallback)
+template <typename T, typename std::enable_if<std::is_convertible<RetType, T>::value, bool >::type>
+NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithCompletionCallback(std::function<void(T)> iCompletionCallback)
 {
   if (m_Command != nullptr
     && iCompletionCallback)
@@ -138,6 +140,22 @@ NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Ar
     m_Data.m_CompletionCallback = [userCallback = std::move(iCompletionCallback)](ConstDynObject const& iResBuffer)
     {
       userCallback(iResBuffer.CastBuffer<RetType>());
+    };
+  }
+  return *this;
+}
+
+template<typename RetType, typename... Args>
+NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Args...>::WithCompletionCallback(std::function<void()> iCompletionCallback)
+{
+  if (m_Command != nullptr
+    && iCompletionCallback)
+  {
+    // To not have to bother with timeout, double send, etc...
+    eXl_ASSERT_MSG_RET(m_Command->m_Reliable, "Only reliable commands can have completion callbacks", *this);
+    m_Data.m_CompletionCallback = [userCallback = std::move(iCompletionCallback)](ConstDynObject const& iResBuffer)
+    {
+      userCallback();
     };
   }
   return *this;

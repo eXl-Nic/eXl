@@ -37,3 +37,6 @@
 [submodule "modules/yojimbo"]
 	path = modules/yojimbo
 	url = https://github.com/eXl-Nic/yojimbo.git
+[submodule "modules/libsodium"]
+	path = modules/libsodium
+	url = https://github.com/jedisct1/libsodium.git

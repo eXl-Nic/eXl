@@ -12,6 +12,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/log.hpp>
 
+#define BUFFERSIZE 256
+#include <b64/encode.h>
+#include <b64/decode.h>
+#undef BUFFERSIZE
+
 #define CHECK_FAIL_STATUS do { if(m_FailStatus) return Err::Error;} while(false)
 
 namespace eXl
@@ -64,7 +69,7 @@ namespace eXl
     return Err::Success;
   }
 
-  Err JSONUnstreamer::PushKey(String const& iKey)
+  Err JSONUnstreamer::PushKey(KString iKey)
   {
     CHECK_FAIL_STATUS;
     Err err = Err::Failure;
@@ -167,22 +172,23 @@ namespace eXl
         err = ClearWhiteSpaces();
         if(err)
         {
-          String curKey;
+          m_Cache.clear();
           while(m_InStream->good() && m_InStream->peek() != ':')
           {
-            curKey.push_back(m_InStream->get());
+            m_Cache.push_back(m_InStream->get());
           }
-          if(!curKey.empty())
+          if(!m_Cache.empty())
           {
-            while(StringUtil::IsSpace(curKey.back()))
+            while(StringUtil::IsSpace(m_Cache.back()))
             {
-              curKey.pop_back();
+              m_Cache.pop_back();
             }
-            if(curKey.front() == '\"' && curKey.back() == '\"'
+            if(m_Cache.front() == '\"' && m_Cache.back() == '\"'
               && m_InStream->good())
             {
-              curKey.pop_back();
-              curKey = curKey.substr(1);
+              m_Cache.pop_back();
+              m_Cache.erase(m_Cache.begin());
+              KString key = m_KeysAlloc.Get(KString(m_Cache.data(), m_Cache.size()));
               //get :
               m_InStream->get();
               ElementDesc* curElem = GetNextElement();
@@ -194,7 +200,7 @@ namespace eXl
               {
                 if(curElem != nullptr && m_InStream->good())
                 {
-                  structure->m_Fields.emplace(std::move(curKey), curElem);
+                  structure->m_Fields.emplace(key, curElem);
                   err = ClearWhiteSpaces();
                   if(err)
                   {
@@ -548,5 +554,64 @@ namespace eXl
       }
     }
     return err;
+  }
+
+  Err JSONUnstreamer::ReadBool(bool* oBoolean)
+  {
+    String tempStr;
+    if (ReadString(&tempStr))
+    {
+      std::transform(tempStr.begin(), tempStr.end(), tempStr.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+
+      if (tempStr == "true")
+        *oBoolean = true;
+      else if (tempStr == "false")
+        *oBoolean = false;
+      else
+        return Err::Failure;
+    }
+    return Err::Success;
+  }
+
+  Err JSONUnstreamer::ReadBinary(Vector<uint8_t>* oData)
+  {
+    String base64String;
+    Err res = ReadString(&base64String);
+    if (!res)
+    {
+      return res;
+    }
+
+    if (base64String.size() == 0)
+    {
+      oData->clear();
+      return res;
+    }
+
+    oData->reserve(base64String.size());
+
+    base64::base64_decodestate state;
+    base64::base64_init_decodestate(&state);
+
+    size_t const decodeBufferSize = 256;
+    char decodeBuffer[decodeBufferSize];
+
+    char const* dataIter = base64String.data();
+    char const* endIter = dataIter + base64String.size();
+    size_t const inputSize = 128;
+
+    do
+    {
+      size_t readSize = dataIter + inputSize < endIter ? inputSize : endIter - dataIter;
+      size_t outSize = base64::base64_decode_block(dataIter, readSize, decodeBuffer, &state);
+
+      oData->insert(oData->end(), decodeBuffer, decodeBuffer + outSize);
+
+      dataIter += readSize;
+
+    } while (dataIter != endIter);
+
+    return Err::Success;
   }
 }

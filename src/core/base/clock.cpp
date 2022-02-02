@@ -19,117 +19,122 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <time.h>
 #endif
 
-Clock::Clock()
+
+namespace eXl
 {
-  Initialize();
-}
- 
-Clock::~Clock()
-{
-}
+
+  Clock::Clock()
+  {
+    Initialize();
+  }
+
+  Clock::~Clock()
+  {
+  }
 
 #ifdef WIN32 
 
-static_assert(sizeof(LARGE_INTEGER) == sizeof(uint64_t), "");
+  static_assert(sizeof(LARGE_INTEGER) == sizeof(uint64_t), "");
 
-struct Clock_Impl
-{
-  Clock_Impl()
+  struct Clock_Impl
   {
-    PerfTime = QueryPerformanceFrequency((LARGE_INTEGER*)&Frq) == 0 ? false : true;
-    if (PerfTime)
+    Clock_Impl()
     {
-      OneTick = 1.0f / Frq;
+      PerfTime = QueryPerformanceFrequency((LARGE_INTEGER*)&Frq) == 0 ? false : true;
+      if (PerfTime)
+      {
+        OneTick = 1.0f / Frq;
+      }
+      else
+      {
+        OneTick = 0.001f;
+      }
     }
-    else
-    {
-      OneTick = 0.001f;
-    }
-  }
 
-  uint64_t GetTimestamp() const
-  {
-    uint64_t time;
-    if (PerfTime)
+    uint64_t GetTimestamp() const
     {
-      QueryPerformanceCounter((LARGE_INTEGER*)&time);
+      uint64_t time;
+      if (PerfTime)
+      {
+        QueryPerformanceCounter((LARGE_INTEGER*)&time);
+      }
+      else
+      {
+        time = timeGetTime();
+      }
+      return time;
     }
-    else
-    {
-      time = timeGetTime();
-    }
-    return time;
-  }
 
-  bool PerfTime;
-  uint64_t Frq;
-  float OneTick;
-};
+    bool PerfTime;
+    uint64_t Frq;
+    float OneTick;
+  };
 #else
 
-struct Clock_Impl
-{
-  Clock_Impl()
+  struct Clock_Impl
   {
-    timespec ts;
+    Clock_Impl()
+    {
+      timespec ts;
 
-    clock_getres(CLOCK_MONOTONIC, &ts);
+      clock_getres(CLOCK_MONOTONIC, &ts);
 
-    Frq = 10000000;
-    OneTick = 1.0 / Frq;
-  }
+      Frq = 10000000;
+      OneTick = 1.0 / Frq;
+    }
 
-  uint64_t GetTimestamp() const
-  {
-    timespec ts;
+    uint64_t GetTimestamp() const
+    {
+      timespec ts;
 
-    clock_gettime(CLOCK_MONOTONIC, &ts);
+      clock_gettime(CLOCK_MONOTONIC, &ts);
 
-    // in 100 ns intervals.
-    return static_cast<uint64_t>(ts.tv_sec) * 10000000u + static_cast<uint64_t>(ts.tv_nsec) / 100u;
-  }
+      // in 100 ns intervals.
+      return static_cast<uint64_t>(ts.tv_sec) * 10000000u + static_cast<uint64_t>(ts.tv_nsec) / 100u;
+    }
 
-  uint64_t Frq;
-  float OneTick;
-};
+    uint64_t Frq;
+    float OneTick;
+  };
 
 #endif
 
-Clock_Impl& GetImpl()
-{
-  static Clock_Impl s_Impl;
-  return s_Impl;
-}
+  Clock_Impl& GetImpl()
+  {
+    static Clock_Impl s_Impl;
+    return s_Impl;
+  }
 
-void Clock::Initialize()
-{
-  Time0 = GetTimestamp();
-}
+  void Clock::Initialize()
+  {
+    Time0 = GetTimestamp();
+  }
 
-float Clock::GetTime()
-{
-  Time1 = GetTimestamp();
- 
-  float dt=(Time1-Time0) * GetImpl().OneTick;
-  Time0=Time1;
+  float Clock::GetTime()
+  {
+    Time1 = GetTimestamp();
 
-  return dt;
-}
+    float dt = (Time1 - Time0) * GetImpl().OneTick;
+    Time0 = Time1;
 
-float Clock::PeekTime() const
-{
-  uint64_t time = GetTimestamp();
- 
-  float dt=(time-Time0)* GetImpl().OneTick;
-  return dt;
-}
+    return dt;
+  }
 
-uint64_t Clock::GetTicksPerSecond()
-{
-  return GetImpl().Frq;
-}
+  float Clock::PeekTime() const
+  {
+    uint64_t time = GetTimestamp();
 
-uint64_t Clock::GetTimestamp()
-{
-  return GetImpl().GetTimestamp();
+    float dt = (time - Time0) * GetImpl().OneTick;
+    return dt;
+  }
+
+  uint64_t Clock::GetTicksPerSecond()
+  {
+    return GetImpl().Frq;
+  }
+
+  uint64_t Clock::GetTimestamp()
+  {
+    return GetImpl().GetTimestamp();
+  }
 }

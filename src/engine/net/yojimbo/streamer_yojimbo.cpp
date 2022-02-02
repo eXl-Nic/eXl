@@ -33,6 +33,12 @@ namespace eXl
       case ElementKind::Double:
         storageNum = dbls.size();
         break;
+      case ElementKind::Boolean:
+        storageNum = booleans.size();
+        break;
+      case ElementKind::Binary:
+        storageNum = binaries.size();
+        break;
       }
       elements.push_back(Element{ iKind, storageNum });
     }
@@ -45,6 +51,8 @@ namespace eXl
       flts.clear();
       dbls.clear();
       strings.clear();
+      booleans.clear();
+      binaries.clear();
       seqs.clear();
       seqElem.clear();
       structs.clear();
@@ -199,7 +207,7 @@ namespace eXl
       uint32_t control = 15;
       m_Good = m_YoStream.SerializeBits(control, s_ControlBitSize);
       CHECK_STREAM_GOOD;
-      m_Good = control >= 3 && control <= 12;
+      m_Good = control >= 3 && control <= 14;
       CHECK_STREAM_GOOD;
       return InterpretNextElement(control);
     }
@@ -208,6 +216,32 @@ namespace eXl
     {
       switch (control)
       {
+      case s_Binary:
+      {
+        uint32_t binLen;
+        m_Good = m_YoStream.SerializeBits(binLen, 12);
+        CHECK_STREAM_GOOD;
+        if (m_Alloc.binReadBuffer.size() < binLen)
+        {
+          m_Alloc.binReadBuffer.resize(binLen);
+        }
+        m_Good = m_YoStream.SerializeBytes(m_Alloc.binReadBuffer.data(), binLen);
+        CHECK_STREAM_GOOD;
+        m_Alloc.PushElement(ElementKind::Binary);
+        m_Alloc.binaries.push_back(m_Alloc.binReadBuffer);
+        return Err::Success;
+      }
+      break;
+      case s_Boolean:
+      {
+        uint32_t val;
+        m_Good = m_YoStream.SerializeBits(val, 1);
+        CHECK_STREAM_GOOD;
+        m_Alloc.PushElement(ElementKind::Boolean);
+        m_Alloc.booleans.push_back(val != 0);
+        return Err::Success;
+      }
+      break;
       case s_String:
       {
         uint32_t stringLen;
@@ -233,7 +267,7 @@ namespace eXl
       case s_Float:
       {
         float flt;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)&flt, sizeof(flt));
+        m_Good = m_YoStream.SerializeBits(reinterpret_cast<uint32_t&>(flt), 32);
         CHECK_STREAM_GOOD;
         m_Alloc.PushElement(ElementKind::Float);
         m_Alloc.flts.push_back(flt);
@@ -243,8 +277,13 @@ namespace eXl
       case s_UInt64:
       {
         uint64_t uint;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)&uint, sizeof(uint));
+        uint32_t temp;
+        m_Good = m_YoStream.SerializeBits(temp, 32);
         CHECK_STREAM_GOOD;
+        uint = temp;
+        m_Good = m_YoStream.SerializeBits(temp, 32);
+        CHECK_STREAM_GOOD;
+        uint |= static_cast<uint64_t>(temp) << 32;
         m_Alloc.PushElement(ElementKind::UInt64);
         m_Alloc.uints64.push_back(uint);
         return Err::Success;
@@ -253,7 +292,7 @@ namespace eXl
       case s_UInteger:
       {
         uint32_t uint;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)&uint, sizeof(uint));
+        m_Good = m_YoStream.SerializeBits(uint, 32);
         CHECK_STREAM_GOOD;
         m_Alloc.PushElement(ElementKind::UInt32);
         m_Alloc.uints.push_back(uint);
@@ -263,7 +302,7 @@ namespace eXl
       case s_Integer:
       {
         int32_t integer;
-        m_Good = m_YoStream.SerializeBytes((uint8_t*)&integer, sizeof(integer));
+        m_Good = m_YoStream.SerializeBits(reinterpret_cast<uint32_t&>(integer), 32);
         CHECK_STREAM_GOOD;
         m_Alloc.PushElement(ElementKind::Int32);
         m_Alloc.ints.push_back(integer);
@@ -411,7 +450,7 @@ namespace eXl
       return Err::Success;
     }
 
-    Err Yo_Unstreamer::PushKey(String const& iKey)
+    Err Yo_Unstreamer::PushKey(KString iKey)
     {
       CHECK_STREAM_GOOD;
       if (m_Alloc.m_Stack.empty())
@@ -555,6 +594,30 @@ namespace eXl
         && m_Alloc.m_Stack.back().elem->kind == ElementKind::String)
       {
         *iStr = m_Alloc.strings[m_Alloc.m_Stack.back().elem->idx];
+        return Err::Success;
+      }
+      return Err::Failure;
+    }
+
+    Err Yo_Unstreamer::ReadBool(bool* iBoolean)
+    {
+      CHECK_STREAM_GOOD;
+      if (!m_Alloc.m_Stack.empty()
+        && m_Alloc.m_Stack.back().elem->kind == ElementKind::Boolean)
+      {
+        *iBoolean = m_Alloc.booleans[m_Alloc.m_Stack.back().elem->idx];
+        return Err::Success;
+      }
+      return Err::Failure;
+    }
+
+    Err Yo_Unstreamer::ReadBinary(Vector<uint8_t>* iBin)
+    {
+      CHECK_STREAM_GOOD;
+      if (!m_Alloc.m_Stack.empty()
+        && m_Alloc.m_Stack.back().elem->kind == ElementKind::Binary)
+      {
+        *iBin = std::move(m_Alloc.binaries[m_Alloc.m_Stack.back().elem->idx]);
         return Err::Success;
       }
       return Err::Failure;

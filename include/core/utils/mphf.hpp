@@ -33,8 +33,12 @@ namespace eXl
       // 3 means unassigned.
       // The following bit manipulation counts the number of pairs of bits not set to 3.
       uint64_t const maskEvenBits = 0x5555555555555555; //01010101.....
-
-      return __popcnt64(~((iValue & maskEvenBits) & ((iValue >> 1) & maskEvenBits))) - 32;
+      uint64_t const maskedValue = ~((iValue & maskEvenBits) & ((iValue >> 1) & maskEvenBits));
+#ifdef _MSC_VER
+      return __popcnt64(maskedValue) - 32;
+#else
+      return __builtin_popcountll(maskedValue) - 32;
+#endif
     }
 
     uint8_t GetLabel(uint32_t iValue) const

@@ -42,6 +42,44 @@ MAKE_NAME_TYPE(NameType)
 
 //#define EXL_NAME_BOOST_IMPL
 
+namespace eXl
+{
+  struct EXL_CORE_API NameAllocHolder
+  {
+    NameAllocHolder();
+    NameAllocHolder(NameAllocHolder const&) = delete;
+    NameAllocHolder& operator = (NameAllocHolder const&) = delete;
+
+    uint32_t AllocPage(size_t iSize);
+
+    struct Page
+    {
+      Page(size_t iSize);
+      ~Page();
+      Page(Page&& iMoved);
+      Page(Page const&) = delete;
+      Page& operator=(Page const&) = delete;
+
+      void Swap(Page& iOther);
+
+      Char* m_Alloc;
+      size_t m_Available;
+      Char* m_Cur;
+    };
+
+    KString Get(KString iStr);
+
+  protected:
+
+    Optional<KString> GetExistingString(KString iStr);
+    KString InsertString(KString iStr);
+
+    UnorderedSet<KString> m_Strings;
+    Vector<Page> m_Pages;
+  };
+}
+
+
 #ifdef EXL_NAME_BOOST_IMPL
 
 #include <boost/flyweight.hpp>

@@ -19,7 +19,10 @@ namespace eXl
   class AABB2D
   {
   public:
-    AABB2D(){}
+    AABB2D()
+    {
+      m_Data[0] = m_Data[1] = Vector2<Real>::ZERO;
+    }
     AABB2D(AABB2D const& iOther)
     {
       m_Data[0] = iOther.m_Data[0];

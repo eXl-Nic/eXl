@@ -1,3 +1,4 @@
+set(YOJIMBO_ROOT "${EXL_ROOT}/modules/yojimbo")
 set(EXL_SUBMODULE_PROJECTS ${EXL_SUBMODULE_PROJECTS} ${EXL_ROOT}/config/yojimbo)
 set(EXL_SUBMODULE_TARGETS ${EXL_SUBMODULE_TARGETS} ${OUT_DIR}/modules/yojimbo)
 
