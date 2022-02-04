@@ -16,7 +16,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 #include <core/clock.hpp>
 
-#define CXXOPTS_NO_RTTI
 #include <cxxopts.hpp>
 
 #include <vector>

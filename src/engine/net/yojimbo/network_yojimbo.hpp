@@ -11,7 +11,6 @@
 
 namespace yojimbo
 {
-  extern const uint8_t DEFAULT_PRIVATE_KEY[KeyBytes];
   constexpr int MAX_PLAYERS = 64;
   extern const uint64_t s_ProtocolId;
 
@@ -285,7 +284,7 @@ namespace eXl
     {
     public:
       Client_Impl(uint32_t iLocalIndex, uint64_t iClientId);
-      Client_Impl(uint32_t iLocalIndex, yojimbo::Address iAddr, uint64_t iClientId);
+      Client_Impl(uint32_t iLocalIndex, uint64_t iClientId, Vector<uint8_t> iConnectToken);
 
       ~Client_Impl();
 
@@ -320,7 +319,7 @@ namespace eXl
     class Server_Impl : public yojimbo::GameAdapter
     {
     public:
-      Server_Impl(yojimbo::Address iAddr);
+      Server_Impl(yojimbo::Address iAddr, Vector<uint8_t> iPrivateKey);
 
       ~Server_Impl()
       {

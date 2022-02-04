@@ -29,7 +29,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/game/scripttrigger.hpp>
 
-#define CXXOPTS_NO_RTTI
 #include <cxxopts.hpp>
 
 namespace eXl

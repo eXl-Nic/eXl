@@ -27,9 +27,9 @@ namespace eXl
 {
   namespace Network
   {
-    size_t HexToBytes(KString iStr, uint8_t* oBuffer, size_t iBufferSize);
-    Optional<uint64_t> HexToUint64(KString iStr);
-    String Uint64ToHex(uint64_t iId);
+    EXL_ENGINE_API size_t HexToBytes(KString iStr, uint8_t* oBuffer, size_t iBufferSize);
+    EXL_ENGINE_API Optional<uint64_t> HexToUint64(KString iStr);
+    EXL_ENGINE_API String Uint64ToHex(uint64_t iId);
 
     enum class NetRole
     {
@@ -195,12 +195,6 @@ namespace eXl
 
     struct NetCtx
     {
-      NetCtx(uint16_t iServerPort)
-        : m_ServerPort(iServerPort)
-      {}
-
-      uint16_t const m_ServerPort;
-
       NetDriver* m_NetDriver = nullptr;
       ClientEvents m_ClientEvents;
       ServerEvents m_ServerEvents;
@@ -213,7 +207,15 @@ namespace eXl
     {
     public:
 
-      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iURL, String const& iClientId, Optional<uint16_t> iPort = {});
+      static const size_t s_PrivateKeySize;
+      static const size_t s_UserDataSize;
+      static const size_t s_ConnectTokenSize;
+
+      static Vector<uint8_t> CreateConnectToken(String const& iClientId
+        , String const& iIPAddr
+        , Vector<uint8_t> const& iPrivateKey
+        , Vector<uint8_t> const& iUserData);
+      static Optional<uint32_t> Connect(NetCtx& iCtx, String const& iClientId, Vector<uint8_t> iConnectToken);
       static Optional<uint32_t> ConnectLoopback(NetCtx& iCtx, String const& iClientId);
 
       ClientState GetState();
@@ -264,7 +266,10 @@ namespace eXl
     class EXL_ENGINE_API Server : public HeapObject
     {
     public:
-      static Server* Start(NetCtx& iCtx, String const& iURL);
+
+      static const size_t s_PrivateKeySize;
+
+      static Server* Start(NetCtx& iCtx, String const& iIPAddr, Vector<uint8_t> const& iPrivateKey);
 
       ~Server();
       void Tick();

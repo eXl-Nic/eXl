@@ -5,8 +5,8 @@ namespace eXl
 {
   namespace Network
   {
-    Server_Impl::Server_Impl(yojimbo::Address iAddr)
-      : m_Server(GetNetAllocator(), yojimbo::DEFAULT_PRIVATE_KEY, std::move(iAddr), yojimbo::GameConnectionConfig(), *this, 0.0)
+    Server_Impl::Server_Impl(yojimbo::Address iAddr, Vector<uint8_t> iPrivateKey)
+      : m_Server(GetNetAllocator(), iPrivateKey.data(), std::move(iAddr), yojimbo::GameConnectionConfig(), *this, 0.0)
     {
       m_TimeStart = Clock::GetTimestamp();
       m_Server.SetContext(&m_SerializationCtx);
@@ -252,14 +252,17 @@ namespace eXl
       return Uint64ToHex(id);
     }
 
-    Server* Server::Start(NetCtx& iCtx, String const& iURL)
+    const size_t Server::s_PrivateKeySize = yojimbo::KeyBytes;
+
+    Server* Server::Start(NetCtx& iCtx, String const& iIPAddr, Vector<uint8_t> const& iPrivateKey)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_Server == nullptr, nullptr);
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, nullptr);
+      eXl_ASSERT_REPAIR_RET(iPrivateKey.size() == s_PrivateKeySize, nullptr);
 
-      yojimbo::Address serverAddress(iURL.c_str(), iCtx.m_ServerPort);
+      yojimbo::Address serverAddress(iIPAddr.c_str());
 
-      std::unique_ptr<Server_Impl> server = std::make_unique<Server_Impl>(serverAddress);
+      std::unique_ptr<Server_Impl> server = std::make_unique<Server_Impl>(serverAddress, iPrivateKey);
 
       if (!server->m_Server.IsRunning())
       {

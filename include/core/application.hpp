@@ -31,6 +31,9 @@ namespace eXl
       m_Argc = iArgc;
       m_ArgV = iArgv;
     }
+
+    inline int GetArgc() const { return m_Argc; }
+    inline char const* const* GetArgV() const { return m_ArgV; }
   
     virtual void Start();
 

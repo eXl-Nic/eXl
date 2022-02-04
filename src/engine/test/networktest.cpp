@@ -165,14 +165,13 @@ struct NetworkSim
 {
   Network::NetCtx ctx;
   Network::TestNetDriver driver;
+  Vector<uint8_t> key;
   Clock timer;
 
-  static uint16_t const serverPort = 16987;
-  NetworkSim() 
-    : ctx(serverPort)
-    , driver(ctx)
+  NetworkSim()
+    : driver(ctx)
   {
-
+    key.resize(Network::Server::s_PrivateKeySize, 0);
   }
 
   void Tick(float iTimeout, std::function<bool()> iWaitCondition = [] { return false; })
@@ -205,7 +204,7 @@ struct NetworkSim
 
 TEST(Network, BasicConnect)
 {
-  String const serverAddress("127.0.0.1");
+  String const serverAddress("127.0.0.1:21616");
 
   TestServerEvents serverEvents;
 
@@ -216,11 +215,13 @@ TEST(Network, BasicConnect)
   { serverEvents.OnClientDisconnected(iClient); };
   
 
-  Network::Server::Start(net.ctx, serverAddress);
+  Network::Server::Start(net.ctx, serverAddress, net.key);
 
   ASSERT_TRUE(net.ctx.m_Server != nullptr);
 
-  auto localIdx = Network::Client::Connect(net.ctx, serverAddress, "FEDCBA987654321");
+  Vector<uint8_t> connectToken = Network::Client::CreateConnectToken("FEDCBA987654321", serverAddress, net.key, Vector<uint8_t>());
+
+  auto localIdx = Network::Client::Connect(net.ctx, "FEDCBA987654321", connectToken);
   ASSERT_TRUE(localIdx);
 
   auto client1 = net.ctx.m_Clients[*localIdx].get();
@@ -234,7 +235,8 @@ TEST(Network, BasicConnect)
 
   ASSERT_TRUE(client1->GetState() == Network::ClientState::Connected);
 
-  localIdx = Network::Client::Connect(net.ctx, serverAddress, "2");
+  connectToken = Network::Client::CreateConnectToken("2", serverAddress, net.key, Vector<uint8_t>());
+  localIdx = Network::Client::Connect(net.ctx, "2", connectToken);
   ASSERT_TRUE(localIdx);
 
   auto client2 = net.ctx.m_Clients[*localIdx].get();
@@ -280,7 +282,7 @@ TEST(Network, BasicRepl)
     serverEvents.OnClientCommand(iClientId, iData);
   };
 
-  Network::Server::Start(net.ctx, serverAddress);
+  Network::Server::Start(net.ctx, serverAddress, net.key);
 
   ASSERT_TRUE(net.ctx.m_Server != nullptr);
 

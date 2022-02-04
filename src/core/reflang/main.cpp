@@ -5,7 +5,6 @@
 #include "parser.hpp"
 #include "serializer.hpp"
 
-#define CXXOPTS_NO_RTTI
 #include <cxxopts.hpp>
 
 namespace eXl

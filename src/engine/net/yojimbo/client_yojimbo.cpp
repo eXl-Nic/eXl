@@ -15,7 +15,7 @@ namespace eXl
       m_Client.SetContext(&m_SerializationCtx);
     }
 
-    Client_Impl::Client_Impl(uint32_t iLocalIndex, yojimbo::Address iAddr, uint64_t iClientId)
+    Client_Impl::Client_Impl(uint32_t iLocalIndex, uint64_t iClientId, Vector<uint8_t> iConnectToken)
       : m_Client(GetNetAllocator(), yojimbo::Address("0.0.0.0"), yojimbo::GameConnectionConfig(), *this, 0.0)
       , m_LocalIndex(iLocalIndex)
       , m_Commands(m_SerializationCtx.m_CmdDictionary)
@@ -23,7 +23,7 @@ namespace eXl
     {
       m_TimeStart = Clock::GetTimestamp();
       m_Client.SetContext(&m_SerializationCtx);
-      m_Client.InsecureConnect(yojimbo::DEFAULT_PRIVATE_KEY, m_ClientId, iAddr);
+      m_Client.Connect(m_ClientId, iConnectToken.data());
     }
 
     Client_Impl::~Client_Impl() = default;
@@ -256,17 +256,58 @@ namespace eXl
       return m_Impl->SendServerCommand(std::move(iCall));
     }
 
-    Optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iURL, String const& iClientId, Optional<uint16_t> iPort)
+    const size_t Client::s_PrivateKeySize = yojimbo::KeyBytes;
+    const size_t Client::s_UserDataSize = yojimbo::ConnectTokenBytes;
+    const size_t Client::s_ConnectTokenSize = NETCODE_CONNECT_TOKEN_BYTES;
+
+    Vector<uint8_t> Client::CreateConnectToken(String const& iClientId, String const& iIPAddr, Vector<uint8_t> const& iPrivateKey, Vector<uint8_t> const& iUserData)
+    {
+      Vector<uint8_t> outToken;
+
+      eXl_ASSERT_REPAIR_RET(iPrivateKey.size() == s_PrivateKeySize, outToken);
+      eXl_ASSERT_REPAIR_RET(iUserData.size() <= s_UserDataSize, outToken);
+
+      Optional<uint64_t> clientId = HexToUint64(iClientId);
+      eXl_ASSERT_REPAIR_RET(clientId, outToken);
+
+      outToken.resize(NETCODE_CONNECT_TOKEN_BYTES);
+
+      const char* publicServerAddrArr = iIPAddr.c_str();
+      const char* serverAddrArr = iIPAddr.c_str();
+
+      Vector<uint8_t> userDataBuffer = iUserData;
+      if (userDataBuffer.size() < s_UserDataSize)
+      {
+        userDataBuffer.resize(s_UserDataSize, 0);
+      }
+
+      bool success = netcode_generate_connect_token(1,
+        &publicServerAddrArr,
+        &serverAddrArr, 3600, 15,
+        *clientId,
+        yojimbo::s_ProtocolId,
+        iPrivateKey.data(),
+        userDataBuffer.data(),
+        outToken.data()) == NETCODE_OK;
+
+      eXl_ASSERT_REPAIR_BEGIN(success)
+      {
+        outToken.clear();
+      }
+
+      return outToken;
+    }
+
+    Optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iClientId, Vector<uint8_t> iConnectToken)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});
-
-      yojimbo::Address serverAddress(iURL.c_str(), iPort ? *iPort : iCtx.m_ServerPort);
+      eXl_ASSERT_REPAIR_RET(iConnectToken.size() == s_ConnectTokenSize, {});
 
       Optional<uint64_t> clientId = HexToUint64(iClientId);
 
       eXl_ASSERT_REPAIR_RET(!(!clientId), {});
 
-      std::unique_ptr<Client_Impl> client = std::make_unique<Client_Impl>(iCtx.m_Clients.size(), serverAddress, *clientId);
+      std::unique_ptr<Client_Impl> client = std::make_unique<Client_Impl>(iCtx.m_Clients.size(), *clientId, iConnectToken);
       uint32_t const localIndex = client->m_LocalIndex;
 
       if (!client->m_Client.IsConnecting())

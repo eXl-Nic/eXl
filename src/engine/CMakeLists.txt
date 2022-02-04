@@ -140,7 +140,7 @@ target_include_directories(eXl_Engine PRIVATE
   ${FREETYPE_INCLUDE_DIR}
   ${UTF8_INCLUDE_DIR}
   ${YOJIMBO_INCLUDE_DIR}
-  ${EXL_ROOT}/modules/cxxopts/include)
+)
 
 target_include_directories(eXl_Engine PUBLIC  
   ${IMGUI_INCLUDE_DIR} 
