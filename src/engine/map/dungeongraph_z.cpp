@@ -133,7 +133,7 @@ namespace eXl
       self.EdgeRemoved(iCtx.graph, iEdge);
     };
 
-    auto createNewRoom = [](ES_RuleSystem::RewriteCtx& iCtx, GraphVtx iVtx)
+    auto createNewRoom = [](ES_RuleSystem::RewriteCtx& iCtx, uint32_t iIdx, GraphVtx iVtx)
     {
       DungeonGraph_Z& self = RewriteCtx::DynamicCast(iCtx.userCtx)->m_Graph;
       self.NodeAdded(iCtx.finalGraph, iVtx);
@@ -142,7 +142,7 @@ namespace eXl
       roomDesc->SetPhysical(true);
     };
 
-    auto createNewDoorway = [](ES_RuleSystem::RewriteCtx& iCtx, GraphEdge iEdge)
+    auto createNewDoorway = [](ES_RuleSystem::RewriteCtx& iCtx, uint32_t iIdx, GraphEdge iEdge)
     {
       DungeonGraph_Z& self = RewriteCtx::DynamicCast(iCtx.userCtx)->m_Graph;
       self.EdgeAdded(iCtx.finalGraph, iEdge);
@@ -150,13 +150,13 @@ namespace eXl
       edgeDesc->m_PhysicalConnection = true;
     };
 
-    auto isRoom = [](ES_RuleSystem::MatchCtx& iCtx, GraphVtx iVtx)
+    auto isRoom = [](ES_RuleSystem::MatchCtx& iCtx, uint32_t, GraphVtx iVtx)
     {
       DungeonGraph_Z& self = MatchCtx::DynamicCast(iCtx.userCtx)->m_Graph;
       return self.GetProperties(iVtx)->IsPhysical();
     };
 
-    auto isNotFinalNode = [](ES_RuleSystem::MatchCtx& iCtx, GraphVtx iVtx)
+    auto isNotFinalNode = [](ES_RuleSystem::MatchCtx& iCtx, uint32_t, GraphVtx iVtx)
     {
       DungeonGraph_Z& self = MatchCtx::DynamicCast(iCtx.userCtx)->m_Graph;
       auto props = self.GetProperties(iVtx);
@@ -170,38 +170,46 @@ namespace eXl
       return props->IsPhysical() && (!props->HasContent(Entrance()) || boost::degree(iVtx, iCtx.graph) < 2);
     };
 
-    auto canBranch = [isNotFinalNode, isNotTooMuchConnectionEntrance](ES_RuleSystem::MatchCtx& iCtx, GraphVtx iVtx)
+    auto canBranch = [isNotFinalNode, isNotTooMuchConnectionEntrance](ES_RuleSystem::MatchCtx& iCtx, uint32_t iIdx, GraphVtx iVtx)
     {
-      return isNotFinalNode(iCtx, iVtx) && isNotTooMuchConnectionEntrance(iCtx, iVtx);
+      return isNotFinalNode(iCtx, iIdx, iVtx) && isNotTooMuchConnectionEntrance(iCtx, iVtx);
     };
 
-    auto isDoorway = [](ES_RuleSystem::MatchCtx& iCtx, GraphEdge iEdge)
+    auto isDoorway = [](ES_RuleSystem::MatchCtx& iCtx, uint32_t iIdx, GraphEdge iEdge)
     {
       DungeonGraph_Z& self = MatchCtx::DynamicCast(iCtx.userCtx)->m_Graph;
       return self.GetProperties(iEdge)->m_PhysicalConnection;
     };
 
-    m_CorridorRoomRule = m_Rules.StartRule().AddNode(0, isRoom).AddNode(0, isRoom)
-      .AddCutConnection(0, 1, 0, isDoorway, edgeRemoved)
-      .AddNewNode(0, createNewRoom)
-      .AddNewConnection(0, 2, 0, -1, 0, createNewDoorway)
-      .AddNewConnection(1, 2, 0, -1, 0, createNewDoorway)
-      .End();
+    ES_RuleSystem::RuleBuilder builder;
+    builder.AddNode(0, isRoom);
+    builder.AddNode(0, isRoom);
+    builder.AddCutConnection(0, 1, 0, isDoorway, edgeRemoved);
+    builder.AddNewNode(0, createNewRoom);
+    builder.AddNewConnection(0, 2, 0, -1, 0, createNewDoorway);
+    builder.AddNewConnection(1, 2, 0, -1, 0, createNewDoorway);
 
-    m_CycleRoomRule = m_Rules.StartRule().AddNode(1, canBranch).AddNode(1, canBranch)
-      .AddCutConnection(0, 1, 0, isDoorway, edgeRemoved)
-      .AddNewNode(0, createNewRoom).AddNewNode(0, createNewRoom)
-      .AddNewConnection(0, 2, -1, -1, 0, createNewDoorway)
-      .AddNewConnection(1, 2, -1, -1, 0, createNewDoorway)
-      .AddNewConnection(0, 3, -1, -1, 0, createNewDoorway)
-      .AddNewConnection(1, 3, -1, -1, 0, createNewDoorway)
-      .End();
+    m_CorridorRoomRule = builder.End(m_Rules);
 
-    m_BranchRoomRule = m_Rules.StartRule().AddNode(2, isNotFinalNode).AddNode(0)
-      .AddConnection(0, 1, 0, isDoorway)
-      .AddNewNode(0, createNewRoom)
-      .AddNewConnection(0, 2, -1, -1, 0, createNewDoorway)
-      .End();
+    builder.AddNode(1, canBranch);
+    builder.AddNode(1, canBranch);
+    builder.AddCutConnection(0, 1, 0, isDoorway, edgeRemoved);
+    builder.AddNewNode(0, createNewRoom);
+    builder.AddNewNode(0, createNewRoom);
+    builder.AddNewConnection(0, 2, -1, -1, 0, createNewDoorway);
+    builder.AddNewConnection(1, 2, -1, -1, 0, createNewDoorway);
+    builder.AddNewConnection(0, 3, -1, -1, 0, createNewDoorway);
+    builder.AddNewConnection(1, 3, -1, -1, 0, createNewDoorway);
+
+    m_CycleRoomRule = builder.End(m_Rules);
+
+    builder.AddNode(2, isNotFinalNode);
+    builder.AddNode(0);
+    builder.AddConnection(0, 1, 0, isDoorway);
+    builder.AddNewNode(0, createNewRoom);
+    builder.AddNewConnection(0, 2, -1, -1, 0, createNewDoorway);
+
+    m_BranchRoomRule = builder.End(m_Rules);
   }
 
   void DungeonGraph_Z::ApplyRoomRule(Random& iRand)

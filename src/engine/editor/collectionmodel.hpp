@@ -56,20 +56,66 @@ namespace eXl
     Vector<Key> m_IndexToName;
   };
 
-  template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
-  class CollectionModelMapAdaptor : public CollectionModel<Key, Val, Resource>
+  template<typename Key, typename Value, typename ResourceType>
+  class MapCollectionModel : public CollectionModel<Key, Value, ResourceType>
   {
   public:
-    static CollectionModelMapAdaptor* Create(QObject* iParent, Resource* iResource);
+    static MapCollectionModel* Create(QObject* iParent, ResourceType* iRes, UnorderedMap<Key, Value> ResourceType::* iMapPtr);
 
-    // Bypasses model, only use on modification callbacks.
-    bool SetOnResource(Key const& iName, Val iObject);
   protected:
-    CollectionModelMapAdaptor(QObject* iParent, Resource* iResource);
-    bool AddToResource(Key const& iName, Val const& iValue) override;
+    MapCollectionModel(QObject* iParent, ResourceType* iSys);
+    bool AddToResource(Key const& iName, Value const& iObject) override;
     bool RemoveFromResource(Key const& iName) override;
-    Val const* FindInResource(Key const& iName) const override;
+    Value const* FindInResource(Key const& iName) const override;
+
+    UnorderedMap<Key, Value> ResourceType::* m_MapPtr;
   };
+
+  template<typename Key, typename Value, typename ResourceType>
+  MapCollectionModel<Key,Value, ResourceType>* MapCollectionModel<Key, Value, ResourceType>::Create(QObject* iParent, ResourceType* iRes, UnorderedMap<Key, Value> ResourceType::* iMapPtr)
+  {
+    MapCollectionModel<Key, Value, ResourceType>* newModel = new MapCollectionModel<Key, Value, ResourceType>(iParent, iRes);
+    newModel->m_MapPtr = iMapPtr;
+    newModel->BuildMap(iRes->*iMapPtr);
+
+    return newModel;
+  }
+
+  template<typename Key, typename Value, typename ResourceType>
+  MapCollectionModel<Key, Value, ResourceType>::MapCollectionModel(QObject* iParent, ResourceType* iRes)
+    : CollectionModel(iParent, iRes)
+  {
+  }
+
+  template<typename Key, typename Value, typename ResourceType>
+  bool MapCollectionModel<Key, Value, ResourceType>::AddToResource(Key const& iName, Value const& iObject)
+  {
+    return (m_Resource->*m_MapPtr).insert(std::make_pair(iName, iObject)).second;
+  }
+
+  template<typename Key, typename Value, typename ResourceType>
+  bool MapCollectionModel<Key, Value, ResourceType>::RemoveFromResource(Key const& iName)
+  {
+    (m_Resource->*m_MapPtr).erase(iName);
+    return true;
+  }
+
+  template<typename Key, typename Value, typename ResourceType>
+  Value const* MapCollectionModel<Key, Value, ResourceType>::FindInResource(Key const& iName) const
+  {
+    auto iter = (m_Resource->*m_MapPtr).find(iName);
+    if (iter != (m_Resource->*m_MapPtr).end())
+    {
+      return &iter->second;
+    }
+    return nullptr;
+  }
+
+  template<typename Key, typename Value, typename ResourceType>
+  constexpr MapCollectionModel<Key, Value, ResourceType>* MakeMapCollectionModel(QObject* iParent, ResourceType* iRes, UnorderedMap<Key, Value> ResourceType::* iMapPtr)
+  {
+    return MapCollectionModel<Key, Value, ResourceType>::Create(iParent, iRes, iMapPtr);
+  }
 }
 
 #include "collectionmodel.cxx"

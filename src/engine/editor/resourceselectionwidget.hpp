@@ -25,8 +25,8 @@ namespace eXl
     ResourceSelectionWidget(QWidget* iParent, ResourceLoaderName iName, Widget iConf, Resource::UUID const& iRsc = Resource::UUID());
 
     void ForceSelection(Resource::UUID const& iRsc);
-    //void ResetModel();
-
+    void Clear();
+    
     Resource::UUID GetSelectedResourceId() const { return m_Selected; }
 
   Q_SIGNALS:

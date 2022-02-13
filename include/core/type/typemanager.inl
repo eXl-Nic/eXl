@@ -34,6 +34,19 @@ ArrayType const* TypeManager::GetSmallArrayType()
   return registeredType;
 }
 
+template <typename T, uint32_t S>
+FixedLengthArray const* TypeManager::GetFixedLengthArrayType()
+{
+  FixedLengthArray const* registeredType = GetFixedLengthArrayType(GetType<T>(), S);
+  if (registeredType == nullptr)
+  {
+    registeredType = FixedLengthArray::Create(GetType<T>(), S);
+    RegisterFixedLengthArrayType(registeredType, S);
+  }
+
+  return registeredType;
+}
+
 template <>
 inline ArrayType const* TypeManager::GetArrayType<bool>()
 {

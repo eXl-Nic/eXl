@@ -23,8 +23,73 @@ namespace eXl
     typedef value_type& reference;
     typedef boost::read_write_property_map_tag category;
 
-    GnrMap m_Map;
+    reference operator[](key_type const& iKey)
+    {
+      return m_Map[iKey];
+    }
+
+    mutable GnrMap m_Map;
   };
+
+  template <typename Graph, typename T>
+  class TEdgeGraphMap
+  {
+  public:
+    typedef Map<typename Graph::edge_descriptor const, T> GnrMap;
+    typedef typename GnrMap::key_type key_type;
+    typedef typename GnrMap::value_type::second_type value_type;
+    typedef value_type& reference;
+    typedef boost::read_write_property_map_tag category;
+
+    reference operator[](key_type const& iKey)
+    {
+      return m_Map[iKey];
+    }
+
+    mutable GnrMap m_Map;
+  };
+
+  template <typename Graph, typename T>
+  class TGraphMapRef
+  {
+  public:
+    typedef typename TGraphMap<Graph, T>::key_type key_type;
+    typedef typename TGraphMap<Graph, T>::value_type value_type;
+    typedef value_type& reference;
+    typedef boost::read_write_property_map_tag category;
+
+    TGraphMapRef(TGraphMap<Graph, T>& iMap)
+      : mapRef(&iMap)
+    {}
+
+    reference operator[](key_type const& iKey)
+    {
+      return (*mapRef)[iKey];
+    }
+
+    TGraphMap<Graph, T>* mapRef;
+  };
+
+  template <typename Graph, typename T>
+  TGraphMapRef<Graph, T> MakeRef(TGraphMap<Graph, T>& iMap)
+  {
+    return TGraphMapRef<Graph, T>(iMap);
+  }
+
+  template <typename Graph, typename T>
+  inline typename eXl::TGraphMapRef<Graph, T>::value_type get(eXl::TGraphMapRef<Graph, T> const& i,
+    typename Graph::vertex_descriptor key)
+  {
+    return get(*i.mapRef, key);
+  }
+
+  template <typename Graph, typename T>
+  inline void put(eXl::TGraphMapRef<Graph, T> const& i,
+    typename eXl::TGraphMap<Graph, T>::key_type key,
+    typename eXl::TGraphMap<Graph, T>::value_type const& value)
+  {
+    return put(*i.mapRef, key, value);
+  }
 
   template <typename Graph>
   using TIndexMap = TGraphMap<Graph, uint32_t>;
@@ -203,6 +268,29 @@ namespace boost
   inline void put(eXl::TGraphMap<Graph, T>& i,
                   typename eXl::TGraphMap<Graph, T>::key_type key,
                   typename eXl::TGraphMap<Graph, T>::value_type const& value)
+  {
+    auto iter = i.m_Map.find(key);
+    if (iter != i.m_Map.end())
+    {
+      iter->second = value;
+    }
+    else
+    {
+      i.m_Map.insert(std::make_pair(key, value));
+    }
+  }
+
+  template <typename Graph, typename T>
+  inline typename eXl::TEdgeGraphMap<Graph, T>::value_type get(eXl::TEdgeGraphMap<Graph, T> const& i,
+    typename Graph::edge_descriptor key)
+  {
+    return i.m_Map.find(key)->second;
+  }
+
+  template <typename Graph, typename T>
+  inline void put(eXl::TEdgeGraphMap<Graph, T>& i,
+    typename eXl::TEdgeGraphMap<Graph, T>::key_type key,
+    typename eXl::TEdgeGraphMap<Graph, T>::value_type const& value)
   {
     auto iter = i.m_Map.find(key);
     if (iter != i.m_Map.end())

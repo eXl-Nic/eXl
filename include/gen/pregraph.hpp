@@ -85,11 +85,11 @@ namespace eXl
     
     using NodePrintCallback = std::function<String(GraphVtx iVtx)>;
     using EdgePrintCallback = std::function<String(GraphEdge iVtx)>;
-    using NodeCheckCallback = std::function<bool(MatchCtx&, GraphVtx iVtx)>;
-    using EdgeCheckCallback = std::function<bool(MatchCtx&, GraphEdge iEdge)>;
+    using NodeCheckCallback = std::function<bool(MatchCtx&, uint32_t, GraphVtx iVtx)>;
+    using EdgeCheckCallback = std::function<bool(MatchCtx&, uint32_t, GraphEdge iEdge)>;
     using MatchCheckCallback = std::function<bool(MatchCtx&, Vector<GraphVtx> const&)>;
-    using NodeCreateCallback = std::function<void(RewriteCtx&, GraphVtx iVtx)>;
-    using EdgeCreateCallback = std::function<void(RewriteCtx&, GraphEdge iEdge)>;
+    using NodeCreateCallback = std::function<void(RewriteCtx&, uint32_t, GraphVtx iVtx)>;
+    using EdgeCreateCallback = std::function<void(RewriteCtx&, uint32_t, GraphEdge iEdge)>;
     using NodeRemoveCallback = std::function<void(RewriteCtx&, GraphVtx iVtx)>;
     using EdgeRemoveCallback = std::function<void(RewriteCtx&, GraphEdge iEdge)>;
     using NodeMergeCallback = std::function<void(RewriteCtx&, Vector<GraphVtx> const& iVtx)>;
@@ -130,7 +130,7 @@ namespace eXl
     {
       bool IsEquivalent(Edge const& iOther) const;
       uint32_t node[2];
-      uint32_t port[2];      
+      uint32_t port[2]; 
     };
 
   public:
@@ -140,23 +140,21 @@ namespace eXl
       friend class ES_RuleSystem;
     public:
 
-      RuleBuilder& AddNode(uint32_t iTag = 0, NodeCheckCallback iCb = {});
-      RuleBuilder& AddCutNode(uint32_t iTag = 0, NodeCheckCallback iCheckCb = {}, NodeRemoveCallback iRemoveCb = {});
-      RuleBuilder& AddNewNode(uint32_t iTag = 0, NodeCreateCallback iCb = {});
+      Err AddNode(uint32_t iTag = 0, NodeCheckCallback iCb = {});
+      Err AddCutNode(uint32_t iTag = 0, NodeCheckCallback iCheckCb = {}, NodeRemoveCallback iRemoveCb = {});
+      Err AddNewNode(uint32_t iTag = 0, NodeCreateCallback iCb = {});
 
-      RuleBuilder& AddConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag = 0, EdgeCheckCallback iCb = {});
-      RuleBuilder& AddCutConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag = 0, EdgeCheckCallback iCheckCb = {}, EdgeRemoveCallback iRemoveCb = {});
+      Err AddConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag = 0, EdgeCheckCallback iCb = {});
+      Err AddCutConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag = 0, EdgeCheckCallback iCheckCb = {}, EdgeRemoveCallback iRemoveCb = {});
       // Port == -1 wil add a new port
       // Port != -1 will reuse connection port from cut connections
-      RuleBuilder& AddNewConnection(uint32_t iNode1, uint32_t iNode2
+      Err AddNewConnection(uint32_t iNode1, uint32_t iNode2
         , uint32_t iPort1 = -1, uint32_t iPort2 = -1
         , uint32_t iTag = 0, EdgeCreateCallback iCb = {});
 
-      int End(MatchCheckCallback iFinalCb = {});
+      int End(ES_RuleSystem& iSys, MatchCheckCallback iFinalCb = {});
 
     protected:
-      inline RuleBuilder(ES_RuleSystem& iSys) : m_System(iSys){}
-      ES_RuleSystem& m_System;
 
       Vector<NodeMeta> m_Nodes;
       Vector<Edge> m_Edges;
@@ -176,9 +174,9 @@ namespace eXl
 
     bool ApplyRule(Graph const& iGraph, Graph& oGraph, uint32_t iRule, VertexMatching const& iMatching, UserRewriteContext* iCtx = nullptr, bool debug = false) const;
 
+    bool ApplyRuleParallel(Graph const& iGraph, Graph& oGraph, uint32_t iRule, UserMatchContext* iMCtx, UserRewriteContext* iCtx = nullptr, bool debug = false) const;
+
     bool Apply(Graph const& iGraph, Graph& oGraph, UserMatchContext* iMCtx = nullptr, UserRewriteContext* iRCtx = nullptr, bool debug = false) const;
-    
-    inline RuleBuilder StartRule(){return RuleBuilder(*this);};
 
     struct PGNode;
     struct PGPort;

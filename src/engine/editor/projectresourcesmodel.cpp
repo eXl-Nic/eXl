@@ -79,15 +79,15 @@ namespace eXl
   QModelIndex ProjectResourcesModel::GetIndexFromUUID(Resource::UUID const& iId)
   {
     Resource::Header const* header = ResourceManager::GetHeader(iId);
-    eXl_ASSERT(header != nullptr);
+    eXl_ASSERT_REPAIR_RET(header != nullptr, QModelIndex());
 
     auto iterCat = m_LoaderToIndex.find(header->m_LoaderName);
-    eXl_ASSERT(iterCat != m_LoaderToIndex.end());
+    eXl_ASSERT_REPAIR_RET(iterCat != m_LoaderToIndex.end(), QModelIndex());
 
     CategoryData const& cat = m_Data[iterCat->second];
 
     auto iterRsc = cat.m_NameToIndex.find(iId);
-    eXl_ASSERT(iterRsc != cat.m_NameToIndex.end());
+    eXl_ASSERT_REPAIR_RET(iterRsc != cat.m_NameToIndex.end(), QModelIndex());
 
     return index(iterRsc->second, 0, index(iterCat->second, 0));
   }

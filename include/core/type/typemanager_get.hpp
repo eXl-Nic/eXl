@@ -38,6 +38,7 @@ namespace eXl
   class EnumType;
   class RttiObject;
   class TupleType;
+  class FixedLengthArray;
   namespace TypeManager
   {
 
@@ -45,12 +46,17 @@ namespace eXl
     EXL_CORE_API void RegisterArrayType(ArrayType const* iType);
     EXL_CORE_API ArrayType const* GetSmallArrayType(Type const* iType, uint32_t iBufferSize);
     EXL_CORE_API void RegisterSmallArrayType(ArrayType const* iType, uint32_t iBufferSize);
+    EXL_CORE_API FixedLengthArray const* GetFixedLengthArrayType(Type const* iType, uint32_t iBufferSize);
+    EXL_CORE_API void RegisterFixedLengthArrayType(FixedLengthArray const* iType, uint32_t iBufferSize);
 
     template <typename T>
     ArrayType const* GetArrayType();
 
     template <typename T, uint32_t S>
     ArrayType const* GetSmallArrayType();
+
+    template <typename T, uint32_t S>
+    FixedLengthArray const* GetFixedLengthArrayType();
 
     template<class T, typename std::enable_if<std::is_same<T, void>::value, bool>::type = true>
     inline Type const* GetTypeDispatched()
@@ -80,6 +86,12 @@ namespace eXl
     inline Type const* GetTypeDispatched()
     {
       return GetArrayType<typename T::value_type>();
+    }
+
+    template<class T, typename std::enable_if<std::is_array<T>::value, bool>::type = true>
+    inline Type const* GetTypeDispatched()
+    {
+      return GetFixedLengthArrayType<typename std::remove_extent<T>::type, std::extent<T>::value>();
     }
 
     template<typename T>

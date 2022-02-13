@@ -50,6 +50,9 @@
 #include <editor/mcmcmodeleditor.hpp>
 #include <engine/gfx/tileset.hpp>
 
+#include <editor/graphtool/graphdata.hpp>
+#include <editor/graphtool/grapheditor.hpp>
+
 namespace eXl
 {
   class QLogDisplay : public QTextBrowser
@@ -252,7 +255,9 @@ namespace eXl
   {
     ui->setupUi(this);
 
+    RewriteSystem::Init();
     EditorState::BuildState(this);
+
     EditorState::AddResourceHandler(&TilesetEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&TilingGroupEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&ArchetypeEditor::GetEditorHandler());
@@ -262,6 +267,7 @@ namespace eXl
     EditorState::AddResourceHandler(&LuaFunctionLibraryEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&LuaCoroutineEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&MCMCModelEditor::GetEditorHandler());
+    EditorState::AddResourceHandler(&GraphEditor::GetEditorHandler());
 
     connect(ui->actionNewProject, &QAction::triggered, this, &MainWindow::newProject);
     connect(ui->actionOpenProject, &QAction::triggered, this, &MainWindow::openProject);

@@ -20,6 +20,19 @@ namespace eXl
 
 #ifdef EXL_WITH_OGL
   void UpdateFromImage(Image const& iImage, GLenum iTextureType, GLuint iTexId, bool iGenMipMap, int iFace);
+
+  
+  GLUnpackSave::GLUnpackSave()
+  {
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &m_Save);
+  }
+
+  GLUnpackSave::~GLUnpackSave()
+  {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, m_Save);
+  }
+  
+
 #endif
   //OGLTextureLoader::OGLTextureLoader(std::list<DataVault*> const& iSource):m_Source(iSource)
   //{
@@ -118,6 +131,9 @@ namespace eXl
         break;
       }
 #endif
+
+      GLUnpackSave save;
+
       //Arbitrary alignment
       glPixelStorei(GL_UNPACK_ALIGNMENT,1);
       glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
@@ -378,6 +394,7 @@ namespace eXl
 
     uint8_t const* pixelsData = reinterpret_cast<uint8_t const*>(replImage != nullptr ? replImage->GetImageData() : iImage.GetImageData());
 
+    GLUnpackSave save;
     if(iImage.GetRowStride() % 8 == 0)
       glPixelStorei(GL_UNPACK_ALIGNMENT,8);
     else if(iImage.GetRowStride() % 4 == 0)

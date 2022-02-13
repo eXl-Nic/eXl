@@ -19,6 +19,15 @@ namespace eXl
   class OGLTexture;
   class Image;
 
+  class GLUnpackSave
+  {
+  public:
+    GLUnpackSave();
+    ~GLUnpackSave();
+  protected:
+    int m_Save;
+  };
+
   class EXL_OGL_API OGLTextureLoader
   {
   public:

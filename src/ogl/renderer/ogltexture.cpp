@@ -249,6 +249,9 @@ namespace eXl
   {
 #ifdef EXL_WITH_OGL
     eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER, void());
+
+    GLUnpackSave save;
+    
     if(m_TexId != 0 && iData != NULL)
     {
       GLenum textureTarget = GetGLTextureType(m_TextureType);
@@ -265,7 +268,7 @@ namespace eXl
         {
           eXl_FAIL_MSG_RET("Invalid box dimensions", void());
         }
-        
+
         glBindTexture(textureTarget, m_TexId);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexSubImage1D(textureTarget, iMip, iBox.MinX(), boxSize.x, GetGLTextureFormat(iFormat), GetGLTextureElementType(iType), iData);

@@ -69,6 +69,10 @@ mapeditor/terraintool.cpp
 mapeditor/editortool.cpp
 mapeditor/mcmclearntool.cpp
 
+graphtool/graphsimulate.cpp
+graphtool/grapheditor.cpp
+graphtool/graphdata.cpp
+graphtool/graphpainter.cpp
 
 ${CMAKE_CURRENT_BINARY_DIR}/editor_gen.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/editor_gen.hpp
@@ -131,6 +135,11 @@ mapeditor/terraintool.hpp
 mapeditor/editortool.hpp
 mapeditor/mcmclearntool.hpp
 mapeditor/mapitemdata.hpp
+
+graphtool/graphsimulate.hpp
+graphtool/grapheditor.hpp
+graphtool/graphdata.hpp
+graphtool/graphpainter.hpp
 )
 
 QT5_WRAP_CPP(QTAppl_MOC_SRC 
@@ -142,6 +151,7 @@ add_dependencies(eXl_Editor eXl_Player)
 
 set(HEADERS_TO_PARSE 
   ${CMAKE_CURRENT_SOURCE_DIR}/mapeditor/mapitemdata.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/graphtool/graphdata.hpp
 )
 
 SETUP_EXL_TARGET(eXl_Editor DEPENDENCIES eXl_Engine HEADERS_TO_PARSE ${HEADERS_TO_PARSE} LIB_SUFFIX "EDITOR")

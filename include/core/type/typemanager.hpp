@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/typemanager_get.hpp>
 #include <core/type/arraytype.hpp>
 #include <core/type/tupletypestruct.hpp>
+#include <core/type/fixedlengtharray.hpp>
 
 namespace luabind
 {

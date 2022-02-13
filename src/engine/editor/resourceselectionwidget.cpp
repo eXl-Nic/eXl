@@ -31,7 +31,12 @@ namespace eXl
         QModelIndex srcIdx = m_FilteredModel->mapToSource(m_FilteredModel->index(iIndex, 0, QModelIndex()));
         Resource::UUID const* resourceId = m_Collection->GetResourceIDFromIndex(srcIdx);
 
-        if (resourceId != nullptr && *resourceId != m_Selected)
+        if (resourceId == nullptr)
+        {
+          m_Selected = Resource::UUID();
+          emit onResourceChanged();
+        }
+        else if (*resourceId != m_Selected)
         {
           m_Selected = *resourceId;
           emit onResourceChanged();
@@ -80,6 +85,11 @@ namespace eXl
   {
     if (iId != m_Selected)
     {
+      if(!iId.IsValid())
+      {
+        return Clear();
+      }
+
       QModelIndex index = m_Collection->GetIndexFromUUID(iId);
       QModelIndex filteredIdx = m_FilteredModel->mapFromSource(index);
       if (filteredIdx.isValid())
@@ -95,5 +105,19 @@ namespace eXl
         }
       }
     }
+  }
+
+  void ResourceSelectionWidget::Clear()
+  {
+    if (m_Selector)
+    {
+      QModelIndex filteredIdx = m_FilteredModel->mapFromSource(m_Collection->index(0, 0, QModelIndex()));
+      m_Selector->setCurrentIndex(filteredIdx.row());
+    }
+    if (m_List)
+    {
+      m_List->selectionModel()->clearSelection();
+    }
+    m_Selected = Resource::UUID();
   }
 }

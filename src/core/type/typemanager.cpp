@@ -61,6 +61,7 @@ namespace eXl
       //typedef std::pair<const TupleType*,const TupleType*> ViewKey;
       typedef UnorderedMap<Type const*, ArrayType const*> ArrayCacheMap;
       typedef UnorderedMap<std::pair<Type const*, uint32_t>, ArrayType const*> SmallArrayCacheMap;
+      typedef UnorderedMap<std::pair<Type const*, uint32_t>, FixedLengthArray const*> FixedLengthArrayCacheMap;
 
       struct ClassTypeEntry
       {
@@ -139,6 +140,7 @@ namespace eXl
       detail::TypeMap       m_TypeMap;
       detail::ArrayCacheMap m_ArrayMap;
       detail::SmallArrayCacheMap m_SmallArrayMap;
+      detail::FixedLengthArrayCacheMap m_FixedLengthArrayMap;
       detail::ClassMap      m_ClassMap;
 
       void Clear()
@@ -399,6 +401,37 @@ namespace eXl
         if (iter == TMData::Get().m_SmallArrayMap.end())
         {
           TMData::Get().m_SmallArrayMap.insert(std::make_pair(key, iType));
+        }
+      }
+    }
+
+    FixedLengthArray const* GetFixedLengthArrayType(Type const* iType, uint32_t iBufferSize)
+    {
+      if (iType != nullptr)
+      {
+        detail::FixedLengthArrayCacheMap::iterator iter = TMData::Get().m_FixedLengthArrayMap.find(std::make_pair(iType, iBufferSize));
+        if (iter == TMData::Get().m_FixedLengthArrayMap.end())
+        {
+          return nullptr;
+        }
+        else
+        {
+          return iter->second;
+        }
+      }
+      return nullptr;
+    }
+
+    void RegisterFixedLengthArrayType(FixedLengthArray const* iType, uint32_t iBufferSize)
+    {
+      if (iType != nullptr)
+      {
+        auto key = std::make_pair(iType->GetFieldDetails(0), iBufferSize);
+        eXl_ASSERT_REPAIR_RET(key.first->IsCoreType(), );
+        detail::FixedLengthArrayCacheMap::iterator iter = TMData::Get().m_FixedLengthArrayMap.find(key);
+        if (iter == TMData::Get().m_FixedLengthArrayMap.end())
+        {
+          TMData::Get().m_FixedLengthArrayMap.insert(std::make_pair(key, iType));
         }
       }
     }

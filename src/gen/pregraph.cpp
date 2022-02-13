@@ -84,7 +84,7 @@ namespace eXl
         || (node[0] == iOther.node[1] && node[1] == iOther.node[0]));
   }
 
-  ES_RuleSystem::RuleBuilder& ES_RuleSystem::RuleBuilder::AddNode(uint32_t iTag, NodeCheckCallback iCb)
+  Err ES_RuleSystem::RuleBuilder::AddNode(uint32_t iTag, NodeCheckCallback iCb)
   {
     NodeMeta node;
     node.type = NodeType::Env;
@@ -92,10 +92,10 @@ namespace eXl
     node.tag = iTag;
     m_Nodes.emplace_back(std::move(node));
     ++m_NumMatchNodes;
-    return *this;
+    return Err::Success;
   }
 
-  ES_RuleSystem::RuleBuilder& ES_RuleSystem::RuleBuilder::AddCutNode(uint32_t iTag, NodeCheckCallback iCb, NodeRemoveCallback iRemoveCb)
+  Err ES_RuleSystem::RuleBuilder::AddCutNode(uint32_t iTag, NodeCheckCallback iCb, NodeRemoveCallback iRemoveCb)
   {
     NodeMeta node;
     node.type = NodeType::Cut;
@@ -104,29 +104,29 @@ namespace eXl
     node.tag = iTag;
     m_Nodes.emplace_back(std::move(node));
     ++m_NumMatchNodes;
-    return *this;
+    return Err::Success;
   }
 
-  ES_RuleSystem::RuleBuilder& ES_RuleSystem::RuleBuilder::AddNewNode(uint32_t iTag, NodeCreateCallback iCb)
+  Err ES_RuleSystem::RuleBuilder::AddNewNode(uint32_t iTag, NodeCreateCallback iCb)
   {
     NodeMeta node;
     node.type = NodeType::New;
     node.createCb = std::move(iCb);
     node.tag = iTag;
     m_Nodes.emplace_back(std::move(node));
-    return *this;
+    return Err::Success;
   }
 
-  ES_RuleSystem::RuleBuilder& ES_RuleSystem::RuleBuilder::AddConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag, EdgeCheckCallback iCb)
+  Err ES_RuleSystem::RuleBuilder::AddConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag, EdgeCheckCallback iCb)
   {
-    eXl_ASSERT_REPAIR_RET(iNode1 < m_Nodes.size(), *this);
-    eXl_ASSERT_REPAIR_RET(iNode2 < m_Nodes.size(), *this);
-    eXl_ASSERT_REPAIR_RET(iNode1 != iNode2, *this);
+    eXl_ASSERT_REPAIR_RET(iNode1 < m_Nodes.size(), Err::Error);
+    eXl_ASSERT_REPAIR_RET(iNode2 < m_Nodes.size(), Err::Error);
+    eXl_ASSERT_REPAIR_RET(iNode1 != iNode2, Err::Error);
 
     auto const& node1 = m_Nodes[iNode1];
     auto const& node2 = m_Nodes[iNode2];
 
-    eXl_ASSERT_REPAIR_RET(node1.type == NodeType::Env && node2.type == NodeType::Env, *this);
+    eXl_ASSERT_REPAIR_RET(node1.type == NodeType::Env && node2.type == NodeType::Env, Err::Error);
 
     Edge edge;
     edge.type = EdgeType::Env;
@@ -138,19 +138,19 @@ namespace eXl
     m_Edges.emplace_back(std::move(edge));
     ++m_NumMatchEdges;
 
-    return *this;
+    return Err::Success;
   }
 
-  ES_RuleSystem::RuleBuilder& ES_RuleSystem::RuleBuilder::AddCutConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag, EdgeCheckCallback iCb, EdgeRemoveCallback iRemoveCb)
+  Err ES_RuleSystem::RuleBuilder::AddCutConnection(uint32_t iNode1, uint32_t iNode2, uint32_t iTag, EdgeCheckCallback iCb, EdgeRemoveCallback iRemoveCb)
   {
-    eXl_ASSERT_REPAIR_RET(iNode1 < m_Nodes.size(), *this);
-    eXl_ASSERT_REPAIR_RET(iNode2 < m_Nodes.size(), *this);
-    eXl_ASSERT_REPAIR_RET(iNode1 != iNode2, *this);
+    eXl_ASSERT_REPAIR_RET(iNode1 < m_Nodes.size(), Err::Error);
+    eXl_ASSERT_REPAIR_RET(iNode2 < m_Nodes.size(), Err::Error);
+    eXl_ASSERT_REPAIR_RET(iNode1 != iNode2, Err::Error);
 
     auto const& node1 = m_Nodes[iNode1];
     auto const& node2 = m_Nodes[iNode2];
 
-    eXl_ASSERT_REPAIR_RET(node1.type != NodeType::New && node2.type != NodeType::New, *this);
+    eXl_ASSERT_REPAIR_RET(node1.type != NodeType::New && node2.type != NodeType::New, Err::Error);
 
     Edge edge;
     edge.type = EdgeType::Cut;
@@ -163,28 +163,28 @@ namespace eXl
     m_Edges.emplace_back(std::move(edge));
     ++m_NumMatchEdges;
 
-    return *this;
+    return Err::Success;
   }
 
-  ES_RuleSystem::RuleBuilder& ES_RuleSystem::RuleBuilder::AddNewConnection(uint32_t iNode1, uint32_t iNode2
+  Err ES_RuleSystem::RuleBuilder::AddNewConnection(uint32_t iNode1, uint32_t iNode2
     , uint32_t iPort1, uint32_t iPort2, uint32_t iTag, EdgeCreateCallback iCb)
   {
-    eXl_ASSERT_REPAIR_RET(iNode1 < m_Nodes.size(), *this);
-    eXl_ASSERT_REPAIR_RET(iNode2 < m_Nodes.size(), *this);
-    eXl_ASSERT_REPAIR_RET(iNode1 != iNode2, *this);
+    eXl_ASSERT_REPAIR_RET(iNode1 < m_Nodes.size(), Err::Error);
+    eXl_ASSERT_REPAIR_RET(iNode2 < m_Nodes.size(), Err::Error);
+    eXl_ASSERT_REPAIR_RET(iNode1 != iNode2, Err::Error);
 
     uint32_t ports[] = { iPort1, iPort2 };
     uint32_t nodeId[] = { iNode1, iNode2 };
     NodeMeta nodes[] = { m_Nodes[iNode1], m_Nodes[iNode2] };
     for (uint32_t i = 0; i < 2; ++i)
     {
-      eXl_ASSERT_REPAIR_RET(nodes[i].type != NodeType::Cut, *this);
+      eXl_ASSERT_REPAIR_RET(nodes[i].type != NodeType::Cut, Err::Error);
 
       if (ports[i] != -1)
       {
-        eXl_ASSERT_REPAIR_RET(nodes[i].type != NodeType::New, *this);
-        eXl_ASSERT_REPAIR_RET(ports[i] < m_Edges.size() && m_Edges[ports[i]].type == EdgeType::Cut, *this);
-        eXl_ASSERT_REPAIR_RET(m_Edges[ports[i]].node[0] == nodeId[i] || m_Edges[ports[i]].node[1] == nodeId[i], *this);
+        eXl_ASSERT_REPAIR_RET(nodes[i].type != NodeType::New, Err::Error);
+        eXl_ASSERT_REPAIR_RET(ports[i] < m_Edges.size() && m_Edges[ports[i]].type == EdgeType::Cut, Err::Error);
+        eXl_ASSERT_REPAIR_RET(m_Edges[ports[i]].node[0] == nodeId[i] || m_Edges[ports[i]].node[1] == nodeId[i], Err::Error);
       }
     }
 
@@ -198,17 +198,17 @@ namespace eXl
     edge.tag = iTag;
 
     m_Edges.emplace_back(std::move(edge));
-    return *this;
+    return Err::Success;
   }
 
-  int ES_RuleSystem::RuleBuilder::End(MatchCheckCallback iCb)
+  int ES_RuleSystem::RuleBuilder::End(ES_RuleSystem& iSys, MatchCheckCallback iCb)
   {
     int numRule = -1;
     eXl_ASSERT_REPAIR_RET(!m_Nodes.empty(), numRule);
 
-    numRule = m_System.m_Rules.size();
-    m_System.m_Rules.push_back(static_cast<Rule const&>(Rule()));
-    Rule& curRule = m_System.m_Rules.back();
+    numRule = iSys.m_Rules.size();
+    iSys.m_Rules.push_back(static_cast<Rule const&>(Rule()));
+    Rule& curRule = iSys.m_Rules.back();
     curRule.finalCb = std::move(iCb);
     UnorderedMap<uint32_t, Vector<uint32_t>> permutationSetsL;
     UnorderedMap<uint32_t, Vector<uint32_t>> permutationSetsR;
@@ -376,7 +376,7 @@ namespace eXl
             }
             else
             {
-              eXl_ASSERT(iter->type == edge.type);
+              validPerm = (iter->type == edge.type);
             }
           }
         } while (!validPerm && std::next_permutation(newNodesPerm.begin(), newNodesPerm.end()));
@@ -429,7 +429,7 @@ namespace eXl
           }
           else
           {
-            eXl_ASSERT(iter->type == edge.type);
+            validPerm = (iter->type == edge.type);
           }
         }
 
@@ -466,12 +466,12 @@ namespace eXl
       }
     }
 
-    m_System.CheckConflicts(numRule);
+    iSys.CheckConflicts(numRule);
 
-    ES_RuleSystem& system = m_System;
+    ES_RuleSystem& system = iSys;
 
     this->~RuleBuilder();
-    new(this) RuleBuilder(system);
+    new(this) RuleBuilder;
 
     return numRule;
   }
@@ -535,7 +535,7 @@ namespace eXl
     {
       uint32_t vtxIdx = boost::get(boost::vertex_index, m_Rule.matchGraph, iRuleVtx);
       NodeMeta const& ruleNode = m_Rule.matchNodes[vtxIdx];
-      return !ruleNode.checkCb || ruleNode.checkCb(m_MatchCtx, iVtx);
+      return !ruleNode.checkCb || ruleNode.checkCb(m_MatchCtx, vtxIdx, iVtx);
     }
 
     Graph const& m_Graph;
@@ -555,7 +555,7 @@ namespace eXl
     {
       uint32_t edgeIdx = boost::get(boost::edge_index, m_Rule.matchGraph, iRuleEdge);
       Edge const& ruleEdge = m_Rule.matchEdges[edgeIdx];
-      return !ruleEdge.checkCb || ruleEdge.checkCb(m_MatchCtx, iEdge);
+      return !ruleEdge.checkCb || ruleEdge.checkCb(m_MatchCtx, edgeIdx, iEdge);
     }
 
     Graph const& m_Graph;
@@ -1369,7 +1369,7 @@ namespace eXl
       if (auto& createFun = m_Rules[newNode->ruleIdx].newNodes[newNode->idx].createCb)
       {
         RewriteCtx rCtx(iGraph, oFinalGraph, iMatches[newNode->ruleIdx][newNode->matchIdx], static_cast<uint32_t>(newNode->ruleIdx), iCtx);
-        createFun(rCtx, entry.first);
+        createFun(rCtx, newNode->idx, entry.first);
       }
     }
     for (auto const& entry : newEdges)
@@ -1378,7 +1378,7 @@ namespace eXl
       if (auto& createFun = m_Rules[newEdge->ruleIdx].newEdges[newEdge->idx].createCb)
       {
         RewriteCtx rCtx(iGraph, oFinalGraph, iMatches[newEdge->ruleIdx][newEdge->matchIdx], static_cast<uint32_t>(newEdge->ruleIdx), iCtx);
-        createFun(rCtx, entry.first);
+        createFun(rCtx, newEdge->idx, entry.first);
       }
     }
     return true;
@@ -1522,6 +1522,33 @@ namespace eXl
     ApplyRule(iGraph, rule, iMatching, 0, pg, iCtx);
 
     return ComputeFinalGraph(iGraph, oGraph, pg, matches, iCtx);
+  }
+
+  bool ES_RuleSystem::ApplyRuleParallel(Graph const& iGraph, Graph& oGraph, uint32_t iRule, UserMatchContext* iMCtx, UserRewriteContext* iRCtx, bool debug) const
+  {
+    eXl_ASSERT_REPAIR_RET(iRule < m_Rules.size(), false);
+
+    Vector<Vector<VertexMatching>> matches;
+
+    PreGraph pg;
+    MakePreGraph(iGraph, pg);
+
+    MatchCtx mCtx(iGraph, iMCtx);
+    
+    Rule const& rule = m_Rules[iRule];
+
+    matches.push_back(FindRuleMatch(rule, iGraph, mCtx));
+
+    //PrintPreGraph(std::cout, iGraph, pg, matches);
+
+    //Should try to detect conflicts, if any.
+    
+    for (uint32_t i = 0; i < matches[0].size(); ++i)
+    {
+      ApplyRule(iGraph, rule, matches[0][i], i, pg, iRCtx);
+    }
+
+    return ComputeFinalGraph(iGraph, oGraph, pg, matches, iRCtx);
   }
 
   bool ES_RuleSystem::Apply(Graph const& iGraph, Graph& oGraph, UserMatchContext* iMCtx, UserRewriteContext* iRCtx, bool debug) const

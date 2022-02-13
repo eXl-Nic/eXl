@@ -341,10 +341,10 @@ namespace eXl
       }
       else
       {
-        LOG_ERROR << "Could not find asset for UUID" << iUUID.uuid_dwords[0] << "-" << 
+        LOG_ERROR << "Could not find asset for UUID " << iUUID.uuid_dwords[0] << "-" << 
           iUUID.uuid_dwords[1] << "-" << 
           iUUID.uuid_dwords[2] << "-" << 
-          iUUID.uuid_dwords[3] << "-" << "\n";
+          iUUID.uuid_dwords[3] << "\n";
       }
       return loadedRsc;
     }
