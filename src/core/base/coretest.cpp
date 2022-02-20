@@ -374,9 +374,9 @@ namespace eXl
       {
         if(!((errorFlags& SILENT_ASSERT)==SILENT_ASSERT))
         {
-          if(iMsg!=nullptr)
+          if(!msg.empty())
           {
-            RAW_LOG_ERROR<<"Assertion Err in "<<file<<" at "<<line<<" : "<<iMsg<<"\n";
+            RAW_LOG_ERROR<<"Assertion Err in "<<file<<" at "<<line<<" : "<<msg<<"\n";
           }
           else
           {
@@ -385,9 +385,9 @@ namespace eXl
         }
         if(errorFlags & THROW_ASSERT)
         {
-          if(iMsg!=nullptr)
+          if(!msg.empty())
           {
-            throw Exception(Exception::AssertType,iMsg,file,line);
+            throw Exception(Exception::AssertType,msg,file,line);
           }
           else
           {

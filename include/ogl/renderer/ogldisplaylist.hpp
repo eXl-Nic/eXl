@@ -64,8 +64,11 @@ namespace eXl
     void PopData();
 
     void PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex);
-
+#ifndef __ANDROID__
     void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance);
+#else
+    void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances);
+#endif
 
     void Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vector4f const& iColor = Vector4f::ZERO, float iDepth = 1.0);
 
@@ -86,7 +89,9 @@ namespace eXl
       uint32_t offset;
       uint32_t baseVertex;
       uint32_t instances;
+#ifndef __ANDROID__
       uint32_t baseInstance;
+#endif
       uint16_t key;
       uint8_t topo;
     };

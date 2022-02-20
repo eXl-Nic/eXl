@@ -38,7 +38,9 @@ namespace eXl
     {
       LOG_INFO<<"Started Core lib"<<"\n";
     }
+#ifndef __ANDROID__
     SetAppPath(Path(::eXl::GetAppPath()));
+#endif
     running = false;
     eXl_ASSERT(s_Instance == nullptr);
     s_Instance = this;

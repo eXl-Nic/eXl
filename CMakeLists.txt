@@ -39,6 +39,7 @@ set(LAYOUT_ROOT "${EXL_ROOT}/modules/layout")
 set(GTEST_ROOT "${EXL_ROOT}/modules/gtest")
 set(UTF8_ROOT "${EXL_ROOT}/modules/utf8")
 
+include(${EXL_ROOT}/config/eXl/eXlconfig_min.cmake)
 include(${EXL_ROOT}/config/eXl/eXlSetupBuildPath.cmake)
 include(${EXL_ROOT}/config/eXl/eXlconfig.cmake)
 include(${EXL_ROOT}/config/eXl/eXlMacros.cmake)

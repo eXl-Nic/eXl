@@ -338,12 +338,16 @@ namespace eXl
       GetImpl().m_UUIDToEntry.clear();
     }
 
-    Vector<Resource::Header> ListResources()
+    Vector<Resource::Header> ListResources(Optional<ResourceLoaderName> iLoader)
     {
       Vector<Resource::Header> oArray;
       oArray.reserve(GetImpl().m_UUIDToEntry.size());
       for (auto Entry : GetImpl().m_UUIDToEntry)
       {
+        if (iLoader && Entry.second->m_Header.m_LoaderName != iLoader)
+        {
+          continue;
+        }
         oArray.push_back(Entry.second->m_Header);
       }
 
@@ -508,18 +512,18 @@ namespace eXl
     {
       String manifestPath("eXlManifest");
       bool validDir = true;
-#ifdef EXL_RSC_HAS_FILESYSTEM
-      Path pathCheck(iDir.c_str());
-      if (!(Filesystem::exists(pathCheck) && Filesystem::is_directory(pathCheck)))
-      {
-        validDir = false;
-        return;
-      }
-      else
-#else
+//#ifdef EXL_RSC_HAS_FILESYSTEM
+//      Path pathCheck(iDir.c_str());
+//      if (!(Filesystem::exists(pathCheck) && Filesystem::is_directory(pathCheck)))
+//      {
+//        validDir = false;
+//        return;
+//      }
+//      else
+//#else
       validDir = !iDir.empty();
       if(validDir)
-#endif
+//#endif
       {
         manifestPath = iDir + "/" + manifestPath;
       }

@@ -111,7 +111,8 @@ namespace eXl
     options.add_options()
       ("p,project", "Project path", cxxopts::value<std::string>())
       ("plugin", "Additional plugins to load", cxxopts::value<std::vector<std::string>>())
-      ("m,map", "Map to load", cxxopts::value<std::string>());
+      ("m,map", "Map to load", cxxopts::value<std::string>())
+      ("b,bake", "Bake directory path", cxxopts::value<std::string>());
 
     cxxopts::ParseResult result = options.parse(m_Argc, m_ArgV);
 
@@ -122,6 +123,7 @@ namespace eXl
       projectPathInput = (result["project"].as<std::string>().c_str());
     }
 
+#ifdef EXL_RSC_HAS_FILESYSTEM
     if(!projectPathInput.empty())
     {
       Path projectPathCandidate = projectPathInput;
@@ -150,6 +152,8 @@ namespace eXl
         LOG_ERROR << ToString(projectPathInput) << " is not a eXl project path";
       }
     }
+#endif
+
     if (result.count("plugin"))
     {
       std::vector<std::string> plugins = result["plugin"].as<std::vector<std::string>>();
@@ -160,6 +164,16 @@ namespace eXl
         {
           LOG_ERROR << "Could not load plugin " << pluginName;
         }
+      }
+    }
+
+    if (result.count("bake"))
+    {
+      Path bakeDir = result["bake"].as<std::string>().c_str();
+      if (Filesystem::exists(bakeDir)
+        && Filesystem::is_directory(bakeDir))
+      {
+        m_BakeDir = bakeDir;
       }
     }
     

@@ -91,7 +91,11 @@ namespace eXl
         }
         else
         {
+#ifndef __ANDROID__
           iList.PushDrawInstanced(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0, draw.m_NumInstances, draw.m_BaseInstance);
+#else
+          iList.PushDrawInstanced(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0, draw.m_NumInstances);
+#endif
         }
 
         for (uint32_t i = 0; i < toPop; ++i)

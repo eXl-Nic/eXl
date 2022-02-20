@@ -1,14 +1,18 @@
 
 #ifdef __ANDROID__
-//precision mediump float;
+//
 #endif
 
 char const* hq4xVS =
+#ifdef __ANDROID__
+"#version 320 es\n"
+"precision mediump float;\n"
+#else
+"#version 140\n"
+#endif
 R"(
-#version 140
-
-attribute vec4 iPosition;
-attribute vec2 iTexCoord;
+in vec4 iPosition;
+in vec2 iTexCoord;
 
 uniform mat4 worldMatrix;
 
@@ -23,7 +27,7 @@ uniform vec2 tcOffset;
 uniform vec2 tcScaling;
 uniform vec2 imageSize;
 
-varying vec4 texCoord[7];
+out vec4 texCoord[7];
 
 void main()
 {
@@ -54,13 +58,19 @@ void main()
 )";
 
 char const* hq4xPS =
+#ifdef __ANDROID__
+"#version 320 es\n"
+"precision mediump float;\n"
+#else
+"#version 140\n"
+#endif
 R"(uniform vec4 tint;
-varying vec4 texCoord[7];
+in vec4 texCoord[7];
 uniform vec2 tcOffset;
 uniform vec2 texSize;
 uniform sampler2D iUnfilteredTexture;
 uniform float     alphaMult;
-
+out vec4 fragColor;
  const float mx = 1.00;      // start smoothing wt.
  const float k = -1.10;      // wt. decrease factor
  const float max_w = 0.75;   // max filter weigth
@@ -87,19 +97,19 @@ void main()
   vec2 finalTc_s4 = fract((texCoord[4].zw - tcOffset) / texSize) * texSize + tcOffset;
 
 
-  vec4 c  = texture2D(iUnfilteredTexture, finalTc_c);
-  vec4 i1 = texture2D(iUnfilteredTexture, finalTc_i1);
-  vec4 i2 = texture2D(iUnfilteredTexture, finalTc_i2);
-  vec4 i3 = texture2D(iUnfilteredTexture, finalTc_i3);
-  vec4 i4 = texture2D(iUnfilteredTexture, finalTc_i4);
-  vec4 o1 = texture2D(iUnfilteredTexture, finalTc_o1);
-  vec4 o3 = texture2D(iUnfilteredTexture, finalTc_o2);
-  vec4 o2 = texture2D(iUnfilteredTexture, finalTc_o3);
-  vec4 o4 = texture2D(iUnfilteredTexture, finalTc_o4);
-  vec4 s1 = texture2D(iUnfilteredTexture, finalTc_s1);
-  vec4 s2 = texture2D(iUnfilteredTexture, finalTc_s2);
-  vec4 s3 = texture2D(iUnfilteredTexture, finalTc_s3);
-  vec4 s4 = texture2D(iUnfilteredTexture, finalTc_s4);
+  vec4 c  = texture(iUnfilteredTexture, finalTc_c);
+  vec4 i1 = texture(iUnfilteredTexture, finalTc_i1);
+  vec4 i2 = texture(iUnfilteredTexture, finalTc_i2);
+  vec4 i3 = texture(iUnfilteredTexture, finalTc_i3);
+  vec4 i4 = texture(iUnfilteredTexture, finalTc_i4);
+  vec4 o1 = texture(iUnfilteredTexture, finalTc_o1);
+  vec4 o3 = texture(iUnfilteredTexture, finalTc_o2);
+  vec4 o2 = texture(iUnfilteredTexture, finalTc_o3);
+  vec4 o4 = texture(iUnfilteredTexture, finalTc_o4);
+  vec4 s1 = texture(iUnfilteredTexture, finalTc_s1);
+  vec4 s2 = texture(iUnfilteredTexture, finalTc_s2);
+  vec4 s3 = texture(iUnfilteredTexture, finalTc_s3);
+  vec4 s4 = texture(iUnfilteredTexture, finalTc_s4);
   vec3 dt = vec3(1.0, 1.0, 1.0);
 
   float ko1=dot(abs(o1.xyz-c.xyz),dt);
@@ -132,6 +142,6 @@ void main()
   if(c.w < 0.5)
     discard;
   c.w = (c.w - 0.5) * 2.0 *alphaMult;
-  gl_FragColor = c * tint;
+  fragColor = c * tint;
 })"
 ;

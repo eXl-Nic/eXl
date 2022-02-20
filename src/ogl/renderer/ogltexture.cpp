@@ -59,11 +59,13 @@ namespace eXl
     glBindTexture(textureTarget, m_TexId);
     switch (m_TextureType)
     {
+#ifndef __ANDROID__
     case OGLTextureType::TEXTURE_1D:
       glTexImage1D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat), 
         m_Size.X(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
       break;
     case OGLTextureType::TEXTURE_1D_ARRAY:
+#endif
     case OGLTextureType::TEXTURE_2D:
       glTexImage2D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat),
         m_Size.X(), m_Size.Y(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
@@ -202,7 +204,7 @@ namespace eXl
       
       GLenum inputType = GetGLTextureElementType(iType);
       GLenum inputFormat = GetGLTextureFormat(iFormat);
-
+#ifndef __ANDROID__
       if (m_TextureType == OGLTextureType::TEXTURE_1D)
       {
         Vector2i boxSize = iBox.GetSize();
@@ -217,10 +219,13 @@ namespace eXl
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexSubImage1D(textureTarget, iMip, iBox.MinX(), boxSize.X(), GetGLTextureFormat(iFormat), GetGLTextureElementType(iType), iData);
       }
-
-      if (m_TextureType == OGLTextureType::TEXTURE_1D_ARRAY
-        || m_TextureType == OGLTextureType::TEXTURE_2D
-        || m_TextureType == OGLTextureType::TEXTURE_CUBE_MAP)
+#endif
+      if (m_TextureType == OGLTextureType::TEXTURE_2D
+        || m_TextureType == OGLTextureType::TEXTURE_CUBE_MAP
+#ifndef __ANDROID__
+        ||m_TextureType == OGLTextureType::TEXTURE_1D_ARRAY
+#endif
+        )
       {
         GLenum textureFaceUpdate = IsCubeMap() ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + iSlice : GL_TEXTURE_2D;
 

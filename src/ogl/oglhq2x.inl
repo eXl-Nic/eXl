@@ -4,9 +4,12 @@
 #endif
 
 char const* hq2xVS =
+#ifdef __ANDROID__
+"#version 320 es\n"
+#else
+"#version 140\n"
+#endif
 R"(
-#version 140
-
 attribute vec4 iPosition;
 attribute vec2 iTexCoord;
 
@@ -48,8 +51,14 @@ void main()
 )";
 
 char const* hq2xPS =
+#ifdef __ANDROID__
+"#version 320 es\n"
+"precision mediump float\n"
+#else
+"#version 140\n"
+#endif
 R"(uniform vec4 tint;
-varying vec4 texCoord[5];
+in vec4 texCoord[5];
 uniform vec2 tcOffset;
 uniform vec2 texSize;
 uniform sampler2D iUnfilteredTexture;

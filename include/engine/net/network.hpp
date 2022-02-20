@@ -212,6 +212,7 @@ namespace eXl
       static const size_t s_ConnectTokenSize;
 
       static Vector<uint8_t> CreateConnectToken(String const& iClientId
+        , String const& iPublicIPAddr
         , String const& iIPAddr
         , Vector<uint8_t> const& iPrivateKey
         , Vector<uint8_t> const& iUserData);

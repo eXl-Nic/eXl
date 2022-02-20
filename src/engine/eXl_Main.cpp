@@ -13,7 +13,9 @@
 #include <core/utils/filetextreader.hpp>
 #include <core/stream/inputstream.hpp>
 
+#ifdef EXL_SHARED_LIBRARY
 #define IMGUI_API __declspec(dllimport)
+#endif
 #include <imgui.h>
 #undef IMGUI_API
 #undef IMGUI_IMPL_API
@@ -295,7 +297,7 @@ namespace eXl
 #ifdef __ANDROID__
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
       SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
       SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
       SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -572,6 +574,7 @@ eXl_Main::eXl_Main()
 
 int eXl_Main::Start(int argc, char const* const argv[])
 {
+  LOG_INFO << "eXl_Main Startup";
   SDL_Application& app = GetApp();
   InitConsoleLog();
 
@@ -599,13 +602,11 @@ int eXl_Main::Start(int argc, char const* const argv[])
       std::unique_ptr<SDLFileInputStream> stream = std::make_unique<SDLFileInputStream>(iFilePath);
       if (stream->GetSize() > 0)
       {
-        return std::make_unique<InputStreamTextReader>(std::move(stream));
+        return std::make_unique<InputStreamTextReader>(iFilePath, std::move(stream));
       }
       return std::unique_ptr<TextReader>();
     });
 #endif
-
-  Path appPath(GetAppPath().begin(), GetAppPath().end());
 
   Project::ProjectTypes types;
   PropertiesManifest appManifest = EngineCommon::GetBaseProperties();
@@ -613,6 +614,10 @@ int eXl_Main::Start(int argc, char const* const argv[])
 
   Project* project = nullptr;
 
+
+#if defined(__ANDROID__)
+  ResourceManager::BootstrapAssetsFromManifest(String());
+#else
   if (!projectPath.empty())
   {
     Path projectDir = projectPath.parent_path();
@@ -620,22 +625,34 @@ int eXl_Main::Start(int argc, char const* const argv[])
     ResourceManager::BootstrapAssetsFromManifest(projectDir);
 #else
     ResourceManager::BootstrapDirectory(projectDir, true);
+    project = ResourceManager::Load<Project>(projectPath);
+#endif
+  }
 #endif
 
-    project = ResourceManager::Load<Project>(projectPath);
-    if (!project)
-    {
-      return -1;
-    }
+  if(!project)
+  {
+    Vector<Resource::Header> projectRes = ResourceManager::ListResources(Project::StaticLoaderName());
 
-    project->FillProperties(types, appManifest);
+    eXl_ASSERT_REPAIR_RET(!projectRes.empty(), -1);
 
-    ResourceManager::AddManifest(EngineCommon::GetComponents());
-    ResourceManager::AddManifest(appManifest);
+    project = ResourceManager::Load<Project>(projectRes[0].m_ResourceId);
   }
 
-#if defined(__ANDROID__)
-  ResourceManager::BootstrapAssetsFromManifest(String());
+  eXl_ASSERT_REPAIR_RET(project != nullptr, -1);
+  
+  project->FillProperties(types, appManifest);
+
+  ResourceManager::AddManifest(EngineCommon::GetComponents());
+  ResourceManager::AddManifest(appManifest);
+
+
+#if defined(WIN32) && !defined(USE_BAKED)
+  if (Path const* bakeDir = app.GetBakeDirectory())
+  {
+    ResourceManager::Bake(*bakeDir);
+    return 0;
+  }
 #endif
 
   if (!app.GetScenario())
@@ -647,6 +664,7 @@ int eXl_Main::Start(int argc, char const* const argv[])
 
   if (Scenario_Base* scenario = Scenario_Base::DynamicCast(app.GetScenario()))
   {
+#if !defined(__ANDROID__)
     if (!app.GetMapPath().empty() && !scenario->GetMapHandle().GetUUID().IsValid())
     {
       MapResource const* mapRsc = ResourceManager::Load<MapResource>(app.GetMapPath());
@@ -657,10 +675,15 @@ int eXl_Main::Start(int argc, char const* const argv[])
         scenario->SetMap(mapRef);
       }
     }
-
+#endif
     if (!scenario->GetMainCharHandle().GetUUID().IsValid())
     {
       scenario->SetMainChar(project->m_PlayerArchetype);
+    }
+
+    if (!scenario->GetMapHandle().GetUUID().IsValid())
+    {
+      scenario->SetMap(project->m_StartupMap);
     }
   }
 

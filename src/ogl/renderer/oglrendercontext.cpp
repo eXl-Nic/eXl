@@ -27,20 +27,20 @@ namespace eXl
 
     OGLRenderContextImpl(OGLSemanticManager& iSemantics)
     {
-      m_CurrentDataSlot.resize(iSemantics.GetNumUniforms(),-1);
-      m_CurrentAttribSlot.resize(iSemantics.GetNumAttribs(),-1);
-      m_CurrentTextureSlot.resize(iSemantics.GetNumTextures(),-1);
+      m_CurrentDataSlot.resize(iSemantics.GetNumUniforms(), -1);
+      m_CurrentAttribSlot.resize(iSemantics.GetNumAttribs(), -1);
+      m_CurrentTextureSlot.resize(iSemantics.GetNumTextures(), -1);
       m_CurrentUBOSlot.resize(iSemantics.GetNumUniforms(), -1);
 
       m_BufferBindings.resize(iSemantics.GetNumAttribs());
 
-      m_TextureCache.resize(iSemantics.GetNumTextures(),nullptr);
+      m_TextureCache.resize(iSemantics.GetNumTextures(), nullptr);
 
       //for(uint32_t i = 0; i<OGLSemanticManager::GetNumUniforms();++i)
       //{
       //  m_DataCache.push_back(OGLSemanticManager::GetData(i)->Build());
       //}
-      m_DataCache.resize(iSemantics.GetNumUniforms(),nullptr);
+      m_DataCache.resize(iSemantics.GetNumUniforms(), nullptr);
       m_UBOCache.resize(iSemantics.GetNumUniforms(), nullptr);
 
       Clear();
@@ -63,11 +63,11 @@ namespace eXl
       m_MaxData = 0;
       m_MaxUBO = 0;
       m_MaxTexture = 0;
-      for(uint32_t i = 0; i < m_BufferBindings.size() ; ++i)
+      for (uint32_t i = 0; i < m_BufferBindings.size(); ++i)
       {
         m_BufferBindings[i].buffer = nullptr;
       }
-      for(uint32_t i = 0; i < m_TextureCache.size(); ++i)
+      for (uint32_t i = 0; i < m_TextureCache.size(); ++i)
       {
         m_TextureCache[i] = nullptr;
       }
@@ -82,12 +82,12 @@ namespace eXl
 
     inline void SetFramebuffer(OGLFramebuffer* iFBO)
     {
-      if(iFBO && iFBO != m_CurFramebuffer)
+      if (iFBO && iFBO != m_CurFramebuffer)
       {
         glBindFramebuffer(GL_FRAMEBUFFER, iFBO->GetId());
         eXl_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
       }
-      else if(iFBO == nullptr && m_CurFramebuffer != nullptr)
+      else if (iFBO == nullptr && m_CurFramebuffer != nullptr)
       {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
       }
@@ -134,7 +134,7 @@ namespace eXl
         return;
       }
 
-      if(iProgram == nullptr)
+      if (iProgram == nullptr)
       {
         Clear();
         return;
@@ -146,25 +146,25 @@ namespace eXl
       uint32_t oldAttribCount = m_MaxAttrib;
       uint32_t oldDataCount = m_MaxData;
 
-      std::fill(m_CurrentAttribSlot.begin(),m_CurrentAttribSlot.end(),-1);
-      std::fill(m_CurrentDataSlot.begin(),m_CurrentDataSlot.end(),-1);
+      std::fill(m_CurrentAttribSlot.begin(), m_CurrentAttribSlot.end(), -1);
+      std::fill(m_CurrentDataSlot.begin(), m_CurrentDataSlot.end(), -1);
       std::fill(m_CurrentUBOSlot.begin(), m_CurrentUBOSlot.end(), -1);
-      std::fill(m_CurrentTextureSlot.begin(),m_CurrentTextureSlot.end(),-1);
+      std::fill(m_CurrentTextureSlot.begin(), m_CurrentTextureSlot.end(), -1);
 
       uint32_t const* slotPtr = iProgram->GetAttribSlots();
       uint32_t enabledAttribs = 0;
-      for(uint32_t i = 0; i < iProgram->GetMaxAttrib(); ++i)
+      for (uint32_t i = 0; i < iProgram->GetMaxAttrib(); ++i)
       {
         m_CurrentAttribSlot[slotPtr[i]] = i;
         m_BufferBindings[i].buffer = nullptr;
         uint32_t attribLoc = iProgram->GetAttribLocation(i);
         //glEnableVertexAttribArray(attribLoc);
-        enabledAttribs |= 1<<attribLoc;
+        enabledAttribs |= 1 << attribLoc;
       }
 
-      for(uint32_t i = 0; i < 16; ++i)
+      for (uint32_t i = 0; i < 16; ++i)
       {
-        if((m_SetAttribs & 1<<i) != 0)
+        if ((m_SetAttribs & 1 << i) != 0)
         {
           glDisableVertexAttribArray(i);
         }
@@ -175,7 +175,7 @@ namespace eXl
       m_AttribFlags = (1 << m_MaxAttrib) - 1;
 
       slotPtr = iProgram->GetUniformSlots();
-      for(uint32_t i = 0; i < iProgram->GetMaxUniform(); ++i)
+      for (uint32_t i = 0; i < iProgram->GetMaxUniform(); ++i)
       {
         m_CurrentDataSlot[slotPtr[i]] = i;
         //m_CurrentData[i] = m_DataCache[slotPtr[i]];
@@ -194,7 +194,7 @@ namespace eXl
       m_UBOFlags = (1 << m_MaxUBO) - 1;
 
       slotPtr = iProgram->GetTextureSlots();
-      for(uint32_t i = 0; i < iProgram->GetMaxTexture(); ++i)
+      for (uint32_t i = 0; i < iProgram->GetMaxTexture(); ++i)
       {
         m_CurrentTextureSlot[slotPtr[i]] = i;
         m_CurrentTexture[i] = &m_TextureCache[slotPtr[i]];
@@ -208,16 +208,16 @@ namespace eXl
     inline void SetVertexAttrib(uint32_t iAttribName, OGLBuffer const* iBuffer, uint32_t iNum, size_t iStride, size_t iOffset)
     {
       int currentSlot;
-      if(iAttribName < m_CurrentAttribSlot.size() && (currentSlot = m_CurrentAttribSlot[iAttribName]) != -1)
+      if (iAttribName < m_CurrentAttribSlot.size() && (currentSlot = m_CurrentAttribSlot[iAttribName]) != -1)
       {
-        if(iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
+        if (iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
         {
-          if(iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
+          if (iBuffer->GetBufferUsage() != OGLBufferUsage::ARRAY_BUFFER)
           {
-            LOG_WARNING<<"Invalid buffer for attrib"<<"\n";
+            LOG_WARNING << "Invalid buffer for attrib" << "\n";
           }
           m_BufferBindings[iAttribName].buffer = nullptr;
-          
+
         }
         else
         {
@@ -238,7 +238,7 @@ namespace eXl
       m_DataCache[iDataName] = iData;
 
       int currentSlot;
-      if(iDataName < m_CurrentDataSlot.size() && (currentSlot = m_CurrentDataSlot[iDataName]) != -1)
+      if (iDataName < m_CurrentDataSlot.size() && (currentSlot = m_CurrentDataSlot[iDataName]) != -1)
       {
         m_DataFlags |= 1 << currentSlot;
       }
@@ -260,7 +260,7 @@ namespace eXl
       m_TextureCache[iTexName] = iTex;
 
       int currentSlot;
-      if(iTexName < m_CurrentTextureSlot.size() && (currentSlot = m_CurrentTextureSlot[iTexName]) != -1)
+      if (iTexName < m_CurrentTextureSlot.size() && (currentSlot = m_CurrentTextureSlot[iTexName]) != -1)
       {
         m_TexFlags |= 1 << currentSlot;
       }
@@ -268,18 +268,58 @@ namespace eXl
 
     inline void CheckCache()
     {
-      if((m_AttribFlags | m_DataFlags | m_TexFlags | m_UBOFlags) != 0)
+      if ((m_AttribFlags | m_DataFlags | m_TexFlags | m_UBOFlags) != 0)
       {
         CommitCache();
       }
     }
+    struct BitIter
+    {
+      BitIter(uint32_t& iFlags)
+        : m_Flags(iFlags)
+      {
+        GetNext();
+      }
 
+      inline explicit operator bool()
+      {
+        return m_Cur.has_value();
+      }
+
+      inline BitIter& operator++()
+      {
+        GetNext();
+        return *this;
+      }
+
+      inline uint32_t operator*() const
+      {
+        return *m_Cur;
+      }
+
+      protected:
+      uint32_t& m_Flags;
+      Optional<uint32_t> m_Cur;
+      inline void GetNext()
+      {
+        if (m_Flags == 0)
+        {
+          m_Cur.reset();
+          return;
+        }
+#ifndef __ANDROID__
+        m_Cur = _tzcnt_u32(m_Flags);
+#else
+        m_Cur = 31 - __builtin_clz(m_Flags);
+#endif
+        m_Flags &= ~(1 << *m_Cur);
+      }
+    };
     void CommitCache()
     {
-      while(m_AttribFlags != 0)
+      for(BitIter attribs(m_AttribFlags); attribs; ++attribs)
       {
-        uint32_t attrib = _tzcnt_u32(m_AttribFlags);
-        m_AttribFlags &= ~(1 << attrib);
+        uint32_t attrib = *attribs;
         int slot = m_CurrentAttribSlot[attrib];
         eXl_ASSERT(slot >= 0);
         BufferBinding& binding = m_BufferBindings[attrib];
@@ -307,10 +347,9 @@ namespace eXl
         }
       }
 
-      while(m_DataFlags != 0)
+      for (BitIter dataSlots(m_DataFlags); dataSlots; ++dataSlots)
       {
-        uint32_t dataSlot = _tzcnt_u32(m_DataFlags);
-        m_DataFlags &= ~(1 << dataSlot);
+        uint32_t dataSlot = *dataSlots;
         
         if(void const* curData = *m_CurrentData[dataSlot])
         {
@@ -318,20 +357,18 @@ namespace eXl
         }
       }
 
-      while(m_UBOFlags != 0)
+      for (BitIter uboSlots(m_UBOFlags); uboSlots; ++uboSlots)
       {
-        uint32_t dataSlot = _tzcnt_u32(m_UBOFlags);
-        m_UBOFlags &= ~(1 << dataSlot);
+        uint32_t dataSlot = *uboSlots;
         if (OGLBuffer const* curBuffer = *m_CurrentUBO[dataSlot])
         {
           m_CurrentProgram->HandleUniformBlock(dataSlot, curBuffer->GetBufferId());
         }
       }
 
-      while (m_TexFlags != 0)
+      for (BitIter texSlots(m_TexFlags); texSlots; ++texSlots)
       {
-        uint32_t texSlot = _tzcnt_u32(m_TexFlags);
-        m_TexFlags &= ~(1 << texSlot);
+        uint32_t texSlot = *texSlots;
         if (OGLTexture const* curTexture = *m_CurrentTexture[texSlot])
         {
           m_CurrentProgram->HandleTexture(texSlot, curTexture);
@@ -484,8 +521,11 @@ namespace eXl
     glDrawElementsBaseVertex(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iBaseVertex);
 #endif
   }
-
+#ifndef __ANDROID__
   void OGLRenderContext::DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseInstance, uint32_t iFirstVertex, uint32_t iNumVertices)
+#else
+  void OGLRenderContext::DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iFirstVertex, uint32_t iNumVertices)
+#endif
   {
 #ifdef EXL_WITH_OGL
     m_Impl->CheckCache();
@@ -494,12 +534,19 @@ namespace eXl
       m_Impl->m_CurrentIndexBuffer = nullptr;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
-
+#ifndef __ANDROID__
     glDrawArraysInstancedBaseInstance(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices, iNumInstances, iBaseInstance);
+#else
+    glDrawArraysInstanced(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices, iNumInstances);
+#endif
 #endif
   }
 
+#ifndef __ANDROID__
   void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseinstance, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
+#else
+  void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
+#endif
   {
 #ifdef EXL_WITH_OGL
     if (iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
@@ -513,8 +560,11 @@ namespace eXl
       m_Impl->m_CurrentIndexBuffer = iBuffer;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBuffer->GetBufferId());
     }
-
+#ifndef __ANDROID__
     glDrawElementsInstancedBaseVertexBaseInstance(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances, iBaseVertex, iBaseinstance);
+#else
+    glDrawElementsInstancedBaseVertex(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances, iBaseVertex);
+#endif
 #endif
   }
 }

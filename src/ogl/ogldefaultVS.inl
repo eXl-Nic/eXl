@@ -1,13 +1,13 @@
 
-#ifdef __ANDROID__
-//precision mediump float;
-#endif
-
 char const* defaultVS =
-R"(
-#version 140
-attribute vec4 iPosition;
-attribute vec2 iTexCoord;
+#ifdef __ANDROID__
+"#version 320 es\n"
+"precision mediump float;\n"
+#else
+"#version 140\n"
+#endif
+R"(in vec4 iPosition;
+in vec2 iTexCoord;
 uniform mat4 worldMatrix;
 
 layout(std140) uniform Camera
@@ -20,7 +20,7 @@ layout(std140) uniform Camera
 uniform vec2 tcOffset;
 uniform vec2 tcScaling;
 
-varying vec2 texCoord;
+out vec2 texCoord;
 
 void main()
 {

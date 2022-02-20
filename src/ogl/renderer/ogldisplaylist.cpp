@@ -246,7 +246,9 @@ namespace eXl
     iGeom.m_Offset = iDraw.offset;
     iGeom.m_BaseVertex = iDraw.baseVertex;
     iGeom.m_Instances = iDraw.instances;
+#ifndef __ANDROID__
     iGeom.m_BaseInstance = iDraw.baseInstance;
+#endif
   }
 
   void OGLDisplayList::FlushDraws()
@@ -380,11 +382,19 @@ namespace eXl
     {
       FlushDraws();  
     }
-    PendingDraw newDraw = {m_CurDataSet, iNum, iOffset, iBaseVertex, 0, 0, iKey, iTopo};
+    PendingDraw newDraw = {m_CurDataSet, iNum, iOffset, iBaseVertex, 0
+#ifndef __ANDROID__
+      , 0
+#endif
+      , iKey, iTopo};
     m_PendingDraws.push_back(newDraw);
   }
 
+#ifndef __ANDROID__
   void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance)
+#else
+  void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances)
+#endif
   {
     if (iNumInstances == 0)
     {
@@ -416,7 +426,11 @@ namespace eXl
       FlushDraws();
     }
 
-    PendingDraw newDraw = { m_CurDataSet, iNum, iOffset, iBaseVertex, iNumInstances, iBaseInstance, iKey, iTopo };
+    PendingDraw newDraw = { m_CurDataSet, iNum, iOffset, iBaseVertex, iNumInstances
+#ifndef __ANDROID__
+      , iBaseInstance
+#endif
+      , iKey, iTopo };
     m_PendingDraws.push_back(newDraw);
   }
 
@@ -644,7 +658,11 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
+#ifndef __ANDROID__
                       iCtx->DrawIndexedInstanced(idxBuff, topo, geom->m_Instances, geom->m_BaseInstance, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
+#else
+                      iCtx->DrawIndexedInstanced(idxBuff, topo, geom->m_Instances, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
+#endif
                       ++geom;
                     }
                   }
@@ -660,7 +678,11 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
+#ifndef __ANDROID__
                       iCtx->DrawInstanced(topo, geom->m_Instances, geom->m_BaseInstance, geom->m_Offset, geom->m_Num);
+#else
+                      iCtx->DrawInstanced(topo, geom->m_Instances, geom->m_Offset, geom->m_Num);
+#endif
                       geom++;
                     }
                   }

@@ -258,7 +258,7 @@ namespace eXl
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_Server == nullptr, nullptr);
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, nullptr);
-      eXl_ASSERT_REPAIR_RET(iPrivateKey.size() == s_PrivateKeySize, nullptr);
+      eXl_ASSERT_MSG_REPAIR_RET(iPrivateKey.size() == s_PrivateKeySize, eXl_FORMAT("Size is %i", int(iPrivateKey.size())), nullptr);
 
       yojimbo::Address serverAddress(iIPAddr.c_str());
 

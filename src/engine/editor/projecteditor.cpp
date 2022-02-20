@@ -10,7 +10,9 @@
 #include <core/type/typemanager.hpp>
 
 #include <engine/common/project.hpp>
+#include <engine/map/map.hpp>
 #include <engine/game/archetype.hpp>
+#include <editor/resourceselectionwidget.hpp>
 
 #include <QTabWidget>
 #include <QTableWidget>
@@ -121,6 +123,7 @@ namespace eXl
     Project::Typedecl m_CurrentEditedType;
     
     QComboBox* m_PlayerSelector;
+    ResourceSelectionWidget* m_MapSelector;
 
     ProjectEditor* m_Editor;
     Project* m_Project;
@@ -149,10 +152,12 @@ namespace eXl
 
     QWidget* projectSettings = new QWidget(this);
     QVBoxLayout* settingsLayout = new QVBoxLayout(projectSettings);
+    projectSettings->setLayout(settingsLayout);
+
     QWidget* playerSelWidget = new QWidget(this);
+
     QHBoxLayout* playerSelLayout = new QHBoxLayout(playerSelWidget);
     playerSelWidget->setLayout(playerSelLayout);
-    projectSettings->setLayout(settingsLayout);
     settingsLayout->addWidget(playerSelWidget);
 
     m_Impl->m_PlayerSelector = new QComboBox(playerSelWidget);
@@ -161,17 +166,6 @@ namespace eXl
     
     auto* archetypesModel = EditorState::GetState()->GetProjectResourcesModel()->MakeFilteredModel(m_Impl->m_PlayerSelector, Archetype::StaticLoaderName(), true);
     m_Impl->m_PlayerSelector->setModel(archetypesModel);
-
-    QObject::connect(m_Impl->m_PlayerSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, archetypesModel](int iIndex)
-      {
-        Resource::UUID const* resourceId = archetypesModel->GetResourceIDFromIndex(archetypesModel->index(iIndex, 0, QModelIndex()));
-
-        if (resourceId != nullptr && *resourceId != m_Impl->m_Project->m_PlayerArchetype.GetUUID())
-        {
-          m_Impl->m_Project->m_PlayerArchetype.SetUUID(*resourceId);
-          ModifyResource();
-        }
-      });
 
     {
       Resource::UUID const& archetypeUUID = m_Impl->m_Project->m_PlayerArchetype.GetUUID();
@@ -184,6 +178,49 @@ namespace eXl
         }
       }
     }
+
+    QObject::connect(m_Impl->m_PlayerSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, archetypesModel](int iIndex)
+      {
+        Resource::UUID const* resourceId = archetypesModel->GetResourceIDFromIndex(archetypesModel->index(iIndex, 0, QModelIndex()));
+
+        if (resourceId != nullptr)
+        {
+          if (*resourceId != m_Impl->m_Project->m_PlayerArchetype.GetUUID())
+          {
+            m_Impl->m_Project->m_PlayerArchetype.SetUUID(*resourceId);
+            ModifyResource();
+          }
+        }
+        else if(m_Impl->m_Project->m_PlayerArchetype.GetUUID().IsValid())
+        {
+          m_Impl->m_Project->m_PlayerArchetype.SetUUID(Resource::UUID());
+          ModifyResource();
+        }
+      });
+
+    QWidget* mapSelWidget = new QWidget(this);
+    QHBoxLayout* defaultMapSelLayout = new QHBoxLayout(mapSelWidget);
+    mapSelWidget->setLayout(defaultMapSelLayout);
+    settingsLayout->addWidget(mapSelWidget);
+
+    m_Impl->m_MapSelector = new ResourceSelectionWidget(playerSelWidget, MapResource::StaticLoaderName(), ResourceSelectionWidget::Combo);
+    defaultMapSelLayout->addWidget(new QLabel("Default map : "));
+    defaultMapSelLayout->addWidget(m_Impl->m_MapSelector);
+    {
+      Resource::UUID const& mapUUID = m_Impl->m_Project->m_PlayerArchetype.GetUUID();
+      m_Impl->m_MapSelector->ForceSelection(mapUUID);
+    }
+
+    QObject::connect(m_Impl->m_MapSelector, &ResourceSelectionWidget::onResourceChanged, [this, archetypesModel]()
+      {
+        Resource::UUID const& resourceId = m_Impl->m_MapSelector->GetSelectedResourceId();
+
+        if (resourceId != m_Impl->m_Project->m_StartupMap.GetUUID())
+        {
+          m_Impl->m_Project->m_StartupMap.SetUUID(resourceId);
+          ModifyResource();
+        }
+      });
 
     rootSplitter->addWidget(projectSettings);
 

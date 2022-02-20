@@ -260,7 +260,7 @@ namespace eXl
     const size_t Client::s_UserDataSize = yojimbo::ConnectTokenBytes;
     const size_t Client::s_ConnectTokenSize = NETCODE_CONNECT_TOKEN_BYTES;
 
-    Vector<uint8_t> Client::CreateConnectToken(String const& iClientId, String const& iIPAddr, Vector<uint8_t> const& iPrivateKey, Vector<uint8_t> const& iUserData)
+    Vector<uint8_t> Client::CreateConnectToken(String const& iClientId, String const& iPublicIPAddr, String const& iIPAddr, Vector<uint8_t> const& iPrivateKey, Vector<uint8_t> const& iUserData)
     {
       Vector<uint8_t> outToken;
 
@@ -272,7 +272,7 @@ namespace eXl
 
       outToken.resize(NETCODE_CONNECT_TOKEN_BYTES);
 
-      const char* publicServerAddrArr = iIPAddr.c_str();
+      const char* publicServerAddrArr = iPublicIPAddr.c_str();
       const char* serverAddrArr = iIPAddr.c_str();
 
       Vector<uint8_t> userDataBuffer = iUserData;
@@ -301,8 +301,7 @@ namespace eXl
     Optional<uint32_t> Client::Connect(NetCtx& iCtx, String const& iClientId, Vector<uint8_t> iConnectToken)
     {
       eXl_ASSERT_REPAIR_RET(iCtx.m_NetDriver != nullptr, {});
-      eXl_ASSERT_REPAIR_RET(iConnectToken.size() == s_ConnectTokenSize, {});
-
+      eXl_ASSERT_MSG_REPAIR_RET(iConnectToken.size() >= s_ConnectTokenSize, eXl_FORMAT("Size is %i", int(iConnectToken.size())), {});
       Optional<uint64_t> clientId = HexToUint64(iClientId);
 
       eXl_ASSERT_REPAIR_RET(!(!clientId), {});

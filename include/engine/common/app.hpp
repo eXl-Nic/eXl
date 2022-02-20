@@ -151,11 +151,17 @@ namespace eXl
       return m_MapPath;
     }
 
+    Path const* GetBakeDirectory()
+    {
+      return m_BakeDir ? &(*m_BakeDir) : nullptr;
+    }
+
   private:
     std::unique_ptr<Scenario> m_Scenario;
     std::unique_ptr<Impl> m_Impl;
     Path m_ProjectPath;
     Path m_MapPath;
+    Optional<Path> m_BakeDir;
   };
 
   inline World& Scenario::GetWorld()

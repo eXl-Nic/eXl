@@ -15,6 +15,11 @@ ExternalProject_Add(
 set(SODIUM_INCLUDE_DIRS ${OUT_DIR}/modules/libsodium/include)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+set(SODIUM_INCLUDE_DIRS ${SODIUM_ROOT}/libsodium-android-armv8-a/include)
+set(SODIUM_LIBRARY ${SODIUM_ROOT}/libsodium-android-armv8-a/lib/libsodium.a)
+endif()
+
 if(${MSVC})
 set(SODIUM_LIBRARY ${SODIUM_ROOT}/bin/x64/Release/v142/static/libsodium.lib)
 SET(MSBUILD_OPTIONS /p:PlatformToolset=v142 /property:Configuration=ReleaseLIB /property:Platform=x64)
@@ -48,7 +53,10 @@ ${SODIUM_INCLUDE_DIRS}
 
 target_compile_definitions(yojimbo PUBLIC -DYOJIMBO_WITH_MBEDTLS=0)
 target_link_libraries(yojimbo PRIVATE ${SODIUM_LIBRARY})
-add_dependencies(yojimbo libsodium)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux"
+OR ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  add_dependencies(yojimbo libsodium)
+endif()
 
 #if (CMAKE_BUILD_TYPE MATCHES Debug)
 #target_compile_definitions(yojimbo PUBLIC -DYOJIMBO_DEBUG -DNETCODE_DEBUG -DRELIABLE_DEBUG)

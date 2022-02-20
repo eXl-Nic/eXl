@@ -48,7 +48,7 @@ namespace eXl
     }
     EXL_CORE_API Resource* Load(Resource::UUID const& iUUID, ResourceLoaderName* oLoader = nullptr);
 
-    EXL_CORE_API Vector<Resource::Header> ListResources();
+    EXL_CORE_API Vector<Resource::Header> ListResources(Optional<ResourceLoaderName> iLoader = {});
     EXL_CORE_API Resource::Header const* GetHeader(Resource::UUID const& iUUID);
     EXL_CORE_API bool HasFile(Resource::UUID const& iUUID);
 

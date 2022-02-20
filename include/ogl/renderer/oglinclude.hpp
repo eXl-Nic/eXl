@@ -13,9 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #ifdef EXL_WITH_OGL
 
 #ifdef __ANDROID__
-#include <GLES2/gl2.h>
-#define GL_GLEXT_PROTOTYPES = 1
-#include <GLES2/gl2ext.h>
+#include <GLES3/gl32.h>
 #else
 #include <GL/glew.h>
 #include <GL/gl.h>

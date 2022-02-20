@@ -16,7 +16,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #endif
 
 #ifndef DISABLE_IMGUI
+#ifdef EXL_SHARED_LIBRARY
 #define IMGUI_API __declspec(dllimport)
+#endif
 #include <imgui.h>
 #endif
 

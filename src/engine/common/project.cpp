@@ -14,6 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/common/gamedatabase.hpp>
 #include <engine/game/archetype.hpp>
+#include <engine/map/map.hpp>
 #include <core/type/typemanager.hpp>
 #include <core/type/tupletypestruct.hpp>
 
@@ -115,6 +116,11 @@ namespace eXl
     iSerializer.PushKey("PlayerArchetype");
     iSerializer &= m_PlayerArchetype;
     iSerializer.PopKey();
+    if (iSerializer.PushKey("StartupMap"))
+    {
+      iSerializer &= m_StartupMap;
+      iSerializer.PopKey();
+    }
     iSerializer.PushKey("ProjectTypes");
     iSerializer.HandleMapSorted(m_Types);
     iSerializer.PopKey();

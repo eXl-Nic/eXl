@@ -225,6 +225,7 @@ Source/ZLib/zutil.h
 )
 
 if(${ANDROID})
+add_definitions(-DPNG_ARM_NEON_OPT=0)
 else()
 
 set(FreeImage_SOURCES

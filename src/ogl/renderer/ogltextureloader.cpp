@@ -61,19 +61,19 @@ namespace eXl
       switch(iFormat)
       {
       case R8:
-        internalFormat = GL_LUMINANCE;
+        internalFormat = OGLInternalTextureFormat::RED;
         dataComponents = GL_LUMINANCE;
         break;
       case RG8:
-        internalFormat = GL_LUMINANCE_ALPHA;
+        internalFormat = OGLInternalTextureFormat::RG;
         dataComponents = GL_LUMINANCE_ALPHA;
         break;
       case RGB8:
-        internalFormat = GL_RGB;
+        internalFormat = OGLInternalTextureFormat::RGB;
         dataComponents = GL_RGB;
         break;
       case RGBA8:
-        internalFormat = GL_RGBA;
+        internalFormat = OGLInternalTextureFormat::RGBA;
         dataComponents = GL_RGBA;
         break;
       }
@@ -387,9 +387,12 @@ namespace eXl
     else
       glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 
-    if (iTextureType == GL_TEXTURE_1D_ARRAY
-      || iTextureType == GL_TEXTURE_2D
-      || iTextureType == GL_TEXTURE_CUBE_MAP)
+    if (iTextureType == GL_TEXTURE_2D
+      || iTextureType == GL_TEXTURE_CUBE_MAP
+#ifndef __ANDROID__
+      || iTextureType == GL_TEXTURE_1D_ARRAY
+#endif
+      )
     {
       for (uint32_t i = 0; i < imgSize.Y(); ++i)
       {
@@ -483,23 +486,23 @@ namespace eXl
         imgDataType = iTexture->GetElementType();
         imgDataComponents = iTexture->GetElementFormat();
       
-#ifdef __ANDROID__
-        switch(imgInternalFormat)
-        {
-        case GL_LUMINANCE:
-          comps = Image::R;
-          break;
-        case GL_LUMINANCE_ALPHA:
-          comps = Image::RG;
-          break;
-        case GL_RGB:
-          comps = Image::RGB;
-          break;
-        case GL_RGBA:
-          comps = Image::RGBA;
-          break;
-        }
-#else
+//#ifdef __ANDROID__
+//        switch(imgInternalFormat)
+//        {
+//        case GL_LUMINANCE:
+//          comps = Image::R;
+//          break;
+//        case GL_LUMINANCE_ALPHA:
+//          comps = Image::RG;
+//          break;
+//        case GL_RGB:
+//          comps = Image::RGB;
+//          break;
+//        case GL_RGBA:
+//          comps = Image::RGBA;
+//          break;
+//        }
+//#else
         switch(imgInternalFormat)
         {
         case OGLInternalTextureFormat::RED:
@@ -515,7 +518,7 @@ namespace eXl
           comps = Image::RGBA;
           break;
         }
-#endif
+//#endif
 
         switch(imgDataType)
         {

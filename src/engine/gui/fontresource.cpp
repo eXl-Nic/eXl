@@ -219,10 +219,12 @@ namespace eXl
     {
       m_Impl->m_FileHandle.reset(eXl_NEW BinaryInputStream(m_FontFile.data(), m_FontFile.size()));
     }
+#ifndef EXL_IS_BAKED_PLATFORM
     else
     {
       m_Impl->m_FileHandle.reset(eXl_NEW FileInputStream(GetFontPath()));
     }
+#endif
     eXl_ASSERT(m_Impl->m_FileHandle != nullptr);
     FT_StreamRec* streamRec = (FT_StreamRec*)eXl_ALLOC(sizeof(FT_StreamRec));
     memset(streamRec, 0, sizeof(FT_StreamRec));

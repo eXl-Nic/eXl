@@ -18,6 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 { 
   class Archetype;
+  class MapResource;
   class ProjectLoader;
   class PropertiesManifest;
 
@@ -46,6 +47,7 @@ namespace eXl
     };
 
     ResourceHandle<Archetype> m_PlayerArchetype;
+    ResourceHandle<MapResource> m_StartupMap;
     UnorderedMap<TypeName, Typedecl> m_Types;
 
     struct ProjectTypes

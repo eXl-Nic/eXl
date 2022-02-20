@@ -149,12 +149,14 @@ namespace eXl
     case GL_FLOAT_MAT4:
       return OGLType::MAT4;
       break;
+#ifndef __ANDROID__
     case GL_SAMPLER_1D:
       return OGLType::SAMPLER_1D;
       break;
     case GL_SAMPLER_1D_ARRAY:
       return OGLType::SAMPLER_1D_ARRAY;
       break;
+#endif
     case GL_SAMPLER_2D:
       return OGLType::SAMPLER_2D;
       break;
@@ -170,12 +172,14 @@ namespace eXl
     case GL_SAMPLER_BUFFER:
       return OGLType::SAMPLER_BUFFER;
       break;
+#ifndef __ANDROID__
     case GL_INT_SAMPLER_1D:
       return OGLType::INT_SAMPLER_1D;
       break;
     case GL_INT_SAMPLER_1D_ARRAY:
       return OGLType::INT_SAMPLER_1D_ARRAY;
       break;
+#endif
     case GL_INT_SAMPLER_2D:
       return OGLType::INT_SAMPLER_2D;
       break;
@@ -375,12 +379,14 @@ namespace eXl
     switch (iTex)
     {
 #ifdef EXL_WITH_OGL
+#ifndef __ANDROID__
     case OGLTextureType::TEXTURE_1D:
       return GL_TEXTURE_1D;
       break;
     case OGLTextureType::TEXTURE_1D_ARRAY:
       return GL_TEXTURE_1D_ARRAY;
       break;
+#endif
     case OGLTextureType::TEXTURE_2D:
       return GL_TEXTURE_2D;
       break;
@@ -500,12 +506,14 @@ namespace eXl
       case OGLTextureElementType::FLOAT:
         return GL_FLOAT;
         break;
+#ifndef __ANDROID__
       case OGLTextureElementType::UNSIGNED_SHORT_5_6_5:
         return GL_UNSIGNED_SHORT_5_6_5;
         break;
       case OGLTextureElementType::UNSIGNED_SHORT_5_6_5_REV:
         return GL_UNSIGNED_SHORT_5_6_5_REV;
         break;
+#endif
       case OGLTextureElementType::UNSIGNED_SHORT_4_4_4_4:
         return GL_UNSIGNED_SHORT_4_4_4_4;
         break;
@@ -537,15 +545,17 @@ namespace eXl
     case OGLTextureFormat::RGB:
       return GL_RGB;
       break;
-    case OGLTextureFormat::BGR:
-      return GL_BGR;
-      break;
     case OGLTextureFormat::RGBA:
       return GL_RGBA;
+      break;
+#ifndef __ANDROID__
+    case OGLTextureFormat::BGR:
+      return GL_BGR;
       break;
     case OGLTextureFormat::BGRA:
       return GL_BGRA;
       break;
+#endif
     case OGLTextureFormat::RED_INTEGER:
       return GL_RED_INTEGER;
       break;
@@ -555,15 +565,17 @@ namespace eXl
     case OGLTextureFormat::RGB_INTEGER:
       return GL_RGB_INTEGER;
       break;
-    case OGLTextureFormat::BGR_INTEGER:
-      return GL_BGR_INTEGER;
-      break;
     case OGLTextureFormat::RGBA_INTEGER:
       return GL_RGBA_INTEGER;
+      break;
+#ifndef __ANDROID__
+    case OGLTextureFormat::BGR_INTEGER:
+      return GL_BGR_INTEGER;
       break;
     case OGLTextureFormat::BGRA_INTEGER:
       return GL_BGRA_INTEGER;
       break;
+#endif
     case OGLTextureFormat::STENCIL_INDEX:
       return GL_STENCIL_INDEX;
       break;
@@ -623,6 +635,7 @@ namespace eXl
   {
     switch (iType)
     {
+#ifndef __ANDROID__
     case OGLType::SAMPLER_1D:
     case OGLType::INT_SAMPLER_1D:
       return OGLTextureType::TEXTURE_1D;
@@ -631,6 +644,7 @@ namespace eXl
     case OGLType::INT_SAMPLER_1D_ARRAY:
       return OGLTextureType::TEXTURE_1D_ARRAY;
       break;
+#endif
     case OGLType::SAMPLER_2D:
     case OGLType::INT_SAMPLER_2D:
       return OGLTextureType::TEXTURE_2D;
@@ -652,7 +666,7 @@ namespace eXl
       return OGLTextureType::TEXTURE_BUFFER;
       break;
     default:
-      eXl_FAIL_MSG_RET("Invalid type constant, expected a sampler", OGLTextureType::TEXTURE_1D);
+      eXl_FAIL_MSG_RET("Invalid type constant, expected a sampler", OGLTextureType::TEXTURE_2D);
       break;
     }
   }

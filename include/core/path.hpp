@@ -11,9 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <core/coredef.hpp>
-
-#if !defined(__ANDROID__)
+#ifndef __ANDROID__
 #define EXL_RSC_HAS_FILESYSTEM
+#endif
 #include <filesystem>
 #include <core/string.hpp>
 
@@ -27,4 +27,3 @@ namespace eXl
     return iPath.string<eXl::Char, String::traits_type, eXl::Allocator<eXl::Char>>(eXl::Allocator<eXl::Char>());
   }
 }
-#endif

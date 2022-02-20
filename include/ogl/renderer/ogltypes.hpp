@@ -113,8 +113,10 @@ namespace eXl
 
   enum class OGLTextureType
   {
+#ifndef __ANDROID__
     TEXTURE_1D,
     TEXTURE_1D_ARRAY,
+#endif
     TEXTURE_2D,
     TEXTURE_2D_ARRAY,
     TEXTURE_3D,
@@ -195,9 +197,11 @@ namespace eXl
     RED,
     RG,
     RGB,
-    BGR,
     RGBA,
+
+    BGR,
     BGRA,
+
     RED_INTEGER,
     RG_INTEGER,
     RGB_INTEGER,
@@ -219,8 +223,10 @@ namespace eXl
     INT,
     HALF_FLOAT,
     FLOAT,
+#ifndef __ANDROID__
     UNSIGNED_SHORT_5_6_5,
     UNSIGNED_SHORT_5_6_5_REV,
+#endif
     UNSIGNED_SHORT_4_4_4_4,
     UNSIGNED_SHORT_5_5_5_1,
     UNSIGNED_INT_2_10_10_10_REV

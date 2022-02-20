@@ -13,6 +13,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <xxhash.h>
 #ifdef _MSC_VER
 #include <intrin.h>
+#elif defined(__ANDROID__)
+
 #else
 #include <x86intrin.h>
 #endif
@@ -234,6 +236,10 @@ namespace eXl
 
   uint32_t StringMPH::RandomInit()
   {
+#ifdef __ANDROID__
+    return 0;
+#else
     return __rdtsc();
+#endif
   }
 }

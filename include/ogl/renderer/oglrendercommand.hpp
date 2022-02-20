@@ -278,7 +278,9 @@ namespace eXl
   struct OGLInstancedGeometry : OGLGeometry
   {
     uint32_t m_Instances;
+#ifndef __ANDROID__
     uint32_t m_BaseInstance;
+#endif
   };
 
   struct OGLClear
