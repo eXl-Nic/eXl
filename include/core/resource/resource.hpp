@@ -197,6 +197,11 @@ namespace eXl
     T const* Get() const { return reinterpret_cast<T const*>(m_Resource.get()); }
     T const* GetOrLoad() const 
     {
+      if (!m_ResourceUUID.IsValid())
+      {
+        return nullptr;
+      }
+
       Load();
       return reinterpret_cast<T const*>(m_Resource.get());
     }

@@ -10,6 +10,11 @@
 
 #include <core/type/typemanager_get.hpp>
 
+namespace eXl
+{
+  EXL_CORE_API void OnTheFlyRegisterType(lua_State* L, Type const* iType);
+}
+
 namespace luabind {
 	namespace detail {
 
@@ -57,6 +62,21 @@ namespace luabind {
 			if(!cls) {
 				cls = get_pointee_class(classes, get_pointer(p));
 			}
+
+      if (cls)
+      {
+        return cls;
+      }
+
+      if (eXl::Type const* type = eXl::TypeManager::GetType<P>())
+      {
+        eXl::OnTheFlyRegisterType(L, type);
+        cls = classes.get(dynamic_id);
+
+        if (!cls) {
+          cls = luabind::detail::get_pointee_class(classes, get_pointer(p));
+        }
+      }
 
 			return cls;
 		}

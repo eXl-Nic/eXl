@@ -45,9 +45,12 @@ namespace eXl
     Vector<ObjectHandle> GetEdges(ObjectHandle iNode) const;
     ObjectHandle GetTargetNode(ObjectHandle iSource, ObjectHandle iEdge) const;
 
+    Name GetEdgeTag(ObjectHandle iEdge) const;
+    Name GetNodeTag(ObjectHandle iNode) const;
+
     ObjectHandle AddNode(ES_RuleSystem::GraphVtx iVtx);
     void RemoveNode(ES_RuleSystem::GraphVtx iVtx);
-
+    
     ObjectHandle AddEdge(ES_RuleSystem::GraphEdge iEdge);
     void RemoveEdge(ES_RuleSystem::GraphEdge iEdge);
 
@@ -58,8 +61,33 @@ namespace eXl
     DenseGameDataStorage<LevelEdgeData>& m_EdgeData;
   };
 
+  struct MatchWrapper
+  {
+    MatchWrapper(GraphWrapper const& iGraph)
+      : m_Graph(iGraph)
+    {}
 
-  DEFINE_TYPE_EX(GraphWrapper, Graph, );
+    GraphWrapper const& GetGraph() const { return m_Graph; }
+
+    GraphWrapper const& m_Graph;
+  };
+
+  struct RewriteWrapper
+  {
+    RewriteWrapper(GraphWrapper const& iSrcGraph
+      , GraphWrapper const& iDstGraph
+      , Vector<ES_RuleSystem::GraphVtx> const& iMatch);
+    GraphWrapper const& GetSrcGraph() const { return m_SrcGraph; }
+    GraphWrapper const& GetDstGraph() const { return m_DstGraph; }
+    Vector<ObjectHandle> const& GetMatch() const { return m_Match; }
+
+    GraphWrapper const& m_SrcGraph;
+    GraphWrapper const& m_DstGraph;
+    Vector<ObjectHandle> m_Match;
+  };
+
+
+  DEFINE_TYPE_EX(GraphWrapper, GraphWrapper, );
 
   struct LevelMatchContext : public ES_RuleSystem::UserMatchContext
   {
@@ -82,6 +110,9 @@ namespace eXl
 
     GraphWrapper& m_Wrapper;
   };
+
+  DEFINE_TYPE_EX(MatchWrapper, MatchWrapper, );
+  DEFINE_TYPE_EX(RewriteWrapper, RewriteWrapper, );
 
   struct Rule
   {

@@ -184,4 +184,13 @@ namespace eXl
     elementRef.GetType()->Assign(valueRef.GetType(), valueRef.GetBuffer(), elementRef.GetBuffer());
   }
 
+  void OnTheFlyRegisterType(lua_State* L, Type const* iType)
+  {
+    if (eXl::ArrayType::DynamicCast(iType) == nullptr)
+    {
+      LOG_WARNING << "Registering type " << iType->GetName() << " on the fly to lua";
+    }
+    iType->RegisterLua(L);
+  }
+  
 }

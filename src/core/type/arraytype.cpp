@@ -163,6 +163,44 @@ namespace eXl
     RETURN_SUCCESS;
   }
 
+  struct array_length
+  {
+    array_length(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    ArrayType const* m_Type;
+
+    uint32_t operator()(luabind::argument const& self_) const
+    {
+      luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(self_);
+      std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(m_Type));
+      if (res.first == nullptr)
+      {
+        lua_pushliteral(self_.interpreter(), "Incorrect argument for array length");
+        lua_error(self_.interpreter());
+      }
+
+      return m_Type->GetArraySize(res.first);
+    }
+  };
+
+  struct array_length_registration : luabind::detail::registration
+  {
+    array_length_registration(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    void register_(lua_State* iState) const
+    {
+      using signature_type = luabind::meta::type_list<uint32_t, luabind::argument const&>;
+      luabind::object fn = luabind::make_function(iState, array_length(m_Type), signature_type(), luabind::no_policies());
+      luabind::detail::add_overload(luabind::object(luabind::from_stack(iState, -1)), "__len", fn);
+    }
+
+    ArrayType const* m_Type;
+  };
+
   void ArrayType::RegisterLua(lua_State* iState) const
   {
     luabind::detail::class_base newClass(m_ScopedName.back().c_str());
@@ -171,6 +209,7 @@ namespace eXl
     newClass.add_default_member(new type_constructor_registration(this));
 
     newClass.add_member(new access_element_registration(this));
+    newClass.add_member(new array_length_registration(this));
 
 
     RegisterScope(iState, newClass);

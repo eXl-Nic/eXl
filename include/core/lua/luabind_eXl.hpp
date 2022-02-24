@@ -149,6 +149,11 @@ namespace eXl
     void operator()(luabind::argument const& self_, T const& value) const
     {
       luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(self_);
+      if (self->is_const())
+      {
+        lua_pushliteral(self_.interpreter(), "Can't modify const object");
+        lua_error(self_.interpreter());
+      }
       std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(m_FieldHolder));
       if (res.first == nullptr)
       {

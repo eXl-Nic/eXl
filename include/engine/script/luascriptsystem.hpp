@@ -48,7 +48,7 @@ namespace eXl
     void DeleteComponent(ObjectHandle) override;
 
     void Tick();
-
+    
     static World* GetWorld_Static();
   protected:
     

@@ -712,6 +712,23 @@ namespace eXl
     return Err::Success;
   }
 
+  bool LuaScriptSystem::HasBehaviour(ObjectHandle iHandle, Name iBehaviourName) const
+  {
+    auto behaviourReg = m_ObjectToBehaviour.find(iBehaviourName);
+    if (behaviourReg == m_ObjectToBehaviour.end())
+    {
+      return false;
+    }
+
+    auto iterScript = behaviourReg->second.m_RegisteredObjects.find(iHandle);
+    if (iterScript == behaviourReg->second.m_RegisteredObjects.end())
+    {
+      return false;
+    }
+
+    return true;
+  }
+
   void LuaScriptSystem::DeleteComponent(ObjectHandle iHandle)
   {
     if (m_Impl->DeleteComponent(iHandle))

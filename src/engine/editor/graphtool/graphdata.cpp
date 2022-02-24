@@ -9,7 +9,9 @@ namespace eXl
     IMPLEMENT_RTTI(LevelEdgeData);
     IMPLEMENT_RTTI(LevelMatchContext);
     IMPLEMENT_RTTI(LevelRewriteContext);
-    IMPLEMENT_TAG_TYPE_EX(GraphWrapper, Graph);
+    IMPLEMENT_TAG_TYPE(GraphWrapper);
+    IMPLEMENT_TAG_TYPE(MatchWrapper);
+    IMPLEMENT_TAG_TYPE(RewriteWrapper);
     
     ObjectHandle GraphWrapper::GetNodeObject(ES_RuleSystem::GraphVtx iVtx) const
     {
@@ -64,6 +66,22 @@ namespace eXl
       return targetNodeData->m_Object;
     }
 
+    Name GraphWrapper::GetEdgeTag(ObjectHandle iEdge) const
+    {
+      LevelEdgeData const* edgeData = m_EdgeData.Get(iEdge);
+      eXl_ASSERT_REPAIR_RET(edgeData != nullptr, Name());
+
+      return edgeData->m_Tag;
+    }
+
+    Name GraphWrapper::GetNodeTag(ObjectHandle iNode) const
+    {
+      LevelNodeData const* nodeData = m_NodeData.Get(iNode);
+      eXl_ASSERT_REPAIR_RET(nodeData != nullptr, Name());
+
+      return nodeData->m_Tag;
+    }
+
     ObjectHandle GraphWrapper::AddNode(ES_RuleSystem::GraphVtx iVtx)
     {
       ObjectHandle nodeObject = m_World.CreateObject();
@@ -108,24 +126,61 @@ namespace eXl
       m_World.DeleteObject(edgeObject);
     }
 
+    RewriteWrapper::RewriteWrapper(GraphWrapper const& iSrcGraph
+      , GraphWrapper const& iDstGraph
+      , Vector<ES_RuleSystem::GraphVtx> const& iMatch)
+      : m_SrcGraph(iSrcGraph)
+      , m_DstGraph(iDstGraph)
+    {
+      for (auto vtx : iMatch)
+      {
+        m_Match.push_back(m_SrcGraph.GetNodeObject(vtx));
+      }
+    }
+
     IMPLEMENT_RTTI(RewriteSystem);
 
     using RewriteSystemLoader = TResourceLoader <RewriteSystem, ResourceLoader>;
+
+    LUA_REG_FUN(BindGraphWrappers)
+    {
+      luabind::module(iState, "eXl")[
+        luabind::class_<GraphWrapper>("Graph")
+          .def("GetEdges", &GraphWrapper::GetEdges)
+          .def("GetTargetNode", &GraphWrapper::GetTargetNode)
+          .def("GetNodeTag", &GraphWrapper::GetNodeTag)
+          .def("GetEdgeTag", &GraphWrapper::GetEdgeTag)
+          ,
+
+          luabind::class_<MatchWrapper>("MatchContext")
+          .def("Graph", &MatchWrapper::GetGraph),
+
+          luabind::class_<RewriteWrapper>("Rewritecontext")
+          .def("SourceGraph", &RewriteWrapper::GetSrcGraph)
+          .def("TargetGraph", &RewriteWrapper::GetDstGraph)
+          .def("Match", &RewriteWrapper::GetMatch)
+
+      ];
+
+      return 0;
+    }
 
     void RewriteSystem::Init()
     {
       BehaviourDesc desc;
       desc.behaviourName = "RewriteRule";
-      desc.functions.insert(std::make_pair("CheckNode", FunDesc::Create<bool(GraphWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("CheckEdge", FunDesc::Create<bool(GraphWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("CheckMatch", FunDesc::Create<bool(GraphWrapper&, Vector<ObjectHandle>)>()));
-      desc.functions.insert(std::make_pair("CreateNode", FunDesc::Create<void(GraphWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("CreateEdge", FunDesc::Create<void(GraphWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("RemoveNode", FunDesc::Create<void(GraphWrapper&, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("RemoveEdge", FunDesc::Create<void(GraphWrapper&, ObjectHandle)>()));
+      desc.functions.insert(std::make_pair("CheckNode", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
+      desc.functions.insert(std::make_pair("CheckEdge", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
+      desc.functions.insert(std::make_pair("CheckMatch", FunDesc::Create<bool(MatchWrapper&, Vector<ObjectHandle>)>()));
+      desc.functions.insert(std::make_pair("CreateNode", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
+      desc.functions.insert(std::make_pair("CreateEdge", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
+      desc.functions.insert(std::make_pair("RemoveNode", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
+      desc.functions.insert(std::make_pair("RemoveEdge", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
 
       LuaScriptSystem::AddBehaviourDesc(desc);
       ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystem::StaticRtti());
+
+      LuaManager::AddRegFun(&BindGraphWrappers);
     }
 
 #ifdef EXL_RSC_HAS_FILESYSTEM

@@ -35,6 +35,7 @@ namespace eXl
     , isSymmetric(iOther.isSymmetric)
     , hasPotentialLoop(iOther.hasPotentialLoop)
     , hasDeletes(iOther.hasDeletes)
+    , finalCb(iOther.finalCb)
   {
     UnorderedMap<GraphVtx, GraphVtx> vtxMap;
     for (auto& vtx : VerticesIter(iOther.matchGraph))

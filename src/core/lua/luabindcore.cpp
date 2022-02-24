@@ -137,7 +137,7 @@ namespace eXl
           .def(luabind::constructor<>())
           .def(luabind::constructor<const char*>())
           .def(luabind::constructor<String const&>())
-          .def("get", &Name::get)
+          .def("__tostring", &Name::c_str)
       ];
 
     TypeManager::GetArrayType<uint64_t>()->RegisterLua(iState);

@@ -6,6 +6,7 @@
 #include <engine/common/app.hpp>
 #include <engine/common/transforms.hpp>
 #include <engine/game/commondef.hpp>
+#include <engine/script/luascriptsystem.hpp>
 
 #include <editor/editorstate.hpp>
 
@@ -182,6 +183,7 @@ namespace eXl
   {
     DECLARE_RefC;
   public:
+    ObjectHandle ruleObject;
     Vector<Name> nodeTags;
     Vector<Name> newNodeTags;
     Vector<Name> edgeTags;
@@ -224,6 +226,8 @@ namespace eXl
     m_DisplayNodes.clear();
     m_GraphPainter->Clear();
 
+    LuaScriptSystem& luaSys = *world.GetSystem<LuaScriptSystem>();
+
     DenseGameDataStorage<LevelNodeData> nodeData(world);
     DenseGameDataStorage<LevelEdgeData> edgeData(world);
 
@@ -235,6 +239,8 @@ namespace eXl
     UnorderedMap<Name, uint32_t> tagsIdx;
     tagsIdx.insert(std::make_pair(RewriteSystem::GetAnyTag(), UINT32_MAX));
 
+    Vector<ObjectHandle> ruleObjects;
+
     for (auto const& tag : m_Sys.m_Tags)
     {
       tags.push_back(tag.first);
@@ -244,6 +250,16 @@ namespace eXl
     for (auto const& ruleEntry : m_Sys.m_Rules)
     {
       IntrusivePtr<RuleData> data = MakeRefCounted<RuleData>();
+      data->ruleObject = world.CreateObject();
+
+      if (LuaScriptBehaviour const* script = ruleEntry.second.m_RewriteScript.GetOrLoad())
+      {
+        if (script->m_BehaviourName == "RewriteRule")
+        {
+          luaSys.AddBehaviour(data->ruleObject, *script);
+        }
+      }
+
       auto checkNodeTag = [data](ES_RuleSystem::MatchCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphVtx iVtx)
       {
         SimMatchCtx const& ctx = *SimMatchCtx::DynamicCast(iCtx.userCtx);
@@ -252,7 +268,19 @@ namespace eXl
         if (data->nodeTags[iIdx] == RewriteSystem::GetAnyTag()
           || data->nodeTags[iIdx] == nodeTag)
         {
-          return true;
+          LuaScriptSystem& luaSys = *ctx.m_SourceGraph.m_World.GetSystem<LuaScriptSystem>();
+          if (!luaSys.HasBehaviour(data->ruleObject, "RewriteRule"))
+          {
+            return true;
+          }
+
+          MatchWrapper wrapper(ctx.m_SourceGraph);
+          Optional<bool> ret = luaSys.CallBehaviour<bool>(data->ruleObject, "RewriteRule", "CheckNode"
+            , wrapper, iIdx, nodeObj);
+
+          eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckNode function", false);
+
+          return *ret;
         }
 
         return false;
@@ -266,10 +294,48 @@ namespace eXl
         if (data->edgeTags[iIdx] == RewriteSystem::GetAnyTag()
           || data->edgeTags[iIdx] == edgeTag)
         {
-          return true;
+          LuaScriptSystem& luaSys = *ctx.m_SourceGraph.m_World.GetSystem<LuaScriptSystem>();
+          if (!luaSys.HasBehaviour(data->ruleObject, "RewriteRule"))
+          {
+            return true;
+          }
+
+          MatchWrapper wrapper(ctx.m_SourceGraph);
+          Optional<bool> ret = luaSys.CallBehaviour<bool>(data->ruleObject, "RewriteRule", "CheckEdge"
+            , wrapper, iIdx, edgeObj);
+
+          eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckEdge function", false);
+
+          return *ret;
         }
 
         return false;
+      };
+
+      auto checkMatch = [data](ES_RuleSystem::MatchCtx& iCtx, Vector<ES_RuleSystem::GraphVtx> const& iMatch)
+      {
+        SimMatchCtx const& ctx = *SimMatchCtx::DynamicCast(iCtx.userCtx);
+
+        LuaScriptSystem& luaSys = *ctx.m_SourceGraph.m_World.GetSystem<LuaScriptSystem>();
+        if (!luaSys.HasBehaviour(data->ruleObject, "RewriteRule"))
+        {
+          return true;
+        }
+
+        Vector<ObjectHandle> nodeObjects;
+
+        for (auto vtx : iMatch)
+        {
+          nodeObjects.push_back(ctx.m_SourceGraph.GetNodeObject(vtx));
+        }
+
+        MatchWrapper wrapper(ctx.m_SourceGraph);
+        Optional<bool> ret = luaSys.CallBehaviour<bool>(data->ruleObject, "RewriteRule", "CheckMatch"
+          , wrapper, nodeObjects);
+
+        eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckMatch function", false);
+
+        return *ret;
       };
 
       auto createNode = [data](ES_RuleSystem::RewriteCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphVtx iVtx)
@@ -357,7 +423,7 @@ namespace eXl
         builder.AddNewConnection(edgeDesc.nodes[0], edgeDesc.nodes[1], edgeDesc.port[0], edgeDesc.port[1], iter->second, createEdge);
         data->newEdgeTags.push_back(edgeDesc.tag);
       }
-      builder.End(sys);
+      builder.End(sys, checkMatch);
     }
 
     ES_RuleSystem::Graph curGraph;
