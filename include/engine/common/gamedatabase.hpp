@@ -90,6 +90,12 @@ namespace eXl
     DynObject ModifyData(ObjectHandle iObject, PropertySheetName iName);
     ConstDynObject GetData(ObjectHandle iObject, PropertySheetName iName);
 
+    using ConstIterRange = std::pair<DataAllocatorBase::ConstIterator, DataAllocatorBase::ConstIterator>;
+    using IterRange = std::pair<DataAllocatorBase::Iterator, DataAllocatorBase::Iterator>;
+
+    ConstIterRange IterateOverDataConst(PropertySheetName) const;
+    IterRange IterateOverData(PropertySheetName);
+
     template <typename T>
     T const* GetData(ObjectHandle iObject, PropertySheetName iName)
     {

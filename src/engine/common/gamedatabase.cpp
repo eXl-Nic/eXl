@@ -377,4 +377,28 @@ namespace eXl
     alloc->GarbageCollect(GetWorld());
     m_GarbageCollectionCycle = (m_GarbageCollectionCycle + 1) % m_Allocators.size();
   }
+
+  GameDatabase::ConstIterRange GameDatabase::IterateOverDataConst(PropertySheetName iName) const
+  {
+    auto iter = m_AllocatorSlot.find(iName);
+    if (iter == m_AllocatorSlot.end())
+    {
+      return ConstIterRange();
+    }
+
+    DataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
+    return ConstIterRange(alloc->begin(), alloc->end());
+  }
+
+  GameDatabase::IterRange GameDatabase::IterateOverData(PropertySheetName iName)
+  {
+    auto iter = m_AllocatorSlot.find(iName);
+    if (iter == m_AllocatorSlot.end())
+    {
+      return IterRange();
+    }
+
+    DataAllocatorBase* alloc = m_Allocators[iter->second].GetAlloc();
+    return IterRange(alloc->begin(), alloc->end());
+  }
 }
