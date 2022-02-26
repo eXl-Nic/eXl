@@ -1003,6 +1003,11 @@ namespace eXl
     return cls;
   }
 
+  bool LuaManager::IsTypeRegistered(lua_State* iState, Type const* iType)
+  {
+    return GetClassRepFromType(iState, iType) != nullptr;
+  }
+
   luabind::object GetLuaRef(lua_State* iState, Type const* iType, void* iMem, bool iIsConst)
   {
     LuaManager::PushRefToLua(iState, iType, iMem, iIsConst);

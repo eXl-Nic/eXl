@@ -387,7 +387,7 @@ namespace eXl
     }
 
     DataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
-    return ConstIterRange(alloc->begin(), alloc->end());
+    return ConstIterRange(alloc->begin(GetWorld()), alloc->end(GetWorld()));
   }
 
   GameDatabase::IterRange GameDatabase::IterateOverData(PropertySheetName iName)
@@ -399,6 +399,6 @@ namespace eXl
     }
 
     DataAllocatorBase* alloc = m_Allocators[iter->second].GetAlloc();
-    return IterRange(alloc->begin(), alloc->end());
+    return IterRange(alloc->begin(GetWorld()), alloc->end(GetWorld()));
   }
 }

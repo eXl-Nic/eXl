@@ -90,7 +90,8 @@ namespace eXl
           .def(luabind::constructor<char const*>())
           //.def("size", &String::size)
           .def("data", (char const*(String::*)()const)&String::data)
-          .def("c_str", (char const*(String::*)()const)&String::c_str),
+          .def("c_str", (char const*(String::*)()const)&String::c_str)
+          .def("__tostring", (char const* (String::*)()const)&String::c_str),
 
       luabind::class_<ConstDynObject>("ConstDynObject")
       .def(luabind::constructor<>())
@@ -128,6 +129,8 @@ namespace eXl
 
       luabind::class_<ArrayType,Type>("ArrayType")
       .def("GetElementType",&ArrayType::GetElementType),
+      
+      luabind::class_<LuaArrayIterator>("ArrayIterator"),
 
       luabind::namespace_("TypeManager")[
         luabind::def("GetArrayType",static_cast<ArrayType const*(*)(Type const*)>(&TypeManager::GetArrayType))

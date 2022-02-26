@@ -238,6 +238,7 @@ namespace eXl
   }
 
   World* LuaScriptSystem::GetWorld_Static()
+
   {
     LuaStateHandle curState = LuaManager::GetCurrentState();
     LuaScriptSystem* self = LuaScriptSystem::DynamicCast(curState.GetUserPtr());

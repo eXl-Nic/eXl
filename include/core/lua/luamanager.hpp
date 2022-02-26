@@ -133,8 +133,6 @@ namespace eXl
 
     Err DoString(const AString& iCode, AString& oStr, luabind::object& oRes);
 
-    //Err LoadScript(LuaScript const&);
-
     Impl& GetImpl();
 
   protected:
@@ -180,6 +178,8 @@ namespace eXl
 
     EXL_CORE_API luabind::object GetLuaRef(lua_State* iState, DynObject const& iObject);
     EXL_CORE_API luabind::object GetLuaRef(lua_State* iState, ConstDynObject const& iObject);
+
+    EXL_CORE_API bool IsTypeRegistered(lua_State* iState, Type const* iType);
 
     namespace detail
     {

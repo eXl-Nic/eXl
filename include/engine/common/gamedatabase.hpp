@@ -143,6 +143,8 @@ namespace eXl
     }
 
     void Register(World& iWorld) override;
+
+    PropertiesManifest const& GetManifest() const { return m_Manifest; }
   protected:
 
     PropertiesManifest const& m_Manifest;

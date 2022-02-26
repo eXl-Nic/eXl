@@ -6,6 +6,7 @@
 #include <engine/common/app.hpp>
 #include <engine/common/transforms.hpp>
 #include <engine/game/commondef.hpp>
+#include <engine/gfx/gfxcomponent.hpp>
 #include <engine/script/luascriptsystem.hpp>
 
 #include <editor/editorstate.hpp>
@@ -183,6 +184,7 @@ namespace eXl
   {
     DECLARE_RefC;
   public:
+    RewriteSystem const* rewriteSys;
     ObjectHandle ruleObject;
     Vector<Name> nodeTags;
     Vector<Name> newNodeTags;
@@ -250,6 +252,7 @@ namespace eXl
     for (auto const& ruleEntry : m_Sys.m_Rules)
     {
       IntrusivePtr<RuleData> data = MakeRefCounted<RuleData>();
+      data->rewriteSys = &m_Sys;
       data->ruleObject = world.CreateObject();
 
       if (LuaScriptBehaviour const* script = ruleEntry.second.m_RewriteScript.GetOrLoad())
@@ -342,14 +345,30 @@ namespace eXl
       {
         SimRewriteCtx& ctx = *SimRewriteCtx::DynamicCast(iCtx.userCtx);
         ObjectHandle nodeObj = ctx.m_DestGraph.AddNode(iVtx);
-        ctx.m_DestGraph.m_NodeData.Get(nodeObj)->m_Tag = data->newNodeTags[iIdx];
+        Name tag = data->newNodeTags[iIdx];
+        ctx.m_DestGraph.m_NodeData.Get(nodeObj)->m_Tag = tag;
+        auto iter = data->rewriteSys->m_Tags.find(tag);
+        if (iter != data->rewriteSys->m_Tags.end()
+          && iter->second.m_Archetype.GetUUID().IsValid())
+        {
+          Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
+          ctx.m_DestGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(nodeObj, arch, nullptr);
+        }
       };
 
       auto createEdge = [data](ES_RuleSystem::RewriteCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphEdge iEdge)
       {
         SimRewriteCtx& ctx = *SimRewriteCtx::DynamicCast(iCtx.userCtx);
         ObjectHandle edgeObj = ctx.m_DestGraph.AddEdge(iEdge);
-        ctx.m_DestGraph.m_EdgeData.Get(edgeObj)->m_Tag = data->newEdgeTags[iIdx];
+        Name tag = data->newEdgeTags[iIdx];
+        ctx.m_DestGraph.m_EdgeData.Get(edgeObj)->m_Tag = tag;
+        auto iter = data->rewriteSys->m_Tags.find(tag);
+        if (iter != data->rewriteSys->m_Tags.end()
+          && iter->second.m_Archetype.GetUUID().IsValid())
+        {
+          Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
+          ctx.m_DestGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(edgeObj, arch, nullptr);
+        }
       };
 
       auto removeNode = [data](ES_RuleSystem::RewriteCtx& iCtx, ES_RuleSystem::GraphVtx iVtx)
@@ -552,28 +571,28 @@ namespace eXl
     GfxSystem& gfx = *world.GetSystem<GfxSystem>();
     GameDatabase& database = *world.GetSystem<GameDatabase>();
 
-    for (uint32_t i = 0; i < nodes.size(); ++i)
-    {
-      auto const& vtx = nodes[i];
-      auto pos = boost::get(positionMap, vtx);
-      m_GraphPainter->nodes.push_back(QPointF(pos[0], pos[1]));
-
-      Name tag = nodeTags[i];
-      auto iter = m_Sys.m_Tags.find(tag);
-      if (iter != m_Sys.m_Tags.end()
-        && iter->second.m_Archetype.GetUUID().IsValid())
+    GameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(world);
+    //for (uint32_t i = 0; i < nodes.size(); ++i)
+    nodeData.Iterate([&](ObjectHandle iObj, LevelNodeData const& iData)
       {
-        Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
-        if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
+        auto pos = boost::get(positionMap, iData.m_Vtx);
+        m_GraphPainter->nodes.push_back(QPointF(pos[0], pos[1]));
+
+        auto iter = m_Sys.m_Tags.find(iData.m_Tag);
+        if (iter != m_Sys.m_Tags.end()
+          && iter->second.m_Archetype.GetUUID().IsValid())
         {
-          ObjectHandle obj = world.CreateObject();
-          database.InstantiateArchetype(obj, arch, nullptr);
-          trans.AddTransform(obj, Matrix4f::FromPosition(Vector3f(pos[0], pos[1], 0.0)));
-          gfx.CreateSpriteComponent(obj);
-          m_DisplayNodes.push_back(obj);
+          Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
+          if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
+          {
+            //ObjectHandle obj = world.CreateObject();
+            database.InstantiateArchetype(iObj, arch, nullptr);
+            trans.AddTransform(iObj, Matrix4f::FromPosition(Vector3f(pos[0], pos[1], 0.0)));
+            gfx.CreateSpriteComponent(iObj);
+            m_DisplayNodes.push_back(iObj);
+          }
         }
-      }
-    }
+      });
 
     for (auto edge : EdgesIter(curGraph))
     {

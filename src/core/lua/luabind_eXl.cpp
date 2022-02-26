@@ -12,9 +12,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/lua/luamanager.hpp>
 
 #include <core/type/arraytype.hpp>
+#include <core/type/tagtype.hpp>
 
 namespace eXl
 {
+  IMPLEMENT_TAG_TYPE(LuaArrayIterator);
+
   dynobject_holder::dynobject_holder(DynObject iObject, bool iIsConst)
     : instance_holder(iIsConst)
     , m_Object(std::move(iObject))
@@ -192,5 +195,81 @@ namespace eXl
     }
     iType->RegisterLua(L);
   }
-  
+
+  uint32_t array_length::operator()(luabind::argument const& self_) const
+  {
+    luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(self_);
+    std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(m_Type));
+    if (res.first == nullptr)
+    {
+      lua_pushliteral(self_.interpreter(), "Incorrect argument for array length");
+      lua_error(self_.interpreter());
+    }
+
+    return m_Type->GetArraySize(res.first);
+  }
+
+  void array_length_registration::register_(lua_State* iState) const
+  {
+    using signature_type = luabind::meta::type_list<uint32_t, luabind::argument const&>;
+    luabind::object fn = luabind::make_function(iState, array_length(m_Type), signature_type(), luabind::no_policies());
+    luabind::detail::add_overload(luabind::object(luabind::from_stack(iState, -1)), "__len", fn);
+  }
+
+  int array_iter::Iterate(lua_State* iState)
+  {
+    int idx = lua_upvalueindex(1);
+
+    luabind::default_converter<LuaArrayIterator*> converter;
+    if (converter.match(iState, luabind::by_pointer<LuaArrayIterator>(), idx) < 0)
+    {
+      lua_pushliteral(iState, "Incorrect argument for game data iterator");
+      return lua_error(iState);
+    }
+
+    LuaArrayIterator* iter = converter.to_cpp(iState, luabind::by_pointer<LuaArrayIterator>(), idx);
+    if (iter->m_Cur >= iter->m_Type->GetArraySize(iter->m_Data))
+    {
+      lua_pushnil(iState);
+      return 1;
+    }
+
+    LuaManager::PushRefToLua(iState
+      , iter->m_Type->GetElementType()
+      , iter->m_Type->GetElement(iter->m_Data, iter->m_Cur)
+      , iter->m_IsConst);
+    ++iter->m_Cur;
+    return 1;
+  }
+
+  luabind::object array_iter::operator()(luabind::argument const& self_) const
+  {
+    luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(self_);
+    std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(m_Type));
+    if (res.first == nullptr)
+    {
+      lua_pushliteral(self_.interpreter(), "Incorrect argument for array length");
+      lua_error(self_.interpreter());
+    }
+
+    LuaArrayIterator iterator;
+    iterator.m_Data = res.first;
+    iterator.m_IsConst = self->is_const();
+    iterator.m_Type = m_Type;
+
+    luabind::object iterObj(self_.interpreter(), iterator);
+    iterObj.push(self_.interpreter());
+
+    lua_pushcclosure(self_.interpreter(), &Iterate, 1);
+
+    return luabind::object(luabind::from_stack(self_.interpreter(), -1));
+  }
+
+  void array_iter_registration::register_(lua_State* iState) const
+  {
+    using signature_type = luabind::meta::type_list<luabind::object, luabind::argument const&>;
+    luabind::object fn = luabind::make_function(iState, array_iter(m_Type), signature_type(), luabind::no_policies());
+    luabind::detail::add_overload(luabind::object(luabind::from_stack(iState, -1)), "Elements", fn);
+  }
+
 }

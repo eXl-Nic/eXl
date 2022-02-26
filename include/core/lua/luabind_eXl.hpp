@@ -234,5 +234,59 @@ namespace eXl
     }
     Type const* m_SequenceType;
   };
+
+  struct LuaArrayIterator
+  {
+    uint32_t m_Cur = 0;
+    ArrayType const* m_Type;
+    void* m_Data;
+    bool m_IsConst;
+  };
+
+  DEFINE_CORE_TYPE(LuaArrayIterator);
+
+  struct array_length
+  {
+    array_length(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    ArrayType const* m_Type;
+
+    uint32_t operator()(luabind::argument const& self_) const;
+  };
+
+  struct array_length_registration : luabind::detail::registration
+  {
+    array_length_registration(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    void register_(lua_State* iState) const;
+    ArrayType const* m_Type;
+  };
+
+  struct array_iter
+  {
+    array_iter(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    ArrayType const* m_Type;
+
+    static int Iterate(lua_State* iState);
+    luabind::object operator()(luabind::argument const& self_) const;
+  };
+
+  struct array_iter_registration : luabind::detail::registration
+  {
+    array_iter_registration(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    void register_(lua_State* iState) const;
+
+    ArrayType const* m_Type;
+  };
 }
 #endif
