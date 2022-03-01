@@ -13,6 +13,16 @@ namespace eXl
     IMPLEMENT_TAG_TYPE(MatchWrapper);
     IMPLEMENT_TAG_TYPE(RewriteWrapper);
     
+    void LevelNodeData::CopyNode(ES_RuleSystem::GraphVtx iVtx) const
+    {
+      m_Vtx = iVtx;
+    }
+
+    void LevelEdgeData::CopyEdge(ES_RuleSystem::GraphEdge iEdge) const
+    {
+      m_Edge = iEdge;
+    }
+
     ObjectHandle GraphWrapper::GetNodeObject(ES_RuleSystem::GraphVtx iVtx) const
     {
       LevelNodeData const* nodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_Graph, iVtx));

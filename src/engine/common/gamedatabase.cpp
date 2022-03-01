@@ -178,12 +178,13 @@ namespace eXl
         {
           slot = sparseAlloc->AllocateSlot_Inl(iObject);
         }
-        else if(sparseAlloc)
+        else
         {
           existingHandle = sparseAlloc->m_ObjectHandles[slot];
         }
 
-        if (sparseAlloc->m_ArchetypeHandle[slot] != existingHandle)
+        if (existingHandle.IsAssigned()
+          && sparseAlloc->m_ArchetypeHandle[slot] != existingHandle)
         {
           sparseAlloc->Release(existingHandle);
         }

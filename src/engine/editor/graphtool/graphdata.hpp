@@ -13,8 +13,10 @@ namespace eXl
   {
     DECLARE_RTTI(LevelNodeData, ES_RuleSystem::NodeData);
 
+    void CopyNode(ES_RuleSystem::GraphVtx iVtx) const override;
+
     ObjectHandle m_Object;
-    ES_RuleSystem::GraphVtx m_Vtx;
+    mutable ES_RuleSystem::GraphVtx m_Vtx;
     Name m_Tag;
   };
 
@@ -22,8 +24,10 @@ namespace eXl
   {
     DECLARE_RTTI(LevelEdgeData, ES_RuleSystem::EdgeData);
 
+    void CopyEdge(ES_RuleSystem::GraphEdge iVtx) const override;
+
     ObjectHandle m_Object;
-    ES_RuleSystem::GraphEdge m_Edge;
+    mutable ES_RuleSystem::GraphEdge m_Edge;
     Name m_Tag;
   };
 

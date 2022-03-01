@@ -1332,6 +1332,7 @@ namespace eXl
         NodeData const* origData = boost::get(boost::vertex_name, iPg.preGraph, nodeData->vtx);
         boost::put(boost::vertex_name, oFinalGraph, newVtx, origData);
         boost::put(boost::vertex_index, oFinalGraph, newVtx, boost::get(boost::vertex_index, iGraph, nodeData->vtx));
+        origData->CopyNode(newVtx);
       }
       pgToFinal.insert(std::make_pair(vtx, newVtx));
     }
@@ -1360,6 +1361,7 @@ namespace eXl
         EdgeData const* origData = boost::get(boost::edge_name, iPg.preGraph, graphEdge.first);
         boost::put(boost::edge_name, oFinalGraph, newEdge, origData);
         boost::put(boost::edge_index, oFinalGraph, newEdge, boost::get(boost::edge_index, iGraph, graphEdge.first));
+        origData->CopyEdge(newEdge);
       }
     }
 

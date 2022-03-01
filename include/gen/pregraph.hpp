@@ -25,15 +25,8 @@ namespace eXl
   {
   public:
 
-    struct EXL_GEN_API NodeData : public RttiObject
-    {
-      DECLARE_RTTI(NodeData, RttiObject);
-    };
-
-    struct EXL_GEN_API EdgeData : public RttiObject
-    {
-      DECLARE_RTTI(EdgeData, RttiObject);
-    };
+    struct NodeData;
+    struct EdgeData;
 
     using Graph = boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, 
       boost::property<boost::vertex_name_t, NodeData const*, boost::property<boost::vertex_index_t, uint32_t>>,
@@ -41,6 +34,24 @@ namespace eXl
 
     using GraphVtx = Graph::vertex_descriptor;
     using GraphEdge = Graph::edge_descriptor;
+
+    struct EXL_GEN_API NodeData : public RttiObject
+    {
+      DECLARE_RTTI(NodeData, RttiObject);
+
+    public:
+      virtual void CopyNode(GraphVtx iNode) const
+      {}
+    };
+
+    struct EXL_GEN_API EdgeData : public RttiObject
+    {
+      DECLARE_RTTI(EdgeData, RttiObject);
+
+    public:
+      virtual void CopyEdge(GraphEdge iEdge) const
+      {}
+    };
 
     using VertexMatching = Vector<GraphVtx>;
 

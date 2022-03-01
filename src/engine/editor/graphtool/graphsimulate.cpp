@@ -446,8 +446,6 @@ namespace eXl
     }
 
     ES_RuleSystem::Graph curGraph;
-
-
     UniquePtr<Random> rand(Random::CreateDefaultRNG(0));
 
     for (uint32_t i = 0; i < m_Rules->count(); ++i)
@@ -475,6 +473,16 @@ namespace eXl
             SimRewriteCtx rewriteCtx(srcGraphWrapper, dstGraphWrapper);
             sys.ApplyRule(curGraph, newGraph, iter->second, matchings[matchToConsider], &rewriteCtx);
             curGraph = newGraph;
+            for (auto vtx : VerticesIter(curGraph))
+            {
+              ES_RuleSystem::NodeData const* data = boost::get(boost::vertex_name, curGraph, vtx);
+              data->CopyNode(vtx);
+            }
+            for (auto edge : EdgesIter(curGraph))
+            {
+              ES_RuleSystem::EdgeData const* data = boost::get(boost::edge_name, curGraph, edge);
+              data->CopyEdge(edge);
+            }
           }
         }
         else if (application == AllMatches)
@@ -485,6 +493,16 @@ namespace eXl
           SimRewriteCtx rewriteCtx(srcGraphWrapper, dstGraphWrapper);
           sys.ApplyRuleParallel(curGraph, newGraph, iter->second, &matchCtx, &rewriteCtx);
           curGraph = newGraph;
+          for (auto vtx : VerticesIter(curGraph))
+          {
+            ES_RuleSystem::NodeData const* data = boost::get(boost::vertex_name, curGraph, vtx);
+            data->CopyNode(vtx);
+          }
+          for (auto edge : EdgesIter(curGraph))
+          {
+            ES_RuleSystem::EdgeData const* data = boost::get(boost::edge_name, curGraph, edge);
+            data->CopyEdge(edge);
+          }
         }
         uint32_t nodeIdx = 0;
         for (auto vtx : VerticesIter(curGraph))
@@ -494,8 +512,6 @@ namespace eXl
       }
     }
 
-    Vector<ES_RuleSystem::GraphVtx> nodes;
-    Vector<Name> nodeTags;
     TGraphMap < ES_RuleSystem::Graph, boost::rectangle_topology<>::point_type> positionMap;
     TGraphMap < ES_RuleSystem::Graph, int> componentsMap;
     bool bIsConnected = boost::connected_components(curGraph, componentsMap) == 1;
@@ -505,16 +521,15 @@ namespace eXl
     defaultPos[1] = 0;
 
     GraphWrapper graphWrapper(world, curGraph, nodeData, edgeData);
-
+    m_GraphPainter->nodes.resize(boost::num_vertices(curGraph));
+    m_GraphPainter->nodeDesc.resize(boost::num_vertices(curGraph));
     for (auto vtx : VerticesIter(curGraph))
     {
       ObjectHandle nodeObj = graphWrapper.GetNodeObject(vtx);
       Name nodeTag = nodeData.Get(nodeObj)->m_Tag;
-      nodeTags.push_back(nodeTag);
       m_GraphPainter->nodesColor.push_back(qRgb(0, 0, 255));
-      nodes.push_back(vtx);
-      boost::put(positionMap, nodes.back(), defaultPos);
-      m_GraphPainter->nodeDesc.push_back(QString::fromUtf8(nodeTag.c_str()));
+      boost::put(positionMap, vtx, defaultPos);
+      m_GraphPainter->nodeDesc[boost::get(boost::vertex_index, curGraph, vtx)] = QString::fromUtf8(nodeTag.c_str());
     }
 
     for (auto edge : EdgesIter(curGraph))
@@ -525,7 +540,7 @@ namespace eXl
       m_GraphPainter->edgeDesc.push_back(QString::fromUtf8(edgeTag.c_str()));
     }
 
-    float dist = Mathf::Max((nodes.size() + 2) / Mathf::Sqrt(2.0), 2) * GraphPainter::s_NodeSize;
+    float dist = Mathf::Max((boost::num_vertices(curGraph) + 2) / Mathf::Sqrt(2.0), 2) * GraphPainter::s_NodeSize;
 
     boost::rectangle_topology<> rectangle(-dist, -dist, dist, dist);
     if (1 || !bIsConnected)
@@ -572,11 +587,11 @@ namespace eXl
     GameDatabase& database = *world.GetSystem<GameDatabase>();
 
     GameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(world);
-    //for (uint32_t i = 0; i < nodes.size(); ++i)
+    
     nodeData.Iterate([&](ObjectHandle iObj, LevelNodeData const& iData)
       {
         auto pos = boost::get(positionMap, iData.m_Vtx);
-        m_GraphPainter->nodes.push_back(QPointF(pos[0], pos[1]));
+        m_GraphPainter->nodes[boost::get(boost::vertex_index, curGraph, iData.m_Vtx)] = QPointF(pos[0], pos[1]);
 
         auto iter = m_Sys.m_Tags.find(iData.m_Tag);
         if (iter != m_Sys.m_Tags.end()
@@ -585,8 +600,6 @@ namespace eXl
           Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
           if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
           {
-            //ObjectHandle obj = world.CreateObject();
-            database.InstantiateArchetype(iObj, arch, nullptr);
             trans.AddTransform(iObj, Matrix4f::FromPosition(Vector3f(pos[0], pos[1], 0.0)));
             gfx.CreateSpriteComponent(iObj);
             m_DisplayNodes.push_back(iObj);
