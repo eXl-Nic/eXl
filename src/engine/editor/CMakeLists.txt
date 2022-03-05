@@ -7,7 +7,6 @@ SOURCE_GROUP("MapEditor" REGULAR_EXPRESSION "mapeditor/.*(hpp|inl|cpp)")
 SOURCE_GROUP("Tileset" REGULAR_EXPRESSION "tileset/.*(hpp|inl|cpp)")
 SOURCE_GROUP("MocFiles" REGULAR_EXPRESSION "moc_.*cpp")
 
-find_package(Qt5 COMPONENTS Core Gui Widgets Opengl REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${QT5Core_INCLUDE_DIRS} ${QT5Widgets_INCLUDE_DIRS} ${QT5Gui_INCLUDE_DIRS} ${QT5OpenGL_INCLUDE_DIRS})
 
@@ -157,7 +156,13 @@ set(HEADERS_TO_PARSE
 SETUP_EXL_TARGET(eXl_Editor DEPENDENCIES eXl_Engine HEADERS_TO_PARSE ${HEADERS_TO_PARSE} LIB_SUFFIX "EDITOR")
 
 target_link_libraries(eXl_Editor PRIVATE ${QT_LIBRARIES})
-
+target_link_libraries(eXl_Editor PRIVATE LuaAutoComplete::core LuaAutoComplete::editor)
+add_custom_command(
+  TARGET eXl_Editor POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:eXl_Editor> $<TARGET_FILE_DIR:eXl_Editor>
+  COMMAND_EXPAND_LISTS
+  )
+  
 add_custom_command(
       TARGET eXl_Editor
 	  POST_BUILD

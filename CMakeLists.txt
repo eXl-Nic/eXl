@@ -5,6 +5,7 @@ project(eXl)
 set(ANDROID_PLATFORM 19)
 
 set(EXL_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(EXL_DEPENDENCIES_FOLDER "" CACHE PATH "Path to eXl dependencies install directory")
 
 set(ARMADILLO_ROOT "" CACHE PATH "Path to armadillo root directory")
 

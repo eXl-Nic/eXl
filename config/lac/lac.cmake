@@ -1,0 +1,7 @@
+if(${EXL_BUILD_EDITOR})
+
+set(LAC_INSTALL_DIR ${EXL_DEPENDENCIES_FOLDER}/lac)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${LAC_INSTALL_DIR}/cmake)
+find_package(LuaAutoComplete)
+
+endif()

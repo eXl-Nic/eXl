@@ -50,6 +50,7 @@ namespace eXl
     void Tick();
     
     static World* GetWorld_Static();
+
   protected:
     
     struct Impl;

@@ -137,6 +137,10 @@ set(LUA_LIB_HEADERS
 	${LUA_SRC_DIR}/luaconf.h
 )
 
+if(${LUA_USE_APICHECK})
+add_definitions(-Dlua_assert=assert)
+endif()
+
 #
 # Lua library.
 #

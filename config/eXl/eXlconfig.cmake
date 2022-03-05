@@ -90,3 +90,6 @@ include(${EXL_ROOT}/config/freetype/freetype.cmake)
 include(${EXL_ROOT}/config/utf8/utf8.cmake)
 include(${EXL_ROOT}/config/yojimbo/yojimbo.cmake)
 include(${EXL_ROOT}/config/assimp/assimp.cmake)
+
+include(${EXL_ROOT}/config/Qt5/qt5.cmake)
+include(${EXL_ROOT}/config/lac/lac.cmake)

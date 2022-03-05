@@ -46,3 +46,6 @@
 [submodule "modules/assimp"]
 	path = modules/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "modules/lac"]
+	path = modules/lac
+	url = https://github.com/eXl-Nic/LuaAutoComplete

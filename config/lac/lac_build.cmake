@@ -1,0 +1,15 @@
+include(ExternalProject)
+
+set(LAC_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lac)
+
+ExternalProject_Add(LuaAutoComplete 
+  SOURCE_DIR ${EXL_ROOT}/modules/lac
+  INSTALL_DIR ${LAC_INSTALL_DIR}
+  STEP_TARGETS install
+  CMAKE_ARGS 
+    -DWITH_NLOHMANN_JSON=OFF 
+    -DBUILD_SHARED_LIBS=${EXL_BUILD_SHARED} 
+    -DBOOST_ROOT=${Boost_ROOT}
+    -DQt5_DIR=${Qt5_DIR}
+    -DCMAKE_INSTALL_PREFIX=${LAC_INSTALL_DIR}
+)
