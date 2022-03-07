@@ -1,29 +1,39 @@
-char const* meshVS = 
+char const* meshVS =
+#ifdef __ANDROID__
+"precision mediump float;\n"
+#else
 "#version 140\n"
-"attribute vec4 iPosition;\n"
-"attribute vec4 iNormal;\n"
-"attribute vec2 iTexCoord;\n"
-""
-"uniform mat4 iViewMatrix;\n"
-"uniform mat4 iProjMatrix;\n"
-"uniform mat4 iWorldMatrix;\n"
-"\n"
-"varying vec3 viewPos;\n"
-"varying vec3 worldPos;\n"
-"varying vec3 worldNormalU;\n"
-"varying vec3 viewNormal;\n"
-"varying vec2 texCoord;\n"
-"\n"
-"void main()\n"
-"{\n"
-"  texCoord = iTexCoord;\n"
-"  mat4 worldInvTrans = transpose(inverse(iWorldMatrix));\n"
-"  worldNormalU = (iWorldMatrix * vec4(iNormal.xyz, 0.0)).xyz;\n"
-"  mat4 worldViewInvTrans = transpose(inverse(iViewMatrix * iWorldMatrix));\n"
-"  viewNormal = normalize(worldViewInvTrans * vec4(iNormal.xyz, 0)).xyz;\n"
-"  vec4 pos = iWorldMatrix * iPosition;\n"
-"  worldPos = pos.xyz;"
-"  viewPos =  (iViewMatrix * pos).xyz;\n"
-"  gl_Position = iProjMatrix * vec4(viewPos.xyz, 1.0);\n"
-"}\n"
+#endif
+R"(
+in vec4 iPosition;
+in vec4 iNormal;
+in vec2 iTexCoord;
+
+layout(std140) uniform Camera
+{
+  mat4 viewMatrix;
+  mat4 viewInverseMatrix;
+  mat4 projMatrix;
+};
+
+uniform mat4 worldMatrix;
+
+out vec3 viewPos;
+out vec3 worldPos;
+out vec3 worldNormalU;
+out vec3 viewNormal;
+out vec2 texCoord;
+
+void main()
+{
+  texCoord = iTexCoord;
+  mat4 worldInvTrans = transpose(inverse(worldMatrix));
+  worldNormalU = (worldMatrix * vec4(iNormal.xyz, 0.0)).xyz;
+  mat4 worldViewInvTrans = transpose(inverse(viewMatrix * worldMatrix));
+  viewNormal = normalize(worldViewInvTrans * vec4(iNormal.xyz, 0)).xyz;
+  vec4 pos = worldMatrix * iPosition;
+  worldPos = pos.xyz;
+  viewPos =  (viewMatrix * pos).xyz;
+  gl_Position = projMatrix * vec4(viewPos.xyz, 1.0);
+})"
 ;

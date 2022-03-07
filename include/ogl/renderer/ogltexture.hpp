@@ -38,6 +38,8 @@ namespace eXl
 
     ~OGLTexture();
 
+    void SetTextureNumLOD(uint32_t iNum);
+
     //void OnNullRefC() const;
 
     //void DropTextureData();

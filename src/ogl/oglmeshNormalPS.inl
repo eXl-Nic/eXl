@@ -1,16 +1,19 @@
 char const* meshNormalPS = 
 #ifdef __ANDROID__
 "precision mediump float;\n"
+#else
+"#version 140\n"
 #endif
+R"(
+in vec3 worldNormalU;
 
-"varying vec3 worldNormalU;\n"
+out vec4 fragColor;
 
-"\n"
-"void main()\n"
-"{\n"
-"  gl_FragColor = vec4( (normalize(worldNormalU) + vec3(1.0)) / 2.0, 1);\n"
+void main()
+{
+  fragColor = vec4( (normalize(worldNormalU) + vec3(1.0)) / 2.0, 1);
 
-"}\n"
+})"
 ;
 
 

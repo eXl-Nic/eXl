@@ -1,125 +1,142 @@
 char const* meshPS = 
+
 #ifdef __ANDROID__
-"precision mediump float;\n"
+"precision mediump float;"
+#else
+"#version 140"
 #endif
-"#define M_PI 3.1415926535897932384626433832795\n"
+R"(
+#define M_PI 3.1415926535897932384626433832795
 
-"varying vec3 viewPos;\n"
-"varying vec3 worldPos;\n"
+in vec3 viewPos;
+in vec3 worldPos;
 
-"varying vec2 texCoord;\n"
+in vec2 texCoord;
 
-"varying vec3 worldNormalU;\n"
-"varying vec3 viewNormal;\n"
+in vec3 worldNormalU;
+in vec3 viewNormal;
 
-"uniform mat4 iViewInverseMatrix;\n"
-"uniform sampler2D iDiffuseTexture;\n"
-"uniform samplerCube iIrradianceMap;\n"
-"uniform samplerCube iSpecularEnvMap;\n"
-"uniform sampler2D iEnvBrdfLUT;\n"
+layout(std140) uniform Camera
+{
+  mat4 viewMatrix;
+  mat4 viewInverseMatrix;
+  mat4 projMatrix;
+};
 
-"uniform vec3     iLightDir;\n"
-"uniform vec3     iLightColor;\n"
-"uniform vec3     iDiffuseColor;\n"
-"uniform vec4     iBRDFParameters;\n"
+uniform sampler2D iDiffuseTexture;
+uniform samplerCube iIrradianceMap;
+uniform samplerCube iSpecularEnvMap;
+uniform sampler2D iEnvBrdfLUT;
 
+uniform vec3     iLightDir;
+uniform vec3     iLightColor;
+uniform vec3     iDiffuseColor;
+uniform vec4     iBRDFParameters;
+
+out vec4 fragColor;
+
+)"
 #include "oglGGXutils.inl"
+R"(
+#define SamplesCount 20u
 
-"#define SamplesCount 20\n"
-"\n"
-"vec3 GGX_Specular(float roughness, vec3 F0, out vec3 kS )\n"
-"{\n"
-"  vec3 viewVectorWorld = -normalize((iViewInverseMatrix * vec4(viewPos, 0.0)).xyz);\n"
-"  vec3 worldNormal = normalize(worldNormalU);\n"
-"  float lodCoeff = log2(min(textureSize(iSpecularEnvMap, 0).x, textureSize(iSpecularEnvMap, 0).y));\n"
-//"  kS = 1.0;\n"
-//"  return (worldNormal + vec3(1.0)) / 2.0;\n"
+vec3 GGX_Specular(float roughness, vec3 F0, out vec3 kS )
+{
+  vec3 viewVectorWorld = -normalize((viewInverseMatrix * vec4(viewPos, 0.0)).xyz);
+  vec3 worldNormal = normalize(worldNormalU);
+  float minSize = min(textureSize(iSpecularEnvMap, 0).x, textureSize(iSpecularEnvMap, 0).y);
+  float lodCoeff = log2(minSize);
+//  kS = 1.0;
 
-"  float dotUp = abs(dot(worldNormal, vec3(1,0,0)));\n"
-"  vec3 side = lerp(vec3(1,0,0), vec3(0,1,0), step(0.98, dotUp));\n"
-"  vec3 up = normalize(cross( worldNormal, side));\n"
-"  side = normalize(cross(up, worldNormal));\n"
-"  vec3 radiance = 0;\n"
-"  float  NoV = saturate(dot(worldNormal, viewVectorWorld));\n"
-"\n"
-"  for(int i = 0; i < SamplesCount; ++i)\n"
-"  {\n"
-"    // Generate a sample vector in some local space\n"
-//"    float sinT = 1.0;\n"
-"    vec3 H = GenerateGGXsampleVector(i, SamplesCount, roughness, side, up, worldNormal);\n"
-"    vec3 L = reflect(-viewVectorWorld, H);\n"
-"\n"
-"\n"
-"    float VoH = saturate(dot( H, viewVectorWorld ));\n"
-"    // Calculate fresnel\n"
-"    vec3 fresnel = Fresnel_Schlick(VoH , F0 );\n"
-"    // Geometry term\n"
-"    float geometry = G_Smith(worldNormal, L, viewVectorWorld, roughness);\n"
-"    // Calculate the Cook-Torrance denominator\n"
-"    float denominator = saturate(NoV * dot(H, worldNormal) + 0.05 );\n"
-"    kS += fresnel;\n"
-"    // Accumulate the radiance\n"
-"    vec3 approxSpecular = pow(textureLod(iSpecularEnvMap, L, roughness * lodCoeff).rgb, vec3(1.0/2.2))\n;"
-"    vec2 envBrdf = texture(iEnvBrdfLUT, vec2(roughness, NoV));\n"
-"    approxSpecular = approxSpecular* (envBrdf.x + envBrdf.y);\n"
-"    radiance += approxSpecular * geometry * fresnel * VoH / denominator;\n"
-"  }\n"
+  float dotUp = abs(dot(worldNormal, vec3(1,0,0)));
+  vec3 side = mix(vec3(1,0,0), vec3(0,1,0), step(0.98, dotUp));
+  vec3 up = normalize(cross( worldNormal, side));
+  side = normalize(cross(up, worldNormal));
+  vec3 radiance = vec3(0, 0, 0);
+  float  NoV = saturate(dot(worldNormal, viewVectorWorld));
+  for(uint i = 0u; i < SamplesCount; ++i)
+  {
+    // Generate a sample vector in some local space
+//    float sinT = 1.0;
+    vec3 H = GenerateGGXsampleVector(i, SamplesCount, roughness, side, up, worldNormal);
+    vec3 L = reflect(-viewVectorWorld, H);
 
-"  // Scale back for the samples count\n"
-"  kS = saturate( kS / (SamplesCount));\n"
-"  radiance = radiance / (SamplesCount);\n" 
 
-"\n"
-"   vec3 L = normalize(-iLightDir);\n"
-"\n"
-"    float VoH = saturate(dot( worldNormal, viewVectorWorld ));\n"
-"\n"
-"    // Calculate fresnel\n"
-"    vec3 fresnel = Fresnel_Schlick( VoH, F0 );\n"
-"    // Diffusion term\n"
-"    float diffusion = GGX_Distribution(worldNormal, L, roughness);\n"
-"    // Geometry term\n"
-"    float geometry = G_Smith(worldNormal, L, viewVectorWorld, 0.125 * (roughness + 1)* (roughness + 1));\n"
-"    float denominator = saturate(NoV + 0.05 );\n"
+    float VoH = saturate(dot( H, viewVectorWorld ));
+    // Calculate fresnel
+    vec3 fresnel = Fresnel_Schlick(VoH , F0 );
+    // Geometry term
+    float geometry = G_Smith(worldNormal, L, viewVectorWorld, roughness);
+    // Calculate the Cook-Torrance denominator
+    float denominator = saturate(NoV * dot(H, worldNormal) + 0.05 );
+    kS += fresnel;
+    // Accumulate the radiance
+    vec3 approxSpecular = pow(textureLod(iSpecularEnvMap, L, roughness * lodCoeff).rgb, vec3(1.0/2.2));
+    vec2 envBrdf = texture(iEnvBrdfLUT, vec2(roughness, NoV)).xy;
+    approxSpecular = approxSpecular* (envBrdf.x + envBrdf.y);
+    radiance += approxSpecular * geometry * fresnel * VoH / denominator;
+  }
 
-"    // Accumulate the radiance\n"
-"    vec3 addedLight = iLightColor * diffusion * geometry * fresnel * VoH / denominator;\n"
-"    if(max(addedLight.x , max(addedLight.y, addedLight.z)) > 0.0001)\n"
-"    {\n"
-"      radiance += addedLight;\n"
-"      kS += fresnel;\n"
-"    }\n"
-"    kS = saturate(kS);\n"
-"    return radiance ;\n"
-"}\n"
+  // Scale back for the samples count
+  kS = saturate( kS / (SamplesCount));
+  radiance = radiance / (SamplesCount); 
 
-"\n"
-"void main()\n"
-"{\n"
-"  vec3 diffuseSampleDir = normalize(worldNormalU);\n"
-"  vec3 diffuseColor = texture(iDiffuseTexture, texCoord);\n"
-"  float ior = 1.0 + iBRDFParameters.x;\n"
-"  float roughness = saturate(iBRDFParameters.y - 0.00001) + 0.00001;\n"
-"  float metallic = iBRDFParameters.z;\n"
-"  float diffuseCoeff = saturate(iBRDFParameters.w);\n"
-//"  float specularCoeff = 1.0 - diffuseCoeff;\n"
-"  \n"
-"  // Calculate colour at normal incidence\n"
-"  vec3 F0 = abs ((1.0 - ior) / (1.0 + ior));\n"
-"  F0 = F0 * F0;\n"
-"  F0 = lerp(F0, diffuseColor.rgb, metallic);\n"
-"  \n"
-"  // Calculate the specular contribution\n"
-"  vec3 ks = 0;\n"
-"  vec3 specular = GGX_Specular(roughness, F0, ks );\n"
-//"  specular = saturate(specular) - specular;\n"
-"  vec3 kd = diffuseCoeff * (1.0 - ks) * (1.0 - metallic);\n"
-"  ks = ks /** specularCoeff*/;\n"
-"  // Calculate the diffuse contribution\n"
-"  vec3 irradiance = pow(texture(iIrradianceMap, diffuseSampleDir ).xyz, vec3(1.0/2.2)) + saturate(dot(worldNormalU, -iLightDir)) * iLightColor;\n"
-"  vec3 diffuse = kd * diffuseColor * irradiance;\n"
-"  \n"
-"  gl_FragColor = vec4( pow(specular + diffuse, vec3(2.2)), 1);\n"
-"}\n"
+   vec3 L = normalize(-iLightDir);
+
+  float VoH = saturate(dot( worldNormal, viewVectorWorld ));
+
+  // Calculate fresnel
+  vec3 fresnel = Fresnel_Schlick( VoH, F0 );
+  // Diffusion term
+  float diffusion = GGX_Distribution(worldNormal, L, roughness);
+  // Geometry term
+  float geometry = G_Smith(worldNormal, L, viewVectorWorld, 0.125 * (roughness + 1)* (roughness + 1));
+  float denominator = saturate(NoV + 0.05 );
+
+  // Accumulate the radiance
+  vec3 addedLight = iLightColor * diffusion * geometry * fresnel * VoH / denominator;
+  if(max(addedLight.x , max(addedLight.y, addedLight.z)) > 0.0001)
+  {
+    radiance += addedLight;
+    kS += fresnel;
+  }
+  kS = saturate(kS);
+
+  return radiance ;
+}
+
+
+void main()
+{
+  vec3 diffuseSampleDir = normalize(worldNormalU);
+  vec3 diffuseColor = texture(iDiffuseTexture, texCoord).xyz;
+
+  float ior = 1.0 + iBRDFParameters.x;
+  float roughness = saturate(iBRDFParameters.y - 0.00001) + 0.00001;
+  float metallic = iBRDFParameters.z;
+  float diffuseCoeff = saturate(iBRDFParameters.w);
+//  float specularCoeff = 1.0 - diffuseCoeff;
+  
+  // Calculate colour at normal incidence
+  float F0 = abs ((1.0 - ior) / (1.0 + ior));
+  vec3 F0vec = vec3(F0, F0, F0);
+  F0vec = F0vec * F0vec;
+  F0vec = mix(F0vec, diffuseColor.rgb, metallic);
+  
+  // Calculate the specular contribution
+  vec3 one_v = vec3(1,1,1);
+  vec3 ks = vec3(0, 0, 0);
+  vec3 specular = GGX_Specular(roughness, F0vec, ks );
+  //vec3 specular = vec3(0, 0, 0);
+
+//  specular = saturate(specular) - specular;
+  vec3 kd = diffuseCoeff * (one_v - ks) * (1.0 - metallic);
+  ks = ks /** specularCoeff*/;
+  // Calculate the diffuse contribution
+  vec3 irradiance = pow(texture(iIrradianceMap, diffuseSampleDir ).xyz, vec3(1.0/2.2)) + saturate(dot(worldNormalU, -iLightDir)) * iLightColor;
+  vec3 diffuse = kd * diffuseColor * irradiance;
+  
+  fragColor = vec4( pow(specular + diffuse, vec3(2.2)), 1);
+})"
 ;
 

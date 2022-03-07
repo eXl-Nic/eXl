@@ -10,41 +10,49 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <math/math.hpp>
+#include <math/matrix4.hpp>
+#include <math/vector4.hpp>
 #include <ogl/oglexp.hpp>
-#include <ogl/oglbasealgo.hpp>
+#include <ogl/renderer/oglsemanticmanager.hpp>
 
 namespace eXl
 {
   class OGLProgram;
   class OGLCompiledProgram;
 
-  struct EXL_OGL_API SpriteColor
+  struct EXL_OGL_API CameraMatrix
   {
     EXL_REFLECT;
 
-    Vec4 tint;
-		Vec2 tcOffset = Zero<Vec2>();
-		Vec2 tcScaling = One<Vec2>();
-    Vec2 texSize = One<Vec2>();
-    Vec2 imageSize;
-    float alphaMult = 1.0;
+    Matrix4f viewMatrix;
+    Matrix4f viewInverseMatrix;
+    Matrix4f projMatrix;
   };
 
-  class EXL_OGL_API OGLSpriteAlgo
+  class EXL_OGL_API OGLBaseAlgo
   {
   public:
 
     static void Init(OGLSemanticManager& iManager);
 
-    static void ShutdownAPI();
+    static AttributeName GetPosAttrib();
+    static AttributeName GetTexCoordAttrib();
 
-    static OGLCompiledProgram const* CreateSpriteProgram(OGLSemanticManager& iSemantics, bool iFiltered = true);
-
-    static OGLCompiledProgram const* CreateFontProgram(OGLSemanticManager& iSemantics);
-
-    static UniformName GetSpriteColorUniform();
-
-    static TextureName GetUnfilteredTexture();
+    static UniformName GetWorldMatUniform();
+    static UniformName GetCameraUniform();
+    static TextureName GetDiffuseTexture();
   };
+
+
+  class EXL_OGL_API OGLLineAlgo
+  {
+  public:
+
+    static void Init(OGLSemanticManager& iManager);
+
+    static OGLCompiledProgram const* CreateProgram(OGLSemanticManager& iSemantics);
+
+    static UniformName GetColor();
+  };
+
 }

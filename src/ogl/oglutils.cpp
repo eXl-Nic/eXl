@@ -13,6 +13,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 #include <vector>
 
+void __stdcall glDebugOutput(GLenum source,
+  GLenum type,
+  GLuint id,
+  GLenum severity,
+  GLsizei length,
+  const GLchar* message,
+  void* userParam)
+{
+  // ignore non-significant error/warning codes
+  if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+  LOG_ERROR << message;
+}
+
+
 namespace eXl
 {
 
@@ -28,6 +43,20 @@ namespace eXl
 #endif
 
       //LOG_INFO << "GL version : " << (char*)glGetString(GL_VERSION) << "\n";
+
+      int flags; 
+      glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+      if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
+      {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(&glDebugOutput, nullptr);
+        glDebugMessageControl(GL_DEBUG_SOURCE_API,
+          GL_DEBUG_TYPE_ERROR,
+          GL_DEBUG_SEVERITY_HIGH,
+          0, nullptr, GL_TRUE);
+      }
+
       s_Initialized = true;
     }
   }

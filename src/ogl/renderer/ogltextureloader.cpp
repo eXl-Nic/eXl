@@ -503,18 +503,18 @@ namespace eXl
 //          break;
 //        }
 //#else
-        switch(imgInternalFormat)
+        switch(imgDataComponents)
         {
-        case OGLInternalTextureFormat::RED:
+        case OGLTextureFormat::RED:
           comps = Image::R;
           break;
-        case OGLInternalTextureFormat::RG:
+        case OGLTextureFormat::RG:
           comps = Image::RG;
           break;
-        case OGLInternalTextureFormat::RGB:
+        case OGLTextureFormat::RGB:
           comps = Image::RGB;
           break;
-        case OGLInternalTextureFormat::RGBA:
+        case OGLTextureFormat::RGBA:
           comps = Image::RGBA;
           break;
         }

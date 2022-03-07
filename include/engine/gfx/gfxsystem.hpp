@@ -30,7 +30,7 @@ namespace eXl
 
   using GfxRenderNodeHandle = ObjectTableHandle_Base;
 
-  class GfxRenderNode : public RttiObject
+  class EXL_ENGINE_API GfxRenderNode : public RttiObject
   {
     DECLARE_RTTI(GfxRenderNode, RttiObject);
   public:

@@ -9,8 +9,10 @@ SET(SOURCES
 ${EXL_OGL_HEADER_FILES}
 
 oglspritealgo.cpp
+oglmeshalgo.cpp
 oglutils.cpp
 oglplugin.cpp
+ogltexturecache.cpp
 
 renderer/oglrendercommand.cpp
 renderer/oglcompiledprogram.cpp
@@ -45,7 +47,11 @@ if(${WIN32})
 
 endif()
 
-set (REFLECTED_HEADERS ${INCLUDE_DIR}/oglspritealgo.hpp)
+set (REFLECTED_HEADERS
+${INCLUDE_DIR}/oglbasealgo.hpp
+${INCLUDE_DIR}/oglspritealgo.hpp
+${INCLUDE_DIR}/oglmeshalgo.hpp
+)
 
 add_definitions(${GLEW_DEFINES})
 

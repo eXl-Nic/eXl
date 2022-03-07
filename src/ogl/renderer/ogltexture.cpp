@@ -165,6 +165,57 @@ namespace eXl
     return GetGLTextureFormat(GetElementFormat());
   }
 
+
+  void OGLTexture::SetTextureNumLOD(uint32_t iNum)
+  {
+#ifdef EXL_WITH_OGL
+    GLenum textureTarget = GetGLTextureType(m_TextureType);
+
+    GLenum internalFormat = GetGLInternalTextureFormat(m_InternalFormat);
+
+    glBindTexture(textureTarget, m_TexId);
+    glTexParameteri(textureTarget,GL_TEXTURE_MAX_LEVEL, iNum);
+    for (uint32_t level = 1; level <iNum; ++level)
+    {
+      if (m_TexId != 0)
+      {
+        GLenum textureTarget = GetGLTextureType(m_TextureType);
+
+#ifndef __ANDROID__
+        if (m_TextureType == OGLTextureType::TEXTURE_1D)
+        {
+        }
+#endif
+        if (m_TextureType == OGLTextureType::TEXTURE_2D
+#ifndef __ANDROID__
+          || m_TextureType == OGLTextureType::TEXTURE_1D_ARRAY
+#endif
+          )
+        {
+
+        }
+
+        if (m_TextureType == OGLTextureType::TEXTURE_CUBE_MAP)
+        {
+          for (uint32_t slice = 0; slice < 6; ++slice)
+          {
+            GLenum textureFaceUpdate = IsCubeMap() ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + slice : GL_TEXTURE_2D;
+            glTexImage2D(textureFaceUpdate, level, internalFormat, m_Size.X() >> level, m_Size.Y() >> level, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+          }
+        }
+
+        if (m_TextureType == OGLTextureType::TEXTURE_2D_ARRAY
+          || m_TextureType == OGLTextureType::TEXTURE_3D)
+        {
+
+        }
+
+      }
+
+    }
+#endif
+  }
+
   //void OGLTexture::OnNullRefC() const
   //{
   //  eXl_DELETE this;

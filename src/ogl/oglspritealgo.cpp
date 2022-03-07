@@ -20,19 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "oglhq4x.inl"
 #include "ogllinePS.inl"
 
-#include "oglmeshVS.inl"
-#include "oglmeshPS.inl"
-#include "oglmeshNormalPS.inl"
-
-#include "oglskyboxVS.inl"
-#include "oglskyboxPS.inl"
-
-#include "oglscreenquadVS.inl"
-#include "oglirradiancePS.inl"
-#include "oglspecularradiancePS.inl"
-
 #include <ogl/renderer/oglinclude.hpp>
-
 
 #include <math/math.hpp>
 #include <core/type/dynobject.hpp>

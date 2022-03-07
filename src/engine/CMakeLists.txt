@@ -243,6 +243,14 @@ endif()
 add_executable(eXl_Player main_player.cpp)
 SETUP_EXL_TARGET(eXl_Player DEPENDENCIES eXl_Main)
 
+add_executable(eXl_Viewer 
+viewer3d/main.cpp
+viewer3d/gfxutils.cpp
+viewer3d/gfxutils.hpp)
+SETUP_EXL_TARGET(eXl_Viewer DEPENDENCIES eXl_Main)
+target_link_libraries(eXl_Viewer PRIVATE assimp)
+target_include_directories(eXl_Viewer PRIVATE ${ASSIMP_ROOT}/include)
+
 if(${EXL_BUILD_TESTS})
 add_subdirectory(test)
 endif()

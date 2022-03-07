@@ -29,6 +29,7 @@ namespace eXl
     {
       m_CurrentDataSlot.resize(iSemantics.GetNumUniforms(), -1);
       m_CurrentAttribSlot.resize(iSemantics.GetNumAttribs(), -1);
+      m_ProgAttribs.resize(iSemantics.GetNumAttribs(), -1);
       m_CurrentTextureSlot.resize(iSemantics.GetNumTextures(), -1);
       m_CurrentUBOSlot.resize(iSemantics.GetNumUniforms(), -1);
 
@@ -148,11 +149,13 @@ namespace eXl
 
       std::fill(m_CurrentAttribSlot.begin(), m_CurrentAttribSlot.end(), -1);
       std::fill(m_CurrentDataSlot.begin(), m_CurrentDataSlot.end(), -1);
+      std::fill(m_ProgAttribs.begin(), m_ProgAttribs.end(), -1);
       std::fill(m_CurrentUBOSlot.begin(), m_CurrentUBOSlot.end(), -1);
       std::fill(m_CurrentTextureSlot.begin(), m_CurrentTextureSlot.end(), -1);
 
       uint32_t const* slotPtr = iProgram->GetAttribSlots();
       uint32_t enabledAttribs = 0;
+      std::copy(slotPtr, slotPtr + iProgram->GetMaxAttrib(), m_ProgAttribs.begin());
       for (uint32_t i = 0; i < iProgram->GetMaxAttrib(); ++i)
       {
         m_CurrentAttribSlot[slotPtr[i]] = i;
@@ -320,9 +323,11 @@ namespace eXl
       for(BitIter attribs(m_AttribFlags); attribs; ++attribs)
       {
         uint32_t attrib = *attribs;
-        int slot = m_CurrentAttribSlot[attrib];
+        
+        int slot = m_ProgAttribs[attrib];
         eXl_ASSERT(slot >= 0);
-        BufferBinding& binding = m_BufferBindings[attrib];
+        
+        BufferBinding& binding = m_BufferBindings[slot];
         if(binding.buffer != nullptr)
         {
           if((m_SetAttribs & 1<<attrib) == 0)
@@ -391,6 +396,7 @@ namespace eXl
     };
 
     Vector<int> m_CurrentAttribSlot;
+    Vector<uint32_t> m_ProgAttribs;
     Vector<int> m_CurrentDataSlot;
     Vector<int> m_CurrentUBOSlot;
     Vector<int> m_CurrentTextureSlot;
