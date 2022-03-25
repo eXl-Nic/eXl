@@ -5,6 +5,7 @@
 namespace eXl
 {
   class OGLSemanticManager;
+  class OGLCompiledProgram;
   struct OGLVAssembly;
   class OGLTexture;
 
@@ -20,9 +21,19 @@ namespace eXl
     Matrix4f& oProj, Matrix4f& oView, 
     float fov = Mathd::PI / 4.0, float displayedSize = 100.0);
 
-  IntrusivePtr<OGLTexture> MakeIrradianceCubemap(OGLSemanticManager& iManager, OGLTexture* iCubeMap);
+  class IBLCompute
+  {
+  public:
+    IBLCompute(OGLSemanticManager& iManager);
 
-  void MakeSpecularMipmap(OGLSemanticManager& iManager, OGLTexture* iCubeMap);
+    IntrusivePtr<OGLTexture> MakeIrradianceCubemap(OGLSemanticManager& iManager, OGLTexture* iCubeMap);
+    void MakeSpecularMipmap(OGLSemanticManager& iManager, OGLTexture* iCubeMap);
+    IntrusivePtr<OGLTexture> MakeEnvBrdfMap(OGLSemanticManager& iManager, Vector2i iSize);
 
-  IntrusivePtr<OGLTexture> MakeEnvBrdfMap(OGLSemanticManager& iManager, Vector2i iSize);
+  protected:
+    OGLCompiledProgram const* m_IrradianceMapProgram;
+    OGLCompiledProgram const* m_SpecularMapProgram;
+    OGLCompiledProgram const* m_EnvBRDFProgram;
+
+  };
 }

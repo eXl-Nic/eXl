@@ -85,6 +85,8 @@ namespace eXl
       OGLSkyAlgo::Init(iSys.GetSemanticManager());
       OGLIrradianceMapAlgo::Init(iSys.GetSemanticManager());
 
+      m_IBLCompute.emplace(iSys.GetSemanticManager());
+
       Vector<Image*> skyBoxPlanes;
       skyBoxPlanes.push_back(ImageStreamer::Load("D:\\cubeMap\\posx.jpg"));
       skyBoxPlanes.push_back(ImageStreamer::Load("D:\\cubeMap\\negx.jpg"));
@@ -95,14 +97,13 @@ namespace eXl
 
 
       m_SkyBox = OGLTextureLoader::CreateCubeMap(skyBoxPlanes.data(), true);
-      m_EnvBrdfLUT = MakeEnvBrdfMap(iSys.GetSemanticManager(), Vector2i::ONE * 256);
-      MakeSpecularMipmap(iSys.GetSemanticManager(), m_SkyBox.get());
+      m_EnvBrdfLUT = m_IBLCompute->MakeEnvBrdfMap(iSys.GetSemanticManager(), Vector2i::ONE * 256);
 
       FILE* tstIrr = fopen("D:\\cubeMap\\Irr_0.png", "r");
 
       if (tstIrr == NULL)
       {
-        m_IrradianceMap = MakeIrradianceCubemap(iSys.GetSemanticManager(), m_SkyBox.get());
+        m_IrradianceMap = m_IBLCompute->MakeIrradianceCubemap(iSys.GetSemanticManager(), m_SkyBox.get());
       }
       else
       {
@@ -116,6 +117,8 @@ namespace eXl
         }
         m_IrradianceMap = OGLTextureLoader::CreateCubeMap(irrBoxPlanes.data(), true);
       }
+
+      m_IBLCompute->MakeSpecularMipmap(iSys.GetSemanticManager(), m_SkyBox.get());
 
       MakeBox(m_SkyBoxVtx, Vector3f(50.0, 50.0, 50.0));
       m_NumIdxSphere = MakeSphere(m_SphereAss, 10.0);
@@ -135,7 +138,7 @@ namespace eXl
 
       float ior = 0.0;
       float roughness = 0.1;
-      bool metallic = false;
+      bool metallic = true;
       bool light = true;
 
       m_RndData.matInfo.m_DiffuseColor = Vector3f(212.0 / 255.0, 175.0 / 255.0, 55.0 / 255.0);
@@ -160,9 +163,9 @@ namespace eXl
 
       Vector3f startPos(-100, -100);
 
-      for (uint32_t i = 0; i < 100; ++i)
+      for (uint32_t i = 0; i < 10; ++i)
       {
-        for (uint32_t j = 0; j < 100; ++j)
+        for (uint32_t j = 0; j < 10; ++j)
         {
           m_Trans.push_back(Matrix4f::FromPosition(Vector3f(i, j) * 2 + startPos));
         }
@@ -196,11 +199,12 @@ namespace eXl
       OGLShaderData skyCam;
       OGLShaderData matSph;
       OGLShaderData envData;
-      
     };
 
     void Push(OGLDisplayList& iList, float iDelta) override
     {
+      //m_IBLCompute->MakeSpecularMipmap(m_Sys->GetSemanticManager(), m_SkyBox.get());
+
       bool displayNormal = false;
 
       Matrix4f neutralView = m_Sys->GetCurrentCamera().viewMatrix;
@@ -249,6 +253,8 @@ namespace eXl
       iList.PopData();
       iList.PopData();
     }
+
+    Optional<IBLCompute> m_IBLCompute;
 
     RenderData m_RndData;
 

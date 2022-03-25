@@ -36,6 +36,23 @@ namespace eXl
     //}
   }
 
+  void OGLShaderData::UpdateDirty(OGLSemanticManager const& iManager) const
+  {
+    for (auto& data : m_Data)
+    {
+      data.m_Slot = iManager.GetSlotForName(data.m_Name);
+    }
+    for (auto& data : m_UBOData)
+    {
+      data.m_Slot = iManager.GetSlotForName(data.m_Name);
+    }
+    for (auto& data : m_TexData)
+    {
+      data.m_Slot = iManager.GetSlotForName(data.m_Name);
+    }
+    m_Dirty = false;
+  }
+
   void OGLShaderData::AddData(UniformName iName, void const* iData)
   {
     for(uint32_t i = 0; i<m_Data.size(); ++i)
@@ -53,6 +70,7 @@ namespace eXl
     m_Data.back().m_Name = iName;
     m_Data.back().m_Data = iData;
 
+    m_Dirty = true;
     //iDataType->Copy(iData,m_Data.back().m_Data);
   }
 
@@ -61,6 +79,8 @@ namespace eXl
     m_UBOData.push_back(UBOData());
     m_UBOData.back().m_Name = iName;
     m_UBOData.back().m_DataBuffer = iBuffer;
+
+    m_Dirty = true;
   }
 
   void OGLShaderData::AddTexture(TextureName iName, OGLTexture const* iTexture)
@@ -76,5 +96,7 @@ namespace eXl
     m_TexData.push_back(TextureData());
     m_TexData.back().m_Name = iName;
     m_TexData.back().m_Texture = iTexture;
+
+    m_Dirty = true;
   }
 }

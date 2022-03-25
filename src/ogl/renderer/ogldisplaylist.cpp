@@ -259,7 +259,11 @@ namespace eXl
       uint16_t curState = m_States.GetStateId();
       CommandKey newKey;
       newKey.m_Offset = m_Commands.size();
-      newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_DataSetStore[m_PendingDraws[0].data].m_RenderHash);
+      newKey.m_UserKey = m_PendingDraws[0].key;
+      newKey.m_StateKey = curState;
+      newKey.m_ProgramKey = ((ptrdiff_t)m_CurProgram) >> 4;
+      newKey.m_AssemblyKey = ((ptrdiff_t)m_CurAssembly) >> 4;
+      newKey.m_MatKey = m_DataSetStore[m_PendingDraws[0].data].m_RenderHash;
 
       if (m_PendingDraws[0].instances == 0)
       {
@@ -292,8 +296,13 @@ namespace eXl
 
       CommandKey newKey;
       newKey.m_Offset = m_Commands.size();
-      newKey.m_Key = (uint64_t(m_PendingDraws[0].key) << 48) | uint64_t(curState) << 32 | (m_DataSetStore[m_PendingDraws[0].data].m_RenderHash);
-      
+      newKey.m_Offset = m_Commands.size();
+      newKey.m_UserKey = m_PendingDraws[0].key;
+      newKey.m_StateKey = curState;
+      newKey.m_ProgramKey = ((ptrdiff_t)m_CurProgram) >> 4;
+      newKey.m_AssemblyKey = ((ptrdiff_t)m_CurAssembly) >> 4;
+      newKey.m_MatKey = m_DataSetStore[m_PendingDraws[0].data].m_RenderHash;
+
       if (m_PendingDraws[0].instances == 0)
       {
         m_Commands.resize(m_Commands.size() + sizeof(OGLDraw) + sizeof(uint32_t) + m_PendingDraws.size() * sizeof(OGLGeometry));
@@ -344,7 +353,8 @@ namespace eXl
     uint8_t curState = m_States.GetStateId();
     CommandKey newKey;
     newKey.m_Offset = m_Commands.size();
-    newKey.m_Key = iKey;
+    memset(newKey.m_KeyBytes, 0, sizeof(newKey.m_KeyBytes));
+    newKey.m_UserKey = iKey;
 
     m_Commands.resize(m_Commands.size() + sizeof(OGLClear));
     OGLClear* clearCmd = (OGLClear*)((uint8_t*)&m_Commands[0] + newKey.m_Offset);
@@ -462,13 +472,14 @@ namespace eXl
     m_Timestamp++;
     while(iSet != nullptr)
     {
+      iSet->m_AdditionalData->CheckDirty(m_Semantics);
       uint32_t numData = iSet->m_AdditionalData->GetNumData();
       if(numData > 0)
       {
         OGLShaderData::ShaderData const* dataPtr = iSet->m_AdditionalData->GetDataDescPtr();
         for(uint32_t i = 0; i<numData; ++i)
         {
-          uint32_t slot = m_Semantics.GetSlotForName(dataPtr->m_Name);
+          uint32_t slot = dataPtr->m_Slot;
           if(m_CurrentSetupData[slot].dataSet != iSet && m_CurrentSetupData[slot].timestamp < m_Timestamp)
           {
             iCtx->SetUniformData(slot, dataPtr->m_Data);
@@ -485,7 +496,7 @@ namespace eXl
         OGLShaderData::UBOData const* dataPtr = iSet->m_AdditionalData->GetUBODescPtr();
         for (uint32_t i = 0; i < numUBO; ++i)
         {
-          uint32_t slot = m_Semantics.GetSlotForName(dataPtr->m_Name);
+          uint32_t slot = dataPtr->m_Slot;
           if (m_CurrentSetupUBO[slot].dataSet != iSet && m_CurrentSetupUBO[slot].timestamp < m_Timestamp)
           {
             iCtx->SetUniformBuffer(slot, dataPtr->m_DataBuffer.get());
@@ -502,7 +513,7 @@ namespace eXl
         OGLShaderData::TextureData const* texPtr = iSet->m_AdditionalData->GetTexturePtr();
         for(uint32_t i = 0; i<numTex; ++i)
         {
-          uint32_t slot = m_Semantics.GetSlotForName(texPtr->m_Name);
+          uint32_t slot = texPtr->m_Slot;
           if(m_CurrentSetupTexture[slot].dataSet != iSet && m_CurrentSetupTexture[slot].timestamp < m_Timestamp)
           {
             iCtx->SetTexture(slot,texPtr->m_Texture.get());
@@ -536,9 +547,9 @@ namespace eXl
     m_CurrentSetupTexture.clear();
     m_CurrentSetupTexture.resize(m_Semantics.GetNumTextures(),DataSetup());
 
-    m_CurProgram = NULL;
-    m_CurAssembly = NULL;
-    m_CurDataSet = 0;
+    m_CurProgram = nullptr;
+    m_CurAssembly = nullptr;
+    m_CurDataSet = -1;
 
     m_Timestamp = 0;
 

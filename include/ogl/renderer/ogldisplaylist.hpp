@@ -21,6 +21,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "ogltypes.hpp"
 #include "oglstatecollection.hpp"
 
+#ifndef __ANDROID__
+#include <emmintrin.h>
+#endif
+
 namespace eXl
 {
   class OGLCompiledProgram;
@@ -116,10 +120,41 @@ namespace eXl
     {
       inline bool operator<(CommandKey const& iOther)const
       {
-        return m_Key < iOther.m_Key;
+#if defined(__ANDROID__)
+        return memcmp(m_KeyBytes, iOther.m_KeyBytes, sizeof(m_KeyBytes)) < 0;
+#else
+        const __m128i signBits = _mm_set1_epi8((char)0x80);
+        __m128i a = _mm_xor_si128(m_SSEVal, signBits);
+        __m128i b = _mm_xor_si128(iOther.m_SSEVal, signBits);
+
+        const int less = _mm_movemask_epi8(_mm_cmplt_epi8(a, b));
+        const int greater = _mm_movemask_epi8(_mm_cmpgt_epi8(a, b));
+        //const int less = _mm_movemask_epi8(_mm_cmplt_epi8(m_SSEVal, iOther.m_SSEVal));
+        //const int greater = _mm_movemask_epi8(_mm_cmpgt_epi8(m_SSEVal, iOther.m_SSEVal));
+        return less > greater;
+#endif
       }
       //High level + Low level
-      uint64_t m_Key;
+      union
+      {
+        struct
+        {
+          uint64_t m_KeyH;
+          uint64_t m_KeyL;
+        };
+        char m_KeyBytes[16];
+        struct
+        {
+          uint16_t m_UserKey;
+          uint16_t m_StateKey;
+          uint32_t m_ProgramKey;
+          uint32_t m_AssemblyKey;
+          uint32_t m_MatKey;
+        };
+#ifndef __ANDROID__
+        __m128i m_SSEVal;
+#endif
+      };
       size_t   m_Offset;
     };
     std::vector<CommandKey> m_Keys;

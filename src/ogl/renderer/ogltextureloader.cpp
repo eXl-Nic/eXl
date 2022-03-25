@@ -182,7 +182,7 @@ namespace eXl
     {
     case Image::R:
     case Image::RG:
-      //Pas envie de le gérer pour le moment.
+      //Pas envie de le gï¿½rer pour le moment.
       LOG_ERROR << "Unsupported format for image"<<"\n";
       break;
       //              
@@ -538,13 +538,12 @@ namespace eXl
 
         oImage = eXl_NEW Image(NULL, iTexture->GetSize(), comps, fmt, 4);
       }
-      uint32_t align = oImage->GetRowStride() - oImage->GetSize().x;
-
-      if(align > 4)
+      
+      if(oImage->GetRowStride() % 8 == 0)
         glPixelStorei(GL_PACK_ALIGNMENT,8);
-      else if(align > 2)
+      else if(oImage->GetRowStride() % 4 == 0)
         glPixelStorei(GL_PACK_ALIGNMENT,4);
-      else if(align > 1)
+      else if(oImage->GetRowStride() % 2 == 0)
         glPixelStorei(GL_PACK_ALIGNMENT,2);
       else
         glPixelStorei(GL_PACK_ALIGNMENT,1);

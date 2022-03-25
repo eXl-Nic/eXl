@@ -20,9 +20,16 @@
 namespace eXl
 {
 
-  IntrusivePtr<OGLTexture> MakeIrradianceCubemap(OGLSemanticManager& iManager, OGLTexture* iCubeMap)
+  IBLCompute::IBLCompute(OGLSemanticManager& iManager)
+    : m_IrradianceMapProgram(OGLIrradianceMapAlgo::CreateIrradianceMapProgram(iManager))
+    , m_SpecularMapProgram(OGLIrradianceMapAlgo::CreateSpecularMapProgram(iManager))
+    , m_EnvBRDFProgram(OGLIrradianceMapAlgo::CreateEnvBrdfProgram(iManager))
   {
-    OGLCompiledProgram const* irrMapProg = OGLIrradianceMapAlgo::CreateIrradianceMapProgram(iManager);
+
+  }
+
+  IntrusivePtr<OGLTexture> IBLCompute::MakeIrradianceCubemap(OGLSemanticManager& iManager, OGLTexture* iCubeMap)
+  {
     Image::Size size = iCubeMap->GetSize();
     unsigned int const sizePix = 3 * size.X() * size.Y();
     OGLTextureLoader texLoader;
@@ -78,7 +85,7 @@ namespace eXl
 
         tempList.PushData(&skyData);
         tempList.SetVAssembly(&emptyAss);
-        tempList.SetProgram(irrMapProg);
+        tempList.SetProgram(m_IrradianceMapProgram);
         tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0, 0);
         tempList.PopData();
 
@@ -122,9 +129,8 @@ namespace eXl
     return IntrusivePtr<OGLTexture>(OGLTextureLoader::CreateCubeMap(images.data(), true));
   }
 
-  void MakeSpecularMipmap(OGLSemanticManager& iManager, OGLTexture* iCubeMap)
+  void IBLCompute::MakeSpecularMipmap(OGLSemanticManager& iManager, OGLTexture* iCubeMap)
   {
-    OGLCompiledProgram const* specMapProg = OGLIrradianceMapAlgo::CreateSpecularMapProgram(iManager);
     Image::Size size = iCubeMap->GetSize();
 
     unsigned int numLod = log2(Mathi::Min(size.X(), size.Y())) + 1;
@@ -178,7 +184,7 @@ namespace eXl
           OGLDisplayList tempList(iManager);
 
           tempList.SetDefaultViewport(Vector2i::ZERO, Vector2i(size.X(), size.Y()));
-          tempList.SetDefaultDepth(true,true);
+          tempList.SetDefaultDepth(false, false);
           tempList.SetDefaultScissor(Vector2i(0,0),Vector2i(-1,-1));
           tempList.SetDefaultBlend(false, OGLBlend::ONE, OGLBlend::ZERO);
 
@@ -192,7 +198,7 @@ namespace eXl
 
           tempList.PushData(&skyData);
           tempList.SetVAssembly(&emptyAss);
-          tempList.SetProgram(specMapProg);
+          tempList.SetProgram(m_SpecularMapProgram);
           tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0, 0);
           tempList.PopData();
 
@@ -242,9 +248,8 @@ namespace eXl
     //return texLoader.CreateCubeMap(images.data(), true);
   }
 
-  IntrusivePtr<OGLTexture> MakeEnvBrdfMap(OGLSemanticManager& iManager, Vector2i iSize)
+  IntrusivePtr<OGLTexture> IBLCompute::MakeEnvBrdfMap(OGLSemanticManager& iManager, Vector2i iSize)
   {
-    OGLCompiledProgram const* envBrdfProg = OGLIrradianceMapAlgo::CreateEnvBrdfProgram(iManager);
     unsigned int const sizePix = 3 * iSize.X() * iSize.Y();
 
     Image::Size size(iSize.X(), iSize.Y());
@@ -279,7 +284,7 @@ namespace eXl
 
     tempList.PushData(&skyData);
     tempList.SetVAssembly(&emptyAss);
-    tempList.SetProgram(envBrdfProg);
+    tempList.SetProgram(m_EnvBRDFProgram);
     tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0, 0);
     tempList.PopData();
 

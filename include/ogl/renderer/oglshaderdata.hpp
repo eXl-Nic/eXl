@@ -29,12 +29,14 @@ namespace eXl
     {
       void const*  m_Data;
       UniformName m_Name;
+      mutable uint32_t m_Slot;
     };
 
     struct UBOData
     {
       IntrusivePtr<OGLBuffer const> m_DataBuffer;
       UniformName m_Name;
+      mutable uint32_t m_Slot;
     };
 
     class TextureData
@@ -43,6 +45,7 @@ namespace eXl
       ~TextureData();
       IntrusivePtr<OGLTexture const> m_Texture;
       TextureName m_Name;
+      mutable uint32_t m_Slot;
     };
 
     OGLShaderData();
@@ -52,7 +55,13 @@ namespace eXl
 
     void AddData(UniformName iName, void const* iData);
 
-    void CheckDirty();
+    void CheckDirty(OGLSemanticManager const& iManager) const
+    {
+      if (m_Dirty)
+      {
+        UpdateDirty(iManager);
+      }
+    }
 
     void SetDataBuffer(UniformName iName, OGLBuffer const* iBuffer);
     void SetDataBuffer(UniformName iName, IntrusivePtr<OGLBuffer const> const& iBuffer) { SetDataBuffer(iName, iBuffer.get()); }
@@ -110,9 +119,11 @@ namespace eXl
     TextureData const* GetTexturePtr() const{return &m_TexData[0];}
 
   protected:
+    void UpdateDirty(OGLSemanticManager const& iManager) const;
+
+    mutable bool m_Dirty = false;
     SmallVector<ShaderData, 2>  m_Data;
     SmallVector<UBOData, 2>  m_UBOData;
     SmallVector<TextureData, 2> m_TexData;
-    bool m_Dirty = false;
   };
 }
