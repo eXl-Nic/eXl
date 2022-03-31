@@ -32,6 +32,9 @@ namespace luabind {
 
 	namespace detail {
 
+    template<typename... Args>
+    struct EnsureRegistered;
+
 		template< typename T >
 		struct is_const_reference
 			: public std::conditional< std::is_reference<T>::value && std::is_const<typename std::remove_reference<T>::type>::value, std::true_type, std::false_type >::type

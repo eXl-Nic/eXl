@@ -10,6 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/type/tagtype.hpp>
 
+#ifdef EXL_LUA
+#include <luabind/class.hpp>
+#endif
+
 namespace eXl
 {
   IMPLEMENT_RTTI(TagType);
@@ -17,6 +21,17 @@ namespace eXl
   TagType::TagType(TypeName iName, size_t iTypeId, size_t iSize, unsigned int iFlags)
     : Type(iName,iTypeId,iSize,iFlags)
   {
+  }
+
+  void TagType::RegisterLua(lua_State* iState) const
+  {
+    luabind::detail::class_base newClass(GetName().c_str());
+    newClass.init(this, luabind::detail::allocate_class_id(this), nullptr, luabind::detail::allocate_class_id(nullptr));
+
+    luabind::module(iState, "eXl")
+      [
+        newClass
+      ];
   }
 
   //CoreType::~CoreType()

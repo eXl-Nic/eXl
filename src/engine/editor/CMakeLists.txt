@@ -156,6 +156,8 @@ set(HEADERS_TO_PARSE
 SETUP_EXL_TARGET(eXl_Editor DEPENDENCIES eXl_Engine HEADERS_TO_PARSE ${HEADERS_TO_PARSE} LIB_SUFFIX "EDITOR")
 
 target_link_libraries(eXl_Editor PRIVATE ${QT_LIBRARIES})
+
+target_include_directories(eXl_Editor PRIVATE ${LAC_INCLUDE_DIRS})
 target_link_libraries(eXl_Editor PRIVATE LuaAutoComplete::core LuaAutoComplete::editor)
 add_custom_command(
   TARGET eXl_Editor POST_BUILD

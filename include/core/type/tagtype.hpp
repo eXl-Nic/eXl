@@ -24,6 +24,9 @@ namespace eXl
          size_t iTypeId,
          size_t iSize,
          unsigned int iFlags);
+
+    void RegisterLua(lua_State* iState) const override;
+
   };
 
   template <class T>

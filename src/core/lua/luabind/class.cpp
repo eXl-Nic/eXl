@@ -34,6 +34,11 @@
 #include <cstring>
 #include <iostream>
 
+namespace eXl
+{
+  EXL_CORE_API void OnTheFlyRegisterType(lua_State* L, Type const* iType);
+}
+
 namespace luabind {
 	namespace detail {
 
@@ -297,6 +302,12 @@ namespace luabind {
 
 			class_registry* r = class_registry::get_registry(L);
 			class_rep* crep = r->find_class(i);
+
+      //if (crep == nullptr)
+      //{
+      //  eXl::OnTheFlyRegisterType(L, i.get_id());
+      //  crep = r->find_class(i);
+      //}
 
 			if(crep == 0)
 			{

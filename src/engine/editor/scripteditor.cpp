@@ -95,19 +95,23 @@ namespace eXl
                 bool isMethod = false;
                 auto parentPos = signature.find('(');
                 auto firstComaPos = signature.find(',');
+                auto lastParentPos = signature.find(')');
                 if (parentPos != std::string::npos
-                  && firstComaPos != std::string::npos
+                  && (firstComaPos != std::string::npos || lastParentPos != std::string::npos)
                   && parentPos < firstComaPos)
                 {
-                  while (std::isspace(signature[parentPos + 1]) != 0 && parentPos < firstComaPos)
+                  ++parentPos;
+                  auto firstParamEnd = firstComaPos != std::string::npos ? firstComaPos : lastParentPos;
+
+                  while (std::isspace(signature[parentPos + 1]) != 0 && parentPos < firstParamEnd)
                   {
                     ++parentPos;
                   }
-                  while (std::isspace(signature[firstComaPos - 1]) != 0 && parentPos < firstComaPos)
+                  while (std::isspace(signature[firstParamEnd - 1]) != 0 && parentPos < firstParamEnd)
                   {
-                    --firstComaPos;
+                    --firstParamEnd;
                   }
-                  if (signature.substr(parentPos, firstComaPos - parentPos) == newType.name)
+                  if (signature.substr(parentPos, firstParamEnd - parentPos).find(newType.name) == 0)
                   {
                     isMethod = true;
                   }
@@ -118,7 +122,6 @@ namespace eXl
                 }
                 else
                 {
-
                   signature.replace(namePos, memberName.size(), "function");
                 }
               }
@@ -127,7 +130,8 @@ namespace eXl
           }
         }
 
-        eXlModule.members.insert(std::make_pair(newType.name, std::move(newType)));
+        //eXlModule.members.insert(std::make_pair(newType.name, std::move(newType)));
+        ud.addType(newType);
       }
 
       eXlModule.members.insert(std::make_pair("GetWorld", "World function()"));
