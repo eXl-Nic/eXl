@@ -51,7 +51,7 @@ namespace eXl
       LinearPositionAnimation newAnim;
       uint32_t numPos = 16;
       float durationIncrement = 0.6 / numPos;
-      float angleIncrement = Mathf::PI * 0.5 / numPos;
+      float angleIncrement = Mathf::Pi() * 0.5 / numPos;
       for (uint32_t i = 0; i < 16; ++i)
       {
         newAnim.Add(Vector3f(Mathf::Cos(i * angleIncrement), 0.0, Mathf::Sin(i * angleIncrement)) * 2.0, durationIncrement * i);

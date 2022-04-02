@@ -341,7 +341,7 @@ namespace eXl
       for (auto const& entry : components)
       {
         TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(entry.first);
-        if (terrainDesc.m_Height > Mathf::ZERO_TOLERANCE)
+        if (terrainDesc.m_Height > Mathf::ZeroTolerance())
         {
           for (auto const& poly : entry.second)
           {

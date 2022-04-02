@@ -541,15 +541,15 @@ namespace eXl
 
       unsigned int const numTurns = interMap[i][j].second;
           
-      otherAngle += (Mathf::PI / numTurns);
-      int div = otherAngle / (Mathf::PI * 2);
+      otherAngle += (Mathf::Pi() / numTurns);
+      int div = otherAngle / (Mathf::Pi() * 2);
       if(otherAngle < 0)
       {
         --div;
       }
-      otherAngle -= div * Mathf::PI * 2;
+      otherAngle -= div * Mathf::Pi() * 2;
 
-      return elemOffset + int((otherAngle / (Mathf::PI * 2)) * numTurns);
+      return elemOffset + int((otherAngle / (Mathf::Pi() * 2)) * numTurns);
     }
   }
 
@@ -659,8 +659,8 @@ namespace eXl
             //if(idx0 == 0 && idx1 == 1 && len < 10.0 && Mathf::Abs(dir1.m_Y - 1.0) < 0.1)
             //{
             //  float diff = prevValue / m_AcceptanceRate;
-            //  if(Mathf::Abs(iOtherAngle - (Mathf::PI * 0.5)) < Mathf::ZERO_TOLERANCE
-            //  || Mathf::Abs(iOtherAngle - (Mathf::PI * 1.5)) < Mathf::ZERO_TOLERANCE)
+            //  if(Mathf::Abs(iOtherAngle - (Mathf::Pi() * 0.5)) < Mathf::ZeroTolerance()
+            //  || Mathf::Abs(iOtherAngle - (Mathf::Pi() * 1.5)) < Mathf::ZeroTolerance())
             //  {
             //    printf("Vertical : %f -> %f\n", len, diff);
             //  }
@@ -687,14 +687,14 @@ namespace eXl
               }
             }
           }
-          //else if(diskAcc < Mathf::EPSILON)
+          //else if(diskAcc < Mathf::Epsilon())
           //{
           //  m_AcceptanceRate = -INFINITY;
           //}
         }
         else
         {
-          //if(diskProb < -Mathf::EPSILON)
+          //if(diskProb < -Mathf::Epsilon())
           MCMC2D::FullInteraction inter;
           inter.dir1 = MathTools::ToDVec(dir1);
           inter.dist = len;
@@ -717,7 +717,7 @@ namespace eXl
               m_MoveGrad -= MathTools::ToDVec(gradient);
             }
           }
-          //else if(diskAcc < Mathf::EPSILON)
+          //else if(diskAcc < Mathf::Epsilon())
           //{
           //  m_AcceptanceRate = -INFINITY;
           //}
@@ -1001,7 +1001,7 @@ namespace eXl
           {
             currentElement.m_Pos = Vector2i(distribX(rand),distribY(rand));
             unsigned int turn = m_Elements[currentElement.m_Element - 1].m_Turn;
-            currentElement.m_Angle = turn > 1 ? (iRand.Generate() % turn) * (Mathf::PI * 2 / float(turn)) : 0.0;
+            currentElement.m_Angle = turn > 1 ? (iRand.Generate() % turn) * (Mathf::Pi() * 2 / float(turn)) : 0.0;
             currentElement.m_Pos += iParams.m_Shape.GetAABB().m_Data[0];
           }
           Element const& elemDef = m_Elements[currentElement.m_Element - 1];
@@ -1073,7 +1073,7 @@ namespace eXl
         if(gradMove > 1)
         {
           double moveNorm = queryHandler.m_MoveGrad.Normalize();
-          if(moveNorm > Mathf::ZERO_TOLERANCE)
+          if(moveNorm > Mathf::ZeroTolerance())
           {
             //queryHandler.m_MoveGrad *= m_MaxDist * (0.1 - 0.05 * float(iRand.Generate() % 1000) / 1000.0 );
 
@@ -1102,7 +1102,7 @@ namespace eXl
 
         accRates[element].push_back((death ? -1.0 : 1.0) * queryHandler.m_AcceptanceRate);
 
-        if(gradMove > 1 && queryHandler.m_AcceptanceRate < prevAcceptRate + Mathf::ZERO_TOLERANCE)
+        if(gradMove > 1 && queryHandler.m_AcceptanceRate < prevAcceptRate + Mathf::ZeroTolerance())
         {
           superiorGrad = false;
           newBox = prevBox;
@@ -1137,7 +1137,7 @@ namespace eXl
       }
       else if(death)
       {
-        float prob = 1.0 / (queryHandler.m_AcceptanceRate + Mathf::EPSILON);
+        float prob = 1.0 / (queryHandler.m_AcceptanceRate + Mathf::Epsilon());
         //if(((iRand.Generate() % 1000) * prob) / 1000.0 > 0.5)
         if((iRand.Generate() % 1000) < prob * 1000 * iParams.m_Temperature)
         {
@@ -1385,7 +1385,7 @@ namespace eXl
           curHit.m_ShapeNum = shapeNum;
           for(unsigned int turn = 0; turn < numAngleSampling; ++turn)
           {
-            iAngle = (Mathf::PI * 2.0f / float (numAngleSampling)) * turn;
+            iAngle = (Mathf::Pi() * 2.0f / float (numAngleSampling)) * turn;
 
             Vector2d baseMine = Vector2d(Mathd::Cos(iAngle), Mathd::Sin(iAngle));
             Vector2d dir1 = MathTools::GetLocal(baseMine, dirOrig);
@@ -1819,7 +1819,7 @@ namespace eXl
       {
         // Neg Wh for dummyPoints
         wh.second.first = (wh.second.second >= egCells ? -1.0 : 1.0) * samplingCells[wh.second.second].Area();
-        wh.second.first /= (weightCoeff /** Mathf::PI * iMaxDist * iMaxDist*/);
+        wh.second.first /= (weightCoeff /** Mathf::Pi() * iMaxDist * iMaxDist*/);
         totWeight += Mathf::Abs(wh.second.first);
       }
     }
@@ -1962,7 +1962,7 @@ namespace eXl
       {
         auto& elemDesc = elements[i];
         unsigned int const angleSampling = Mathi::Max(elemDesc.m_Turn, 1);
-        float const angleIncrement = Mathf::PI * 2.0 / angleSampling;
+        float const angleIncrement = Mathf::Pi() * 2.0 / angleSampling;
       
         for(unsigned int shapeNum = 0; shapeNum < elemDesc.m_Shapes.size(); ++shapeNum)
         {
@@ -2297,7 +2297,7 @@ namespace eXl
           unsigned int const numTurns = Mathi::Max(elements[i + j].m_Turn, 1);
           for (unsigned int turn = 0; turn < numTurns; ++turn)
           {
-            float angle2 = turn * 2.0 * Mathf::PI / numTurns;
+            float angle2 = turn * 2.0 * Mathf::Pi() / numTurns;
 
             unsigned int oneHotIdx = builder.BuildOneHot(i, j, angle2);
 

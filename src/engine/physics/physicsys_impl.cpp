@@ -20,12 +20,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  const Quaternionf RXD(Mathf::Cos(Mathf::PI / 4.0f), 1.0*Mathf::Sin(Mathf::PI / 4.0f), 0.0, 0.0);
-  const Quaternionf RXA(Mathf::Cos(Mathf::PI / 4.0f), -1.0*Mathf::Sin(Mathf::PI / 4.0f), 0.0, 0.0);
-  const Quaternionf RYD(Mathf::Cos(Mathf::PI / 4.0f), 0.0, 1.0*Mathf::Sin(Mathf::PI / 4.0f), 0.0);
-  const Quaternionf RYA(Mathf::Cos(Mathf::PI / 4.0f), 0.0, -1.0*Mathf::Sin(Mathf::PI / 4.0f), 0.0);
-  const Quaternionf RZD(Mathf::Cos(Mathf::PI / 4.0f), 0.0, 0.0, 1.0*Mathf::Sin(Mathf::PI / 4.0f));
-  const Quaternionf RZA(Mathf::Cos(Mathf::PI / 4.0f), 0.0, 0.0, -1.0*Mathf::Sin(Mathf::PI / 4.0f));
+  const Quaternionf RXD(Mathf::Cos(Mathf::Pi() / 4.0f), 1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0, 0.0);
+  const Quaternionf RXA(Mathf::Cos(Mathf::Pi() / 4.0f), -1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0, 0.0);
+  const Quaternionf RYD(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0);
+  const Quaternionf RYA(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, -1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0);
+  const Quaternionf RZD(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 0.0, 1.0*Mathf::Sin(Mathf::Pi() / 4.0f));
+  const Quaternionf RZA(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 0.0, -1.0*Mathf::Sin(Mathf::Pi() / 4.0f));
 
   btCollisionShape* ShapesCache::MakeGeom(const GeomDef& iDef, btCompoundShape* iCont)
   {

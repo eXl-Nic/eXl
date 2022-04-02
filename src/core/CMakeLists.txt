@@ -148,7 +148,9 @@ target_include_directories(eXl_Core PRIVATE
   ${XXHASH_INCLUDE_DIR} 
   ${LIBB64_INCLUDE_DIR} 
 )
-target_include_directories(eXl_Core PUBLIC ${EXL_ROOT}/modules/cxxopts/include)
+
+target_include_directories(eXl_Core PUBLIC ${EXL_ROOT}/modules/cxxopts/include )
+target_include_directories(eXl_Core PUBLIC ${GLM_INCLUDE_DIR})
 target_compile_definitions(eXl_Core PUBLIC CXXOPTS_NO_RTTI)
 target_link_libraries(eXl_Core LINK_PUBLIC ${CORE_LIBS})
 target_link_libraries(eXl_Core LINK_PRIVATE ${CORE_LIBS_PRIVATE})

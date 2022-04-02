@@ -645,8 +645,8 @@ namespace eXl
           lbfgsfloatval_t grad = -g[globOffset];
           accumAdaDeltaGrad[globOffset] = adadeltaDecay * accumAdaDeltaGrad[globOffset] + (1.0 - adadeltaDecay) * grad * grad;
 
-          double update = (  Mathd::Sqrt(accumAdaDeltaUpd[globOffset] + Mathd::ZERO_TOLERANCE) 
-            / Mathd::Sqrt(accumAdaDeltaGrad[globOffset] + Mathd::ZERO_TOLERANCE)) * grad;
+          double update = (  Mathd::Sqrt(accumAdaDeltaUpd[globOffset] + Mathd::ZeroTolerance()) 
+            / Mathd::Sqrt(accumAdaDeltaGrad[globOffset] + Mathd::ZeroTolerance())) * grad;
 
           x[wh] += learnRate * (update /*- x[wh] * whDecay*/);//learnRate;
                                                                   //imgWeights[wh] += -grad * learnRate - imgWeights[wh] * whDecay;
@@ -676,7 +676,7 @@ namespace eXl
 #ifdef EXP_METHOD
           elem.m_AbsDensity = exp(*xIter);
 #else
-          elem.m_AbsDensity = Mathf::Max(Mathd::ZERO_TOLERANCE, Mathd::Abs(*xIter));
+          elem.m_AbsDensity = Mathf::Max(Mathd::ZeroTolerance(), Mathd::Abs(*xIter));
 #endif
 
 #ifndef ONE_BETA
@@ -878,7 +878,7 @@ namespace eXl
 
         //float const distIncrement = /*GetMaxDist(idx)*/ 1.0 / numDistStep;
         //
-        //float const angleIncrement = (2 * Mathf::PI) / numAngleSteps;
+        //float const angleIncrement = (2 * Mathf::Pi()) / numAngleSteps;
         //for(unsigned int angleStep = 0; angleStep < numAngleSteps; ++angleStep)
         //{
         //  float curAngle = angleStep * angleIncrement;
@@ -1148,7 +1148,7 @@ namespace eXl
       auto& inter = iBuilder.interMap[idx0][idx1];
 
       unsigned int turn = Mathi::Max(1, inter.second);
-      float const angleInc = (Mathf::PI * 2.0) / turn;
+      float const angleInc = (Mathf::Pi() * 2.0) / turn;
       unsigned int const locTurn = iRand.Generate() % turn;
       float const locAngle = angleInc * locTurn;
 

@@ -21,7 +21,7 @@ namespace boost
     struct geometry_concept<eXl::AABB2DPolygon<Real> >{ typedef polygon_90_with_holes_concept /*polygon_90_concept*/ type; };
 
     template <typename Real>
-    struct geometry_concept<eXl::Vector<eXl::Vector2<Real> > >{ typedef polygon_90_concept type; };
+    struct geometry_concept<eXl::Vector<glm::vec<2, Real> > >{ typedef polygon_90_concept type; };
 
     template <typename Real>
     struct geometry_concept<eXl::Vector<eXl::AABB2DPolygon<Real> > >{ typedef polygon_90_set_concept type; };
@@ -29,8 +29,8 @@ namespace boost
     template <typename Real>
     struct polygon_90_traits<eXl::AABB2DPolygon<Real> > {
       typedef Real coordinate_type;
-      typedef iterator_points_to_compact<typename eXl::Vector<eXl::Vector2<Real> >::const_iterator,eXl::Vector2<Real> > compact_iterator_type;
-      typedef eXl::Vector2<Real> point_type;
+      typedef iterator_points_to_compact<typename eXl::Vector<glm::vec<2,Real> >::const_iterator,glm::vec<2,Real> > compact_iterator_type;
+      typedef glm::vec<2,Real> point_type;
 
       static inline compact_iterator_type begin_compact(eXl::AABB2DPolygon<Real> const& t) {
           return compact_iterator_type (t.Border().begin(),t.Border().end());
@@ -57,9 +57,9 @@ namespace boost
       static inline eXl::AABB2DPolygon<Real>& set_compact(eXl::AABB2DPolygon<Real> & t, 
                                          iT input_begin, iT input_end) {
 
-        eXl::Vector<eXl::Vector2<Real>> tempStor;
-        iterator_compact_to_points<iT,eXl::Vector2<Real>> iterBegin(input_begin,input_end);
-        iterator_compact_to_points<iT,eXl::Vector2<Real>> iterEnd(input_end,input_end);
+        eXl::Vector<glm::vec<2,Real>> tempStor;
+        iterator_compact_to_points<iT,glm::vec<2,Real>> iterBegin(input_begin,input_end);
+        iterator_compact_to_points<iT,glm::vec<2,Real>> iterEnd(input_end,input_end);
 
         tempStor.assign(iterBegin,iterEnd);
 
@@ -71,10 +71,10 @@ namespace boost
     };
 
     template <typename Real>
-    struct polygon_90_traits<eXl::Vector<eXl::Vector2<Real> > > {
+    struct polygon_90_traits<eXl::Vector<glm::vec<2,Real> > > {
       typedef Real coordinate_type;
-      typedef iterator_points_to_compact<typename eXl::Vector<eXl::Vector2<Real> >::const_iterator,eXl::Vector2<Real> > compact_iterator_type;
-      typedef eXl::Vector2<Real> point_type;
+      typedef iterator_points_to_compact<typename eXl::Vector<glm::vec<2,Real> >::const_iterator,glm::vec<2,Real> > compact_iterator_type;
+      typedef glm::vec<2,Real> point_type;
 
       static inline compact_iterator_type begin_compact(typename eXl::AABB2DPolygon<Real>::PtList const& t) {
           return compact_iterator_type (t.begin(),t.end());
@@ -95,14 +95,14 @@ namespace boost
     };
 
     template <typename Real>
-    struct polygon_90_mutable_traits<eXl::Vector<eXl::Vector2<Real> > > {
+    struct polygon_90_mutable_traits<eXl::Vector<glm::vec<2,Real> > > {
 
       template <typename iT>
       static inline typename eXl::AABB2DPolygon<Real>::PtList& set_compact(typename eXl::AABB2DPolygon<Real>::PtList & t, 
                                          iT input_begin, iT input_end) {
 
-        iterator_compact_to_points<iT,eXl::Vector2<Real> > iterBegin(input_begin,input_end);
-        iterator_compact_to_points<iT,eXl::Vector2<Real> > iterEnd(input_end,input_end);
+        iterator_compact_to_points<iT,glm::vec<2,Real> > iterBegin(input_begin,input_end);
+        iterator_compact_to_points<iT,glm::vec<2,Real> > iterEnd(input_end,input_end);
         t.assign(iterBegin,iterEnd);
 
         return t;
@@ -208,32 +208,32 @@ namespace eXl
   template <typename Real> 
   struct PreciseVector
   {
-    typedef eXl::Vector2<typename eXl::PreciseType<Real>::type > type; 
+    typedef glm::vec<2, typename eXl::PreciseType<Real>::type > type; 
   };
 
   template <typename Real> 
-  inline typename PreciseVector<Real>::type ToPrecise(Vector2<Real> const& iVec)
+  inline typename PreciseVector<Real>::type ToPrecise(glm::vec<2,Real> const& iVec)
   {
-    return typename PreciseVector<Real>::type(Math<Real>::ToPrecise(iVec.X()), Math<Real>::ToPrecise(iVec.Y()));
+    return typename PreciseVector<Real>::type(Math<Real>::ToPrecise(iVec.x), Math<Real>::ToPrecise(iVec.y));
   }
 
   template <typename Real> 
-  inline bool VectorNotnullptr(Vector2<Real> const& iVec)
+  inline bool VectorNotnullptr(glm::vec<2,Real> const& iVec)
   {
-    return iVec.Length() > Math<Real>::ZERO_TOLERANCE;
+    return iVec.Length() > Math<Real>::ZeroTolerance();
   }
 
   template <> 
-  inline bool VectorNotnullptr<int>(Vector2i const& iVec)
+  inline bool VectorNotnullptr<int>(Vec2i const& iVec)
   {
-    return iVec != Vector2i::ZERO;
+    return iVec != Zero<Vec2i>();
   }
 
   template <typename Real>
   AABB2DPolygon<Real>::AABB2DPolygon(){}  
 
   template <typename Real>
-  void AABB2DPolygon<Real>::Translate(Vector2<Real> const& iTrans)
+  void AABB2DPolygon<Real>::Translate(glm::vec<2,Real> const& iTrans)
   {
     for (unsigned int i = 0; i < m_Ext.size(); ++i)
     {
@@ -276,16 +276,16 @@ namespace eXl
   {
     for (unsigned int i = 0; i < m_Ext.size(); ++i)
     {
-      m_Ext[i].X() = (m_Ext[i].X() * iNumX) / iDenomX;
-      m_Ext[i].Y() = (m_Ext[i].Y() * iNumY) / iDenomY;
+      m_Ext[i].x = (m_Ext[i].x * iNumX) / iDenomX;
+      m_Ext[i].y = (m_Ext[i].y * iNumY) / iDenomY;
     }
 
     for (unsigned int i = 0; i < m_Holes.size(); ++i)
     {
       for (unsigned int j = 0; j < m_Holes[i].size(); ++j)
       {
-        m_Holes[i][j].X() = (m_Holes[i][j].X() * iNumX) / iDenomX;
-        m_Holes[i][j].Y() = (m_Holes[i][j].Y() * iNumY) / iDenomY;
+        m_Holes[i][j].x = (m_Holes[i][j].x * iNumX) / iDenomX;
+        m_Holes[i][j].y = (m_Holes[i][j].y * iNumY) / iDenomY;
       }
     }
 
@@ -293,17 +293,17 @@ namespace eXl
   }
 
   template <typename Real>
-  AABB2DPolygon<Real>::AABB2DPolygon(Vector<Vector2<Real>> const& iPoints)
+  AABB2DPolygon<Real>::AABB2DPolygon(Vector<glm::vec<2,Real>> const& iPoints)
   {
     m_Ext.clear();
     
     if(iPoints.size()>=4)
     {
       m_Ext = iPoints;
-      if((m_Ext[0]-m_Ext[1]).GetY() != 0)
+      if((m_Ext[0]-m_Ext[1]).y != 0)
       {
-        Vector2<Real> tempPt = m_Ext[0];
-        //memmove(&m_Points[0],&m_Points[1],m_Points.size() * sizeof(Vector2<Real>));
+        glm::vec<2,Real> tempPt = m_Ext[0];
+        //memmove(&m_Points[0],&m_Points[1],m_Points.size() * sizeof(glm::vec<2,Real>));
         m_Ext.erase(m_Ext.begin());
         m_Ext.push_back(tempPt);
       }
@@ -333,7 +333,7 @@ namespace eXl
   }
 
   template <class Real>
-  void AABB2DPolygon<Real>::_RemoveUselessPoints(Vector<Vector2<Real> >& ioPoints)
+  void AABB2DPolygon<Real>::_RemoveUselessPoints(Vector<glm::vec<2,Real> >& ioPoints)
   {
     if(ioPoints.size() > 2)
     {
@@ -350,20 +350,21 @@ namespace eXl
         }
       }
 
-      Vector2<Real> prevPt1 = ioPoints[ioPoints.size() - 1];
-      Vector2<Real> prevPt2 = ioPoints[ioPoints.size() - 2];
+      glm::vec<2,Real> prevPt1 = ioPoints[ioPoints.size() - 1];
+      glm::vec<2,Real> prevPt2 = ioPoints[ioPoints.size() - 2];
       for (int i = 0; i<(int)ioPoints.size(); ++i)
       {
         unsigned int prevIdx = i > 0 ? i - 1 : (i == -1 ? ioPoints.size() - 2 : ioPoints.size() - 1);
         unsigned int curIdx = i >= 0 ? i : ioPoints.size() - 1;
-        Vector2<Real> curPt = ioPoints[curIdx];
+        glm::vec<2,Real> curPt = ioPoints[curIdx];
         if (curPt != prevPt1 && prevPt1 != prevPt2)
         {
           typename PreciseVector<Real>::type dir1 = ToPrecise<int>(prevPt1 - prevPt2);
           typename PreciseVector<Real>::type dir2 = ToPrecise<int>(curPt - prevPt2);
-          typename PreciseType<Real>::type len1 = dir1.Normalize();
-          typename PreciseType<Real>::type len2 = dir2.Normalize();
-          if (dir1.Dot(dir2) > (1 - eXl::Math<typename PreciseType<Real>::type>::EPSILON) && len1 < len2)
+          typename PreciseType<Real>::type len1 = NormalizeAndGetLength(dir1);
+          typename PreciseType<Real>::type len2 = NormalizeAndGetLength(dir2);
+
+          if (dot(dir1, dir2) > (1 - eXl::Math<typename PreciseType<Real>::type>::Epsilon()) && len1 < len2)
           {
             ioPoints[prevIdx] = curPt;
             ioPoints.erase(ioPoints.begin() + curIdx);
@@ -463,13 +464,13 @@ namespace eXl
     Vector<AABB2DPolygon> swappedPoly(1, meSet[0]);
     for(auto& pt : swappedPoly[0].Border())
     {
-      std::swap(pt.X(), pt.Y());
+      std::swap(pt.x, pt.y);
     }
     for(auto& hole : swappedPoly[0].Holes())
     {
       for(auto& pt : hole)
       {
-        std::swap(pt.X(), pt.Y());
+        std::swap(pt.x, pt.y);
       }
     }
 
@@ -479,8 +480,8 @@ namespace eXl
     for(auto const& hBoxSwapped : hBoxes)
     {
       AABB2D<Real> hBox = hBoxSwapped;
-      std::swap(hBox.m_Data[0].X(), hBox.m_Data[0].Y());
-      std::swap(hBox.m_Data[1].X(), hBox.m_Data[1].Y());
+      std::swap(hBox.m_Data[0].x, hBox.m_Data[0].y);
+      std::swap(hBox.m_Data[1].x, hBox.m_Data[1].y);
       for(auto const& vBox : vBoxes)
       {
         AABB2D<Real> commonBox;
@@ -638,10 +639,10 @@ namespace eXl
   {
     if (Empty())
     {
-      m_Ext.push_back(Vector2<Real>(iBox.m_Data[1].X(), iBox.m_Data[0].Y()));
-      m_Ext.push_back(Vector2<Real>(iBox.m_Data[0].X(), iBox.m_Data[0].Y()));
-      m_Ext.push_back(Vector2<Real>(iBox.m_Data[0].X(), iBox.m_Data[1].Y()));
-      m_Ext.push_back(Vector2<Real>(iBox.m_Data[1].X(), iBox.m_Data[1].Y()));
+      m_Ext.push_back(glm::vec<2,Real>(iBox.m_Data[1].x, iBox.m_Data[0].y));
+      m_Ext.push_back(glm::vec<2,Real>(iBox.m_Data[0].x, iBox.m_Data[0].y));
+      m_Ext.push_back(glm::vec<2,Real>(iBox.m_Data[0].x, iBox.m_Data[1].y));
+      m_Ext.push_back(glm::vec<2,Real>(iBox.m_Data[1].x, iBox.m_Data[1].y));
 
       boost::polygon::extents(m_AABB, *this);
 
@@ -650,11 +651,11 @@ namespace eXl
     else
     {
 
-      Vector<Vector2<Real>> temp;
-      temp.push_back(Vector2<Real>(iBox.m_Data[1].X(), iBox.m_Data[0].Y()));
-      temp.push_back(Vector2<Real>(iBox.m_Data[0].X(), iBox.m_Data[0].Y()));
-      temp.push_back(Vector2<Real>(iBox.m_Data[0].X(), iBox.m_Data[1].Y()));
-      temp.push_back(Vector2<Real>(iBox.m_Data[1].X(), iBox.m_Data[1].Y()));
+      Vector<glm::vec<2,Real>> temp;
+      temp.push_back(glm::vec<2,Real>(iBox.m_Data[1].x, iBox.m_Data[0].y));
+      temp.push_back(glm::vec<2,Real>(iBox.m_Data[0].x, iBox.m_Data[0].y));
+      temp.push_back(glm::vec<2,Real>(iBox.m_Data[0].x, iBox.m_Data[1].y));
+      temp.push_back(glm::vec<2,Real>(iBox.m_Data[1].x, iBox.m_Data[1].y));
 
       Vector<AABB2DPolygon> meSet;
       Vector<AABB2DPolygon> boxSet;

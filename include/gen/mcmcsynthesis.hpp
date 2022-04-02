@@ -146,7 +146,7 @@ namespace eXl
       bool m_Resample = false;
       bool m_QuantileCull = true;
       float m_SigmaDist = 0.2;
-      float m_SigmaAngle = Mathf::Sqrt(1.0 - Mathf::Cos(Mathf::PI / 8.0));
+      float m_SigmaAngle = Mathf::Sqrt(1.0 - Mathf::Cos(Mathf::Pi() / 8.0));
 
       SERIALIZE_METHODS;
     };

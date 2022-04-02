@@ -30,12 +30,12 @@ namespace eXl
     return Compute(iPoly);
   }
 
-  bool ComputePrincipalAxis::operator()(Vector<Vector2f> const& iPoints)
+  bool ComputePrincipalAxis::operator()(Vector<Vec2> const& iPoints)
   {
     return Compute(iPoints.data(), iPoints.size());
   }
 
-  bool ComputePrincipalAxis::operator()(Vector<Vector2d> const& iPoints)
+  bool ComputePrincipalAxis::operator()(Vector<Vec2d> const& iPoints)
   {
     return Compute(iPoints.data(), iPoints.size());
   }
@@ -48,7 +48,7 @@ namespace eXl
       return false;
     }
     uint32_t numPt = iPoly.Border().size();
-    Vector2<Real> const* points = iPoly.Border().data();
+    glm::vec<2,Real> const* points = iPoly.Border().data();
     if (numPt > 1 && points[0] == points[numPt - 1])
     {
       --numPt;
@@ -58,30 +58,30 @@ namespace eXl
   }
 
   template <typename Real>
-  bool ComputePrincipalAxis::Compute(Vector2<Real> const* iPoints, uint32_t iNumPt)
+  bool ComputePrincipalAxis::Compute(glm::vec<2,Real> const* iPoints, uint32_t iNumPt)
   {
     if (iNumPt == 0)
     {
       return false;
     }
     arma::mat covarianceMatrix(2, 2, arma::fill::zeros);
-    m_Center = Vector2d::ZERO;
+    m_Center = Zero<Vec2d>();
 
     for (unsigned int i = 0; i < iNumPt; ++i)
     {
-      Vector2<Real> const& curValue = iPoints[i];
-      m_Center.X() += curValue.X();
-      m_Center.Y() += curValue.Y();
+      glm::vec<2,Real> const& curValue = iPoints[i];
+      m_Center.x += curValue.x;
+      m_Center.y += curValue.y;
     }
 
-    m_Center.X() /= iNumPt;
-    m_Center.Y() /= iNumPt;
+    m_Center.x /= iNumPt;
+    m_Center.y /= iNumPt;
 
     for (unsigned int i = 0; i < iNumPt; ++i)
     {
-      Vector2<Real> const& curValue = iPoints[i];
-      double centeredX = curValue.X() - m_Center.X();
-      double centeredY = curValue.Y() - m_Center.Y();
+      glm::vec<2,Real> const& curValue = iPoints[i];
+      double centeredX = curValue.x - m_Center.x;
+      double centeredY = curValue.y - m_Center.y;
       covarianceMatrix.at(0,0) += centeredX * centeredX;
       covarianceMatrix.at(1,1) += centeredY * centeredY;
       covarianceMatrix.at(0,1) += centeredX * centeredY;
@@ -107,8 +107,8 @@ namespace eXl
       maxVal = eigval.at(1);
     }
 
-    m_PrimaryAxis.X() = eigvect.at(maxIdx, 0);
-    m_PrimaryAxis.Y() = eigvect.at(maxIdx, 1);
+    m_PrimaryAxis.x = eigvect.at(maxIdx, 0);
+    m_PrimaryAxis.y = eigvect.at(maxIdx, 1);
 
     return true;
   }

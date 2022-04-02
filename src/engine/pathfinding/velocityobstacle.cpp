@@ -103,7 +103,7 @@ namespace eXl
 
     float const otherVel = iOrig.Length();
 
-    bool velInside = otherVel - Mathf::ZERO_TOLERANCE < m_MaxVelocity;
+    bool velInside = otherVel - Mathf::ZeroTolerance() < m_MaxVelocity;
 
     uint32_t numArcs = 0;
     Arc circleArcs[2];
@@ -124,7 +124,7 @@ namespace eXl
       Vector2f projPt = iOrig - vecDir[i] * dotDir;
       float kSq = m_MaxVelocitySq - (otherVel * otherVel - dotDir * dotDir);
 
-      if (kSq > Mathf::ZERO_TOLERANCE)
+      if (kSq > Mathf::ZeroTolerance())
       {
         Vector2f ray = vecDir[i] * (otherVel + s_sqrt2 * m_MaxVelocity);
         auto boxPt = velocityBox.SegmentTest(iOrig + ray, -ray * 2.0, 0.0);
@@ -132,7 +132,7 @@ namespace eXl
         //eXl_ASSERT(!(!boxPt));
         //float k = Mathf::Sqrt(kSq);
         //auto circlePt = projPt + k * vecDir[i];
-        //eXl_ASSERT(Mathf::Abs(circlePt.Length() - m_MaxVelocity) < Mathf::ZERO_TOLERANCE);
+        //eXl_ASSERT(Mathf::Abs(circlePt.Length() - m_MaxVelocity) < Mathf::ZeroTolerance());
 
         Vector2f(&exts)[2] = reinterpret_cast<Vector2f(&)[2]>(newObstacle.m_Segs[i]);
 
@@ -361,7 +361,7 @@ namespace eXl
 
       float totRadius = (iRadius + m_CasterRadius);
       float distance = relPos.Normalize();
-      if (distance > Mathf::ZERO_TOLERANCE)
+      if (distance > Mathf::ZeroTolerance())
       {
         Vector2f vecDir[2];
         {
@@ -421,7 +421,7 @@ namespace eXl
 
   float VelocityObstacle::BestVelocity::ComputeScore(Vector2f const& iOptimalDir, Vector2f const& iCandidateDir, float iCandidateSpeed)
   {
-    if (iCandidateSpeed > Mathf::ZERO_TOLERANCE && iCandidateSpeed < (1.0 + Mathf::ZERO_TOLERANCE))
+    if (iCandidateSpeed > Mathf::ZeroTolerance() && iCandidateSpeed < (1.0 + Mathf::ZeroTolerance()))
     {
       float score = iCandidateDir.Dot(iOptimalDir) * dirMult + iCandidateSpeed;
       return score;
@@ -561,7 +561,7 @@ namespace eXl
 
     float* bestScore = std::max_element(velocities.curScore, velocities.curScore + 4);
     uint32_t priority = bestScore - velocities.curScore;
-    if (*bestScore > -Mathf::EPSILON)
+    if (*bestScore > -Mathf::Epsilon())
       //for (uint32_t priority = 0; priority < 4; ++priority)
     {
       //if (velocities.curScore[priority] > )
@@ -787,7 +787,7 @@ namespace eXl
           Vector2f dummy;
           float curDist = Segmentf::NearestPointSeg(pt1, pt2, testVtxPos, dummy);
           
-          if(curDist > Mathf::EPSILON && curDist < minDist)
+          if(curDist > Mathf::Epsilon() && curDist < minDist)
           {
             minDist = curDist;
           }

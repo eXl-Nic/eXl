@@ -40,15 +40,15 @@ namespace eXl
 
   inline unsigned int DiskDistribution::_GetSection(float iAngle) const
   {
-    iAngle += (Mathf::PI / m_Distrib.size());
-    int div = iAngle / (Mathf::PI * 2);
+    iAngle += (Mathf::Pi() / m_Distrib.size());
+    int div = iAngle / (Mathf::Pi() * 2);
     if(iAngle < 0)
     {
       --div;
     }
-    iAngle -= div * Mathf::PI * 2;
+    iAngle -= div * Mathf::Pi() * 2;
 
-    return (unsigned int)((iAngle / (Mathf::PI * 2)) * m_Distrib.size()) % m_Distrib.size();
+    return (unsigned int)((iAngle / (Mathf::Pi() * 2)) * m_Distrib.size()) % m_Distrib.size();
   }
 
   inline int DiskDistribution::_GetQuantile(unsigned int iSection, float iDist) const
@@ -206,15 +206,15 @@ namespace eXl
 
   inline unsigned int DoubleDiskDistribution::_GetDisk(float iAngle) const
   {
-    iAngle += (Mathf::PI / m_Disks.size());
-    int div = iAngle / (Mathf::PI * 2);
+    iAngle += (Mathf::Pi() / m_Disks.size());
+    int div = iAngle / (Mathf::Pi() * 2);
     if(iAngle < 0)
     {
       --div;
     }
-    iAngle -= div * Mathf::PI * 2;
+    iAngle -= div * Mathf::Pi() * 2;
 
-    return (iAngle / (Mathf::PI * 2)) * m_Disks.size();
+    return (iAngle / (Mathf::Pi() * 2)) * m_Disks.size();
   }
   
   inline int DoubleDiskDistribution::_GetQuantile(unsigned int iSection1, unsigned int iSection2, float iDist) const
@@ -229,7 +229,7 @@ namespace eXl
 
   void DiskFuncEval::Build(DoubleDiskDistribution const& iDisk, float iMaxLimit)
   {
-    float curAngleStep1 = 2.0 * Mathf::PI / iDisk.m_Disks.size();
+    float curAngleStep1 = 2.0 * Mathf::Pi() / iDisk.m_Disks.size();
     float curAngle1 = 0.0;
     for(auto& disk : iDisk.m_Disks)
     {
@@ -245,7 +245,7 @@ namespace eXl
 
   void DiskFuncEval::_Build(DiskDistribution const& iDisk, float iMaxLimit, float iCurAngle1, float iCurGamma1)
   {
-    float curAngleStep2 = 2.0 * Mathf::PI / iDisk.m_Distrib.size();
+    float curAngleStep2 = 2.0 * Mathf::Pi() / iDisk.m_Distrib.size();
     float curAngle2 = 0.0;
     for(auto& section : iDisk.m_Distrib)
     {
@@ -261,7 +261,7 @@ namespace eXl
 
         curDist += quantile.m_Dist;
       }
-      if(curDist + Mathf::EPSILON < iMaxLimit)
+      if(curDist + Mathf::Epsilon() < iMaxLimit)
       {
         RBFParams params;
         params.m_Center = Vector3f(curDist, iCurAngle1, curAngle2);
@@ -276,13 +276,13 @@ namespace eXl
   float AngleDist(float iAngle1, float iAngle2)
   {
     float dist = iAngle1 - iAngle2;
-    if(dist > Mathf::PI)
+    if(dist > Mathf::Pi())
     {
-      return 2.0 * Mathf::PI - dist;
+      return 2.0 * Mathf::Pi() - dist;
     }
-    else if(dist < -Mathf::PI)
+    else if(dist < -Mathf::Pi())
     {
-      return dist + 2.0 * Mathf::PI;
+      return dist + 2.0 * Mathf::Pi();
     }
     return dist;
   }
@@ -301,19 +301,19 @@ namespace eXl
 
   float DiskFuncEval::Eval(float iDist, float iAngle1, float iAngle2)
   {
-    int div = iAngle1 / (Mathf::PI * 2);
+    int div = iAngle1 / (Mathf::Pi() * 2);
     if(iAngle1 < 0)
     {
       --div;
     }
-    iAngle1 -= div * Mathf::PI * 2;
+    iAngle1 -= div * Mathf::Pi() * 2;
 
-    div = iAngle2 / (Mathf::PI * 2);
+    div = iAngle2 / (Mathf::Pi() * 2);
     if(iAngle2 < 0)
     {
       --div;
     }
-    iAngle2 -= div * Mathf::PI * 2;
+    iAngle2 -= div * Mathf::Pi() * 2;
 
     float score = 0.0;
     float nullMult = 1.0;
@@ -330,7 +330,7 @@ namespace eXl
       }
       else
       {
-        distCoeff *= function.m_Weight / (pow(2.0 * Mathf::PI, 1.5f) * gamma.X() * gamma.Y() * gamma.Z());
+        distCoeff *= function.m_Weight / (pow(2.0 * Mathf::Pi(), 1.5f) * gamma.X() * gamma.Y() * gamma.Z());
         score += distCoeff;
       }
     }
@@ -341,7 +341,7 @@ namespace eXl
       Vector3f dist = function.GetDist(iDist, iAngle1, iAngle2);
       float distCoeff = exp( - (dist.Y() / (2*gamma.Y() * gamma.Y()) + dist.Z() / (2*gamma.Z() * gamma.Z())));
       distCoeff /= (1.0 + exp(gamma.X() * (function.m_Center.X() - iDist)));
-      distCoeff *= function.m_Weight / (2.0 * Mathf::PI * gamma.Y() * gamma.Z());
+      distCoeff *= function.m_Weight / (2.0 * Mathf::Pi() * gamma.Y() * gamma.Z());
       score += distCoeff;
     }
 

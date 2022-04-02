@@ -11,11 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/mathplugin.hpp>
 #include <math/mathexp.hpp>
 
-#include <math/vector2.hpp>
-#include <math/vector3.hpp>
-#include <math/vector4.hpp>
-#include <math/matrix4.hpp>
-#include <math/quaternion.hpp>
 #include <math/aabb2d.hpp>
 #include <math/aabb2dpolygon.hpp>
 
@@ -35,93 +30,93 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  Type const* Get_Vector4f_NativeType()
+  Type const* Get_Vec4_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vector4f>("Vector4f")
-        .AddField("X", &Vector4f::m_X)
-        .AddField("Y", &Vector4f::m_Y)
-        .AddField("Z", &Vector4f::m_Z)
-        .AddField("W", &Vector4f::m_W)
+      return TypeManager::BeginNativeTypeRegistration<Vec4>("Vec4")
+        .AddField("X", &Vec4::x)
+        .AddField("Y", &Vec4::y)
+        .AddField("Z", &Vec4::z)
+        .AddField("W", &Vec4::w)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_Vector3f_NativeType()
+  Type const* Get_Vec3_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vector3f>("Vector3f")
-        .AddField("X", &Vector3f::m_X)
-        .AddField("Y", &Vector3f::m_Y)
-        .AddField("Z", &Vector3f::m_Z)
+      return TypeManager::BeginNativeTypeRegistration<Vec3>("Vec3")
+        .AddField("X", &Vec3::x)
+        .AddField("Y", &Vec3::y)
+        .AddField("Z", &Vec3::z)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_Vector2f_NativeType()
+  Type const* Get_Vec2_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vector2f>("Vector2f")
-        .AddField("X", &Vector2f::m_X)
-        .AddField("Y", &Vector2f::m_Y)
+      return TypeManager::BeginNativeTypeRegistration<Vec2>("Vec2")
+        .AddField("X", &Vec2::x)
+        .AddField("Y", &Vec2::y)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_Vector4i_NativeType()
+  Type const* Get_Vec4i_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vector4i>("Vector4i")
-        .AddField("X", &Vector4i::m_X)
-        .AddField("Y", &Vector4i::m_Y)
-        .AddField("Z", &Vector4i::m_Z)
-        .AddField("W", &Vector4i::m_W)
+      return TypeManager::BeginNativeTypeRegistration<Vec4i>("Vec4i")
+        .AddField("X", &Vec4i::x)
+        .AddField("Y", &Vec4i::y)
+        .AddField("Z", &Vec4i::z)
+        .AddField("W", &Vec4i::w)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_Vector3i_NativeType()
+  Type const* Get_Vec3i_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vector3i>("Vector3i")
-        .AddField("X", &Vector3i::m_X)
-        .AddField("Y", &Vector3i::m_Y)
-        .AddField("Z", &Vector3i::m_Z)
+      return TypeManager::BeginNativeTypeRegistration<Vec3i>("Vec3i")
+        .AddField("X", &Vec3i::x)
+        .AddField("Y", &Vec3i::y)
+        .AddField("Z", &Vec3i::z)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_Vector2i_NativeType()
+  Type const* Get_Vec2i_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vector2i>("Vector2i")
-        .AddField("X", &Vector2i::m_X)
-        .AddField("Y", &Vector2i::m_Y)
+      return TypeManager::BeginNativeTypeRegistration<Vec2i>("Vec2i")
+        .AddField("X", &Vec2i::x)
+        .AddField("Y", &Vec2i::y)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_Quaternionf_NativeType()
+  Type const* Get_Quaternion_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Quaternionf>("Quaternionf")
-        .AddField("X", &Quaternionf::m_X)
-        .AddField("Y", &Quaternionf::m_Y)
-        .AddField("Z", &Quaternionf::m_Z)
-        .AddField("W", &Quaternionf::m_W)
+      return TypeManager::BeginNativeTypeRegistration<Quaternion>("Quaternion")
+        .AddField("X", &Quaternion::x)
+        .AddField("Y", &Quaternion::y)
+        .AddField("Z", &Quaternion::z)
+        .AddField("W", &Quaternion::w)
         .EndRegistration();
     }();
     return s_Type;
@@ -151,7 +146,7 @@ namespace eXl
     return s_Type;
   }
 
-  IMPLEMENT_TYPE(Matrix4f)
+  IMPLEMENT_TYPE(Mat4)
   IMPLEMENT_TYPE(AABB2DPolygoni)
 
   void DeclareMath()
@@ -159,7 +154,7 @@ namespace eXl
 #if EXL_TYPE_ENABLED
 
     TypeManager::RegisterCoreType<AABB2DPolygoni>();
-    TypeManager::RegisterCoreType<Matrix4f>();
+    TypeManager::RegisterCoreType<Mat4>();
     
 #endif
   }
@@ -170,45 +165,43 @@ namespace eXl
   {
     luabind::module(iState, "eXl")[
 
-      luabind::class_<Vector3f>("Vector3f")
+      luabind::class_<Vec3>("Vec3")
         .def(luabind::constructor<float, float, float>())
-        .property("x", &Vector3f::GetX, &Vector3f::SetX)
-        .property("y", &Vector3f::GetY, &Vector3f::SetY)
-        .property("z", &Vector3f::GetZ, &Vector3f::SetZ)
-        .def("Normalize", (float (Vector3f::*)())&Vector3f::Normalize)
-        .def("Length", &Vector3f::Length)
+        .def_readwrite("x", &Vec3::x)
+        .def_readwrite("y", &Vec3::y)
+        .def_readwrite("z", &Vec3::z)
+        .def("length", &glm::length<3, float, glm::defaultp>)
         //Trouver pkoi operateur marchent pas.
-        .def(luabind::self + Vector3f())
-        .def(luabind::self - Vector3f())
+        .def(luabind::self + Vec3())
+        .def(luabind::self - Vec3())
         .def(luabind::self * float())
         .def(luabind::self / float())
         ,
 
-        luabind::class_<Vector2f>("Vector2f")
+        luabind::class_<Vec2>("Vec2")
         .def(luabind::constructor<float, float>())
-        .property("x", &Vector2f::GetX, &Vector2f::SetX)
-        .property("y", &Vector2f::GetY, &Vector2f::SetY)
-        .def("Normalize", ((float (Vector2f::*)())&Vector2f::Normalize))
-        .def("Length", &Vector2f::Length)
-        .def(luabind::self + luabind::other<Vector2f>())
-        .def(luabind::self - luabind::other<Vector2f>())
+        .def_readwrite("x", &Vec2::x)
+        .def_readwrite("y", &Vec2::y)
+        .def("length", &glm::length<2, float, glm::defaultp>)
+        .def(luabind::self + luabind::other<Vec2>())
+        .def(luabind::self - luabind::other<Vec2>())
         .def(luabind::self * float())
         .def(luabind::self / float())
         ,
 
-        luabind::class_<Vector2i>("Vector2i")
+        luabind::class_<Vec2i>("Vec2i")
         .def(luabind::constructor<int, int>())
-        .property("x", &Vector2i::GetX, &Vector2i::SetX)
-        .property("y", &Vector2i::GetY, &Vector2i::SetY)
-        .def(luabind::self + Vector2i())
-        .def(luabind::self - Vector2i())
+        .def_readwrite("x", &Vec2i::x)
+        .def_readwrite("y", &Vec2i::y)
+        .def(luabind::self + Vec2i())
+        .def(luabind::self - Vec2i())
         ,
 
         luabind::class_<AABB2Df>("AABB2Df")
         .def(luabind::constructor<float, float, float, float>())
-        .def(luabind::constructor<Vector2f, Vector2f>())
+        .def(luabind::constructor<Vec2, Vec2>())
         .def("AbsorbPoint", (void (AABB2Df::*)(AABB2Df const&))(&AABB2Df::Absorb))
-        .def("AbsorbBox", (void (AABB2Df::*)(Vector2f const&))(&AABB2Df::Absorb))
+        .def("AbsorbBox", (void (AABB2Df::*)(Vec2 const&))(&AABB2Df::Absorb))
         .def("Contains", &AABB2Df::Contains)
         .def("GetCenter", &AABB2Df::GetCenter)
         .def("GetSize", &AABB2Df::GetSize)
@@ -223,9 +216,9 @@ namespace eXl
 
         luabind::class_<AABB2Di>("AABB2Di")
         .def(luabind::constructor<int, int, int, int>())
-        .def(luabind::constructor<Vector2i, Vector2i>())
+        .def(luabind::constructor<Vec2i, Vec2i>())
         .def("AbsorbPoint", (void (AABB2Di::*)(AABB2Di const&))(&AABB2Di::Absorb))
-        .def("AbsorbBox", (void (AABB2Di::*)(Vector2i const&))(&AABB2Di::Absorb))
+        .def("AbsorbBox", (void (AABB2Di::*)(Vec2i const&))(&AABB2Di::Absorb))
         .def("Contains", &AABB2Di::Contains)
         .def("GetCenter", &AABB2Di::GetCenter)
         .def("GetSize", &AABB2Di::GetSize)
@@ -238,17 +231,12 @@ namespace eXl
         .def("MaxY", (int (AABB2Di::*)()const)(&AABB2Di::MaxY))
         ,
 
-        luabind::class_<Quaternionf>("Quaternionf")
-        .def(luabind::constructor<float, float, float, float>())
-        .def(luabind::constructor<Vector3f const&, float>()),
+        luabind::class_<Quaternion>("Quaternion")
+        .def(luabind::constructor<float, float, float, float>()),
+        //.def(luabind::constructor<Vec3 const&, float>()),
 
-        luabind::class_<Matrix4f>("Matrix4f")
+        luabind::class_<Mat4>("Mat4")
         .def(luabind::constructor<>())
-        .def("MakeIdentity", &Matrix4f::MakeIdentity)
-        .scope
-        [
-          luabind::def("FromPosition", &Matrix4f::FromPosition)
-        ]
 
     ];
 
@@ -256,19 +244,19 @@ namespace eXl
 
     LuaStateHandle iStateHandle = LuaManager::GetHandle(iState);
 
-    luabind::object _G = luabind::globals(iState);
-    _G["eXl"]["Vector3f"]["ZERO"] = Vector3f::ZERO; 
-    _G["eXl"]["Vector3f"]["UNIT_X"] = Vector3f::UNIT_X; 
-    _G["eXl"]["Vector3f"]["UNIT_Y"] = Vector3f::UNIT_Y; 
-    _G["eXl"]["Vector3f"]["UNIT_Z"] = Vector3f::UNIT_Z;
-    _G["eXl"]["Vector3f"]["ONE"] = Vector3f::ONE;
-    _G["eXl"]["Vector2f"]["ZERO"] = Vector2f::ZERO; 
-    _G["eXl"]["Vector2f"]["UNIT_X"] = Vector2f::UNIT_X; 
-    _G["eXl"]["Vector2f"]["UNIT_Y"] = Vector2f::UNIT_Y; 
-    _G["eXl"]["Vector2f"]["ONE"] = Vector2f::ONE;
-    _G["eXl"]["Quaternionf"]["IDENTITY"] = Quaternionf::IDENTITY;
-    _G["eXl"]["Mathf"] = luabind::newtable(iState);
-    _G["eXl"]["Mathf"]["PI"] = Mathf::PI;
+    //luabind::object _G = luabind::globals(iState);
+    //_G["eXl"]["Vec3"]["ZERO"] = Vec3::ZERO; 
+    //_G["eXl"]["Vec3"]["UNIT_X"] = Vec3::UNIT_X; 
+    //_G["eXl"]["Vec3"]["UNIT_Y"] = Vec3::UNIT_Y; 
+    //_G["eXl"]["Vec3"]["UNIT_Z"] = Vec3::UNIT_Z;
+    //_G["eXl"]["Vec3"]["ONE"] = Vec3::ONE;
+    //_G["eXl"]["Vec2"]["ZERO"] = Vec2::ZERO; 
+    //_G["eXl"]["Vec2"]["UNIT_X"] = Vec2::UNIT_X; 
+    //_G["eXl"]["Vec2"]["UNIT_Y"] = Vec2::UNIT_Y; 
+    //_G["eXl"]["Vec2"]["ONE"] = Vec2::ONE;
+    //_G["eXl"]["Quaternionf"]["IDENTITY"] = Quaternionf::IDENTITY;
+    //_G["eXl"]["Mathf"] = luabind::newtable(iState);
+    //_G["eXl"]["Mathf"]["PI"] = Mathf::Pi();
 
     return 0;
   }

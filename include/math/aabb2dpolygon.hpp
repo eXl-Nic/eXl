@@ -10,7 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include "vector2.hpp"
 #include "aabb2d.hpp"
 #include <core/containers.hpp>
 
@@ -35,14 +34,14 @@ namespace eXl
     friend struct boost::polygon::polygon_with_holes_mutable_traits;
   public:
 
-    typedef Vector<Vector2<Real> > PtList;
+    typedef Vector<glm::vec<2,Real> > PtList;
     typedef Vector<PtList> PtLists;
 
     AABB2DPolygon();
 
     AABB2DPolygon(AABB2D<Real> const& iBox);
 
-    AABB2DPolygon(Vector<Vector2<Real> > const& iPoints);
+    AABB2DPolygon(Vector<glm::vec<2,Real> > const& iPoints);
 
     Err Stream(Streamer& iStreamer) const;
     Err Unstream(Unstreamer& iUnstreamer);
@@ -55,7 +54,7 @@ namespace eXl
 
     static void Merge(Vector<AABB2DPolygon>& oPoly);
 
-    void Translate(Vector2<Real> const& iTrans);
+    void Translate(glm::vec<2,Real> const& iTrans);
 
     void Scale(Real iNum, Real iDenom = 1);
     void ScaleComponents(Real iNumX, Real iNumY, Real iDenomX = 1, Real iDenomY = 1);
@@ -95,7 +94,7 @@ namespace eXl
     
   protected:
 
-    void _RemoveUselessPoints(Vector<Vector2<Real> >& ioPoints);
+    void _RemoveUselessPoints(Vector<glm::vec<2,Real> >& ioPoints);
     
     inline PtLists& HolesRW() {return m_Holes;}
 

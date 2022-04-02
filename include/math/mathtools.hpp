@@ -28,10 +28,10 @@ namespace eXl
   public:
 
     //template <typename Real>
-    //static Err Stream(Vector2<Real> const& iPoint, Serializer iStreamer);
+    //static Err Stream(glm::vec<2,Real> const& iPoint, Serializer iStreamer);
 
     //template <typename Real>
-    //static Err Unstream(Vector2<Real>& oPoint, Unstreamer& iUnstreamer);
+    //static Err Unstream(glm::vec<2,Real>& oPoint, Unstreamer& iUnstreamer);
 
     //template <typename Real>
     //static Err Stream(Polygon<Real> const& iPolygon, Streamer& iStreamer);
@@ -48,57 +48,57 @@ namespace eXl
     //Clamp angle between 0 and 2*PI
     inline static float ClampAngle(float iAngle)
     {
-      int div = iAngle / (Mathf::PI * 2);
+      int div = iAngle / (Mathf::Pi() * 2);
       if(iAngle < 0)
       {
         --div;
       }
-      return iAngle - div * Mathf::PI * 2;
+      return iAngle - div * Mathf::Pi() * 2;
     }
 
     // AngleDist between -PI and PI
     inline static float AngleDist(float iAngle1, float iAngle2)
     {
       float dist = ClampAngle(iAngle1) - ClampAngle(iAngle2);
-      if(dist > Mathf::PI)
+      if(dist > Mathf::Pi())
       {
-        return 2.0 * Mathf::PI - dist;
+        return 2.0 * Mathf::Pi() - dist;
       }
-      else if(dist < -Mathf::PI)
+      else if(dist < -Mathf::Pi())
       {
-        return dist + 2.0 * Mathf::PI;
+        return dist + 2.0 * Mathf::Pi();
       }
       return dist;
     }
 
 
     template <typename Real>
-    static inline Vector2<Real> Perp(Vector2<Real> const& iVec)
+    static inline glm::vec<2,Real> Perp(glm::vec<2,Real> const& iVec)
     {
-      return Vector2<Real>(-iVec.Y(), iVec.X());
+      return glm::vec<2,Real>(-iVec.y, iVec.x);
     }
 
-    static inline uint64_t SquaredLength(Vector2i const& iVect)
+    static inline uint64_t SquaredLength(Vec2i const& iVect)
     {
-      return (int64_t)iVect.X() * (int64_t)iVect.X() + (int64_t)iVect.Y() * (int64_t)iVect.Y();
-    }
-
-    template <typename Real>
-    static inline Vector2i ToIVec(Vector2<Real> const& iVec)
-    {
-      return Vector2i(Math<Real>::Round(iVec.X()), Math<Real>::Round(iVec.Y()));
+      return (int64_t)iVect.x * (int64_t)iVect.x + (int64_t)iVect.y * (int64_t)iVect.y;
     }
 
     template <typename Real>
-    static inline Vector2f ToFVec(Vector2<Real> const& iVec)
+    static inline Vec2i ToIVec(glm::vec<2,Real> const& iVec)
     {
-      return Vector2f(iVec.X(), iVec.Y());
+      return Vec2i(Math<Real>::Round(iVec.x), Math<Real>::Round(iVec.y));
     }
 
     template <typename Real>
-    static inline Vector2d ToDVec(Vector2<Real> const& iVec)
+    static inline Vec2 ToFVec(glm::vec<2,Real> const& iVec)
     {
-      return Vector2d(iVec.X(), iVec.Y());
+      return Vec2(iVec.x, iVec.y);
+    }
+
+    template <typename Real>
+    static inline Vec2d ToDVec(glm::vec<2,Real> const& iVec)
+    {
+      return Vec2d(iVec.x, iVec.y);
     }
 
     template <typename Real>
@@ -108,15 +108,15 @@ namespace eXl
     }
 
     template <typename Real1, typename Real2>
-    static inline bool NearestPointOnPoly(Vector2<Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, unsigned int &oSegNum, Vector2<Real1>& oPoint, Vector2<Real1>& oDir, bool iCheckExt = true)
+    static inline bool NearestPointOnPoly(glm::vec<2,Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, unsigned int &oSegNum, glm::vec<2,Real1>& oPoint, glm::vec<2,Real1>& oDir, bool iCheckExt = true)
     {
       int dummyHole;
-      Vector2<Real2> dummy;
+      glm::vec<2,Real2> dummy;
       return NearestPointOnPoly(iPoint,iPoly, iMinSegLen, dummy, oSegNum, dummyHole, oPoint, oDir, iCheckExt, false);
     }
 
     template <typename Real1, typename Real2>
-    static inline bool NearestPointOnPoly(Vector2<Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, Vector2<Real2> (&oSeg)[2], Vector2<Real1>& oPoint, Vector2<Real1>& oDir, bool iCheckExt = true)
+    static inline bool NearestPointOnPoly(glm::vec<2,Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, glm::vec<2,Real2> (&oSeg)[2], glm::vec<2,Real1>& oPoint, glm::vec<2,Real1>& oDir, bool iCheckExt = true)
     {
       int dummyHole;
       unsigned int dummy;
@@ -124,14 +124,14 @@ namespace eXl
     }
 
     template <typename Real1, typename Real2>
-    static inline bool NearestPointOnPoly(Vector2<Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, Vector2<Real2> (&oSeg)[2], unsigned int& oSegNum, Vector2<Real1>& oPoint, Vector2<Real1>& oDir, bool iCheckExt = true)
+    static inline bool NearestPointOnPoly(glm::vec<2,Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, glm::vec<2,Real2> (&oSeg)[2], unsigned int& oSegNum, glm::vec<2,Real1>& oPoint, glm::vec<2,Real1>& oDir, bool iCheckExt = true)
     {
       int dummyHole;
       return NearestPointOnPoly(iPoint,iPoly, iMinSegLen, oSeg, oSegNum, dummyHole, oPoint, oDir, iCheckExt, false);
     }
 
     template <typename Real1, typename Real2>
-    static inline bool NearestPointOnPoly(Vector2<Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, Vector2<Real2> (&oSeg)[2], unsigned int& oSegNum, int& oHole, Vector2<Real1>& oPoint, Vector2<Real1>& oDir, bool iCheckExt = true, bool iCheckHoles = false)
+    static inline bool NearestPointOnPoly(glm::vec<2,Real1> const& iPoint, Polygon<Real2> const& iPoly, Real1 iMinSegLen, glm::vec<2,Real2> (&oSeg)[2], unsigned int& oSegNum, int& oHole, glm::vec<2,Real1>& oPoint, glm::vec<2,Real1>& oDir, bool iCheckExt = true, bool iCheckHoles = false)
     {
       Real1 minDist;
       oHole = -1;
@@ -141,9 +141,9 @@ namespace eXl
         for(unsigned int i = 0 ; i< iPoly.Holes().size(); ++i)
         {
           unsigned int segNum;
-          Vector2<Real1> point;
-          Vector2<Real2> seg[2];
-          Vector2<Real1>    dir;
+          glm::vec<2,Real1> point;
+          glm::vec<2,Real2> seg[2];
+          glm::vec<2,Real1>    dir;
           Real1 curMin;
           bool newRes = _NearestPointOnPoly(iPoint, iPoly.Holes()[i], iMinSegLen, seg, segNum, point, dir, curMin, iCheckExt);
           if(newRes)
@@ -166,17 +166,17 @@ namespace eXl
     }
 
     template <typename Real1, typename Real2>
-    static inline bool _NearestPointOnPoly(Vector2<Real1> const& iPoint, Vector<Vector2<Real2> > const& polyBorder, Real1 iMinSegLen, Vector2<Real2> (&oSeg)[2], unsigned int& oSegNum, Vector2<Real1>& oPoint, Vector2<Real1>& oDir, Real1& oDist, bool iCheckExt)
+    static inline bool _NearestPointOnPoly(glm::vec<2,Real1> const& iPoint, Vector<glm::vec<2,Real2> > const& polyBorder, Real1 iMinSegLen, glm::vec<2,Real2> (&oSeg)[2], unsigned int& oSegNum, glm::vec<2,Real1>& oPoint, glm::vec<2,Real1>& oDir, Real1& oDist, bool iCheckExt)
     {
-      Vector2<Real1> polyCenter;
+      glm::vec<2,Real1> polyCenter;
       for(auto point : polyBorder)
       {
-        polyCenter += Vector2<Real1>(point.X(), point.Y());
+        polyCenter += glm::vec<2,Real1>(point.x, point.y);
       }
 
       if(polyBorder.front() == polyBorder.back())
       {
-        polyCenter -= Vector2<Real1>(polyBorder.front().X(), polyBorder.front().Y());
+        polyCenter -= glm::vec<2,Real1>(polyBorder.front().x, polyBorder.front().y);
         polyCenter = polyCenter / (polyBorder.size() - 1);
       }
       else
@@ -184,40 +184,40 @@ namespace eXl
         polyCenter = polyCenter / polyBorder.size();
       }
 
-      //Vector2<Real1> iDir = polyCenter - iPoint;
+      //glm::vec<2,Real1> iDir = polyCenter - iPoint;
       //Real1 minDist = iDir.Normalize();
 
-      Vector2<Real1> prevPoint(polyBorder.back().X(), polyBorder.back().Y());
+      glm::vec<2,Real1> prevPoint(polyBorder.back().x, polyBorder.back().y);
 
-      Vector2<Real1> iDir = polyCenter - iPoint;
+      glm::vec<2,Real1> iDir = polyCenter - iPoint;
       iDir.Normalize();
       Real1 minDist = (iPoint - prevPoint).Length() + 1;
 
       for (unsigned int i = 0; i < polyBorder.size(); ++i)
       {
-        Vector2<Real1> curPoint(polyBorder[i].X(), polyBorder[i].Y());
+        glm::vec<2,Real1> curPoint(polyBorder[i].x, polyBorder[i].y);
 
         if (curPoint != prevPoint)
         {
-          Vector2<Real1> dir = curPoint - prevPoint;
-          Vector2<Real1> extDir(MathTools::Perp(dir));
+          glm::vec<2,Real1> dir = curPoint - prevPoint;
+          glm::vec<2,Real1> extDir(MathTools::Perp(dir));
 
           if (!iCheckExt || (iDir).Dot(extDir) < 0)
           {
             Real1 segLen = dir.Normalize();
             if (segLen > iMinSegLen)
             {
-              Vector2<Real1> prevPointOff = prevPoint + dir * 0.5 * iMinSegLen;
-              Vector2<Real1> curPointOff = curPoint - dir * 0.5 * iMinSegLen;
+              glm::vec<2,Real1> prevPointOff = prevPoint + dir * 0.5 * iMinSegLen;
+              glm::vec<2,Real1> curPointOff = curPoint - dir * 0.5 * iMinSegLen;
               segLen -= iMinSegLen;
               Real1 dirPoj = (iPoint - prevPointOff).Dot(dir);
-              Vector2<Real1> candidate;
+              glm::vec<2,Real1> candidate;
 
-              if (dirPoj < -Math<Real1>::ZERO_TOLERANCE)
+              if (dirPoj < -Math<Real1>::ZeroTolerance())
               {
                 candidate = prevPointOff;
               }
-              else if (dirPoj > segLen - Math<Real1>::ZERO_TOLERANCE)
+              else if (dirPoj > segLen - Math<Real1>::ZeroTolerance())
               {
                 candidate = curPointOff;
               }
@@ -229,8 +229,8 @@ namespace eXl
               Real1 curDist = (candidate - iPoint).Length();
               if (curDist < minDist)
               {
-                oSeg[0] = Vector2<Real2>(prevPoint.X(), prevPoint.Y());
-                oSeg[1] = Vector2<Real2>(curPoint.X(), curPoint.Y());
+                oSeg[0] = glm::vec<2,Real2>(prevPoint.x, prevPoint.y);
+                oSeg[1] = glm::vec<2,Real2>(curPoint.x, curPoint.y);
                 if(i == 0)
                   oSegNum = polyBorder.size() - 1;
                 else
@@ -259,19 +259,19 @@ namespace eXl
     static void SimplifyPolygon(Polygon<Real> const& iPoly1, double iEpsilon, Polygon<Real>& oPoly);
 
     template <typename Real1, typename Real2>
-    static inline unsigned int FindPolyIntersection(Vector2<Real1> const& iPoint1, Vector2<Real1> const& iPoint2, Polygon<Real2> const& iPoly, Vector2<Real1>(&oPoints)[2])
+    static inline unsigned int FindPolyIntersection(glm::vec<2,Real1> const& iPoint1, glm::vec<2,Real1> const& iPoint2, Polygon<Real2> const& iPoly, glm::vec<2,Real1>(&oPoints)[2])
     {
       unsigned int curInter = 0;
-      Vector<Vector2<Real2> > const& border = iPoly.Border();
-      Vector2<Real1> prevPoint(border.back().X(), border.back().Y());
+      Vector<glm::vec<2,Real2> > const& border = iPoly.Border();
+      glm::vec<2,Real1> prevPoint(border.back().x, border.back().y);
       for (unsigned int i = 0; i < border.size() && curInter < 2; ++i)
       {
-        Vector2<Real1> curPoint(border[i].X(), border[i].Y());
+        glm::vec<2,Real1> curPoint(border[i].x, border[i].y);
             
         unsigned int res = Segment<Real1>::Intersect(prevPoint, curPoint, iPoint1, iPoint2, oPoints[curInter]);
         if (res & Segmentd::PointOnSegment1)
         {
-          if ((curInter == 0 || (oPoints[0] - oPoints[curInter]).Length() > Math<Real1>::ZERO_TOLERANCE))
+          if ((curInter == 0 || (oPoints[0] - oPoints[curInter]).Length() > Math<Real1>::ZeroTolerance()))
           {
             ++curInter;
           }
@@ -282,38 +282,38 @@ namespace eXl
     }
 
     template <typename Real1, typename Real2>
-    static bool FindCommonSegment(Polygon<Real2> const& iPoly1, Polygon<Real2> const& iPoly2, Vector2<Real1>& oSegPt1, Vector2<Real1>& oSegPt2, Real1 iMinLen = Math<Real1>::ZERO_TOLERANCE)
+    static bool FindCommonSegment(Polygon<Real2> const& iPoly1, Polygon<Real2> const& iPoly2, glm::vec<2,Real1>& oSegPt1, glm::vec<2,Real1>& oSegPt2, Real1 iMinLen = Math<Real1>::ZeroTolerance())
     {
       bool foundCommon = false;
-      Vector2<Real1> prevPt1 = Vector2<Real1>(iPoly1.Border().back().X(),iPoly1.Border().back().Y());
+      glm::vec<2,Real1> prevPt1 = glm::vec<2,Real1>(iPoly1.Border().back().x,iPoly1.Border().back().y);
       for(auto curPt1I : iPoly1.Border())
       {
-        Vector2<Real1> curPt1 = Vector2<Real1>(curPt1I.X(),curPt1I.Y());
+        glm::vec<2,Real1> curPt1 = glm::vec<2,Real1>(curPt1I.x,curPt1I.y);
         if(prevPt1 != curPt1)
         {
-          Vector2<Real1> prevPt2 = Vector2<Real1>(iPoly2.Border().back().X(), iPoly2.Border().back().Y());
+          glm::vec<2,Real1> prevPt2 = glm::vec<2,Real1>(iPoly2.Border().back().x, iPoly2.Border().back().y);
           for(auto curPt2I : iPoly2.Border())
           {
-            Vector2<Real1> curPt2 = Vector2<Real1>(curPt2I.X(),curPt2I.Y());
+            glm::vec<2,Real1> curPt2 = glm::vec<2,Real1>(curPt2I.x,curPt2I.y);
             if(prevPt2 != curPt2)
             {
                 unsigned int res = Segment<Real1>::Intersect(prevPt1, curPt1, prevPt2, curPt2);
                 if(res & Segment<Real1>::AlignedSegments
                 && (res & Segment<Real1>::ConfoundSegments || res & Segmentd::PointOnSegments))
                 {
-                  Vector2<Real1> dir = curPt1 - prevPt1;
+                  glm::vec<2,Real1> dir = curPt1 - prevPt1;
                   AABB2D<Real1> box1(0.0,0.0, dir.Normalize(), 0.0);
                   double val1 = (prevPt2 - prevPt1).Dot(dir);
                   double val2 = (curPt2 - prevPt1).Dot(dir);
                   AABB2D<Real1> box2 = val1 > val2 ? AABB2D<Real1>(val2, 0.0, val1, 0.0) : AABB2D<Real1>(val1, 0.0, val2, 0.0);
                   AABB2D<Real1> result;
                   result.SetCommonBox(box1, box2);
-                  double commonLen = result.m_Data[1].X() - result.m_Data[0].X();
+                  double commonLen = result.m_Data[1].x - result.m_Data[0].x;
                   if(commonLen >= iMinLen)
                   {
                     foundCommon = true;
-                    oSegPt1 = prevPt1 + dir * result.m_Data[0].X();
-                    oSegPt2 = prevPt1 + dir * (result.m_Data[0].X() + commonLen);
+                    oSegPt1 = prevPt1 + dir * result.m_Data[0].x;
+                    oSegPt2 = prevPt1 + dir * (result.m_Data[0].x + commonLen);
                     break;
                   }
                 }
@@ -329,35 +329,35 @@ namespace eXl
     }
 
     template <typename Real>
-    static inline Real GetAngleFromVec(Vector2<Real> const& iDir)
+    static inline Real GetAngleFromVec(glm::vec<2,Real> const& iDir)
     {
-      return Math<Real>::Abs(iDir.X()) < Math<Real>::EPSILON ? (iDir.Y() > 0.0 ? Math<Real>::PI * 0.5 : Math<Real>::PI * 1.5) 
-        : (iDir.X() > 0.0 ? Math<Real>::ATan(iDir.Y() / iDir.X()) : Math<Real>::PI - Math<Real>::ATan(iDir.Y() / (-1.0 * iDir.X())));
+      return Math<Real>::Abs(iDir.x) < Math<Real>::Epsilon() ? (iDir.y > 0.0 ? Math<Real>::PI * 0.5 : Math<Real>::PI * 1.5) 
+        : (iDir.x > 0.0 ? Math<Real>::ATan(iDir.y / iDir.x) : Math<Real>::PI - Math<Real>::ATan(iDir.y / (-1.0 * iDir.x)));
     }
 
     template<typename Real>
-    static inline Vector2<Real> GetPerp(Vector2<Real> const& iVec)
+    static inline glm::vec<2,Real> GetPerp(glm::vec<2,Real> const& iVec)
     {
-      return Vector2<Real>(iVec.Y() * -1.0, iVec.X());
+      return glm::vec<2,Real>(iVec.y * -1.0, iVec.x);
     }
 
     template<typename Real>
-    static inline Vector2<Real> GetLocal(Vector2<Real> const& iBase, Vector2<Real> const& iVec)
+    static inline glm::vec<2,Real> GetLocal(glm::vec<2,Real> const& iBase, glm::vec<2,Real> const& iVec)
     {
-      return Vector2<Real>(iBase.X() * iVec.X() + iBase.Y() * iVec.Y(), iBase.X() * iVec.Y() - iBase.Y() * iVec.X());
+      return glm::vec<2,Real>(iBase.x * iVec.x + iBase.y * iVec.y, iBase.x * iVec.y - iBase.y * iVec.x);
     }
 
     template<typename Real>
-    static inline Vector2i RoundVector(Vector2<Real> const& iVec)
+    static inline Vec2i RoundVector(glm::vec<2,Real> const& iVec)
     {
-      return Vector2i(Math<Real>::Round(iVec.X()), Math<Real>::Round(iVec.Y()));
+      return Vec2i(Math<Real>::Round(iVec.x), Math<Real>::Round(iVec.y));
     }
 
     template <typename Real>
     static inline Real ModAngle(Real iAngle)
     {
       iAngle = fmod(iAngle, 2.0*Math<Real>::PI);
-      iAngle -= Mathf::PI;
+      iAngle -= Mathf::Pi();
       return iAngle;
     }
 
@@ -384,63 +384,33 @@ namespace eXl
       return (randGen() % (iMax - iMin)) + iMin;
     };
 
-    static inline Vector2f Perturbate(Random& iRand, Vector2f const& iPos, float iRadius)
+    static inline Vec2 Perturbate(Random& iRand, Vec2 const& iPos, float iRadius)
     {
-      float const angle = ((iRand.Generate() % 10000) / 10000.0 - 1.0) * Mathf::PI;
+      float const angle = ((iRand.Generate() % 10000) / 10000.0 - 1.0) * Mathf::Pi();
       float const dist = ((iRand.Generate() % 10000) / 10000.0 ) * iRadius;
 
-      return iPos + Vector2f(Mathd::Cos(angle), Mathd::Sin(angle)) * dist;
+      return iPos + Vec2(Mathd::Cos(angle), Mathd::Sin(angle)) * dist;
     }
 
     template <typename Real>
-    static inline Vector2<Real> const& As2DVec(Vector3<Real> const& iVec)
+    static inline glm::vec<2,Real> const& As2DVec(glm::vec<3,Real> const& iVec)
     {
-      return reinterpret_cast<Vector2<Real> const&>(iVec);
+      return reinterpret_cast<glm::vec<2,Real> const&>(iVec);
     }
 
     template <typename Real>
-    static inline Vector2<Real>& As2DVec(Vector3<Real>& iVec)
+    static inline glm::vec<2,Real>& As2DVec(glm::vec<3,Real>& iVec)
     {
-      return reinterpret_cast<Vector2<Real>&>(iVec);
-    }
-
-    template <typename Real>
-    static inline Vector3<Real> To3DVec(Vector2<Real> const& iVec, Real iZComp = 0)
-    {
-      return Vector3<Real>(iVec.X(), iVec.Y(), iZComp);
-    }
-
-    template <typename Real>
-    static inline Vector3<Real> const& GetPosition(Matrix4<Real> const& iMat)
-    {
-      return *reinterpret_cast<Vector3<Real> const*>(iMat.m_Data + 12);
-    }
-
-    template <typename Real>
-    static inline Vector2<Real> const& GetPosition2D(Matrix4<Real> const& iMat)
-    {
-      return *reinterpret_cast<Vector2<Real> const*>(iMat.m_Data + 12);
-    }
-
-    template <typename Real>
-    static inline Vector3<Real>& GetPosition(Matrix4<Real>& iMat)
-    {
-      return *reinterpret_cast<Vector3<Real>*>(iMat.m_Data + 12);
-    }
-
-    template <typename Real>
-    static inline Vector2<Real>& GetPosition2D(Matrix4<Real>& iMat)
-    {
-      return *reinterpret_cast<Vector2<Real>*>(iMat.m_Data + 12);
+      return reinterpret_cast<glm::vec<2,Real>&>(iVec);
     }
 
     // Prereq : points have to be in CCW order
     template <typename Real>
-    static Vector2<Real> ConeGetMidSegment(Vector2<Real> const (&iRange)[2])
+    static glm::vec<2,Real> ConeGetMidSegment(glm::vec<2,Real> const (&iRange)[2])
     {
-      Vector2<Real> mid = iRange[0] + iRange[1];
-      Real dist = mid.Normalize();
-      if (dist < Math<Real>::ZERO_TOLERANCE)
+      glm::vec<2,Real> mid = iRange[0] + iRange[1];
+      Real dist = NormalizeAndGetLength(mid);
+      if (dist < Math<Real>::ZeroTolerance())
       {
         mid = GetPerp(iRange[0]);
       }
@@ -450,26 +420,26 @@ namespace eXl
     }
 
     template <typename Real>
-    static void ConeUpdateRange(Vector2<Real> const (&iRange)[2], Vector2<Real>& oMid, Real& oLowLimit)
+    static void ConeUpdateRange(glm::vec<2,Real> const (&iRange)[2], glm::vec<2,Real>& oMid, Real& oLowLimit)
     {
       oMid = ConeGetMidSegment(iRange);
-      oLowLimit = iRange[0].Dot(oMid) / iRange[0].Length();
+      oLowLimit = dot(iRange[0], oMid) / length(iRange[0]);
     }
 
     template <typename Real>
-    static bool IsInCone(Vector2<Real> const& iDir, Vector2<Real> const& iMidSeg, Real iLowLimit, Real iEpsilon = Math<Real>::EPSILON)
+    static bool IsInCone(glm::vec<2,Real> const& iDir, glm::vec<2,Real> const& iMidSeg, Real iLowLimit, Real iEpsilon = Math<Real>::Epsilon())
     {
-      return iDir.Dot(iMidSeg) > (iLowLimit - iEpsilon);
+      return dot(iDir,iMidSeg) > (iLowLimit - iEpsilon);
     }
 
     template <typename Real>
-    static Vector3<Real> Reflect(Vector3<Real> const& iIncomingDir, Vector3<Real> const& iNormal)
+    static glm::vec<3,Real> Reflect(glm::vec<3,Real> const& iIncomingDir, glm::vec<3,Real> const& iNormal)
     {
-      return iIncomingDir - iNormal * iIncomingDir.Dot(iNormal) * 2;
+      return iIncomingDir - iNormal * dot(iIncomingDir, iNormal) * 2;
     }
 
     template <typename Real>
-    static void ClampToBox(Vector2<Real>& ioPoint, AABB2D<Real> const& iBox)
+    static void ClampToBox(glm::vec<2,Real>& ioPoint, AABB2D<Real> const& iBox)
     {
       for (uint32_t i = 0; i < 2; ++i)
       {
@@ -477,35 +447,35 @@ namespace eXl
       }
     }
 
-    //static void AlignVector(Vector2d& ioDir, Vector2i& oCanonicalVector, unsigned int iFactor)
+    //static void AlignVector(Vec2d& ioDir, Vec2i& oCanonicalVector, unsigned int iFactor)
     //{
-    //  if (Mathd::Abs(ioDir.X()) > Mathd::ZERO_TOLERANCE)
+    //  if (Mathd::Abs(ioDir.x) > Mathd::ZeroTolerance())
     //  {
-    //    if (Mathd::Abs(ioDir.Y()) > Mathd::ZERO_TOLERANCE)
+    //    if (Mathd::Abs(ioDir.y) > Mathd::ZeroTolerance())
     //    {
-    //      double ratio = (ioDir.X() / ioDir.Y()));
+    //      double ratio = (ioDir.x / ioDir.y));
     //      int sign = Sign(ratio);
     //      ratio = ratio * sign;
     //      if (ratio > 1)
     //      {
     //        ratio = 1 / ratio;
     //        unsigned int ratioI = Mathi::Round(ratio * iFactor);
-    //        oCanonicalVector = Vector2i(Sign(ioDir.X()) * iFactor, Sign(ioDir.Y()) * ratioI);
+    //        oCanonicalVector = Vec2i(Sign(ioDir.x) * iFactor, Sign(ioDir.y) * ratioI);
     //      }
     //      else
     //      {
     //        unsigned int ratioI = Mathi::Round(ratio * iFactor);
-    //        oCanonicalVector = Vector2i(Sign(ioDir.X()) * ratioI, Sign(ioDir.Y()) * iFactor);
+    //        oCanonicalVector = Vec2i(Sign(ioDir.x) * ratioI, Sign(ioDir.y) * iFactor);
     //      }
     //      ioDir = MathTools::ToDVec(oCanonicalVector) * ioDir.Length() / Mathd::Sqrt(ratioI*ratioI + iFactor*iFactor);
     //      return;
     //    }
     //  }
-    //  ioDir = Vector2d::ZERO;
-    //  oCanonicalVector = Vector2i::ZERO;
+    //  ioDir = Vec2d::ZERO;
+    //  oCanonicalVector = zero<Vec2i>();
     //}
     //
-    //static void AlignSegment(Vector2d& ioPoint1, Vector2d ioPoint2, unsigned int iFactor)
+    //static void AlignSegment(Vec2d& ioPoint1, Vec2d ioPoint2, unsigned int iFactor)
     //{
     //  
     //}
@@ -513,16 +483,16 @@ namespace eXl
   };
 
   //template <>
-  //EXL_MATH_API Err MathTools::Stream<float>(Vector2f const& iPoint, Serializer iStreamer);
+  //EXL_MATH_API Err MathTools::Stream<float>(Vec2 const& iPoint, Serializer iStreamer);
 
   //template <>
-  //EXL_MATH_API Err MathTools::Unstream<float>(Vector2f& oPoint, Unstreamer& iUnstreamer);
+  //EXL_MATH_API Err MathTools::Unstream<float>(Vec2& oPoint, Unstreamer& iUnstreamer);
 
   //template <>
-  //EXL_MATH_API Err MathTools::Stream<int>(Vector2i const& iPoint, Serializer iStreamer);
+  //EXL_MATH_API Err MathTools::Stream<int>(Vec2i const& iPoint, Serializer iStreamer);
 
   //template <>
-  //EXL_MATH_API Err MathTools::Unstream<int>(Vector2i& oPoint, Unstreamer& iUnstreamer);
+  //EXL_MATH_API Err MathTools::Unstream<int>(Vec2i& oPoint, Unstreamer& iUnstreamer);
 
   //template <>
   //EXL_MATH_API Err MathTools::Stream<int>(Polygoni const& iPoint, Streamer& iStreamer);

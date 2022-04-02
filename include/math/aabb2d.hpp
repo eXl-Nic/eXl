@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include "math.hpp"
-#include "vector2.hpp"
 
 namespace eXl
 {
@@ -21,7 +20,7 @@ namespace eXl
   public:
     AABB2D()
     {
-      m_Data[0] = m_Data[1] = Vector2<Real>::ZERO;
+      m_Data[0] = m_Data[1] = Zero<glm::vec<2,Real>>();
     }
     AABB2D(AABB2D const& iOther)
     {
@@ -36,11 +35,11 @@ namespace eXl
     }
     AABB2D(Real iMinX, Real iMinY, Real iMaxX, Real iMaxY)
     {
-      m_Data[0] = Vector2<Real>(iMinX,iMinY);
-      m_Data[1] = Vector2<Real>(iMaxX,iMaxY);
+      m_Data[0] = glm::vec<2,Real>(iMinX,iMinY);
+      m_Data[1] = glm::vec<2,Real>(iMaxX,iMaxY);
     }
 
-    static AABB2D FromCenterAndSize(Vector2<Real> iCenter,Vector2<Real> iSize)
+    static AABB2D FromCenterAndSize(glm::vec<2,Real> iCenter,glm::vec<2,Real> iSize)
     {
       AABB2D ret;
       ret.m_Data[0] = iCenter - iSize / 2.0;
@@ -48,7 +47,7 @@ namespace eXl
       return ret;
     }
 
-    AABB2D(Vector2<Real> iMin,Vector2<Real> iSize)
+    AABB2D(glm::vec<2,Real> iMin,glm::vec<2,Real> iSize)
     {
       m_Data[0] = iMin;
       m_Data[1] = iMin + iSize;
@@ -57,16 +56,16 @@ namespace eXl
     template <class OtherReal>
     explicit AABB2D(AABB2D<OtherReal> const& iOther)
     {
-      m_Data[0] = Vector2<Real>(iOther.m_Data[0]);
-      m_Data[1] = Vector2<Real>(iOther.m_Data[1]);
+      m_Data[0] = glm::vec<2,Real>(iOther.m_Data[0]);
+      m_Data[1] = glm::vec<2,Real>(iOther.m_Data[1]);
     }
 
     bool Empty() const
     {
-      return m_Data[0].X() == m_Data[1].X() || m_Data[0].Y() == m_Data[1].Y();
+      return m_Data[0].x == m_Data[1].x || m_Data[0].y == m_Data[1].y;
     }
 
-    bool CircleTest(Vector2f const& iPos, Real iRadius)
+    bool CircleTest(Vec2 const& iPos, Real iRadius)
     {
       if(Contains(iPos))
       {
@@ -75,40 +74,40 @@ namespace eXl
       else
       {
         //Test segment X == X0
-        Real dist = m_Data[0].X() - iPos.X();   //(x0-xc)
+        Real dist = m_Data[0].x - iPos.x;   //(x0-xc)
         dist = (iRadius + dist)*(iRadius - dist); //R^2 - (x0-xc)^2
         if(dist > 0)
         {
-          Real y = Math<Real>::Sqrt(dist) + iPos.Y();
-          if(Math<Real>::ZERO_TOLERANCE < m_Data[1].Y() - y && y - m_Data[0].Y() > Math<Real>::ZERO_TOLERANCE)
+          Real y = Math<Real>::Sqrt(dist) + iPos.y;
+          if(Math<Real>::ZeroTolerance() < m_Data[1].y - y && y - m_Data[0].y > Math<Real>::ZeroTolerance())
             return true;
         }
         //Test segment X == X1
-        dist = m_Data[1].X() - iPos.X();   //(x0-xc)
+        dist = m_Data[1].x - iPos.x;   //(x0-xc)
         dist = (iRadius + dist)*(iRadius - dist); //R^2 - (x0-xc)^2
         if(dist > 0)
         {
-          Real y = Math<Real>::Sqrt(dist) + iPos.Y();
-          if(Math<Real>::ZERO_TOLERANCE < m_Data[1].Y() - y && y - m_Data[0].Y() > Math<Real>::ZERO_TOLERANCE)
+          Real y = Math<Real>::Sqrt(dist) + iPos.y;
+          if(Math<Real>::ZeroTolerance() < m_Data[1].y - y && y - m_Data[0].y > Math<Real>::ZeroTolerance())
             return true;
         }
 
         //TestSegment Y == Y0
-        dist = m_Data[0].Y() - iPos.Y();   //(x0-xc)
+        dist = m_Data[0].y - iPos.y;   //(x0-xc)
         dist = (iRadius + dist)*(iRadius - dist); //R^2 - (x0-xc)^2
         if(dist > 0)
         {
-          Real x = Math<Real>::Sqrt(dist) + iPos.X();
-          if(Math<Real>::ZERO_TOLERANCE < m_Data[1].X() - x && x - m_Data[0].X() > Math<Real>::ZERO_TOLERANCE)
+          Real x = Math<Real>::Sqrt(dist) + iPos.x;
+          if(Math<Real>::ZeroTolerance() < m_Data[1].x - x && x - m_Data[0].x > Math<Real>::ZeroTolerance())
             return true;
         }
         //Test segment Y == Y1
-        dist = m_Data[1].Y() - iPos.Y();   //(x0-xc)
+        dist = m_Data[1].y - iPos.y;   //(x0-xc)
         dist = (iRadius + dist)*(iRadius - dist); //R^2 - (x0-xc)^2
         if(dist > 0)
         {
-          Real x = Math<Real>::Sqrt(dist) + iPos.X();
-          if(Math<Real>::ZERO_TOLERANCE < m_Data[1].X() - x && x - m_Data[0].X() > Math<Real>::ZERO_TOLERANCE)
+          Real x = Math<Real>::Sqrt(dist) + iPos.x;
+          if(Math<Real>::ZeroTolerance() < m_Data[1].x - x && x - m_Data[0].x > Math<Real>::ZeroTolerance())
             return true;
         }
       }
@@ -117,62 +116,62 @@ namespace eXl
 
     void Rotate(Real iAngle)
     {
-      Vector2<Real> center = GetCenter();
-      Vector2<Real> size = GetSize();
-      Vector2<Real> points[4];
+      glm::vec<2,Real> center = GetCenter();
+      glm::vec<2,Real> size = GetSize();
+      glm::vec<2,Real> points[4];
       points[0] = size * -0.5;
-      points[1] = Vector2<Real>(size.X() * -0.5, size.Y() *  0.5) ;
-      points[2] = Vector2<Real>(size.X() *  0.5, size.Y() * -0.5) ;
+      points[1] = glm::vec<2,Real>(size.x * -0.5, size.y *  0.5) ;
+      points[2] = glm::vec<2,Real>(size.x *  0.5, size.y * -0.5) ;
       points[3] = size * 0.5;
-      points[0] = Vector2<Real>(points[0].X() * Math<Real>::Cos(iAngle) + points[0].Y() * Math<Real>::Sin(iAngle)
-                         , points[0].Y() * Math<Real>::Cos(iAngle) - points[0].X() * Math<Real>::Sin(iAngle));
-      points[1] = Vector2<Real>(points[1].X() * Math<Real>::Cos(iAngle) + points[1].Y() * Math<Real>::Sin(iAngle)
-                         , points[1].Y() * Math<Real>::Cos(iAngle) - points[1].X() * Math<Real>::Sin(iAngle));
-      points[2] = Vector2<Real>(points[2].X() * Math<Real>::Cos(iAngle) + points[2].Y() * Math<Real>::Sin(iAngle)
-                         , points[2].Y() * Math<Real>::Cos(iAngle) - points[2].X() * Math<Real>::Sin(iAngle));
-      points[3] = Vector2<Real>(points[3].X() * Math<Real>::Cos(iAngle) + points[3].Y() * Math<Real>::Sin(iAngle)
-                         , points[3].Y() * Math<Real>::Cos(iAngle) - points[3].X() * Math<Real>::Sin(iAngle));
+      points[0] = glm::vec<2,Real>(points[0].x * Math<Real>::Cos(iAngle) + points[0].y * Math<Real>::Sin(iAngle)
+                         , points[0].y * Math<Real>::Cos(iAngle) - points[0].x * Math<Real>::Sin(iAngle));
+      points[1] = glm::vec<2,Real>(points[1].x * Math<Real>::Cos(iAngle) + points[1].y * Math<Real>::Sin(iAngle)
+                         , points[1].y * Math<Real>::Cos(iAngle) - points[1].x * Math<Real>::Sin(iAngle));
+      points[2] = glm::vec<2,Real>(points[2].x * Math<Real>::Cos(iAngle) + points[2].y * Math<Real>::Sin(iAngle)
+                         , points[2].y * Math<Real>::Cos(iAngle) - points[2].x * Math<Real>::Sin(iAngle));
+      points[3] = glm::vec<2,Real>(points[3].x * Math<Real>::Cos(iAngle) + points[3].y * Math<Real>::Sin(iAngle)
+                         , points[3].y * Math<Real>::Cos(iAngle) - points[3].x * Math<Real>::Sin(iAngle));
 
       m_Data[0] = m_Data[1] = points[0];
       for (unsigned int i = 1; i < 4; ++i)
       {
-        m_Data[0].X() = Math<Real>::Min(m_Data[0].X(), points[i].X());
-        m_Data[0].Y() = Math<Real>::Min(m_Data[0].Y(), points[i].Y());
-        m_Data[1].X() = Math<Real>::Max(m_Data[1].X(), points[i].X());
-        m_Data[1].Y() = Math<Real>::Max(m_Data[1].Y(), points[i].Y());
+        m_Data[0].x = Math<Real>::Min(m_Data[0].x, points[i].x);
+        m_Data[0].y = Math<Real>::Min(m_Data[0].y, points[i].y);
+        m_Data[1].x = Math<Real>::Max(m_Data[1].x, points[i].x);
+        m_Data[1].y = Math<Real>::Max(m_Data[1].y, points[i].y);
       }
       m_Data[0] += center;
       m_Data[1] += center;
     }
 
-    Vector2<Real> GetCenter()const
+    glm::vec<2,Real> GetCenter()const
     {
-      return (m_Data[0] + m_Data[1])/2;
+      return (m_Data[0] + m_Data[1])/Real(2);
     }
 
-    Vector2<Real> GetSize()const
+    glm::vec<2,Real> GetSize()const
     {
       return m_Data[1] - m_Data[0];
     }
 
     void Inflate(Real iCoeff)
     {
-      Vector2<Real> center = (m_Data[1] + m_Data[0]) / 2;
-      Vector2<Real> size = m_Data[1] - m_Data[0];
+      glm::vec<2,Real> center = (m_Data[1] + m_Data[0]) / 2;
+      glm::vec<2,Real> size = m_Data[1] - m_Data[0];
       size = size * iCoeff;
       m_Data[0] = center - size / 2.0;
       m_Data[1] = center + size / 2.0;
     }
 
-    Real MinX()const{return m_Data[0].X();}
-    Real MinY()const{return m_Data[0].Y();}
-    Real MaxX()const{return m_Data[1].X();}
-    Real MaxY()const{return m_Data[1].Y();}
+    Real MinX()const{return m_Data[0].x;}
+    Real MinY()const{return m_Data[0].y;}
+    Real MaxX()const{return m_Data[1].x;}
+    Real MaxY()const{return m_Data[1].y;}
     
-    Real& MinX(){return m_Data[0].X();}
-    Real& MinY(){return m_Data[0].Y();}
-    Real& MaxX(){return m_Data[1].X();}
-    Real& MaxY(){return m_Data[1].Y();}
+    Real& MinX(){return m_Data[0].x;}
+    Real& MinY(){return m_Data[0].y;}
+    Real& MaxX(){return m_Data[1].x;}
+    Real& MaxY(){return m_Data[1].y;}
 
     bool operator ==(AABB2D const& iOther) const
     {
@@ -186,83 +185,83 @@ namespace eXl
 
 	  bool Empty()
 	  {
-		  return m_Data[0].X() == m_Data[1].X() || m_Data[0].Y() == m_Data[1].Y();
+		  return m_Data[0].x == m_Data[1].x || m_Data[0].y == m_Data[1].y;
 	  }
 
     void SetCommonBox(AABB2D<Real> const& iBox1,AABB2D<Real> const& iBox2)
     {
-      m_Data[0].X() = Math<Real>::Max(iBox1.m_Data[0].X(),iBox2.m_Data[0].X());
-      m_Data[0].Y() = Math<Real>::Max(iBox1.m_Data[0].Y(),iBox2.m_Data[0].Y());
-      m_Data[1].X() = Math<Real>::Max(Math<Real>::Min(iBox1.m_Data[1].X(),iBox2.m_Data[1].X()),m_Data[0].X());
-      m_Data[1].Y() = Math<Real>::Max(Math<Real>::Min(iBox1.m_Data[1].Y(),iBox2.m_Data[1].Y()),m_Data[0].Y());
+      m_Data[0].x = Math<Real>::Max(iBox1.m_Data[0].x,iBox2.m_Data[0].x);
+      m_Data[0].y = Math<Real>::Max(iBox1.m_Data[0].y,iBox2.m_Data[0].y);
+      m_Data[1].x = Math<Real>::Max(Math<Real>::Min(iBox1.m_Data[1].x,iBox2.m_Data[1].x),m_Data[0].x);
+      m_Data[1].y = Math<Real>::Max(Math<Real>::Min(iBox1.m_Data[1].y,iBox2.m_Data[1].y),m_Data[0].y);
     }
 
-    void Absorb(Vector2<Real> const& iPoint)
+    void Absorb(glm::vec<2,Real> const& iPoint)
     {
-      m_Data[0].X() = Math<Real>::Min(m_Data[0].X(), iPoint.X());
-      m_Data[0].Y() = Math<Real>::Min(m_Data[0].Y(), iPoint.Y());
-      m_Data[1].X() = Math<Real>::Max(m_Data[1].X(), iPoint.X());
-      m_Data[1].Y() = Math<Real>::Max(m_Data[1].Y(), iPoint.Y());
+      m_Data[0].x = Math<Real>::Min(m_Data[0].x, iPoint.x);
+      m_Data[0].y = Math<Real>::Min(m_Data[0].y, iPoint.y);
+      m_Data[1].x = Math<Real>::Max(m_Data[1].x, iPoint.x);
+      m_Data[1].y = Math<Real>::Max(m_Data[1].y, iPoint.y);
     }
 
     void Absorb(AABB2D<Real> const& iBox)
     {
-      m_Data[0].X() = Math<Real>::Min(m_Data[0].X(),iBox.m_Data[0].X());
-      m_Data[0].Y() = Math<Real>::Min(m_Data[0].Y(),iBox.m_Data[0].Y());
-      m_Data[1].X() = Math<Real>::Max(m_Data[1].X(),iBox.m_Data[1].X());
-      m_Data[1].Y() = Math<Real>::Max(m_Data[1].Y(),iBox.m_Data[1].Y());
+      m_Data[0].x = Math<Real>::Min(m_Data[0].x,iBox.m_Data[0].x);
+      m_Data[0].y = Math<Real>::Min(m_Data[0].y,iBox.m_Data[0].y);
+      m_Data[1].x = Math<Real>::Max(m_Data[1].x,iBox.m_Data[1].x);
+      m_Data[1].y = Math<Real>::Max(m_Data[1].y,iBox.m_Data[1].y);
     }
 
-    bool IsInside(AABB2D const& iOther, Real iEpsilon = Math<Real>::ZERO_TOLERANCE) const
+    bool IsInside(AABB2D const& iOther, Real iEpsilon = Math<Real>::ZeroTolerance()) const
     {
-      return (m_Data[0].X() - iOther.m_Data[0].X() >= iEpsilon && m_Data[0].Y() - iOther.m_Data[0].Y() >= iEpsilon
-           && iOther.m_Data[1].X() - m_Data[1].X() >= iEpsilon && iOther.m_Data[1].Y() - m_Data[1].Y() >= iEpsilon );
+      return (m_Data[0].x - iOther.m_Data[0].x >= iEpsilon && m_Data[0].y - iOther.m_Data[0].y >= iEpsilon
+           && iOther.m_Data[1].x - m_Data[1].x >= iEpsilon && iOther.m_Data[1].y - m_Data[1].y >= iEpsilon );
     }
 
-    bool Intersect(AABB2D const& iOther, Real iEpsilon = Math<Real>::ZERO_TOLERANCE) const
+    bool Intersect(AABB2D const& iOther, Real iEpsilon = Math<Real>::ZeroTolerance()) const
     {
-      return iOther.m_Data[1].X() - m_Data[0].X() >= iEpsilon && m_Data[1].X() - iOther.m_Data[0].X() >= iEpsilon
-          && iOther.m_Data[1].Y() - m_Data[0].Y() >= iEpsilon && m_Data[1].Y() - iOther.m_Data[0].Y() >= iEpsilon;
+      return iOther.m_Data[1].x - m_Data[0].x >= iEpsilon && m_Data[1].x - iOther.m_Data[0].x >= iEpsilon
+          && iOther.m_Data[1].y - m_Data[0].y >= iEpsilon && m_Data[1].y - iOther.m_Data[0].y >= iEpsilon;
     }
 
     //0 No, 1 Left, 2 Right, 3 Down, 4 Up
-    int Touch(AABB2D const& iOther, Real iEpsilon = Math<Real>::ZERO_TOLERANCE) const
+    int Touch(AABB2D const& iOther, Real iEpsilon = Math<Real>::ZeroTolerance()) const
     {
-      if(iOther.m_Data[1].Y() - m_Data[0].Y() >= iEpsilon && m_Data[1].Y() - iOther.m_Data[0].Y() >= iEpsilon)
+      if(iOther.m_Data[1].y - m_Data[0].y >= iEpsilon && m_Data[1].y - iOther.m_Data[0].y >= iEpsilon)
       {
-        Real val = m_Data[0].X() - iOther.m_Data[1].X();
+        Real val = m_Data[0].x - iOther.m_Data[1].x;
         if(val <= iEpsilon && val >= -iEpsilon)
           return 1;
         
-        val = m_Data[1].X() - iOther.m_Data[0].X();
+        val = m_Data[1].x - iOther.m_Data[0].x;
         if(val <= iEpsilon && val >= -iEpsilon)
           return 2;
       }
-      if(iOther.m_Data[1].X() - m_Data[0].X() >= iEpsilon && m_Data[1].X() - iOther.m_Data[0].X() >= iEpsilon)
+      if(iOther.m_Data[1].x - m_Data[0].x >= iEpsilon && m_Data[1].x - iOther.m_Data[0].x >= iEpsilon)
       {
-        Real val = m_Data[0].Y() - iOther.m_Data[1].Y();
+        Real val = m_Data[0].y - iOther.m_Data[1].y;
       
         if(val <= iEpsilon && val >= -iEpsilon)
           return 3;
 
-        val = m_Data[1].Y() - iOther.m_Data[0].Y();
+        val = m_Data[1].y - iOther.m_Data[0].y;
         if(val <= iEpsilon && val >= -iEpsilon)
           return 4;
       }
       return 0;
     }
 
-    Optional<Vector2<Real>> SegmentTest(Vector2<Real> const& iOrigin, Vector2<Real> const& iDir, Real iEpsilon = Math<Real>::ZERO_TOLERANCE)
+    Optional<glm::vec<2,Real>> SegmentTest(glm::vec<2,Real> const& iOrigin, glm::vec<2,Real> const& iDir, Real iEpsilon = Math<Real>::ZeroTolerance())
     {
-      Real const scaleX = 1.0 / iDir.X();
-      Real const scaleY = 1.0 / iDir.Y();
+      Real const scaleX = 1.0 / iDir.x;
+      Real const scaleY = 1.0 / iDir.y;
       Real const signX = Math<Real>::Sign(scaleX);
       Real const signY = Math<Real>::Sign(scaleY);
 
-      Real const nearTimeX = ((signX > 0 ? m_Data[0].X() : m_Data[1].X()) - iOrigin.X()) * scaleX;
-      Real const nearTimeY = ((signY > 0 ? m_Data[0].Y() : m_Data[1].Y()) - iOrigin.Y()) * scaleY;
-      Real const farTimeX = ((signX > 0 ? m_Data[1].X() : m_Data[0].X()) - iOrigin.X()) * scaleX;
-      Real const farTimeY = ((signY > 0 ? m_Data[1].Y() : m_Data[0].Y()) - iOrigin.Y()) * scaleY;
+      Real const nearTimeX = ((signX > 0 ? m_Data[0].x : m_Data[1].x) - iOrigin.x) * scaleX;
+      Real const nearTimeY = ((signY > 0 ? m_Data[0].y : m_Data[1].y) - iOrigin.y) * scaleY;
+      Real const farTimeX = ((signX > 0 ? m_Data[1].x : m_Data[0].x) - iOrigin.x) * scaleX;
+      Real const farTimeY = ((signY > 0 ? m_Data[1].y : m_Data[0].y) - iOrigin.y) * scaleY;
 
       if (nearTimeX > farTimeY || nearTimeY > farTimeX) 
       {
@@ -280,16 +279,16 @@ namespace eXl
       return iOrigin + iDir * nearTime;
     }
 
-    bool Contains(Vector2<Real>const& iPoint, Real iEpsilon = Math<Real>::ZERO_TOLERANCE) const
+    bool Contains(glm::vec<2,Real>const& iPoint, Real iEpsilon = Math<Real>::ZeroTolerance()) const
     {
-      return iPoint.X() - m_Data[0].X() >= iEpsilon && m_Data[1].X() - iPoint.X() >= iEpsilon
-          && iPoint.Y() - m_Data[0].Y() >= iEpsilon && m_Data[1].Y() - iPoint.Y() >= iEpsilon;
+      return iPoint.x - m_Data[0].x >= iEpsilon && m_Data[1].x - iPoint.x >= iEpsilon
+          && iPoint.y - m_Data[0].y >= iEpsilon && m_Data[1].y - iPoint.y >= iEpsilon;
     }
 
     // Neg value -> distance to min, Pos value -> distance to max, 0, inside
-    Vector2f Classify(Vector2<Real>const& iPoint, Real iEpsilon = Math<Real>::ZERO_TOLERANCE) const
+    glm::vec<2, Real> Classify(glm::vec<2,Real> const& iPoint, Real iEpsilon = Math<Real>::ZeroTolerance()) const
     {
-      Vector2f res(iPoint.X() - m_Data[0].X(), iPoint.Y() - m_Data[0].Y());
+      glm::vec<2, Real> res(iPoint.x - m_Data[0].x, iPoint.y - m_Data[0].y);
       for(uint32_t axis = 0; axis < 2; ++axis)
       {
         if(!(res.m_Data[axis] < -iEpsilon))
@@ -309,23 +308,23 @@ namespace eXl
       return res;
     }
 
-    Vector2<Real> GetDistX(AABB2D const& iOther) const
+    glm::vec<2,Real> GetDistX(AABB2D const& iOther) const
     {
-      return Vector2<Real>(iOther.m_Data[0].X() - m_Data[0].X(),m_Data[1].X() - iOther.m_Data[1].X());
+      return glm::vec<2,Real>(iOther.m_Data[0].x - m_Data[0].x,m_Data[1].x - iOther.m_Data[1].x);
     }
 
-    Vector2<Real> GetDistY(AABB2D const& iOther) const
+    glm::vec<2,Real> GetDistY(AABB2D const& iOther) const
     {
-      return Vector2<Real>(iOther.m_Data[0].Y() - m_Data[0].Y(),m_Data[1].Y() - iOther.m_Data[1].Y());
+      return glm::vec<2,Real>(iOther.m_Data[0].y - m_Data[0].y,m_Data[1].y - iOther.m_Data[1].y);
     }
 
     union
     {
-      Vector2<Real> m_Data[2];
+      glm::vec<2,Real> m_Data[2];
       struct
       {
-        Vector2<Real> m_Min;
-        Vector2<Real> m_Max;
+        glm::vec<2,Real> m_Min;
+        glm::vec<2,Real> m_Max;
       };
     };
   };

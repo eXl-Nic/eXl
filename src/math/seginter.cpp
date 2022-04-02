@@ -84,6 +84,14 @@ namespace eXl
       && m_SegmentsInter.Begin() == m_SegmentsInter.End();
   }
 
+  bool operator < (Vector2Q const& iPt1, Vector2Q const& iPt2)
+  {
+    if (iPt1.x == iPt2.x)
+    {
+      return iPt1.y < iPt2.y;
+    }
+    return iPt1.x < iPt2.x;
+  }
 
   bool Intersector::Event::operator<(Event const& iOther) const
   {
@@ -99,9 +107,9 @@ namespace eXl
     {
       std::swap(m_Start, m_End);
     }
-    if(m_End.X() != m_Start.X())
+    if(m_End.x != m_Start.x)
     {
-      m_Slope = QType(m_End.Y() - m_Start.Y()) / QType(m_End.X() - m_Start.X());
+      m_Slope = QType(m_End.y - m_Start.y) / QType(m_End.x - m_Start.x);
     }
   }
 
@@ -109,11 +117,11 @@ namespace eXl
   {
     if(m_Slope)
     {
-      return m_Start.Y() + (*m_Slope) * (iX - m_Start.X());
+      return m_Start.y + (*m_Slope) * (iX - m_Start.x);
     }
     else
     {
-      return iEvt.m_Point.Y();
+      return iEvt.m_Point.y;
     }
   }
 
@@ -122,7 +130,7 @@ namespace eXl
     uint32_t seg1Idx = &iSeg1 - m_Segments.data();
     uint32_t seg2Idx = &iSeg2 - m_Segments.data();
 
-    Vector2Q interPt;
+    Vector2Q interPt(0, 0);
     uint32_t res = Segment<QType>::Intersect(iSeg1.m_Start, iSeg1.m_End, iSeg2.m_Start, iSeg2.m_End, interPt, 0);
     if(res == Segment<QType>::PointOnSegments)
     {
@@ -135,7 +143,7 @@ namespace eXl
     {
       //eXl_ASSERT(iEvt.m_Type == Event::Start);
 
-      if(iSeg1.m_End.m_X > iSeg2.m_End.m_X)
+      if(iSeg1.m_End.x > iSeg2.m_End.x)
       {
         //Reinsert seg1's start at seg2's end.
         Event newStart(m_SegListPool, iSeg2.m_End, seg1Idx, Event::Start);
@@ -396,7 +404,7 @@ namespace eXl
       //Event curEvt = *m_EventQueue.begin();
       //m_EventQueue.erase(m_EventQueue.begin());
 
-      auto curX = curEvt.m_Point.X();
+      auto curX = curEvt.m_Point.x;
 
       auto activeSegComp = [this, curX, &curEvt](ActiveSegment const& iSeg1, ActiveSegment const& iSeg2)
       {
@@ -479,7 +487,7 @@ namespace eXl
 
           if(activeSeg.m_Point != curEvt.m_Point)
           {
-            if(!iParams.m_Filter || iParams.m_Filter(m_ActiveSegments, i, Segment<QType>{activeSeg.m_Point, curEvt.m_Point} ))
+            if(!iParams.m_Filter || iParams.m_Filter(m_ActiveSegments, i, Segment<QType>{ activeSeg.m_Point, curEvt.m_Point} ))
             {
               Segmenti interSeg = {FromVec2Q<int>(activeSeg.m_Point), FromVec2Q<int>(curEvt.m_Point)};
               oSegs.push_back(std::make_pair(activeSeg.m_Idx, interSeg));
@@ -673,7 +681,7 @@ namespace eXl
           
           auto y1 = seg.GetYAt(curX, curEvt);
           
-          return y1 < curEvt.m_Point.Y();
+          return y1 < curEvt.m_Point.y;
         };
 
         ActiveSegment dummySeg = {curEvt.m_Point, -1};

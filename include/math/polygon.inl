@@ -23,21 +23,21 @@ namespace boost
     struct geometry_concept<eXl::Polygon<Real> >{ typedef polygon_with_holes_concept type; };
   
     template <typename Real>
-    struct geometry_concept<eXl::Vector<eXl::Vector2<Real> > >{ typedef polygon_concept type; };
+    struct geometry_concept<eXl::Vector<glm::vec<2,Real> > >{ typedef polygon_concept type; };
   
     template <typename Real>
     struct polygon_90_traits < eXl::Polygon<Real>, boost::polygon::gtl_no > {};
     
   
     template <typename Real>
-    struct polygon_90_traits < eXl::Vector<eXl::Vector2<Real> >, boost::polygon::gtl_no > {};
+    struct polygon_90_traits < eXl::Vector<glm::vec<2,Real> >, boost::polygon::gtl_no > {};
     
   
     template <typename Real>
     struct polygon_traits_general<eXl::Polygon<Real> > {
       typedef Real coordinate_type;
-      typedef typename eXl::Vector<eXl::Vector2<Real> >::const_iterator iterator_type;
-      typedef eXl::Vector2<Real> point_type;
+      typedef typename eXl::Vector<glm::vec<2,Real> >::const_iterator iterator_type;
+      typedef glm::vec<2,Real> point_type;
     
       static inline iterator_type begin_points(eXl::Polygon<Real> const& t) {
           return t.Border().begin();
@@ -64,14 +64,14 @@ namespace boost
       static inline eXl::Polygon<Real>& set_points(eXl::Polygon<Real> & t, 
                                          iT input_begin, iT input_end) {
     
-        eXl::Vector<eXl::Vector2<Real> > tempStor;
-        //iterator_compact_to_points<iT,eXl::Vector2<Real> > iterBegin(input_begin,input_end);
-        //iterator_compact_to_points<iT,eXl::Vector2<Real> > iterEnd(input_end,input_end);
+        eXl::Vector<glm::vec<2,Real> > tempStor;
+        //iterator_compact_to_points<iT,glm::vec<2,Real> > iterBegin(input_begin,input_end);
+        //iterator_compact_to_points<iT,glm::vec<2,Real> > iterEnd(input_end,input_end);
         
         //tempStor.assign(input_begin,input_end);
         for (; input_begin != input_end; ++input_begin)
         {
-          eXl::Vector2<Real> temp(boost::polygon::point_traits<typename iT::value_type>::get(*input_begin, boost::polygon::HORIZONTAL),
+          glm::vec<2,Real> temp(boost::polygon::point_traits<typename iT::value_type>::get(*input_begin, boost::polygon::HORIZONTAL),
                                   boost::polygon::point_traits<typename iT::value_type>::get(*input_begin, boost::polygon::VERTICAL)) ;
           tempStor.push_back(temp);
         }
@@ -86,10 +86,10 @@ namespace boost
     };
   
     template <typename Real>
-    struct polygon_traits_general<eXl::Vector<eXl::Vector2<Real> > > {
+    struct polygon_traits_general<eXl::Vector<glm::vec<2,Real> > > {
       typedef Real coordinate_type;
-      typedef typename eXl::Vector<eXl::Vector2<Real> >::const_iterator iterator_type;
-      typedef eXl::Vector2<Real> point_type;
+      typedef typename eXl::Vector<glm::vec<2,Real> >::const_iterator iterator_type;
+      typedef glm::vec<2,Real> point_type;
   
       static inline iterator_type begin_points(typename eXl::Polygon<Real>::PtList const& t) {
           return t.begin();
@@ -110,19 +110,19 @@ namespace boost
     };
   
     template <typename Real>
-    struct polygon_mutable_traits<eXl::Vector<eXl::Vector2<Real> > > {
+    struct polygon_mutable_traits<eXl::Vector<glm::vec<2,Real> > > {
   
       template <typename iT>
       static inline typename eXl::Polygon<Real>::PtList& set_points(typename eXl::Polygon<Real>::PtList & t, 
                                          iT input_begin, iT input_end) {
   
-        //iterator_compact_to_points<iT,eXl::Vector2<Real> > iterBegin(input_begin,input_end);
-        //iterator_compact_to_points<iT,eXl::Vector2<Real> > iterEnd(input_end,input_end);
+        //iterator_compact_to_points<iT,glm::vec<2,Real> > iterBegin(input_begin,input_end);
+        //iterator_compact_to_points<iT,glm::vec<2,Real> > iterEnd(input_end,input_end);
         //t.assign(input_begin,input_end);
         t.clear();
         for (; input_begin != input_end; ++input_begin)
         {
-          eXl::Vector2<Real> temp(boost::polygon::point_traits<typename iT::value_type>::get(*input_begin, boost::polygon::HORIZONTAL),
+          glm::vec<2,Real> temp(boost::polygon::point_traits<typename iT::value_type>::get(*input_begin, boost::polygon::HORIZONTAL),
                                   boost::polygon::point_traits<typename iT::value_type>::get(*input_begin, boost::polygon::VERTICAL)) ;
           t.push_back(temp);
         }
@@ -204,25 +204,25 @@ namespace eXl
   template <typename Real> 
   struct PreciseVector
   {
-    typedef eXl::Vector2<typename eXl::PreciseType<Real>::type > type; 
+    typedef glm::vec<2, typename eXl::PreciseType<Real>::type > type; 
   };
 
   template <typename Real> 
-  inline typename PreciseVector<Real>::type ToPrecise(Vector2<Real> const& iVec)
+  inline typename PreciseVector<Real>::type ToPrecise(glm::vec<2,Real> const& iVec)
   {
-    return typename PreciseVector<Real>::type(Math<Real>::ToPrecise(iVec.X()), Math<Real>::ToPrecise(iVec.Y()));
+    return typename PreciseVector<Real>::type(Math<Real>::ToPrecise(iVec.x), Math<Real>::ToPrecise(iVec.y));
   }
 
   template <typename Real> 
-  inline bool VectorNotNull(Vector2<Real> const& iVec)
+  inline bool VectorNotNull(glm::vec<2,Real> const& iVec)
   {
-    return iVec.Length() > Math<Real>::ZERO_TOLERANCE;
+    return length(iVec) > Math<Real>::ZeroTolerance();
   }
 
   template <> 
-  inline bool VectorNotNull<int>(Vector2i const& iVec)
+  inline bool VectorNotNull<int>(Vec2i const& iVec)
   {
-    return iVec != Vector2i::ZERO;
+    return iVec != Zero<Vec2i>();
   }
 
   template <typename Real>
@@ -232,7 +232,7 @@ namespace eXl
   Polygon<Real>::~Polygon(){}
 
   template <typename Real>
-  void Polygon<Real>::Translate(Vector2<Real> const& iTrans)
+  void Polygon<Real>::Translate(glm::vec<2,Real> const& iTrans)
   {
     for (unsigned int i = 0; i < m_Ext.size(); ++i)
     {
@@ -273,23 +273,25 @@ namespace eXl
   template <typename Real>
   void Polygon<Real>::Rotate(typename eXl::PreciseType<Real>::type iAngle)
   {
-    if(Math<typename eXl::PreciseType<Real>::type>::Abs(iAngle) > Math<typename eXl::PreciseType<Real>::type>::ZERO_TOLERANCE)
+    if(Math<typename eXl::PreciseType<Real>::type>::Abs(iAngle) > Math<typename eXl::PreciseType<Real>::type>::ZeroTolerance())
     {
-      auto xAxis = Vector2<typename eXl::PreciseType<Real>::type>(Math<typename eXl::PreciseType<Real>::type>::Cos(iAngle), Math<typename eXl::PreciseType<Real>::type>::Sin(iAngle));
-      auto yAxis = Vector2<typename eXl::PreciseType<Real>::type>(-xAxis.Y(), xAxis.X());
+      auto xAxis = glm::vec<2, typename eXl::PreciseType<Real>::type>(Math<typename eXl::PreciseType<Real>::type>::Cos(iAngle), Math<typename eXl::PreciseType<Real>::type>::Sin(iAngle));
+      auto yAxis = glm::vec<2, typename eXl::PreciseType<Real>::type>(-xAxis.y, xAxis.x);
 
       for (unsigned int i = 0; i < m_Ext.size(); ++i)
       {
-        auto vec = xAxis * m_Ext[i].X() + yAxis * m_Ext[i].Y();
-        m_Ext[i] = Vector2<Real>(Math<Real>::Round(vec.X()), Math<Real>::Round(vec.Y()));
+        auto vec = xAxis * static_cast<typename eXl::PreciseType<Real>::type>(m_Ext[i].x) 
+          + yAxis * static_cast<typename eXl::PreciseType<Real>::type>(m_Ext[i].y);
+        m_Ext[i] = glm::vec<2,Real>(Math<Real>::Round(vec.x), Math<Real>::Round(vec.y));
       }
     
       for (unsigned int i = 0; i < m_Holes.size(); ++i)
       {
         for (unsigned int j = 0; j < m_Holes[i].size(); ++j)
         {
-          auto vec = xAxis * m_Holes[i][j].X() + yAxis * m_Holes[i][j].Y();
-          m_Holes[i][j] = Vector2<Real>(Math<Real>::Round(vec.X()), Math<Real>::Round(vec.Y()));
+          auto vec = xAxis * static_cast<typename eXl::PreciseType<Real>::type>(m_Holes[i][j].x)
+            + yAxis * static_cast<typename eXl::PreciseType<Real>::type>(m_Holes[i][j].y);
+          m_Holes[i][j] = glm::vec<2,Real>(Math<Real>::Round(vec.x), Math<Real>::Round(vec.y));
         }
       }
 
@@ -298,7 +300,7 @@ namespace eXl
   }
 
   template <typename Real>
-  Polygon<Real>::Polygon(Vector<Vector2<Real> > const& iPoints)
+  Polygon<Real>::Polygon(Vector<glm::vec<2,Real> > const& iPoints)
   {
     if(iPoints.size() > 2)
     {
@@ -322,9 +324,9 @@ namespace eXl
     m_Ext.clear();
     
     m_Ext.push_back(iBox.m_Data[0]);
-    m_Ext.push_back(Vector2<Real>(iBox.m_Data[0].X(), iBox.m_Data[1].Y()));
+    m_Ext.push_back(glm::vec<2,Real>(iBox.m_Data[0].x, iBox.m_Data[1].y));
     m_Ext.push_back(iBox.m_Data[1]);
-    m_Ext.push_back(Vector2<Real>(iBox.m_Data[1].X(), iBox.m_Data[0].Y()));
+    m_Ext.push_back(glm::vec<2,Real>(iBox.m_Data[1].x, iBox.m_Data[0].y));
     m_Ext.push_back(iBox.m_Data[0]);
 
     ForceClockwise();
@@ -397,9 +399,9 @@ namespace eXl
   }
 
   template <typename Real>
-  bool Polygon<Real>::ContainsPoint(Vector2<Real> const& iPoint) const
+  bool Polygon<Real>::ContainsPoint(glm::vec<2,Real> const& iPoint) const
   {
-    boost::polygon::point_data<Real> point(iPoint.X(), iPoint.Y());
+    boost::polygon::point_data<Real> point(iPoint.x, iPoint.y);
     return boost::polygon::contains(*this, point);
   }
 
@@ -511,7 +513,7 @@ namespace eXl
   }
 
   template <typename Real>
-  void Polygon<Real>::CutConvex(Vector2<Real> const& iOrig, Vector2<Real> const& iDir, Polygon& oLeftPoly, Polygon& oRightPoly) const
+  void Polygon<Real>::CutConvex(glm::vec<2,Real> const& iOrig, glm::vec<2,Real> const& iDir, Polygon& oLeftPoly, Polygon& oRightPoly) const
   {
     oLeftPoly.Clear();
     oRightPoly.Clear();
@@ -520,13 +522,13 @@ namespace eXl
     auto highPt = ToPrecise(m_AABB.m_Data[1]);
 
     typename PreciseVector<Real>::type boxSeg[5] = 
-    {lowPt,  typename PreciseVector<Real>::type(lowPt.X(), highPt.Y()),
-     highPt, typename PreciseVector<Real>::type(highPt.X(), lowPt.Y()),
+    {lowPt,  typename PreciseVector<Real>::type(lowPt.x, highPt.y),
+     highPt, typename PreciseVector<Real>::type(highPt.x, lowPt.y),
      lowPt
     };
 
     unsigned int curPoint = 0;
-    Vector2<Real> cutPoints[2];
+    glm::vec<2,Real> cutPoints[2];
 
     auto dOrig = ToPrecise(iOrig);
     auto dDir  = ToPrecise(iDir);
@@ -538,7 +540,7 @@ namespace eXl
       unsigned int mask = Segment<typename PreciseType<Real>::type>::PointFound | Segment<typename PreciseType<Real>::type>::PointOnSegment2;
       if((result & mask) == mask)
       {
-        Vector2<Real> potPoint(Math<Real>::Round(res.X()), Math<Real>::Round(res.Y()));
+        glm::vec<2,Real> potPoint(Math<Real>::Round(res.x), Math<Real>::Round(res.y));
         if (curPoint == 0 || VectorNotNull(cutPoints[0] - potPoint))
         {
           //Snap to bbox seg if integer.
@@ -550,20 +552,20 @@ namespace eXl
 
     if (curPoint == 2)
     {
-      Vector2<Real> cutVect = cutPoints[0] - cutPoints[1];
+      glm::vec<2,Real> cutVect = cutPoints[0] - cutPoints[1];
       if (VectorNotNull(cutVect))
       {
-        int origPoint = cutVect.Dot(iDir) > 0 ? 0 : 1;
+        int origPoint = (cutVect.x * iDir.x + cutVect.y * iDir.y) > 0 ? 0 : 1;
 
         typename Segment<Real>::SortByAngle sortMeth(cutPoints[origPoint]);
-        std::set<Vector2<Real>, typename Segment<Real>::SortByAngle > sortedPoints(sortMeth);
+        std::set<glm::vec<2,Real>, typename Segment<Real>::SortByAngle > sortedPoints(sortMeth);
         sortedPoints.insert(cutPoints[1 - origPoint]);
         sortedPoints.insert(m_AABB.m_Data[0]);
         sortedPoints.insert(m_AABB.m_Data[1]);
-        sortedPoints.insert(Vector2<Real>(m_AABB.m_Data[0].X(), m_AABB.m_Data[1].Y()));
-        sortedPoints.insert(Vector2<Real>(m_AABB.m_Data[1].X(), m_AABB.m_Data[0].Y()));
+        sortedPoints.insert(glm::vec<2,Real>(m_AABB.m_Data[0].x, m_AABB.m_Data[1].y));
+        sortedPoints.insert(glm::vec<2,Real>(m_AABB.m_Data[1].x, m_AABB.m_Data[0].y));
 
-        Vector<Vector2<Real> > cutPoly;
+        Vector<glm::vec<2,Real> > cutPoly;
 
         cutPoly.push_back(cutPoints[origPoint]);
 
@@ -614,10 +616,10 @@ namespace eXl
     if(m_Ext.size() <= 2)
       return true;
 
-    Vector2<Real> initPoint = m_Ext[0];
-    Vector2<Real> lastPoint1 = initPoint;
-    Vector2<Real> lastPoint2 = m_Ext[1];
-    Vector2<Real> curPoint = m_Ext[2];
+    glm::vec<2,Real> initPoint = m_Ext[0];
+    glm::vec<2,Real> lastPoint1 = initPoint;
+    glm::vec<2,Real> lastPoint2 = m_Ext[1];
+    glm::vec<2,Real> curPoint = m_Ext[2];
 
     Real initSign = Segment<Real>::IsLeft(lastPoint1, lastPoint2, curPoint);
     initSign = initSign > 0 ? 1 : -1; 
@@ -654,11 +656,11 @@ namespace eXl
   template <class Real>
   struct SortPoints
   {
-    bool operator()(Vector2<Real> const& iPt1, Vector2<Real> const& iPt2)
+    bool operator()(glm::vec<2,Real> const& iPt1, glm::vec<2,Real> const& iPt2)
     {
-      if(iPt1.X() == iPt2.X())
-        return iPt1.Y() < iPt2.Y();
-      return iPt1.X() < iPt2.X();
+      if(iPt1.x == iPt2.x)
+        return iPt1.y < iPt2.y;
+      return iPt1.x < iPt2.x;
     }
   };
 
@@ -669,18 +671,18 @@ namespace eXl
   }
 
   template <class Real>
-  void Polygon<Real>::ConvexHull(Vector<Vector2<Real> >const& iPoints, Polygon<Real>& oHull)
+  void Polygon<Real>::ConvexHull(Vector<glm::vec<2,Real> >const& iPoints, Polygon<Real>& oHull)
   {
     oHull.Clear();
     if(!iPoints.empty())
     {
-      Vector<Vector2<Real> > sorted = iPoints;
+      Vector<glm::vec<2,Real> > sorted = iPoints;
 
       std::sort(sorted.begin(), sorted.end(), SortPoints<Real>());
 
       int n = sorted.size();
       int k = 0;
-	    Vector<Vector2<Real> > H(2*n);
+	    Vector<glm::vec<2,Real> > H(2*n);
 
 	    
 	    for (int i = 0; i < n; ++i) 
@@ -717,20 +719,20 @@ namespace eXl
   }
 
   template <class Real>
-  void Polygon<Real>::_RemoveUselessPoints(Vector<Vector2<Real> >& ioPoints)
+  void Polygon<Real>::_RemoveUselessPoints(Vector<glm::vec<2,Real> >& ioPoints)
   {
-    Vector2<Real> prevPt1 = ioPoints.back();
-    Vector2<Real> prevPt2 = ioPoints.back();
+    glm::vec<2,Real> prevPt1 = ioPoints.back();
+    glm::vec<2,Real> prevPt2 = ioPoints.back();
     for (unsigned int i = 0; i<ioPoints.size(); ++i)
     {
-      Vector2<Real> curPt =  ioPoints[i];
+      glm::vec<2,Real> curPt =  ioPoints[i];
       if (curPt != prevPt1 && prevPt1 != prevPt2)
       {
         typename PreciseVector<Real>::type dir1 = ToPrecise<Real>(prevPt1 - prevPt2);
         typename PreciseVector<Real>::type dir2 = ToPrecise<Real>(curPt - prevPt2);
-        typename PreciseType<Real>::type len1 = dir1.Normalize();
-        typename PreciseType<Real>::type len2 = dir2.Normalize();
-        if (dir1.Dot(dir2) > (1 - eXl::Math<typename PreciseType<Real>::type>::EPSILON) && len1 < len2)
+        typename PreciseType<Real>::type len1 = NormalizeAndGetLength(dir1);
+        typename PreciseType<Real>::type len2 = NormalizeAndGetLength(dir2);
+        if (dot(dir1, dir2) > (1 - eXl::Math<typename PreciseType<Real>::type>::Epsilon()) && len1 < len2)
         {
           ioPoints[i - 1] = curPt;
           ioPoints.erase(ioPoints.begin() + i);

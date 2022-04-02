@@ -23,10 +23,10 @@ namespace eXl
     void SwapRB(Image::Size const& iSize, void* iData, unsigned int iRowStride)
     {
       unsigned char* dataPtr = reinterpret_cast<unsigned char*>(iData);
-      for(unsigned int i = 0; i < iSize.Y(); ++i)
+      for(unsigned int i = 0; i < iSize.y; ++i)
       {
         T* curRow = (T*)dataPtr;
-        for(unsigned int j = 0; j<iSize.X(); ++j)
+        for(unsigned int j = 0; j<iSize.x; ++j)
         {
           T temp = curRow[2];
           curRow[2] = curRow[0];
@@ -174,11 +174,11 @@ namespace eXl
   void CopyBlackData(Image::Size const& iSize, unsigned char* iTexCopy, unsigned char* iOrigData)
   {
     T* texCopyIter = (T*)iTexCopy;
-    unsigned int rowStride = (iSize.X() + (iSize.X() % 4))*sizeof(T);
-    for(unsigned int i = 0; i < iSize.Y(); ++i)
+    unsigned int rowStride = (iSize.x + (iSize.x % 4))*sizeof(T);
+    for(unsigned int i = 0; i < iSize.y; ++i)
     {
       T* curRow = (T*)iOrigData;
-      for(unsigned int j = 0; j<iSize.X(); ++j)
+      for(unsigned int j = 0; j<iSize.x; ++j)
       {
         texCopyIter[0] = curRow[0];
         texCopyIter[1] = curRow[0];
@@ -194,11 +194,11 @@ namespace eXl
   void CopyWhiteData(Image::Size const& iSize, unsigned char* iTexCopy, unsigned char* iOrigData)
   {
     T* texCopyIter = (T*)iTexCopy;
-    unsigned int rowStride = (iSize.X() + (iSize.X() % 4))*sizeof(T);
-    for(unsigned int i = 0; i < iSize.Y(); ++i)
+    unsigned int rowStride = (iSize.x + (iSize.x % 4))*sizeof(T);
+    for(unsigned int i = 0; i < iSize.y; ++i)
     {
       T* curRow = (T*)iOrigData;
-      for(unsigned int j = 0; j<iSize.X(); ++j)
+      for(unsigned int j = 0; j<iSize.x; ++j)
       {
         texCopyIter[0] = GetMaxVal<T>() - curRow[0];
         texCopyIter[1] = GetMaxVal<T>() - curRow[0];
@@ -242,7 +242,7 @@ namespace eXl
       eXl_ASSERT_MSG(bpp % 8 == 0,"Exotic format");
 
       unsigned int bytesPP = bpp/8;
-      size_t totSize = imgSize.X()*imgSize.Y()*bytesPP;
+      size_t totSize = imgSize.x*imgSize.y*bytesPP;
 
       unsigned char* pixelsData = FreeImage_GetBits(iBmp);
 
@@ -278,11 +278,11 @@ namespace eXl
         Image* newImage = eXl_NEW Image(nullptr, imgSize, components, format, 4, Image::Adopt);
 
         unsigned char* imageData = reinterpret_cast<unsigned char*>(newImage->GetImageData());
-        for(unsigned int i = 0; i < imgSize.Y(); ++i)
+        for(unsigned int i = 0; i < imgSize.y; ++i)
         {
           unsigned char* rowData = imageData + i * newImage->GetRowStride();
           unsigned char* pixData = pixelsData + i * rowStride;
-          for(unsigned int j = 0; j < imgSize.X(); ++j)
+          for(unsigned int j = 0; j < imgSize.x; ++j)
           {
             rowData[0] = palette[*pixData].rgbRed;
             rowData[1] = palette[*pixData].rgbGreen;
@@ -377,11 +377,11 @@ namespace eXl
         {
           Image* newImage = eXl_NEW Image(nullptr,imgSize,components,format,1,Image::Adopt);
           unsigned char* imageData = reinterpret_cast<unsigned char*>(newImage->GetImageData());
-          for(unsigned int i = 0; i < imgSize.Y(); ++i)
+          for(unsigned int i = 0; i < imgSize.y; ++i)
           {
             unsigned char* rowData = imageData + i* newImage->GetRowStride();
             unsigned char* pixData = pixelsData + i * rowStride;
-            for(unsigned int j = 0; j < imgSize.X(); ++j)
+            for(unsigned int j = 0; j < imgSize.x; ++j)
             {
               memcpy(rowData,pixData,newPixSize);
               rowData += newPixSize;
@@ -458,23 +458,23 @@ namespace eXl
       return nullptr;
 
     Image::Size imgSize = iImage->GetSize();
-    FIBITMAP* bmp = FreeImage_Allocate(imgSize.X(),imgSize.Y(),iImage->GetPixelSize() * 8);
+    FIBITMAP* bmp = FreeImage_Allocate(imgSize.x,imgSize.y,iImage->GetPixelSize() * 8);
 
     if(iImage->GetComponents() == Image::RGBA || iImage->GetComponents() == Image::BGRA)
     {
       FreeImage_SetTransparent(bmp,TRUE);
     }
 
-    unsigned int oRowStride = FreeImage_GetPitch(bmp);//imgSize.X() * iImage->GetPixelSize();
+    unsigned int oRowStride = FreeImage_GetPitch(bmp);//imgSize.x * iImage->GetPixelSize();
     //if(oRowStride % 16 != 0)
     //{
     //  oRowStride += 16 - (oRowStride % 16);
     //}
     unsigned char* oData = FreeImage_GetBits(bmp);
     unsigned char const* iData = reinterpret_cast<unsigned char const*>(iImage->GetImageData());
-    for(unsigned int i = 0; i<imgSize.Y(); ++i)
+    for(unsigned int i = 0; i<imgSize.y; ++i)
     {
-      memcpy(oData,iData,iImage->GetPixelSize() * imgSize.X());
+      memcpy(oData,iData,iImage->GetPixelSize() * imgSize.x);
       oData += oRowStride;
       iData += iImage->GetRowStride();
     }

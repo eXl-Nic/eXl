@@ -27,31 +27,31 @@ namespace boost
   {
     namespace traits
     {
-      template<typename Real> struct tag<eXl::Vector2<Real> > { typedef point_tag type; };
-      template<typename Real> struct dimension<eXl::Vector2<Real> > : boost::mpl::int_<2> {};
-      template<typename Real> struct coordinate_type<eXl::Vector2<Real> > { typedef Real type; };
-      template<typename Real> struct coordinate_system<eXl::Vector2<Real> > { typedef cs::cartesian type ; };
+      template<typename Real> struct tag<glm::vec<2,Real> > { typedef point_tag type; };
+      template<typename Real> struct dimension<glm::vec<2,Real> > : boost::mpl::int_<2> {};
+      template<typename Real> struct coordinate_type<glm::vec<2,Real> > { typedef Real type; };
+      template<typename Real> struct coordinate_system<glm::vec<2,Real> > { typedef cs::cartesian type ; };
 
-      template<typename Real, std::size_t Dim> struct access<eXl::Vector2<Real>, Dim>
+      template<typename Real, std::size_t Dim> struct access<glm::vec<2,Real>, Dim>
       {
-          static inline Real get(eXl::Vector2<Real> const& p) { return p.m_Data[Dim]; }
-          static inline void set(eXl::Vector2<Real>& p, Real const& value) { p.m_Data[Dim] = value; }
+          static inline Real get(glm::vec<2,Real> const& p) { return p[Dim]; }
+          static inline void set(glm::vec<2,Real>& p, Real const& value) { p[Dim] = value; }
       };
 
-      template<typename Real> struct tag<eXl::Vector3<Real> > { typedef point_tag type; };
-      template<typename Real> struct dimension<eXl::Vector3<Real> > : boost::mpl::int_<3> {};
-      template<typename Real> struct coordinate_type<eXl::Vector3<Real> > { typedef Real type; };
-      template<typename Real> struct coordinate_system<eXl::Vector3<Real> > { typedef cs::cartesian type ; };
+      template<typename Real> struct tag<glm::vec<3,Real> > { typedef point_tag type; };
+      template<typename Real> struct dimension<glm::vec<3,Real> > : boost::mpl::int_<3> {};
+      template<typename Real> struct coordinate_type<glm::vec<3,Real> > { typedef Real type; };
+      template<typename Real> struct coordinate_system<glm::vec<3,Real> > { typedef cs::cartesian type ; };
 
-      template<typename Real, std::size_t Dim> struct access<eXl::Vector3<Real>, Dim>
+      template<typename Real, std::size_t Dim> struct access<glm::vec<3,Real>, Dim>
       {
-        static inline Real get(eXl::Vector3<Real> const& p) { return p.m_Data[Dim]; }
-        static inline void set(eXl::Vector3<Real>& p, Real const& value) { p.m_Data[Dim] = value; }
+        static inline Real get(glm::vec<3,Real> const& p) { return p.m_Data[Dim]; }
+        static inline void set(glm::vec<3,Real>& p, Real const& value) { p.m_Data[Dim] = value; }
       };
 
 
       template<typename Real> struct tag<eXl::Segment<Real> > { typedef segment_tag type; };
-      template<typename Real> struct point_type<eXl::Segment<Real> > { typedef eXl::Vector2<Real> type; };
+      template<typename Real> struct point_type<eXl::Segment<Real> > { typedef glm::vec<2,Real> type; };
       template <typename Real, std::size_t Dimension>
       struct indexed_access<eXl::Segment<Real>, 0, Dimension>
       {
@@ -88,7 +88,7 @@ namespace boost
       };
 
       template<typename Real> struct tag<eXl::AABB2D<Real> > { typedef box_tag type; }; \
-      template<typename Real> struct point_type<eXl::AABB2D<Real> > { typedef eXl::Vector2<Real> type; };
+      template<typename Real> struct point_type<eXl::AABB2D<Real> > { typedef glm::vec<2,Real> type; };
 
       template <typename Real, std::size_t Corner, std::size_t Dimension>
       struct indexed_access<eXl::AABB2D<Real>, Corner, Dimension>
@@ -106,7 +106,7 @@ namespace boost
         }
       };
 
-      template<typename Real> struct tag<eXl::Vector<eXl::Vector2<Real> > > { typedef ring_tag type; };
+      template<typename Real> struct tag<eXl::Vector<glm::vec<2,Real> > > { typedef ring_tag type; };
 
       template <typename Real>
       struct tag<eXl::Polygon<Real> >

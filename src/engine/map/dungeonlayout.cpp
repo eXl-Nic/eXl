@@ -1167,7 +1167,7 @@ namespace eXl
               float curEnergy = ComputeTotalEnergy();
               float deltaEnergy = curEnergy - prevEnergy;
 
-              if(deltaEnergy <= Mathf::ZERO_TOLERANCE
+              if(deltaEnergy <= Mathf::ZeroTolerance()
               || exp(deltaEnergy / (temp * kB)) > iRand())
               {
                 //Accept move.

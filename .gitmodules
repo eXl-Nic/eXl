@@ -40,3 +40,6 @@
 [submodule "modules/libsodium"]
 	path = modules/libsodium
 	url = https://github.com/jedisct1/libsodium.git
+[submodule "modules/glm"]
+	path = modules/glm
+	url = https://github.com/g-truc/glm.git

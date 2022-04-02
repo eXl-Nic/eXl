@@ -22,7 +22,16 @@ namespace eXl
     return nextIncoming;
   }
 
-  void PolyMesh::UpdateSmallerPoint(std::pair<Vector2i, uint32_t> const& iNewPoint)
+  bool operator < (Vec2i const& iPt1, Vec2i const& iPt2)
+  {
+    if (iPt1.x == iPt2.x)
+    {
+      return iPt1.y < iPt2.y;
+    }
+    return iPt1.x < iPt2.x;
+  }
+
+  void PolyMesh::UpdateSmallerPoint(std::pair<Vec2i, uint32_t> const& iNewPoint)
   {
     if (!smallerPoint)
     {
@@ -30,14 +39,14 @@ namespace eXl
     }
     else
     {
-      if (iNewPoint.first < smallerPoint->first)
+      if (LexicographicCompare(iNewPoint.first, smallerPoint->first))
       {
         smallerPoint = iNewPoint;
       }
     }
   }
 
-  bool PolyMesh::FindInsertionPoint(uint32_t srcVtx, uint32_t dstVtx, uint32_t firstEdge, Vector2f const& iOutgoingDir, int32_t& prevInsertPt, int32_t& nextInsertPt)const
+  bool PolyMesh::FindInsertionPoint(uint32_t srcVtx, uint32_t dstVtx, uint32_t firstEdge, Vec2 const& iOutgoingDir, int32_t& prevInsertPt, int32_t& nextInsertPt)const
   {
     //Find closest prev dir. Has to be an incoming edge.
     if(firstEdge == -1)
@@ -71,9 +80,9 @@ namespace eXl
 
       auto checkInCone = [&](PolyHalfEdge const* incomingEdge)
       {
-        Vector2f coneMid;
+        Vec2 coneMid;
         float coneRange;
-        Vector2f coneExts[2] = { -incomingEdge->normDir, edges[incomingEdge->nextEdge].normDir };
+        Vec2 coneExts[2] = { -incomingEdge->normDir, edges[incomingEdge->nextEdge].normDir };
         if (coneExts[0] == coneExts[1])
         {
           isInCone = true;
@@ -136,7 +145,7 @@ namespace eXl
     auto vtx2 = insertRes.first->second;
     UpdateSmallerPoint(*insertRes.first);
 
-    Vector2f halfEdgeSegDir = iFltSeg.m_Ext2 - iFltSeg.m_Ext1;
+    Vec2 halfEdgeSegDir = iFltSeg.m_Ext2 - iFltSeg.m_Ext1;
 
     uint32_t curEdgeIdx = edges.size();
     uint32_t siblingEdgeIdx = edges.size() + 1;
@@ -146,11 +155,12 @@ namespace eXl
     int32_t prevInsertPt2 = -1;
     int32_t nextInsertPt2 = -1;
 
-    Vector2f outgoingDir = vertices[vtx2].positionf - vertices[vtx1].positionf;
-    float segLength = outgoingDir.Normalize();
+    Vec2 outgoingDir = vertices[vtx2].positionf - vertices[vtx1].positionf;
+    float segLength = length(outgoingDir);
+    outgoingDir *= 1.f / segLength;
 
     bool goodEdge = FindInsertionPoint(vtx1, vtx2, vertices[vtx1].firstEdge, outgoingDir, prevInsertPt1, nextInsertPt1);
-    goodEdge |= FindInsertionPoint(vtx2, vtx1, vertices[vtx2].firstEdge, outgoingDir * -1, prevInsertPt2, nextInsertPt2);
+    goodEdge |= FindInsertionPoint(vtx2, vtx1, vertices[vtx2].firstEdge, outgoingDir * -1.f, prevInsertPt2, nextInsertPt2);
 
     if(!goodEdge)
     {
@@ -171,7 +181,7 @@ namespace eXl
     auto& siblingEdge = edges[siblingEdgeIdx];
     siblingEdge.srcVtx = vtx2;
     siblingEdge.dstVtx = vtx1;
-    siblingEdge.normDir = outgoingDir * -1;
+    siblingEdge.normDir = outgoingDir * -1.f;
     siblingEdge.length = segLength;
     siblingEdge.sibling = curEdgeIdx;
     siblingEdge.userId = edgeIdx;

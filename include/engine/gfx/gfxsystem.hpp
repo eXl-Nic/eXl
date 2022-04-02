@@ -86,7 +86,7 @@ namespace eXl
       Vector3f pos;
       Vector4f backgroundColor = Vector4f::ZERO;
       Projection projection = Perspective;
-      float fov = Mathf::PI / 2.0; // Vertical FOV
+      float fov = Mathf::Pi() / 2.0; // Vertical FOV
 
       // How much units of the world should we display in our viewport (vertically)
       // For ortho, it is exactly how much of the world we will see

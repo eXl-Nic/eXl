@@ -22,19 +22,19 @@ namespace eXl
     bool operator()(Polygoni const& iPoly);
     bool operator()(Polygonf const& iPoly);
     bool operator()(Polygond const& iPoly);
-    bool operator()(Vector<Vector2f> const& iPoints);
-    bool operator()(Vector<Vector2d> const& iPoints);
+    bool operator()(Vector<Vec2> const& iPoints);
+    bool operator()(Vector<Vec2d> const& iPoints);
 
-    Vector2d const& GetCenter() const {return m_Center; }
-    Vector2d const& GetPrimaryAxis() const { return m_PrimaryAxis; }
+    Vec2d const& GetCenter() const {return m_Center; }
+    Vec2d const& GetPrimaryAxis() const { return m_PrimaryAxis; }
 
   protected:
     template <typename Real>
     bool Compute(Polygon<Real> const& iPoly);
     template <typename Real>
-    bool Compute(Vector2<Real> const* iPoints, uint32_t iNumPoints);
+    bool Compute(glm::vec<2,Real> const* iPoints, uint32_t iNumPoints);
 
-    Vector2d m_Center;
-    Vector2d m_PrimaryAxis;
+    Vec2d m_Center;
+    Vec2d m_PrimaryAxis;
   };
 }

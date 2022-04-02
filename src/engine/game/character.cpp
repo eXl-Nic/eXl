@@ -118,7 +118,7 @@ namespace eXl
       //  NavigatorSystem::Obstacle const* obstacle = navSys->GetObstacle(entry.m_Handle);
       //  //linVel = obstacle->m_LinVel;
       //  
-      //  moving = obstacle->m_LinVel.SquaredLength() > Mathf::ZERO_TOLERANCE;
+      //  moving = obstacle->m_LinVel.SquaredLength() > Mathf::ZeroTolerance();
       //
       //  Matrix4f const& mat = transforms->GetWorldTransform(entry.m_Handle);
       //  dir = *reinterpret_cast<Vector3f const*>(mat.m_Data + 0);
@@ -127,7 +127,7 @@ namespace eXl
       if (entry.m_Desc.kind == PhysicKind::Kinematic)
       {
         KinematicEntry& kEntry = GetKinematic(entry.m_KinematicEntry);
-        moving = kEntry.m_Speed > Mathf::ZERO_TOLERANCE;
+        moving = kEntry.m_Speed > Mathf::ZeroTolerance();
         dir = kEntry.m_Dir;
         linVel = dir * kEntry.m_Speed;
         velocities->GetOrCreate(iObject) = linVel;
@@ -137,7 +137,7 @@ namespace eXl
         linVel = velocities->GetOrCreate(iObject);
         dir = linVel;
         float vel = linVel.Normalize();
-        moving = vel > Mathf::ZERO_TOLERANCE;
+        moving = vel > Mathf::ZeroTolerance();
       }
 
       if (entry.m_Desc.controlKind != ControlKind::Remote)

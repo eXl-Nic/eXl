@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <core/corelibexp.hpp>
-#include <math/vector2.hpp>
 #include <core/heapobject.hpp>
 
 namespace eXl
@@ -46,7 +45,7 @@ namespace eXl
 
     };
 
-    typedef Vector2<uint32_t> Size;
+    using Size = Vec2u;
 
     Image(void* iData, Size const& iSize, Components iComp, Format iFormat, unsigned char iRowAlign, Storage iStorage = Copy);
     Image(Image const& iImage);
@@ -66,7 +65,7 @@ namespace eXl
     ~Image();
 
     //iFilter must be a Float:R image
-    void Convolve(Image const& iFilter, Vector2i const& iFilterOffset);
+    void Convolve(Image const& iFilter, Vec2i const& iFilterOffset);
 
     size_t GetByteSize() const;
     size_t GetPixelSize() const;

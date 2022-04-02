@@ -61,7 +61,7 @@ namespace eXl
   {
     //Vector2f mid = (iRange[0] + iRange[1]) * 0.5;
     //float dist = mid.Normalize();
-    //if(dist < Mathf::ZERO_TOLERANCE)
+    //if(dist < Mathf::ZeroTolerance())
     //{
     //  mid = MathTools::GetPerp(iRange[0]);
     //}
@@ -347,7 +347,7 @@ namespace eXl
         drawer->DrawLine(MathTools::To3DVec(curPos1), MathTools::To3DVec(curPos2), Vector4f(1.0, 1.0, 1.0, 1.0));
 
         uint32_t const numSeg = 16;
-        float const angleStep = Mathf::PI * 2 / numSeg;
+        float const angleStep = Mathf::Pi() * 2 / numSeg;
         
         Vector2f curPos = GetWorldPosition(nextPt->m_RelDir * nextPt->m_Distance);
         

@@ -42,6 +42,8 @@ namespace eXl
   {
   public:
 
+    FastRational() = default;
+
     FastRational(IntReal iNum)
       : m_N(iNum){}
 
@@ -50,10 +52,7 @@ namespace eXl
       , m_D(iDen)
     {}
 
-    FastRational(FastRational const& iR)
-      : m_N(iR.m_N)
-      , m_D(iR.m_D)
-    {}
+    FastRational(FastRational const& iR) = default;
 
     FastRational& operator=(IntReal i) { m_N = i; m_D = 1; return *this; }
     FastRational& assign(IntReal n, IntReal d)
@@ -203,19 +202,24 @@ namespace eXl
   }
 
   typedef /*boost::rational<int64_t>*/ /*float*/ FastRational<int64_t> QType;
-  typedef Vector2<QType> Vector2Q;
+  typedef glm::vec<2, QType> Vector2Q;
 
   template <typename Real>
-  Vector2Q ToVec2Q(Vector2<Real> const& iVec)
+  Vector2Q ToVec2Q(glm::vec<2,Real> const& iVec)
   {
-    return Vector2Q(iVec.X(), iVec.Y());
+    return Vector2Q(iVec.x, iVec.y);
+  }
+
+  inline QType dot(Vector2Q const& iDir1, Vector2Q const& iDir2)
+  {
+    return iDir1.x * iDir2.x + iDir1.y + iDir2.y;
   }
 
   template <typename Real>
-  Vector2<Real> FromVec2Q(Vector2Q const& iVec)
+  glm::vec<2,Real> FromVec2Q(Vector2Q const& iVec)
   {
-    return Vector2<Real>(static_cast<Real>(iVec.X()), static_cast<Real>(iVec.Y()));
-    //return Vector2<Real>(iVec.X().numerator() / iVec.X().denominator(), iVec.Y().numerator() / iVec.Y().denominator());
+    return glm::vec<2,Real>(static_cast<Real>(iVec.x), static_cast<Real>(iVec.y));
+    //return glm::vec<2,Real>(iVec.x.numerator() / iVec.x.denominator(), iVec.y.numerator() / iVec.y.denominator());
   }
 
   class EXL_MATH_API Intersector
@@ -230,7 +234,7 @@ namespace eXl
 
     struct UserEvent
     {
-      Vector2i m_Position;
+      Vec2i m_Position;
       uint32_t m_Idx;
     };
 

@@ -108,10 +108,10 @@ namespace eXl
       Vector2f center = face.m_Box.GetCenter();
       Vector2f size = face.m_Box.GetSize() - (Vector2f::ONE * 4 * 4);
       float radius = Mathf::Min(size.X(), size.Y()) * 0.5;
-      float perimeter = radius * 2 * Mathf::PI;
+      float perimeter = radius * 2 * Mathf::Pi();
 
       uint32_t numActors = (perimeter / (1.2 * 4));
-      float increment = Mathf::PI * 2 / numActors;
+      float increment = Mathf::Pi() * 2 / numActors;
 
       Vector<ObjectHandle> autonomousAgents;
       auto& transforms = *iWorld.GetSystem<Transforms>();
@@ -125,7 +125,7 @@ namespace eXl
       for (unsigned int i = 0; i < numActors / 2; ++i)
       {
         Vector3f curPos(Mathf::Cos(i * increment) * radius + center.X(), Mathf::Sin(i * increment) * radius + center.Y(), 0.0);
-        Vector3f destPos(Mathf::Cos(i * increment + Mathf::PI) * radius + center.X(), Mathf::Sin(i * increment + Mathf::PI) * radius + center.Y(), 0.0);
+        Vector3f destPos(Mathf::Cos(i * increment + Mathf::Pi()) * radius + center.X(), Mathf::Sin(i * increment + Mathf::Pi()) * radius + center.Y(), 0.0);
 
         ObjectHandle truc = iWorld.CreateObject();
         transforms.AddTransform(truc, Matrix4f::FromPosition(curPos));

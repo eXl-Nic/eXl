@@ -492,7 +492,7 @@ namespace eXl
 
 
       float const gamma = FieldSize / sqrt(-2.0 * log(0.1));
-      float const expWh = 1.0 / (gamma * sqrt(2 * Mathf::PI));
+      float const expWh = 1.0 / (gamma * sqrt(2 * Mathf::Pi()));
       float const varWh = -1.0 / (2 * gamma * gamma);
       for(unsigned int i = 0; i< patternScores.size(); ++i)
       {

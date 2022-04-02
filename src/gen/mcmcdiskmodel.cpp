@@ -223,7 +223,7 @@ namespace eXl
       DiskDistribution::Quantile compVal = {0.0, iDist};
       auto iter = std::lower_bound(iVec.begin(), iVec.end(), compVal, CompareDist());
 
-      if(iter != iVec.end() && Mathf::Abs(iter->m_Dist - iDist) < Mathf::EPSILON)
+      if(iter != iVec.end() && Mathf::Abs(iter->m_Dist - iDist) < Mathf::Epsilon())
       {
         iter->m_Value += 1.0;
       }

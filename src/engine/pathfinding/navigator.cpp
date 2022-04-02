@@ -59,7 +59,7 @@ namespace eXl
       {
         Vector2f segDir = seg.m_Ext2 - seg.m_Ext1;
         float segLength = segDir.Normalize();
-        if (Segmentf::Cross(segDir, segToExcludeDir) < Mathf::ZERO_TOLERANCE)
+        if (Segmentf::Cross(segDir, segToExcludeDir) < Mathf::ZeroTolerance())
         {
           continue;
         }
@@ -201,7 +201,7 @@ namespace eXl
 
               Vector3f linVel = agentObs.m_Dir * agentObs.m_Speed;
 
-              if (distDest < Mathf::ZERO_TOLERANCE
+              if (distDest < Mathf::ZeroTolerance()
                 || agentObs.m_Speed * iTime > distDest)
               {
                 nearDest = true;
@@ -604,7 +604,7 @@ namespace eXl
 
           float dirIndicator = oDir.Dot(agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep]);
 
-          if (Mathf::Abs(dirIndicator) > Mathf::ZERO_TOLERANCE && dirIndicator < 0.0)
+          if (Mathf::Abs(dirIndicator) > Mathf::ZeroTolerance() && dirIndicator < 0.0)
           {
             //Going backward !! pop path item.
             agent.m_CurPathStep--;
@@ -653,7 +653,7 @@ namespace eXl
                       distToPtIn = otherDist;
                     }
                   }
-                  if (distToPtIn > Mathf::ZERO_TOLERANCE)
+                  if (distToPtIn > Mathf::ZeroTolerance())
                   {
                     pointToReach = curPos2D + dirToPtIn * distToPtIn;
                   }
@@ -704,7 +704,7 @@ namespace eXl
     if (agent.m_AvoidanceFactor > 0.5)
     {
       avoidanceToTransmit = agent.m_AvoidanceFactor - 0.5;
-      agent.m_AvoidanceFactor = 0.5 + Mathf::EPSILON;
+      agent.m_AvoidanceFactor = 0.5 + Mathf::Epsilon();
       avoidanceToTransmit = Mathf::Min(1.0, avoidanceToTransmit);
     }
 
@@ -767,11 +767,11 @@ namespace eXl
           Vector2f pt1Dir = wall.m_Ext1 - curPos2D;
           Vector2f ptProjDir;
           float pt1DirProj = pt1Dir.Dot(segDir);
-          if (pt1DirProj > Mathd::ZERO_TOLERANCE)
+          if (pt1DirProj > Mathd::ZeroTolerance())
           {
             ptProjDir = pt1Dir;
           }
-          else if (-pt1DirProj > (segLength - Mathd::ZERO_TOLERANCE))
+          else if (-pt1DirProj > (segLength - Mathd::ZeroTolerance()))
           {
             ptProjDir = wall.m_Ext2 - curPos2D;
           }
@@ -1062,7 +1062,7 @@ namespace eXl
   //    Beacon* beacon = m_Beacons[i];
   //    Vector3f center(beacon->m_Position.X(), beacon->m_Position.Y(), 0.0);
   //    uint32_t const numArcs = 32;
-  //    float const angleIncrease = (Mathf::PI / numArcs) * 2;
+  //    float const angleIncrease = (Mathf::Pi() / numArcs) * 2;
   //    for (uint32_t arcSeg = 0; arcSeg < numArcs; ++arcSeg)
   //    {
   //      Vector4f color(0.0, 0.0, 1.0, 1.0);

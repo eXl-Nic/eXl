@@ -134,8 +134,8 @@ namespace eXl
 
   float Perlin::_GetFractal(Vector3f iCoord, FractalParameters const& iParams)
   {
-    if (iParams.period < Mathf::ZERO_TOLERANCE
-      || iParams.persistence < Mathf::ZERO_TOLERANCE
+    if (iParams.period < Mathf::ZeroTolerance()
+      || iParams.persistence < Mathf::ZeroTolerance()
       || iParams.octaves == 0)
     {
       return 0;

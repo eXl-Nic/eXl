@@ -58,6 +58,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/corenew.hpp>
 
+#include <glm/glm.hpp>
+
 #define eXl_TO_STR_(s) #s
 #define eXl_TO_STR(s) eXl_TO_STR_(s)
 #define eXl_CONCAT(s,r) s##r
@@ -70,6 +72,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  using Vec2i = glm::ivec2;
+  using Vec2u = glm::uvec2;
+
 
   class EXL_CORE_API Exception //: public std::exception
   {

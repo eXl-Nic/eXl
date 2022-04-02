@@ -533,7 +533,7 @@ namespace eXl
           Vector2f next2 = center - m_Cells[nextNeigh].position;
 
           float crossA = Segmentf::Cross(next1, next2);
-          if(Mathf::Abs(crossA) > Mathf::EPSILON)
+          if(Mathf::Abs(crossA) > Mathf::Epsilon())
           {
             alphaI = Mathf::Abs(next1.Dot(next2) / crossA);
           }
@@ -542,7 +542,7 @@ namespace eXl
           Vector2f prev2 = m_Cells[curNeigh].position - m_Cells[prevNeigh].position;
 
           float crossB = Segmentf::Cross(prev1, prev2);
-          if(Mathf::Abs(crossB) > Mathf::EPSILON)
+          if(Mathf::Abs(crossB) > Mathf::Epsilon())
           {
             betaI = Mathf::Abs(prev1.Dot(prev2) / crossB);
           }
@@ -716,7 +716,7 @@ namespace eXl
 
         Vector3f locNormal = (pos - otherPt1).Cross(pos - otherPt2);
 
-        if (locNormal.Dot(Vector3f::UNIT_Z) < -Mathf::EPSILON)
+        if (locNormal.Dot(Vector3f::UNIT_Z) < -Mathf::Epsilon())
         {
           std::swap(pt1Idx, pt2Idx);
         }
@@ -869,7 +869,7 @@ namespace eXl
 
         Vector3f locNormal = (pos - otherPt1).Cross(pos - otherPt2);
 
-        if (locNormal.Dot(Vector3f::UNIT_Z) < -Mathf::EPSILON)
+        if (locNormal.Dot(Vector3f::UNIT_Z) < -Mathf::Epsilon())
         {
           locNormal *= -1.0;
           std::swap(indicesPtr[1], indicesPtr[2]);
@@ -940,7 +940,7 @@ namespace eXl
           eXl_ASSERT(curNeigh < numCells);
 
           float neighH = filledHeight[curNeigh];
-          if(curOrigH >= neighH + Mathf::ZERO_TOLERANCE)
+          if(curOrigH >= neighH + Mathf::ZeroTolerance())
           {
             //C'est bon on a un voisin plus bas
             filledHeight[i] = curOrigH;
@@ -948,7 +948,7 @@ namespace eXl
           }
           else
           {
-            float newH = neighH + Mathf::ZERO_TOLERANCE;
+            float newH = neighH + Mathf::ZeroTolerance();
             if(filledHeight[i] > newH && (newH > curOrigH))
             {
               filledHeight[i] = newH;
@@ -1018,7 +1018,7 @@ namespace eXl
   //        Vector3f curPt(m_Cells[curNeigh].position.X() * iScale.X(), iHeight[curNeigh] * iScale.Y(), m_Cells[curNeigh].position.Y() * iScale.Z());
   //        Vector3f locNormal = (pos - prevPt).Cross(pos - curPt);
   //
-  //        if(locNormal.Dot(Vector3f::UNIT_Y) < -Mathf::EPSILON)
+  //        if(locNormal.Dot(Vector3f::UNIT_Y) < -Mathf::Epsilon())
   //          locNormal *= -1.0;
   //
   //        normal += locNormal;

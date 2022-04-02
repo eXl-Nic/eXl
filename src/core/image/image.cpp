@@ -71,7 +71,7 @@ namespace eXl
     ,m_ImageFormat((iFormat << 3) | iComp)
     ,m_StorageKind(iStorage == Reference ? Reference : Adopt)
   {
-    m_RowStride = iSize.X() * pixelSizeTab[m_ImageFormat];
+    m_RowStride = iSize.x * pixelSizeTab[m_ImageFormat];
     unsigned int padding = m_RowStride % iRowAlign;
     if(padding != 0)
     {
@@ -143,7 +143,7 @@ namespace eXl
 
   size_t Image::GetByteSize() const
   {
-    return m_Size.Y() * m_RowStride;
+    return m_Size.y * m_RowStride;
   }
 
   size_t Image::GetPixelSize() const
@@ -153,7 +153,7 @@ namespace eXl
 
   void* Image::I_GetRow(unsigned int iRow) const
   {
-    if(iRow < m_Size.Y())
+    if(iRow < m_Size.y)
     {
       return reinterpret_cast<char*>(m_ImageData) + iRow * m_RowStride; 
     }
@@ -162,24 +162,24 @@ namespace eXl
 
   void* Image::I_GetPixel(unsigned int iRow, unsigned int iCol) const
   {
-    if(iRow < m_Size.Y() && iCol < m_Size.X())
+    if(iRow < m_Size.y && iCol < m_Size.x)
     {
       return reinterpret_cast<char*>(m_ImageData) + iRow * m_RowStride + iCol * GetPixelSize(); 
     }
     return nullptr;
   }
 
-  void Image::Convolve(Image const& iFilter, Vector2i const& iFilterOffset)
+  void Image::Convolve(Image const& iFilter, Vec2i const& iFilterOffset)
   {
     if(iFilter.GetComponents() != R || iFilter.GetFormat() != Float)
       return;
 
-    Vector2i minFilter = iFilterOffset;
-    Vector2i maxFilter = Vector2i(iFilter.GetSize().X(), iFilter.GetSize().Y()) + iFilterOffset;
+    Vec2i minFilter = iFilterOffset;
+    Vec2i maxFilter = Vec2i(iFilter.GetSize().x, iFilter.GetSize().y) + iFilterOffset;
     Size filterSize = iFilter.GetSize();
 
-    Vector2i minImage = Vector2i(Mathi::Max(0,-minFilter.X()), Mathi::Max(0,-minFilter.Y()));
-    Vector2i maxImage = Vector2i(Mathi::Min(m_Size.X(),m_Size.X() - (maxFilter.X() - 1)), Mathi::Min(m_Size.Y(),m_Size.Y() - (maxFilter.Y() - 1)));
+    Vec2i minImage = Vec2i(glm::max(0,-minFilter.x), glm::max(0,-minFilter.y));
+    Vec2i maxImage = Vec2i(glm::min(m_Size.x,m_Size.x - (maxFilter.x - 1)), glm::min(m_Size.y,m_Size.y - (maxFilter.y - 1)));
 
     void (*multiplier)(float , unsigned char const* , unsigned char* ) = multiplierTab[m_ImageFormat];
 
@@ -187,7 +187,7 @@ namespace eXl
 
     memcpy(newImage,m_ImageData,GetByteSize());
 
-    //for(unsigned int i = 0; i < minImage.Y(); ++i)
+    //for(unsigned int i = 0; i < minImage.y; ++i)
     //{
     //  unsigned char const* pixels = reinterpret_cast<unsigned char*>(m_ImageData) + i*m_RowStride;
     //  unsigned char*       newVal = reinterpret_cast<unsigned char*>(newImage)    + i*m_RowStride;
@@ -195,20 +195,20 @@ namespace eXl
     //  
     //}
     //
-    //for(unsigned int i = minImage.Y(); i < maxImage.Y(); ++i)
+    //for(unsigned int i = minImage.y; i < maxImage.y; ++i)
     //{
     //  unsigned char const* pixels = reinterpret_cast<unsigned char*>(m_ImageData) + i*m_RowStride;
     //  unsigned char*       newVal = reinterpret_cast<unsigned char*>(newImage)    + i*m_RowStride;
-    //  for(unsigned int j = 0; j< minImage.X(); ++j)
+    //  for(unsigned int j = 0; j< minImage.x; ++j)
     //  {
     //    memcpy(newVal,pixels,GetPixelSize());
     //    //_CrtCheckMemory();
     //    pixels += GetPixelSize();
     //    newVal += GetPixelSize();
     //  }
-    //  pixels = reinterpret_cast<unsigned char*>(m_ImageData) + i*m_RowStride + maxImage.X() * GetPixelSize();
-    //  newVal = reinterpret_cast<unsigned char*>(newImage)    + i*m_RowStride + maxImage.X() * GetPixelSize();
-    //  for(unsigned int j = maxImage.X(); j< m_Size.X(); ++j)
+    //  pixels = reinterpret_cast<unsigned char*>(m_ImageData) + i*m_RowStride + maxImage.x * GetPixelSize();
+    //  newVal = reinterpret_cast<unsigned char*>(newImage)    + i*m_RowStride + maxImage.x * GetPixelSize();
+    //  for(unsigned int j = maxImage.x; j< m_Size.x; ++j)
     //  {
     //    memcpy(newVal,pixels,GetPixelSize());
     //    //_CrtCheckMemory();
@@ -217,24 +217,24 @@ namespace eXl
     //  }
     //}
     //
-    //for(unsigned int i = maxImage.Y(); i < m_Size.Y(); ++i)
+    //for(unsigned int i = maxImage.y; i < m_Size.y; ++i)
     //{
     //  unsigned char const* pixels = reinterpret_cast<unsigned char*>(m_ImageData) + i*m_RowStride;
     //  unsigned char*       newVal = reinterpret_cast<unsigned char*>(newImage)    + i*m_RowStride;
     //  memcpy(newVal,pixels,m_RowStride);
     //}
 
-    for(int i = minImage.Y(); i< maxImage.Y(); ++i)
+    for(int i = minImage.y; i< maxImage.y; ++i)
     {
-      for(int j = minImage.X(); j< maxImage.X(); ++j)
+      for(int j = minImage.x; j< maxImage.x; ++j)
       {
         unsigned char* value = newImage + i*m_RowStride + j * GetPixelSize();
         unsigned char const* pixels = reinterpret_cast<unsigned char const*>(m_ImageData) + i *m_RowStride + j * GetPixelSize();
         memset(value,0,GetPixelSize());
-        for(int l = minFilter.Y(); l<maxFilter.Y(); ++l)
+        for(int l = minFilter.y; l<maxFilter.y; ++l)
         {
-          float const* filterData = reinterpret_cast<float const*>(reinterpret_cast<unsigned char const*>(iFilter.GetImageData()) + iFilter.GetRowStride() * (l - minFilter.Y()));
-          for(int m = minFilter.X(); m<maxFilter.X(); ++m)
+          float const* filterData = reinterpret_cast<float const*>(reinterpret_cast<unsigned char const*>(iFilter.GetImageData()) + iFilter.GetRowStride() * (l - minFilter.y));
+          for(int m = minFilter.x; m<maxFilter.x; ++m)
           {
             multiplier(*filterData,pixels + l * GetRowStride() + m * GetPixelSize(),value);
             //_CrtCheckMemory();

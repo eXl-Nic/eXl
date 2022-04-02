@@ -60,6 +60,7 @@ if(${EXL_REFLANG_ENABLED})
   endif()
 endif()
 
+include(${EXL_ROOT}/config/glm/glm.cmake)
 include(${EXL_ROOT}/config/libclang/libclang.cmake)
 include(${EXL_ROOT}/config/boost/boost.cmake)
 include(${EXL_ROOT}/config/lua/lua.cmake)

@@ -19,14 +19,14 @@ namespace eXl
   struct EXL_MATH_API OBB
   {
     AABB2Dd m_Dims;
-    Vector2d m_Axis[2];
+    Vec2d m_Axis[2];
     inline OBB(){}
     template <typename Real>
-    inline OBB(Vector2<Real> iDims, Vector2<Real> const& iCenter, Vector2d iPrimaryAxis, Vector2d iSecondaryAxis)
+    inline OBB(glm::vec<2,Real> iDims, glm::vec<2,Real> const& iCenter, Vec2d iPrimaryAxis, Vec2d iSecondaryAxis)
     {
       m_Axis[0] = iPrimaryAxis;
       m_Axis[1] = iSecondaryAxis;
-      Vector2d offset(MathTools::ToDVec(iCenter).Dot(iPrimaryAxis), MathTools::ToDVec(iCenter).Dot(iSecondaryAxis));
+      Vec2d offset(MathTools::ToDVec(iCenter).Dot(iPrimaryAxis), MathTools::ToDVec(iCenter).Dot(iSecondaryAxis));
       m_Dims = AABB2Dd::FromCenterAndSize(offset, MathTools::ToDVec(iDims));
     }
 

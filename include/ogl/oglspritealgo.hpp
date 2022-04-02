@@ -143,8 +143,8 @@ namespace eXl
     struct AlgoData
     {
       inline AlgoData()
-        :phiComputationRange(0.0, 2.0 * Mathf::PI, 0.025)
-        ,thetaComputationRange(0.0, Mathf::PI / 2.0, 0.05)
+        :phiComputationRange(0.0, 2.0 * Mathf::Pi(), 0.025)
+        ,thetaComputationRange(0.0, Mathf::Pi() / 2.0, 0.05)
       {
 
       }

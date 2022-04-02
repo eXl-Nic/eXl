@@ -150,7 +150,7 @@ namespace eXl
     iDotDirNormal /= oldMoveLen;
     
     Vector3f perpDir = newMove - iTouchingNormal * iDotDirNormal;
-    if (!iCanBounce && perpDir.Length() > Mathf::ZERO_TOLERANCE)
+    if (!iCanBounce && perpDir.Length() > Mathf::ZeroTolerance())
     {
       perpDir.Normalize();
       newMove = perpDir * iOldMove.Dot(perpDir) + iTouchingNormal * iOldMove.Dot(iTouchingNormal) * iCollisionDepth;
@@ -296,7 +296,7 @@ namespace eXl
           candidateMove = moveDir;
         }
 
-        if (moveDir.Length() > Mathf::ZERO_TOLERANCE)
+        if (moveDir.Length() > Mathf::ZeroTolerance())
         {
           std::function<bool(PhysicComponent_Impl*)> attachedFilter = [&entry](PhysicComponent_Impl* iComp)
           {
@@ -357,7 +357,7 @@ namespace eXl
           }
         }
 
-        if (candidateMove.SquaredLength() > Mathf::ZERO_TOLERANCE)
+        if (candidateMove.SquaredLength() > Mathf::ZeroTolerance())
         {
           ApplyLinearVelocity(*entry.GetPhComp(), candidateMove / iTime, iTime);
           entry.m_Asleep = false;

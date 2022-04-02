@@ -78,40 +78,40 @@ namespace eXl
   {
     Segment<Real> res;
 
-    if(iBox2.m_Data[1].Y() - iBox1.m_Data[0].Y() >= Math<Real>::ZERO_TOLERANCE && iBox1.m_Data[1].Y() - iBox2.m_Data[0].Y() >= Math<Real>::ZERO_TOLERANCE)
+    if(iBox2.m_Data[1].Y() - iBox1.m_Data[0].Y() >= Math<Real>::ZeroTolerance() && iBox1.m_Data[1].Y() - iBox2.m_Data[0].Y() >= Math<Real>::ZeroTolerance())
     {
       res.m_Ext1.Y() = Math<Real>::Max(iBox1.m_Data[0].Y(), iBox2.m_Data[0].Y());
       res.m_Ext2.Y() = Math<Real>::Min(iBox1.m_Data[1].Y(), iBox2.m_Data[1].Y());
 
       Real val = iBox1.m_Data[0].X() - iBox2.m_Data[1].X();
-      if(val <= Math<Real>::ZERO_TOLERANCE && val >= -Math<Real>::ZERO_TOLERANCE)
+      if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
         res.m_Ext1.X() = res.m_Ext2.X() = iBox1.m_Data[0].X();
         return res;
       }
 
       val = iBox1.m_Data[1].X() - iBox2.m_Data[0].X();
-      if(val <= Math<Real>::ZERO_TOLERANCE && val >= -Math<Real>::ZERO_TOLERANCE)
+      if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
         res.m_Ext1.X() = res.m_Ext2.X() = iBox1.m_Data[1].X();
         return res;
       }
     }
 
-    if(iBox2.m_Data[1].X() - iBox1.m_Data[0].X() >= Math<Real>::ZERO_TOLERANCE && iBox1.m_Data[1].X() - iBox2.m_Data[0].X() >= Math<Real>::ZERO_TOLERANCE)
+    if(iBox2.m_Data[1].X() - iBox1.m_Data[0].X() >= Math<Real>::ZeroTolerance() && iBox1.m_Data[1].X() - iBox2.m_Data[0].X() >= Math<Real>::ZeroTolerance())
     {
       res.m_Ext1.X() = Math<Real>::Max(iBox1.m_Data[0].X(), iBox2.m_Data[0].X());
       res.m_Ext2.X() = Math<Real>::Min(iBox1.m_Data[1].X(), iBox2.m_Data[1].X());
 
       Real val = iBox1.m_Data[0].Y() - iBox2.m_Data[1].Y();
-      if(val <= Math<Real>::ZERO_TOLERANCE && val >= -Math<Real>::ZERO_TOLERANCE)
+      if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
         res.m_Ext1.Y() = res.m_Ext2.Y() = iBox1.m_Data[0].Y(); 
         return res;
       }
 
       val = iBox1.m_Data[1].Y() - iBox2.m_Data[0].Y();
-      if(val <= Math<Real>::ZERO_TOLERANCE && val >= -Math<Real>::ZERO_TOLERANCE)
+      if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
         res.m_Ext1.Y() = res.m_Ext2.Y() = iBox1.m_Data[1].Y(); 
         return res;
@@ -624,7 +624,7 @@ namespace eXl
 
               auto dirToGoal = goalPt - midPt;
 
-              if(dirToGoal.Length() < Mathf::ZERO_TOLERANCE)
+              if(dirToGoal.Length() < Mathf::ZeroTolerance())
               {
                 dirToGoal = (seg.m_Ext1 - seg.m_Ext2);
                 dirToGoal.Normalize();

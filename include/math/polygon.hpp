@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma warning(disable : 4661)
 
-#include "vector2.hpp"
 #include "aabb2d.hpp"
 
 #include <core/containers.hpp>
@@ -51,7 +50,7 @@ namespace eXl
     friend struct boost::polygon::polygon_with_holes_traits;
   public:
 
-    typedef Vector<Vector2<Real> > PtList;
+    typedef Vector<glm::vec<2,Real> > PtList;
     typedef Vector<PtList> PtLists;
 
     Polygon();
@@ -73,7 +72,7 @@ namespace eXl
 
     inline Polygon(Polygon&& iOther){iOther.Swap(*this);}
 
-    explicit Polygon(Vector<Vector2<Real> > const& iPoints);
+    explicit Polygon(Vector<glm::vec<2,Real> > const& iPoints);
 
     explicit Polygon(AABB2D<Real> const& iBox);
 
@@ -85,7 +84,7 @@ namespace eXl
 
     static void Merge(Vector<Polygon>& oPoly);
 
-    void Translate(Vector2<Real> const& iTrans);
+    void Translate(glm::vec<2,Real> const& iTrans);
 
     void Scale(Real iNum, Real iDenom = 1);
 
@@ -99,7 +98,7 @@ namespace eXl
     void Intersection(Polygon const& iOther, Vector<Polygon>& oPoly)const;
 
     //Two poly only when the poly is convex.
-    void CutConvex(Vector2<Real> const& iOrig, Vector2<Real> const& iDir, Polygon& oLeftPoly, Polygon& oRightPoly) const;
+    void CutConvex(glm::vec<2,Real> const& iOrig, glm::vec<2,Real> const& iDir, Polygon& oLeftPoly, Polygon& oRightPoly) const;
 
     bool IsConvex() const;
 
@@ -107,11 +106,11 @@ namespace eXl
 
     void ConvexHull(Polygon<Real>& oHull) const;
 
-    static void ConvexHull(Vector<Vector2<Real> >const& iPoints, Polygon<Real>& oHull);
+    static void ConvexHull(Vector<glm::vec<2,Real> >const& iPoints, Polygon<Real>& oHull);
 
     void RemoveUselessPoints();
 
-    bool ContainsPoint(Vector2<Real> const& iPoint) const;
+    bool ContainsPoint(glm::vec<2,Real> const& iPoint) const;
 
     void RemoveTiny(Real iFactor,Vector<Polygon>& oOut,Vector<Polygon>& oRemoved)const;
 
@@ -137,20 +136,20 @@ namespace eXl
 
   protected:
 
-    static void _RemoveUselessPoints(Vector<Vector2<Real> >& ioPoints);
+    static void _RemoveUselessPoints(Vector<glm::vec<2,Real> >& ioPoints);
 
     void UpdateAABB();
 
     typedef Real coordinate_type;
-    typedef typename Vector<eXl::Vector2<Real> >::const_iterator iterator_type;
-    typedef eXl::Vector2<Real> point_type;
+    typedef typename Vector<glm::vec<2,Real> >::const_iterator iterator_type;
+    typedef glm::vec<2,Real> point_type;
     
     inline iterator_type begin_points() {return m_Ext.begin();}
     inline iterator_type end_points() {return m_Ext.end();}
     inline unsigned int size(){return m_Ext.size();}
     
     typedef typename PtLists::const_iterator iterator_holes_type;
-    typedef Vector<eXl::Vector2<Real> > hole_type;
+    typedef Vector<glm::vec<2,Real> > hole_type;
     inline iterator_holes_type begin_holes() {return m_Holes.begin();}
     inline iterator_holes_type end_holes() {return m_Holes.end();}
     inline unsigned int size_holes() {return m_Holes.size(); }
@@ -182,7 +181,7 @@ namespace eXl
 
     for(auto point : iOther.Border())
     {
-      m_Ext.push_back(Vector2<Real>(point.X(), point.Y()));
+      m_Ext.push_back(glm::vec<2,Real>(point.x, point.y));
     }
 
     for(auto hole : iOther.Holes())
@@ -190,7 +189,7 @@ namespace eXl
       m_Holes.push_back(PtList());
       for(auto point : hole)
       {
-        m_Holes.back().push_back(Vector2<Real>(point.X(), point.Y()));
+        m_Holes.back().push_back(glm::vec<2,Real>(point.x, point.y));
       }
     }
   }
@@ -204,7 +203,7 @@ namespace eXl
 
 	  for (auto point : iOther.Border())
 	  {
-		  m_Ext.push_back(Vector2<Real>(point.X(), point.Y()));
+		  m_Ext.push_back(glm::vec<2,Real>(point.x, point.y));
 	  }
 
 	  for (auto hole : iOther.Holes())
@@ -212,7 +211,7 @@ namespace eXl
 		  m_Holes.push_back(PtList());
 		  for (auto point : hole)
 		  {
-			  m_Holes.back().push_back(Vector2<Real>(point.X(), point.Y()));
+			  m_Holes.back().push_back(glm::vec<2,Real>(point.x, point.y));
 		  }
 	  }
 	  return *this;

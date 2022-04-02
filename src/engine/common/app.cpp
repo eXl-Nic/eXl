@@ -319,7 +319,7 @@ namespace eXl
     view.projection = GfxSystem::Orthographic;
     view.displayedSize = 10 * 4.0;
 
-    float const viewAngle = 0.0 * Mathf::PI;
+    float const viewAngle = 0.0 * Mathf::Pi();
 
     view.basis[0] = Vector3f::UNIT_X;
     view.basis[1] = Vector3f::UNIT_Y * Mathf::Cos(viewAngle) + Vector3f::UNIT_Z * Mathf::Sin(viewAngle);
