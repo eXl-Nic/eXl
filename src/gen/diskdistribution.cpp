@@ -253,8 +253,8 @@ namespace eXl
       for(auto& quantile : section)
       {
         RBFParams params;
-        params.m_Center = Vector3f(curDist + (quantile.m_Dist / 2.0), iCurAngle1, curAngle2);
-        params.m_Gamma = Vector3f(quantile.m_Dist / 3, iCurGamma1, curAngleStep2 / 3) * 2;
+        params.m_Center = Vec3(curDist + (quantile.m_Dist / 2.0), iCurAngle1, curAngle2);
+        params.m_Gamma = Vec3(quantile.m_Dist / 3, iCurGamma1, curAngleStep2 / 3) * 2;
         params.m_Weight = quantile.m_Value;
 
         m_Functions.push_back(params);
@@ -264,8 +264,8 @@ namespace eXl
       if(curDist + Mathf::Epsilon() < iMaxLimit)
       {
         RBFParams params;
-        params.m_Center = Vector3f(curDist, iCurAngle1, curAngle2);
-        params.m_Gamma = Vector3f(10.0 * iMaxLimit, iCurGamma1, curAngleStep2 / 3) * 2;
+        params.m_Center = Vec3(curDist, iCurAngle1, curAngle2);
+        params.m_Gamma = Vec3(10.0 * iMaxLimit, iCurGamma1, curAngleStep2 / 3) * 2;
         params.m_Weight = 1.0;
         m_Limits.push_back(params);
       }
@@ -287,14 +287,14 @@ namespace eXl
     return dist;
   }
 
-  Vector3f DiskFuncEval::RBFParams::GetDist(float x, float y, float z) const
+  Vec3 DiskFuncEval::RBFParams::GetDist(float x, float y, float z) const
   {
-    Vector3f dist(m_Center.X() - x, 
-      AngleDist(y, m_Center.Y()), 
-      AngleDist(z, m_Center.Z()));
-    dist.X() *= dist.X();
-    dist.Y() *= dist.Y();
-    dist.Z() *= dist.Z();
+    Vec3 dist(m_Center.x - x, 
+      AngleDist(y, m_Center.y), 
+      AngleDist(z, m_Center.z));
+    dist.x *= dist.x;
+    dist.y *= dist.y;
+    dist.z *= dist.z;
 
     return dist;
   }
@@ -320,9 +320,9 @@ namespace eXl
 
     for(auto& function : m_Functions)
     {
-      Vector3f const& gamma = function.m_Gamma;
-      Vector3f dist = function.GetDist(iDist, iAngle1, iAngle2);
-      float distCoeff = exp( - (dist.X() / (2*gamma.X() * gamma.X()) + dist.Y() / (2*gamma.Y() * gamma.Y()) + dist.Z() / (2*gamma.Z() * gamma.Z())));
+      Vec3 const& gamma = function.m_Gamma;
+      Vec3 dist = function.GetDist(iDist, iAngle1, iAngle2);
+      float distCoeff = exp( - (dist.x / (2*gamma.x * gamma.x) + dist.y / (2*gamma.y * gamma.y) + dist.z / (2*gamma.z * gamma.z)));
 
       if(function.m_Weight == 0.0)
       {
@@ -330,18 +330,18 @@ namespace eXl
       }
       else
       {
-        distCoeff *= function.m_Weight / (pow(2.0 * Mathf::Pi(), 1.5f) * gamma.X() * gamma.Y() * gamma.Z());
+        distCoeff *= function.m_Weight / (pow(2.0 * Mathf::Pi(), 1.5f) * gamma.x * gamma.y * gamma.z);
         score += distCoeff;
       }
     }
 
     for(auto& function : m_Limits)
     {
-      Vector3f const& gamma = function.m_Gamma;
-      Vector3f dist = function.GetDist(iDist, iAngle1, iAngle2);
-      float distCoeff = exp( - (dist.Y() / (2*gamma.Y() * gamma.Y()) + dist.Z() / (2*gamma.Z() * gamma.Z())));
-      distCoeff /= (1.0 + exp(gamma.X() * (function.m_Center.X() - iDist)));
-      distCoeff *= function.m_Weight / (2.0 * Mathf::Pi() * gamma.Y() * gamma.Z());
+      Vec3 const& gamma = function.m_Gamma;
+      Vec3 dist = function.GetDist(iDist, iAngle1, iAngle2);
+      float distCoeff = exp( - (dist.y / (2*gamma.y * gamma.y) + dist.z / (2*gamma.z * gamma.z)));
+      distCoeff /= (1.0 + exp(gamma.x * (function.m_Center.x - iDist)));
+      distCoeff *= function.m_Weight / (2.0 * Mathf::Pi() * gamma.y * gamma.z);
       score += distCoeff;
     }
 

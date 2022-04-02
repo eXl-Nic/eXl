@@ -46,8 +46,8 @@ namespace eXl
       unsigned int goalIdx = boost::get(m_Index, m_Goal);
       unsigned int idx = boost::get(m_Index, u);
 
-      Vector2f goalPos = m_CellCenter(goalIdx);
-      Vector2f curPos = m_CellCenter(idx);
+      Vec2 goalPos = m_CellCenter(goalIdx);
+      Vec2 curPos = m_CellCenter(idx);
 
       return (curPos - goalPos).Length();
     }
@@ -99,7 +99,7 @@ namespace eXl
     TerrainPosMap(Vector<Terrain::CellProperties> const& iCells)
       :m_Cells(iCells){}
 
-    Vector2f const& operator()(unsigned int i) const {return m_Cells[i].position;}
+    Vec2 const& operator()(unsigned int i) const {return m_Cells[i].position;}
 
     Vector<Terrain::CellProperties> const& m_Cells;
   };
@@ -108,11 +108,11 @@ namespace eXl
   {
   }
   
-  void Terrain::MakeGrid(Vector2f const& iSize, Vector2i const& iGridSize)
+  void Terrain::MakeGrid(Vec2 const& iSize, Vec2i const& iGridSize)
   {
     m_Size = iSize;
     
-    Vector2f gridStep(iSize.X() / iGridSize.X(), iSize.Y() / iGridSize.Y());
+    Vec2 gridStep(iSize.x / iGridSize.x, iSize.y / iGridSize.y);
 
     m_QueryBox = AABB2Df(-gridStep * 0.51, gridStep * 1.02);
 
@@ -123,7 +123,7 @@ namespace eXl
     m_Neigh.clear();
     m_Index.clear();
 
-    uint32_t totNumCells = iGridSize.X() * iGridSize.Y();
+    uint32_t totNumCells = iGridSize.x * iGridSize.y;
 
     m_Cells.reserve(totNumCells);
     m_Neigh.reserve(totNumCells * 4);
@@ -132,12 +132,12 @@ namespace eXl
       boost::add_vertex(m_Graph.m_CellGraph);
     }
     
-    for (int32_t y = 0; y < iGridSize.Y() + 1; ++y)
+    for (int32_t y = 0; y < iGridSize.y + 1; ++y)
     {
-      for (int32_t x = 0; x < iGridSize.X() + 1; ++x)
+      for (int32_t x = 0; x < iGridSize.x + 1; ++x)
       {
         VoronoiGraph::Vertex gridVtx;
-        gridVtx.m_Position = Vector2f(gridStep.X() * x, gridStep.Y() * y);
+        gridVtx.m_Position = Vec2(gridStep.x * x, gridStep.y * y);
         m_Graph.m_Vertices.push_back(gridVtx);
       }
     }
@@ -145,18 +145,18 @@ namespace eXl
     uint32_t cellOffset = 0;
     Vector<CellLoc> locs;
     locs.reserve(totNumCells);
-    for (int32_t y = 0; y < iGridSize.Y(); ++y)
+    for (int32_t y = 0; y < iGridSize.y; ++y)
     {
-      for (int32_t x = 0; x < iGridSize.X(); ++x)
+      for (int32_t x = 0; x < iGridSize.x; ++x)
       {
-        uint32_t gridLowLeftCorner = y * (iGridSize.X() + 1) + x;
+        uint32_t gridLowLeftCorner = y * (iGridSize.x + 1) + x;
 
         CellProperties cell;
         cell.neighCount = 0;
-        cell.position = Vector2f(((float)x + 0.5) * gridStep.X(), ((float)y + 0.5) * gridStep.Y());
+        cell.position = Vec2(((float)x + 0.5) * gridStep.x, ((float)y + 0.5) * gridStep.y);
         cell.neighStart = m_Neigh.size();
 
-        Vector2f const& cellPos = cell.position;
+        Vec2 const& cellPos = cell.position;
         locs.push_back(std::make_pair(AABB2Df(cellPos - gridStep * 0.5, gridStep), cellOffset));
 
         if (x > 0)
@@ -166,41 +166,41 @@ namespace eXl
         //  auto edgeDesc = boost::add_edge(cellOffset, cellOffset - 1, m_Graph.m_CellGraph);
         //  VoronoiGraph::Edge newEdge;
         //  newEdge.m_Pt1 = gridLowLeftCorner;
-        //  newEdge.m_Pt2 = gridLowLeftCorner + iGridSize.X() + 1;
+        //  newEdge.m_Pt2 = gridLowLeftCorner + iGridSize.x + 1;
         //  m_Graph.m_Edges.insert(std::make_pair(edgeDesc, newEdge));
         }
 
-        if (x < iGridSize.X() - 1)
+        if (x < iGridSize.x - 1)
         {
           cell.neighCount++;
           m_Neigh.push_back(cellOffset + 1);
           auto edgeDesc = boost::add_edge(cellOffset, cellOffset + 1, m_Graph.m_CellGraph).first;
           VoronoiGraph::Edge newEdge;
           newEdge.m_Pt1 = gridLowLeftCorner + 1;
-          newEdge.m_Pt2 = gridLowLeftCorner + 1 + iGridSize.X() + 1;
+          newEdge.m_Pt2 = gridLowLeftCorner + 1 + iGridSize.x + 1;
           m_Graph.m_Edges[edgeDesc] = newEdge;
         }
 
         if (y > 0)
         {
           cell.neighCount++;
-          m_Neigh.push_back(cellOffset - iGridSize.X());
-        //  auto edgeDesc = boost::add_edge(cellOffset, cellOffset - iGridSize.X(), m_Graph.m_CellGraph);
+          m_Neigh.push_back(cellOffset - iGridSize.x);
+        //  auto edgeDesc = boost::add_edge(cellOffset, cellOffset - iGridSize.x, m_Graph.m_CellGraph);
         //  VoronoiGraph::Edge newEdge;
         //  newEdge.m_Pt1 = gridLowLeftCorner;
         //  newEdge.m_Pt2 = gridLowLeftCorner + 1;
         //  m_Graph.m_Edges.insert(std::make_pair(edgeDesc, newEdge));
         }
 
-        if (y < iGridSize.Y() - 1)
+        if (y < iGridSize.y - 1)
         {
           cell.neighCount++;
-          m_Neigh.push_back(cellOffset + iGridSize.X());
+          m_Neigh.push_back(cellOffset + iGridSize.x);
 
-          auto edgeDesc = boost::add_edge(cellOffset, cellOffset + iGridSize.X(), m_Graph.m_CellGraph).first;
+          auto edgeDesc = boost::add_edge(cellOffset, cellOffset + iGridSize.x, m_Graph.m_CellGraph).first;
           VoronoiGraph::Edge newEdge;
-          newEdge.m_Pt1 = gridLowLeftCorner + iGridSize.X() + 1;
-          newEdge.m_Pt2 = gridLowLeftCorner + 1 + iGridSize.X() + 1;
+          newEdge.m_Pt1 = gridLowLeftCorner + iGridSize.x + 1;
+          newEdge.m_Pt2 = gridLowLeftCorner + 1 + iGridSize.x + 1;
           m_Graph.m_Edges[edgeDesc] = newEdge;
         }
         m_Cells.push_back(cell);
@@ -211,7 +211,7 @@ namespace eXl
     m_Index = CellIndex(locs);
   }
 
-  void Terrain::MakeCirclePacking(Random& iRand, Vector2f const& iSize, float iCellSize)
+  void Terrain::MakeCirclePacking(Random& iRand, Vec2 const& iSize, float iCellSize)
   {
     m_Size = iSize;
 
@@ -224,13 +224,13 @@ namespace eXl
     m_Neigh.clear();
     m_Index.clear();
 
-    Polygoni poly(AABB2Di(Vector2i::ZERO, Vector2i(Mathf::Ceil(m_Size.X()), Mathf::Ceil(m_Size.Y()))));
+    Polygoni poly(AABB2Di(Zero<Vec2i>(), Vec2i(Mathf::Ceil(m_Size.x), Mathf::Ceil(m_Size.y))));
     PoissonDiskSampling sampler(poly, iRand);
 
     sampler.Sample(iCellSize, iCellSize);
 
-    Vector<Vector2d> samples;
-    Vector<Vector2f> cellCenter;
+    Vector<Vec2d> samples;
+    Vector<Vec2> cellCenter;
     sampler.GetLayer(0, samples);
     //sampler.GetLayer(1, samples[1]);
     //sampler.GetLayer(2, samples[2]);
@@ -256,8 +256,8 @@ namespace eXl
       Vector<CellLoc> locs(cellCenter.size());
       for(unsigned int i = 0; i<cellCenter.size(); ++i)
       {
-        Vector2f const& cellPos = cellCenter[i];
-        locs.push_back(std::make_pair(AABB2Df(cellPos - Vector2f::ONE * iCellSize, Vector2f::ONE * 2 * iCellSize), i));
+        Vec2 const& cellPos = cellCenter[i];
+        locs.push_back(std::make_pair(AABB2Df(cellPos - One<Vec2>() * iCellSize, One<Vec2>() * 2 * iCellSize), i));
       }
       m_Index = CellIndex(locs);
     }
@@ -269,7 +269,7 @@ namespace eXl
     {
       m_Cells[i].neighCount = 0;
       sortedPoints.clear();
-      Vector2f center = m_Cells[i].position;
+      Vec2 center = m_Cells[i].position;
 
       VoronoiGraph::CellGraphImpl::out_edge_iterator edgesBegin, edgesEnd;
       boost::tie(edgesBegin, edgesEnd) = boost::out_edges(i, m_Graph.m_CellGraph);
@@ -288,7 +288,7 @@ namespace eXl
         }
 
         Segmentf::SortByAngle sortMeth(m_Cells[firstPoint].position);
-        std::map<Vector2f, unsigned int, Segmentf::SortByAngle > sortedPointsMap(sortMeth);
+        std::map<Vec2, unsigned int, Segmentf::SortByAngle > sortedPointsMap(sortMeth);
 
         for (; edgesBegin != edgesEnd; ++edgesBegin)
         {
@@ -320,7 +320,7 @@ namespace eXl
     }
   }
 
-  bool Terrain::GetClosestCell(Vector2f const& iPos, uint32_t& oCellIdx)
+  bool Terrain::GetClosestCell(Vec2 const& iPos, uint32_t& oCellIdx)
   {
     AABB2Df queryBox = m_QueryBox;
     queryBox.m_Data[0] += iPos;
@@ -338,7 +338,7 @@ namespace eXl
     for (auto const& cellLoc : results)
     {
       CellProperties const& cell = m_Cells[cellLoc.second];
-      float const distSq = (cell.position - iPos).SquaredLength();
+      float const distSq = distance2(cell.position , iPos);
       if (minDist > distSq)
       {
         oCellIdx = cellLoc.second;
@@ -357,8 +357,8 @@ namespace eXl
     queryBox.m_Data[0] = iSeg.m_Ext1;
     queryBox.m_Data[1] = iSeg.m_Ext1;
     queryBox.Absorb(iSeg.m_Ext2);
-    queryBox.m_Data[0] -= Vector2f::ONE * iRadius;
-    queryBox.m_Data[1] += Vector2f::ONE * iRadius;
+    queryBox.m_Data[0] -= One<Vec2>() * iRadius;
+    queryBox.m_Data[1] += One<Vec2>() * iRadius;
 
     Vector<CellLoc> results;
     m_Index.query(boost::geometry::index::intersects(queryBox), std::back_inserter(results));
@@ -367,7 +367,7 @@ namespace eXl
     {
       CellProperties const& cell = m_Cells[cellLoc.second];
 
-      Vector2f dir;
+      Vec2 dir;
       float dist = iSeg.NearestPointSeg(cell.position, dir);
       if (dist < iRadius)
       {
@@ -376,18 +376,18 @@ namespace eXl
     }
   }
 
-  void Terrain::GetDiskCells(Vector2f const& iCenter, float iRadius, Vector<unsigned int>& oCells)
+  void Terrain::GetDiskCells(Vec2 const& iCenter, float iRadius, Vector<unsigned int>& oCells)
   {
     oCells.clear();
 
-    AABB2Df queryBox(iCenter - iRadius * Vector2f::ONE, Vector2f::ONE * 2 * iRadius);
+    AABB2Df queryBox(iCenter - iRadius * One<Vec2>(), One<Vec2>() * 2 * iRadius);
 
     Vector<CellLoc> results;
     m_Index.query(boost::geometry::index::intersects(queryBox), std::back_inserter(results));
 
     for(auto cell : results)
     {
-      if((m_Cells[cell.second].position - iCenter).Length() < iRadius)
+      if(distance(m_Cells[cell.second].position, iCenter) < iRadius)
       {
         oCells.push_back(cell.second);
       }
@@ -412,7 +412,7 @@ namespace eXl
     mat.set_size(numCells, numCells);
 
     //Vector<unsigned int> sortedPoints;
-    //Vector<Vector2f> cellPoints;
+    //Vector<Vec2> cellPoints;
 
     for (unsigned int i = 0; i < numCells; ++i)
     {
@@ -420,7 +420,7 @@ namespace eXl
       //sortedPoints.clear();
       float sum = 0.0;
 
-      Vector2f center = m_Cells[i].position;
+      Vec2 center = m_Cells[i].position;
 
       VoronoiGraph::CellGraphImpl::out_edge_iterator edgesBegin, edgesEnd;
       boost::tie(edgesBegin, edgesEnd) = boost::out_edges(i, m_Graph.m_CellGraph);
@@ -434,8 +434,8 @@ namespace eXl
         }
         VoronoiGraph::Edge const& curEdge = m_Graph.m_Edges.find(*edgesBegin)->second;
         
-        float edgeLen = (m_Graph.m_Vertices[curEdge.m_Pt2].m_Position - m_Graph.m_Vertices[curEdge.m_Pt1].m_Position).Length();
-        float cellDist = (center - m_Cells[target].position).Length();
+        float edgeLen = distance(m_Graph.m_Vertices[curEdge.m_Pt2].m_Position, m_Graph.m_Vertices[curEdge.m_Pt1].m_Position);
+        float cellDist = distance(center, m_Cells[target].position);
 
         float curConnectionValue = iConductivity(i, target, edgeLen, cellDist);
         sum -= curConnectionValue;
@@ -465,13 +465,13 @@ namespace eXl
     mat.set_size(numCells, numCells);
 
     Vector<unsigned int> sortedPoints;
-    Vector<Vector2f> cellPoints;
+    Vector<Vec2> cellPoints;
 
     for (unsigned int i = 0; i < numCells; ++i)
     {
       cellPoints.clear();
       sortedPoints.clear();
-      Vector2f center = m_Cells[i].position;
+      Vec2 center = m_Cells[i].position;
       
       VoronoiGraph::CellGraphImpl::out_edge_iterator edgesBegin, edgesEnd;
       boost::tie(edgesBegin, edgesEnd) = boost::out_edges(i, m_Graph.m_CellGraph);
@@ -490,7 +490,7 @@ namespace eXl
         }
           
         Segmentf::SortByAngle sortMeth(m_Cells[firstPoint].position);
-        std::map<Vector2f, unsigned int, Segmentf::SortByAngle > sortedPointsMap(sortMeth);
+        std::map<Vec2, unsigned int, Segmentf::SortByAngle > sortedPointsMap(sortMeth);
 
         cellPoints.push_back(m_Graph.m_Vertices[firstEdge.m_Pt1].m_Position);
         cellPoints.push_back(m_Graph.m_Vertices[firstEdge.m_Pt2].m_Position);
@@ -529,22 +529,22 @@ namespace eXl
           unsigned int prevNeigh = sortedPoints[curNeighIdx == 0 ? numNeigh - 1 : curNeighIdx - 1];
           unsigned int nextNeigh = sortedPoints[curNeighIdx == numNeigh - 1 ? 0 : curNeighIdx + 1];
 
-          Vector2f next1 = m_Cells[curNeigh].position - m_Cells[nextNeigh].position;
-          Vector2f next2 = center - m_Cells[nextNeigh].position;
+          Vec2 next1 = m_Cells[curNeigh].position - m_Cells[nextNeigh].position;
+          Vec2 next2 = center - m_Cells[nextNeigh].position;
 
           float crossA = Segmentf::Cross(next1, next2);
           if(Mathf::Abs(crossA) > Mathf::Epsilon())
           {
-            alphaI = Mathf::Abs(next1.Dot(next2) / crossA);
+            alphaI = Mathf::Abs(dot(next1, next2) / crossA);
           }
 
-          Vector2f prev1 = center - m_Cells[prevNeigh].position;
-          Vector2f prev2 = m_Cells[curNeigh].position - m_Cells[prevNeigh].position;
+          Vec2 prev1 = center - m_Cells[prevNeigh].position;
+          Vec2 prev2 = m_Cells[curNeigh].position - m_Cells[prevNeigh].position;
 
           float crossB = Segmentf::Cross(prev1, prev2);
           if(Mathf::Abs(crossB) > Mathf::Epsilon())
           {
-            betaI = Mathf::Abs(prev1.Dot(prev2) / crossB);
+            betaI = Mathf::Abs(dot(prev1, prev2) / crossB);
           }
           float curConnectionValue = (alphaI + betaI / area);
           sum -= curConnectionValue;
@@ -620,14 +620,14 @@ namespace eXl
     return numIndices;
   }
 
-  void Terrain::BuildMesh(Vector3f const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx)
+  void Terrain::BuildMesh(Vec3 const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx)
   {
     uint32_t maxIndices = GetNumMeshIndices();
     uint32_t counterCheck = 0;
 
-    Vector3f* positionsPtr = reinterpret_cast<Vector3f*>(oPositions.data);
+    Vec3* positionsPtr = reinterpret_cast<Vec3*>(oPositions.data);
     float* texCoordPtr = reinterpret_cast<float*>(oTexCoords.data);
-    Vector3f* normalsPtr = reinterpret_cast<Vector3f*>(oNormals.data);
+    Vec3* normalsPtr = reinterpret_cast<Vec3*>(oNormals.data);
     uint32_t* indicesPtr = reinterpret_cast<uint32_t*>(oIdx.data);
     uint32_t addVtxCounter = 0;
 
@@ -637,16 +637,16 @@ namespace eXl
     {
       uint32_t cellCenterIdx = addVtxCounter;
       vtxAlloc.clear();
-      Vector2f ptCenter = m_Cells[i].position;
+      Vec2 ptCenter = m_Cells[i].position;
 
       float height = iHeight[i];
 
-      Vector3f pos(iScale.X() * ptCenter.X(), iScale.Y() * ptCenter.Y(), iScale.Z() * height);
+      Vec3 pos(iScale.x * ptCenter.x, iScale.y * ptCenter.y, iScale.z * height);
 
       *positionsPtr = pos;
-      texCoordPtr[0] = ptCenter.X() / m_Size.X();
-      texCoordPtr[1] = ptCenter.Y() / m_Size.Y();
-      *normalsPtr = Vector3f::UNIT_Z;
+      texCoordPtr[0] = ptCenter.x / m_Size.x;
+      texCoordPtr[1] = ptCenter.y / m_Size.y;
+      *normalsPtr = UnitZ<Vec3>();
 
       oPositions.NextItem(positionsPtr);
       oTexCoords.NextItem(texCoordPtr);
@@ -669,12 +669,12 @@ namespace eXl
         auto insertRes = vtxAlloc.insert(std::make_pair(curEdge.m_Pt1, addVtxCounter));
         if (insertRes.second)
         {
-          *positionsPtr = Vector3f(iScale.X() * m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.X(), 
-            iScale.Y() * m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.Y(), 
-            iScale.Z() * height);
-          texCoordPtr[0] = m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.X() / m_Size.X();
-          texCoordPtr[1] = m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.Y() / m_Size.Y();
-          *normalsPtr = Vector3f::UNIT_Z;
+          *positionsPtr = Vec3(iScale.x * m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.x, 
+            iScale.y * m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.y, 
+            iScale.z * height);
+          texCoordPtr[0] = m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.x / m_Size.x;
+          texCoordPtr[1] = m_Graph.m_Vertices[curEdge.m_Pt1].m_Position.y / m_Size.y;
+          *normalsPtr = UnitZ<Vec3>();
 
           oPositions.NextItem(positionsPtr);
           oTexCoords.NextItem(texCoordPtr);
@@ -684,12 +684,12 @@ namespace eXl
         insertRes = vtxAlloc.insert(std::make_pair(curEdge.m_Pt2, addVtxCounter));
         if (insertRes.second)
         {
-          *positionsPtr = Vector3f(iScale.X() * m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.X(),
-            iScale.Y() * m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.Y(), 
-            iScale.Z() * height);
-          texCoordPtr[0] = m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.X() / m_Size.X();
-          texCoordPtr[1] = m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.Y() / m_Size.Y();
-          *normalsPtr = Vector3f::UNIT_Z;
+          *positionsPtr = Vec3(iScale.x * m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.x,
+            iScale.y * m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.y, 
+            iScale.z * height);
+          texCoordPtr[0] = m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.x / m_Size.x;
+          texCoordPtr[1] = m_Graph.m_Vertices[curEdge.m_Pt2].m_Position.y / m_Size.y;
+          *normalsPtr = UnitZ<Vec3>();
 
           oPositions.NextItem(positionsPtr);
           oTexCoords.NextItem(texCoordPtr);
@@ -711,12 +711,12 @@ namespace eXl
         uint32_t pt1Idx = vtxAlloc[curEdge.m_Pt1];
         uint32_t pt2Idx = vtxAlloc[curEdge.m_Pt2];
 
-        Vector3f const& otherPt1 = *oPositions.Item<Vector3f>(pt1Idx);
-        Vector3f const& otherPt2 = *oPositions.Item<Vector3f>(pt2Idx);
+        Vec3 const& otherPt1 = *oPositions.Item<Vec3>(pt1Idx);
+        Vec3 const& otherPt2 = *oPositions.Item<Vec3>(pt2Idx);
 
-        Vector3f locNormal = (pos - otherPt1).Cross(pos - otherPt2);
+        Vec3 locNormal =  cross((pos - otherPt1), (pos - otherPt2));
 
-        if (locNormal.Dot(Vector3f::UNIT_Z) < -Mathf::Epsilon())
+        if (dot(locNormal, UnitZ<Vec3>()) < -Mathf::Epsilon())
         {
           std::swap(pt1Idx, pt2Idx);
         }
@@ -748,12 +748,12 @@ namespace eXl
       //  height /= numRef;
       //
       //
-      //positionsPtr[0] = iScale.X() * m_Graph.m_Vertices[i].m_Position.X();
-      //positionsPtr[1] = iScale.Y() * m_Graph.m_Vertices[i].m_Position.Y();
+      //positionsPtr[0] = iScale.x * m_Graph.m_Vertices[i].m_Position.x;
+      //positionsPtr[1] = iScale.y * m_Graph.m_Vertices[i].m_Position.y;
       //positionsPtr[2] = height;
-      //texCoordPtr[0] = m_Graph.m_Vertices[i].m_Position.X() / m_Size.X();
-      //texCoordPtr[1] = m_Graph.m_Vertices[i].m_Position.Y() / m_Size.Y();
-      //*normalsPtr = Vector3f::ZERO;
+      //texCoordPtr[0] = m_Graph.m_Vertices[i].m_Position.x / m_Size.x;
+      //texCoordPtr[1] = m_Graph.m_Vertices[i].m_Position.y / m_Size.y;
+      //*normalsPtr = Vec3::ZERO;
       //
       //oPositions.NextItem(positionsPtr);
       //oTexCoords.NextItem(texCoordPtr);
@@ -761,7 +761,7 @@ namespace eXl
     }
   }
 
-  void Terrain::BuildSmoothMesh(Vector3f const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx)
+  void Terrain::BuildSmoothMesh(Vec3 const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx)
   {
     unsigned int const numCells = m_Cells.size();
 
@@ -770,19 +770,19 @@ namespace eXl
     float* positionsPtr = reinterpret_cast<float*>(oPositions.data);
     float* texCoordPtr = reinterpret_cast<float*>(oTexCoords.data);
     uint32_t* indicesPtr = reinterpret_cast<uint32_t*>(oIdx.data);
-    Vector3f* normalsPtr = reinterpret_cast<Vector3f*>(oNormals.data);
+    Vec3* normalsPtr = reinterpret_cast<Vec3*>(oNormals.data);
 
     for (unsigned int i = 0; i < numCells; ++i)
     {
-      Vector2f ptCenter = m_Cells[i].position;
+      Vec2 ptCenter = m_Cells[i].position;
       
       float height = iHeight[i];
 
-      positionsPtr[0] = iScale.X() * ptCenter.X();
-      positionsPtr[1] = iScale.Y() * ptCenter.Y();
-      positionsPtr[2] = iScale.Z() * height;
-      texCoordPtr[0] = ptCenter.X() / m_Size.X();
-      texCoordPtr[1] = ptCenter.Y() / m_Size.Y();
+      positionsPtr[0] = iScale.x * ptCenter.x;
+      positionsPtr[1] = iScale.y * ptCenter.y;
+      positionsPtr[2] = iScale.z * height;
+      texCoordPtr[0] = ptCenter.x / m_Size.x;
+      texCoordPtr[1] = ptCenter.y / m_Size.y;
 
       VoronoiGraph::CellGraphImpl::vertex_descriptor curCell = i;
       VoronoiGraph::CellGraphImpl::out_edge_iterator edgesBegin, edgesEnd;
@@ -811,7 +811,7 @@ namespace eXl
         edgePtRef[curEdge.m_Pt2].insert(i);
       }  
 
-      *normalsPtr = Vector3f::ZERO;
+      *normalsPtr = Zero<Vec3>();
 
       oPositions.NextItem(positionsPtr);
       oTexCoords.NextItem(texCoordPtr);
@@ -832,12 +832,12 @@ namespace eXl
         height /= numRef;
 
 
-      positionsPtr[0] = iScale.X() * m_Graph.m_Vertices[i].m_Position.X();
-      positionsPtr[1] = iScale.Y() * m_Graph.m_Vertices[i].m_Position.Y();
+      positionsPtr[0] = iScale.x * m_Graph.m_Vertices[i].m_Position.x;
+      positionsPtr[1] = iScale.y * m_Graph.m_Vertices[i].m_Position.y;
       positionsPtr[2] = height;
-      texCoordPtr[0] = m_Graph.m_Vertices[i].m_Position.X() / m_Size.X();
-      texCoordPtr[1] = m_Graph.m_Vertices[i].m_Position.Y() / m_Size.Y();
-      *normalsPtr = Vector3f::ZERO;
+      texCoordPtr[0] = m_Graph.m_Vertices[i].m_Position.x / m_Size.x;
+      texCoordPtr[1] = m_Graph.m_Vertices[i].m_Position.y / m_Size.y;
+      *normalsPtr = Zero<Vec3>();
 
       oPositions.NextItem(positionsPtr);
       oTexCoords.NextItem(texCoordPtr);
@@ -847,12 +847,12 @@ namespace eXl
     indicesPtr = reinterpret_cast<uint32_t*>(oIdx.data);
     for (unsigned int i = 0; i < numCells; ++i)
     {
-      Vector3f const& pos = *oPositions.Item<Vector3f>(i);
+      Vec3 const& pos = *oPositions.Item<Vec3>(i);
 
       VoronoiGraph::CellGraphImpl::vertex_descriptor curCell = i;
       VoronoiGraph::CellGraphImpl::out_edge_iterator edgesBegin, edgesEnd;
       unsigned int numPts = 0;
-      Vector3f normal;
+      Vec3 normal;
       Set<unsigned int> pts;
       for (boost::tie(edgesBegin, edgesEnd) = boost::out_edges(curCell, m_Graph.m_CellGraph); edgesBegin != edgesEnd; ++edgesBegin)
       {
@@ -864,20 +864,20 @@ namespace eXl
 
         VoronoiGraph::Edge const& curEdge = m_Graph.m_Edges.find(*edgesBegin)->second;
 
-        Vector3f const& otherPt1 = *oPositions.Item<Vector3f>(curEdge.m_Pt1 + numCells);
-        Vector3f const& otherPt2 = *oPositions.Item<Vector3f>(curEdge.m_Pt2 + numCells);
+        Vec3 const& otherPt1 = *oPositions.Item<Vec3>(curEdge.m_Pt1 + numCells);
+        Vec3 const& otherPt2 = *oPositions.Item<Vec3>(curEdge.m_Pt2 + numCells);
 
-        Vector3f locNormal = (pos - otherPt1).Cross(pos - otherPt2);
+        Vec3 locNormal = cross((pos - otherPt1), (pos - otherPt2));
 
-        if (locNormal.Dot(Vector3f::UNIT_Z) < -Mathf::Epsilon())
+        if (dot(locNormal, UnitZ<Vec3>()) < -Mathf::Epsilon())
         {
           locNormal *= -1.0;
           std::swap(indicesPtr[1], indicesPtr[2]);
         }
 
-        *oNormals.Item<Vector3f>(i) += locNormal;
-        *oNormals.Item<Vector3f>(curEdge.m_Pt1 + numCells) += locNormal;
-        *oNormals.Item<Vector3f>(curEdge.m_Pt2 + numCells) += locNormal;
+        *oNormals.Item<Vec3>(i) += locNormal;
+        *oNormals.Item<Vec3>(curEdge.m_Pt1 + numCells) += locNormal;
+        *oNormals.Item<Vec3>(curEdge.m_Pt2 + numCells) += locNormal;
 
         oIdx.NextItem(indicesPtr);
         oIdx.NextItem(indicesPtr);
@@ -885,10 +885,10 @@ namespace eXl
       }
     }
 
-    normalsPtr = reinterpret_cast<Vector3f*>(oNormals.data);
+    normalsPtr = reinterpret_cast<Vec3*>(oNormals.data);
     for (unsigned int i = 0; i < numCells + m_Graph.m_Vertices.size(); ++i)
     {
-      normalsPtr->Normalize();
+      *normalsPtr = normalize(*normalsPtr);
       oNormals.NextItem(normalsPtr);
     }
   }
@@ -901,7 +901,7 @@ namespace eXl
     oNext.resize(numCells, -1);
 
     
-    Vector<float> filledHeight(numCells, Mathf::MAX_REAL);
+    Vector<float> filledHeight(numCells, Mathf::MaxReal());
 
     for (unsigned int i = 0; i < numCells; ++i)
     {
@@ -962,7 +962,7 @@ namespace eXl
     for (unsigned int i = 0; i < numCells; ++i)
     {
       int lowerN = -1;
-      float curLowerH = Mathf::MAX_REAL;
+      float curLowerH = Mathf::MaxReal();
       float curH = filledHeight[i];
       bool summit = true;
 
@@ -994,31 +994,31 @@ namespace eXl
     }
   }
 
-  //void Terrain::ComputeNormals(Vector3f const& iScale, const Vector<float>& iHeight, Vector<Vector3f>& oNormals)
+  //void Terrain::ComputeNormals(Vec3 const& iScale, const Vector<float>& iHeight, Vector<Vec3>& oNormals)
   //{
   //  unsigned int const numCells = m_Cells.size();
   //  oNormals.resize(numCells);
   //
   //  for (unsigned int i = 0; i < numCells; ++i)
   //  {
-  //    Vector3f pos(m_Cells[i].position.X() * iScale.X(), iHeight[i] * iScale.Y(), m_Cells[i].position.Y() * iScale.Z());
+  //    Vec3 pos(m_Cells[i].position.x * iScale.x, iHeight[i] * iScale.y, m_Cells[i].position.y * iScale.z);
   //
   //    unsigned int neighStart = m_Cells[i].neighStart;
   //    unsigned int neighEnd = m_Cells[i].neighCount + neighStart;
   //
-  //    Vector3f normal;
+  //    Vec3 normal;
   //    if(neighEnd != neighStart)
   //    {
   //      unsigned int prevNeigh = m_Neigh[neighEnd - 1];
-  //      Vector3f prevPt(m_Cells[prevNeigh].position.X() * iScale.X(), iHeight[prevNeigh] * iScale.Y(), m_Cells[prevNeigh].position.Y() * iScale.Z());
+  //      Vec3 prevPt(m_Cells[prevNeigh].position.x * iScale.x, iHeight[prevNeigh] * iScale.y, m_Cells[prevNeigh].position.y * iScale.z);
   //
   //      for (unsigned int neighIdx = neighStart; neighIdx < neighEnd; ++neighIdx)
   //      {
   //        unsigned int curNeigh = m_Neigh[neighIdx];
-  //        Vector3f curPt(m_Cells[curNeigh].position.X() * iScale.X(), iHeight[curNeigh] * iScale.Y(), m_Cells[curNeigh].position.Y() * iScale.Z());
-  //        Vector3f locNormal = (pos - prevPt).Cross(pos - curPt);
+  //        Vec3 curPt(m_Cells[curNeigh].position.x * iScale.x, iHeight[curNeigh] * iScale.y, m_Cells[curNeigh].position.y * iScale.z);
+  //        Vec3 locNormal = (pos - prevPt).Cross(pos - curPt);
   //
-  //        if(locNormal.Dot(Vector3f::UNIT_Y) < -Mathf::Epsilon())
+  //        if(locNormal.Dot(UnitY<Vec3>()) < -Mathf::Epsilon())
   //          locNormal *= -1.0;
   //
   //        normal += locNormal;

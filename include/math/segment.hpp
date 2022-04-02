@@ -107,7 +107,7 @@ namespace eXl
     static Real NearestPointSeg(glm::vec<2,Real> const& iPoint1, glm::vec<2,Real> const& iPoint2, glm::vec<2,Real> const& iPos, glm::vec<2,Real>& oVect)
     {
       glm::vec<2,Real> segDir = iPoint2 - iPoint1;
-      Real segLength = segDir.Normalize();
+      Real segLength = NormalizeAndGetLength(segDir);
 
       glm::vec<2,Real> pt1Dir = iPoint1 - iPos;
 
@@ -125,7 +125,7 @@ namespace eXl
         oVect = pt1Dir - (pt1DirProj * segDir);
       }
 
-      return oVect.Normalize();
+      return NormalizeAndGetLength(oVect);
     }
 
     static unsigned int Intersect(glm::vec<2,Real> const& iSeg1Pt1, glm::vec<2,Real> const& iSeg1Pt2, glm::vec<2,Real> const& iSeg2Pt1, glm::vec<2,Real> const& iSeg2Pt2)
@@ -235,8 +235,8 @@ namespace eXl
       unsigned int oRes = 0;
       glm::vec<2,Real> dir1 = iSeg1Pt2 - iSeg1Pt1;
       glm::vec<2,Real> dir2 = iSeg2Pt2 - iSeg2Pt1;
-      Real length1 = dir1.Normalize();
-      Real length2 = dir2.Normalize();
+      Real length1 = NormalizeAndGetLength(dir1);
+      Real length2 = NormalizeAndGetLength(dir2);
       Real cross = dir1.x * dir2.y - dir1.y * dir2.x;
       if (Math<Real>::FAbs(cross) > Math<Real>::Epsilon())
       {
@@ -270,14 +270,14 @@ namespace eXl
         }
         oPoint = glm::vec<2,Real>((eqn1[1] * eqn2[2] - eqn1[2] * eqn2[1]) / (eqn1[0] * eqn2[1] - eqn1[1] * eqn2[0]),
           (eqn1[2] * eqn2[0] - eqn1[0] * eqn2[2]) / (eqn1[0] * eqn2[1] - eqn1[1] * eqn2[0]));
-        Real proj1 = (oPoint - iSeg1Pt1).Dot(dir1);
+        Real proj1 = dot((oPoint - iSeg1Pt1), dir1);
         if (proj1 < 0.0)
           oPoint = iSeg1Pt1;
         else if (proj1 > length1)
           oPoint = iSeg1Pt2;
         else
           oRes |= PointOnSegment1;
-        Real proj2 = (oPoint - iSeg2Pt1).Dot(dir2);
+        Real proj2 = dot((oPoint - iSeg2Pt1), dir2);
         if (proj2 >= 0.0 && proj2 <= length2)
           oRes |= PointOnSegment2;
       }

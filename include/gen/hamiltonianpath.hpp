@@ -24,8 +24,8 @@ namespace eXl
 
     struct Point
     {
-      Point(Vector2i const& iPos) : pos(iPos), neigh1(-1), neigh2(-1) {}
-      Vector2i pos;
+      Point(Vec2i const& iPos) : pos(iPos), neigh1(-1), neigh2(-1) {}
+      Vec2i pos;
       int neigh1;
       int neigh2;
     };
@@ -49,7 +49,7 @@ namespace eXl
 
     inline unsigned int GetNumPoints() const {return m_NumPoints;}
 
-	  void Cull(Random& iRand, float iReduc, Vector2f iPathRange, Vector<HamiltonianPath>* oPathes = NULL);
+	  void Cull(Random& iRand, float iReduc, Vec2 iPathRange, Vector<HamiltonianPath>* oPathes = NULL);
 
     inline Point const& GetPoint(unsigned int iNum) const {return m_Points[iNum];}
 
@@ -63,7 +63,7 @@ namespace eXl
     bool ConnectedPoint(int numPt) const;
 
     AABB2Di        m_GridBox;
-    Vector2i       m_Offset;
+    Vec2i       m_Offset;
     unsigned int   m_GridSize;
     unsigned int   m_NumPoints;
     Vector<int>    m_Grid;

@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <gen/gen_exp.hpp>
 #include <core/heapobject.hpp>
-#include <math/vector2.hpp>
 #include <math/aabb2d.hpp>
 #include <gen/voronoigr.hpp>
 
@@ -46,7 +45,7 @@ namespace eXl
 
     struct CellProperties
     {
-      Vector2f position;
+      Vec2 position;
       unsigned int neighStart;
       unsigned int neighCount;
     };
@@ -56,12 +55,12 @@ namespace eXl
 
     Terrain();
 
-    void MakeCirclePacking(Random& iRand, Vector2f const& iSize, float iCellSize);
-    void MakeGrid(Vector2f const& iSize, Vector2i const& iGridSize);
+    void MakeCirclePacking(Random& iRand, Vec2 const& iSize, float iCellSize);
+    void MakeGrid(Vec2 const& iSize, Vec2i const& iGridSize);
 
-    bool GetClosestCell(Vector2f const& iPos, uint32_t& oCellIdx);
+    bool GetClosestCell(Vec2 const& iPos, uint32_t& oCellIdx);
     void GetLineCells(Segmentf const& iSeg, float iRadius, Vector<unsigned int>& oCells);
-    void GetDiskCells(Vector2f const& iCenter, float iRadius, Vector<unsigned int>& oCells);
+    void GetDiskCells(Vec2 const& iCenter, float iRadius, Vector<unsigned int>& oCells);
 
     void BuildLaplaceMatrix(const Vector<float>& iCellConductivity, LaplaceMatrix*& oMatrix);
 
@@ -95,8 +94,8 @@ namespace eXl
     size_t GetNumSmoothMeshVertices();
     size_t GetNumSmoothMeshIndices();
 
-    void BuildMesh(Vector3f const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx);
-    void BuildSmoothMesh(Vector3f const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx);
+    void BuildMesh(Vec3 const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx);
+    void BuildSmoothMesh(Vec3 const& iScale, const Vector<float>& iHeight, OutputBuffer oPositions, OutputBuffer oNormals, OutputBuffer oTexCoords, OutputBuffer oIdx);
 
     void ComputeFlowMap(const Vector<float>& iHeight, Vector<unsigned int>& oSummits, Vector<int>& oNext);
 
@@ -108,7 +107,7 @@ namespace eXl
     Vector<CellProperties>  m_Cells;
     Vector<unsigned int>    m_Neigh;
     CellIndex               m_Index;
-    Vector2f                m_Size;
+    Vec2                m_Size;
     AABB2Df                 m_QueryBox;
     //float                   m_CellRadius;
   };

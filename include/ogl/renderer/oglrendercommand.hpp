@@ -10,8 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-//#include <cstdint>
-#include <math/vector2.hpp>
+#include <math/math.hpp>
 #include <cstdlib>
 #include <vector>
 
@@ -110,8 +109,8 @@ namespace eXl
     void Apply();
     uint16_t m_Flag = 0;
     uint16_t m_Padding = 0;
-    Vector2i m_Orig;
-    Vector2i m_Size;
+    Vec2i m_Orig;
+    Vec2i m_Size;
   };
 
   struct OGLBlendCommand
@@ -297,7 +296,7 @@ namespace eXl
     uint8_t m_StateId;
     uint8_t m_Padding;
 
-    Vector4f m_ClearColor;
+    Vec4  m_ClearColor;
     float m_ClearDepth;
   };
 

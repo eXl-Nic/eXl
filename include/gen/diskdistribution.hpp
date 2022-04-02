@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <gen/gen_exp.hpp>
 #include <core/containers.hpp>
-#include <math/vector3.hpp>
+#include <math/math.hpp>
 
 namespace eXl
 {
@@ -82,11 +82,11 @@ namespace eXl
 
     struct RBFParams
     {
-      Vector3f m_Center;
-      Vector3f m_Gamma;
+      Vec3 m_Center;
+      Vec3 m_Gamma;
       float m_Weight;
 
-      Vector3f GetDist(float x, float y, float z) const;
+      Vec3 GetDist(float x, float y, float z) const;
     };
 
     Vector<RBFParams> m_Functions;

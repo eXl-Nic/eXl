@@ -17,36 +17,36 @@ TEST(Pathfinding, VelocityObstacle)
   Random* randGen = Random::CreateDefaultRNG(0);
   VelocityObstacle obs(*randGen);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, Vector2f::UNIT_X, 1.0);
-  obs.AddPoint(Vector2f::UNIT_X * 2.0f, 1.0, Vector2f::ZERO);
+  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
+  obs.AddPoint(UnitX<Vector2f>() * 2.0f, 1.0, Vector2f::ZERO);
 
   Vector2f bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_GT(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_Y)), 0.8);
+  ASSERT_GT(Mathf::Abs(bestVel.Dot(UnitY<Vector2f>())), 0.8);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, Vector2f::UNIT_X, 1.0);
-  obs.AddPoint(Vector2f::UNIT_X * 2.0f, 1.0, Vector2f::UNIT_X);
-
-  bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_EQ(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_X)), 1.0);
-
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, Vector2f::UNIT_X, 1.0);
-  obs.AddPoint(Vector2f::UNIT_X * 4.0f, 1.0, Vector2f::ZERO);
+  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
+  obs.AddPoint(UnitX<Vector2f>() * 2.0f, 1.0, UnitX<Vector2f>());
 
   bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_GT(Mathf::Abs(bestVel.Dot(Vector2f::UNIT_X)), 0.75);
+  ASSERT_EQ(Mathf::Abs(bestVel.Dot(UnitX<Vector2f>())), 1.0);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, Vector2f::UNIT_X, 1.0);
-  obs.AddPoint(Vector2f::UNIT_X * 4.0f, 1.0, -Vector2f::UNIT_X);
-  obs.AddPoint(Vector2f::UNIT_X * 4.0f + Vector2f::UNIT_Y * 2.0f, 1.0, -Vector2f::UNIT_X);
+  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
+  obs.AddPoint(UnitX<Vector2f>() * 4.0f, 1.0, Vector2f::ZERO);
+
+  bestVel = obs.FindBestVelocity(Vector2f::ZERO);
+  ASSERT_GT(Mathf::Abs(bestVel.Dot(UnitX<Vector2f>())), 0.75);
+
+  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
+  obs.AddPoint(UnitX<Vector2f>() * 4.0f, 1.0, -UnitX<Vector2f>());
+  obs.AddPoint(UnitX<Vector2f>() * 4.0f + UnitY<Vector2f>() * 2.0f, 1.0, -UnitX<Vector2f>());
 
   Vector2f bestVel1 = obs.FindBestVelocity(Vector2f::ZERO);
 
-  ASSERT_LT(Mathf::Abs(bestVel1.Dot(Vector2f::UNIT_X)), 0.3);
-  ASSERT_LT(bestVel1.Dot(Vector2f::UNIT_Y), -0.5);
+  ASSERT_LT(Mathf::Abs(bestVel1.Dot(UnitX<Vector2f>())), 0.3);
+  ASSERT_LT(bestVel1.Dot(UnitY<Vector2f>()), -0.5);
 
-  obs.Start(nullptr, Vector2f::UNIT_X * 4.0f, 1.0, -Vector2f::UNIT_X, 1.0);
-  obs.AddPoint(Vector2f::ZERO, 1.0, Vector2f::UNIT_X);
-  obs.AddPoint(Vector2f::UNIT_X * 4.0f, 1.0, -Vector2f::UNIT_X);
+  obs.Start(nullptr, UnitX<Vector2f>() * 4.0f, 1.0, -UnitX<Vector2f>(), 1.0);
+  obs.AddPoint(Vector2f::ZERO, 1.0, UnitX<Vector2f>());
+  obs.AddPoint(UnitX<Vector2f>() * 4.0f, 1.0, -UnitX<Vector2f>());
 
   Vector2f bestVel2 = obs.FindBestVelocity(Vector2f::ZERO);
 

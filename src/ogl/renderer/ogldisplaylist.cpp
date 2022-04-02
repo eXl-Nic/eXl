@@ -63,7 +63,7 @@ namespace eXl
   void OGLViewportCommand::Apply()
   {
 #ifdef EXL_WITH_OGL
-    glViewport(m_Orig.X(),m_Orig.Y(), m_Size.X(),m_Size.Y());
+    glViewport(m_Orig.x,m_Orig.y, m_Size.x,m_Size.y);
 #endif
   }
 
@@ -102,7 +102,7 @@ namespace eXl
     m_States.InitForPush();
   }
 
-  void OGLDisplayList::SetDefaultViewport(Vector2i const& iOrig, Vector2i const& iSize)
+  void OGLDisplayList::SetDefaultViewport(Vec2i const& iOrig, Vec2i const& iSize)
   {
     OGLViewportCommand defCommand;
     defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ViewportCommand;
@@ -118,14 +118,14 @@ namespace eXl
     m_States.SetDefaultCommand(defCommand);
   }
 
-  void OGLDisplayList::SetDefaultScissor(Vector2i const& iScissorOrig, Vector2i const& iScissorSize)
+  void OGLDisplayList::SetDefaultScissor(Vec2i const& iScissorOrig, Vec2i const& iScissorSize)
   {
     OGLScissorCommand defCommand;
-    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.X() > 0 && iScissorSize.Y() > 0 ? OGLScissorCommand::EnableScissor:0);
-    defCommand.m_ScissorCoord[0] = iScissorOrig.X();
-    defCommand.m_ScissorCoord[1] = iScissorOrig.Y();
-    defCommand.m_ScissorCoord[2] = iScissorSize.X();
-    defCommand.m_ScissorCoord[3] = iScissorSize.Y();
+    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.x > 0 && iScissorSize.y > 0 ? OGLScissorCommand::EnableScissor:0);
+    defCommand.m_ScissorCoord[0] = iScissorOrig.x;
+    defCommand.m_ScissorCoord[1] = iScissorOrig.y;
+    defCommand.m_ScissorCoord[2] = iScissorSize.x;
+    defCommand.m_ScissorCoord[3] = iScissorSize.y;
     m_States.SetDefaultCommand(defCommand);
   }
 
@@ -140,7 +140,7 @@ namespace eXl
     m_States.SetDefaultCommand(defCommand);
   }
 
-  void OGLDisplayList::SetViewport(Vector2i const& iOrig, Vector2i const& iSize)
+  void OGLDisplayList::SetViewport(Vec2i const& iOrig, Vec2i const& iSize)
   {
     FlushDraws();
     OGLViewportCommand defCommand;
@@ -150,15 +150,15 @@ namespace eXl
     m_States.SetCommand(defCommand);
   }
 
-  void OGLDisplayList::SetScissor(Vector2i const& iScissorOrig, Vector2i const& iScissorSize)
+  void OGLDisplayList::SetScissor(Vec2i const& iScissorOrig, Vec2i const& iScissorSize)
   {
     FlushDraws();
     OGLScissorCommand defCommand;
-    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.X() > 0 && iScissorSize.Y() > 0 ? OGLScissorCommand::EnableScissor:0);
-    defCommand.m_ScissorCoord[0] = iScissorOrig.X();
-    defCommand.m_ScissorCoord[1] = iScissorOrig.Y();
-    defCommand.m_ScissorCoord[2] = iScissorSize.X();
-    defCommand.m_ScissorCoord[3] = iScissorSize.Y();
+    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.x > 0 && iScissorSize.y > 0 ? OGLScissorCommand::EnableScissor:0);
+    defCommand.m_ScissorCoord[0] = iScissorOrig.x;
+    defCommand.m_ScissorCoord[1] = iScissorOrig.y;
+    defCommand.m_ScissorCoord[2] = iScissorSize.x;
+    defCommand.m_ScissorCoord[3] = iScissorSize.y;
     m_States.SetCommand(defCommand);
   }
 
@@ -338,7 +338,7 @@ namespace eXl
     }
   }
 
-  void OGLDisplayList::Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vector4f const& iColor, float iDepth)
+  void OGLDisplayList::Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vec4 const& iColor, float iDepth)
   {
     uint8_t curState = m_States.GetStateId();
     CommandKey newKey;
@@ -699,7 +699,7 @@ namespace eXl
                 }
                 if (clearCmd->m_Flags & OGLClear::Color)
                 {
-                  glClearColor(clearCmd->m_ClearColor.X(), clearCmd->m_ClearColor.Y(), clearCmd->m_ClearColor.Z(), clearCmd->m_ClearColor.W());
+                  glClearColor(clearCmd->m_ClearColor.x, clearCmd->m_ClearColor.y, clearCmd->m_ClearColor.z, clearCmd->m_ClearColor.w);
                   glClear(GL_COLOR_BUFFER_BIT);
                 }
                 if (clearCmd->m_Flags & OGLClear::Depth)

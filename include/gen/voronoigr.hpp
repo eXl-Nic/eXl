@@ -54,13 +54,13 @@ namespace eXl
     inline unsigned int GetId() const { return m_Id; }
     inline uint32_t GetKind() const { return m_Flags & CK_KindMask; }
 
-    inline Vector2f& GetPos() { return m_Pos; }
-    inline Vector2f const& GetPos() const { return m_Pos; }
+    inline Vec2& GetPos() { return m_Pos; }
+    inline Vec2 const& GetPos() const { return m_Pos; }
     inline float& GetAngle() { return m_Angle; }
     inline float  GetAngle() const { return m_Angle; }
 
   protected:
-    Vector2f m_Pos;
+    Vec2 m_Pos;
     float    m_Angle;
     uint32_t m_Flags;
     uint32_t m_Id;
@@ -91,9 +91,9 @@ namespace eXl
   class EXL_GEN_API Rect : public Wall
   {
   public:
-    Rect(unsigned int iId, Vector2f const& iHalfDim, int iWallId);
-    //inline Vector2f& GetHalfDim() { return halfDim; }
-    Vector2f const& GetHalfDim() const;
+    Rect(unsigned int iId, Vec2 const& iHalfDim, int iWallId);
+    //inline Vec2& GetHalfDim() { return halfDim; }
+    Vec2 const& GetHalfDim() const;
     voro::wall& GetWall();
     void GetAABB(AABB2D<float>& oBox) const;
   protected:
@@ -104,7 +104,7 @@ namespace eXl
   {
   public:
     Capsule(unsigned int iId, float iRadius, float iLength, int iWallId);
-    //inline Vector2f& GetHalfDim() { return halfDim; }
+    //inline Vec2& GetHalfDim() { return halfDim; }
     float GetRadius() const;
     float GetLength() const;
     voro::wall& GetWall();
@@ -124,7 +124,7 @@ namespace eXl
 
     struct Vertex
     {
-      Vector2f m_Position;
+      Vec2 m_Position;
     };
 
     struct Edge
@@ -176,11 +176,11 @@ namespace eXl
 
     void Clear();
 
-    uint32_t AddCircle(float iRadius, Vector2f const& iPos);
+    uint32_t AddCircle(float iRadius, Vec2 const& iPos);
 
-    uint32_t AddCapsuleWall(float iRadius, float iLength, Vector2f const& iPos, float iAngle);
+    uint32_t AddCapsuleWall(float iRadius, float iLength, Vec2 const& iPos, float iAngle);
 
-    uint32_t AddRectangleWall(Vector2f const& iHalfDims, Vector2f const& iPos, float iAngle);
+    uint32_t AddRectangleWall(Vec2 const& iHalfDims, Vec2 const& iPos, float iAngle);
 
     inline Particle const* GetParticle(uint32_t iId) const
     {

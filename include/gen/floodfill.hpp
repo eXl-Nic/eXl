@@ -35,7 +35,7 @@ namespace eXl
 
     static uint32_t ExtractComponents(Vector<char> const& iMap, AABB2Di const& iBox, Vector<uint32_t>& oCompMap);
 
-    static unsigned int MakeGradientMap(AABB2DPolygoni const& iPoly, Vector<unsigned int>& oValues, Vector<Vector2i>& oGradient);
+    static unsigned int MakeGradientMap(AABB2DPolygoni const& iPoly, Vector<unsigned int>& oValues, Vector<Vec2i>& oGradient);
 
   protected:
 
@@ -45,23 +45,23 @@ namespace eXl
     static constexpr char Corner_Tag = -3;
     static constexpr char Border_Tag = -4;
 
-    static void Fill(Vector2i const& iStartPt, Vector<char>& iGrid , Vector<Vector2i>& oBorder, bool iExt, AABB2Di const& iBox);
-    static bool ExamineNeigh(Vector<Vector2i>& ioList, Vector<char>& iGrid, Vector2i const& iPos, AABB2Di const& iBox);
+    static void Fill(Vec2i const& iStartPt, Vector<char>& iGrid , Vector<Vec2i>& oBorder, bool iExt, AABB2Di const& iBox);
+    static bool ExamineNeigh(Vector<Vec2i>& ioList, Vector<char>& iGrid, Vec2i const& iPos, AABB2Di const& iBox);
   };
 
   template <typename T, typename ValidOp>
   void FloodFill::MakePolygon(Vector<T> const& iBitmap, AABB2Di const& iBox, ValidOp const& iOp, AABB2DPolygoni& oPoly)
   {
     AABB2Di extendedBox = iBox;
-    extendedBox.m_Data[0] = extendedBox.m_Data[0] - Vector2i::ONE;
-    extendedBox.m_Data[1] = extendedBox.m_Data[1] + Vector2i::ONE;
-    Vector2i dim = extendedBox.GetSize();
-    Vector<char> grid(dim.X() * dim.Y(), Out_Tag);
+    extendedBox.m_Data[0] = extendedBox.m_Data[0] - One<Vec2i>();
+    extendedBox.m_Data[1] = extendedBox.m_Data[1] + One<Vec2i>();
+    Vec2i dim = extendedBox.GetSize();
+    Vector<char> grid(dim.x * dim.y, Out_Tag);
     int32_t offsetOrig = 0;
-    for(int32_t i = 0; i< dim.Y() - 2; ++i)
+    for(int32_t i = 0; i< dim.y - 2; ++i)
     {
-      int32_t offsetDest = 1 + (i + 1) * dim.X();
-      for(int32_t j = 0; j< dim.X() - 2; ++j)
+      int32_t offsetDest = 1 + (i + 1) * dim.x;
+      for(int32_t j = 0; j< dim.x - 2; ++j)
       {
         grid[offsetDest] = iOp(iBitmap[offsetOrig]) ? In_Tag : Out_Tag;
         ++offsetOrig;
@@ -78,15 +78,15 @@ namespace eXl
     oPolys.clear();
 
     AABB2Di extendedBox = iBox;
-    extendedBox.m_Data[0] = extendedBox.m_Data[0] - Vector2i::ONE;
-    extendedBox.m_Data[1] = extendedBox.m_Data[1] + Vector2i::ONE;
-    Vector2i dim = extendedBox.GetSize();
-    Vector<char> grid(dim.X() * dim.Y(), Out_Tag);
+    extendedBox.m_Data[0] = extendedBox.m_Data[0] - Vec2i::ONE;
+    extendedBox.m_Data[1] = extendedBox.m_Data[1] + Vec2i::ONE;
+    Vec2i dim = extendedBox.GetSize();
+    Vector<char> grid(dim.x * dim.y, Out_Tag);
     unsigned int offsetOrig = 0;
-    for (int32_t i = 0; i < dim.Y() - 2; ++i)
+    for (int32_t i = 0; i < dim.y - 2; ++i)
     {
-      int32_t offsetDest = 1 + (i + 1) * dim.X();
-      for (int32_t j = 0; j < dim.X() - 2; ++j)
+      int32_t offsetDest = 1 + (i + 1) * dim.x;
+      for (int32_t j = 0; j < dim.x - 2; ++j)
       {
         grid[offsetDest] = iOp(iBitmap[offsetOrig]) ? In_Tag : Out_Tag;
         ++offsetOrig;
@@ -99,10 +99,10 @@ namespace eXl
 
     for (uint32_t compIdx = 0; compIdx < numComps; ++compIdx)
     {
-      for (int32_t i = 0; i < dim.Y(); ++i)
+      for (int32_t i = 0; i < dim.y; ++i)
       {
-        int32_t offsetDest = i * dim.X();
-        for (int32_t j = 0; j < dim.X(); ++j)
+        int32_t offsetDest = i * dim.x;
+        for (int32_t j = 0; j < dim.x; ++j)
         {
           if (compMap[offsetDest] == compIdx)
           {

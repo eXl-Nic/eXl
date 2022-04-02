@@ -21,22 +21,22 @@ namespace eXl
 
   namespace
   {
-    bool CheckCoord(Vector2i const& iPos, AABB2Di const& iBox)
+    bool CheckCoord(Vec2i const& iPos, AABB2Di const& iBox)
     {
-      return (iPos.X() >= iBox.m_Data[0].X() && iPos.X() < iBox.m_Data[1].X())
-        && (iPos.Y() >= iBox.m_Data[0].Y() && iPos.Y() < iBox.m_Data[1].Y());
+      return (iPos.x >= iBox.m_Data[0].x && iPos.x < iBox.m_Data[1].x)
+        && (iPos.y >= iBox.m_Data[0].y && iPos.y < iBox.m_Data[1].y);
     }
 
-    unsigned int GetOffset(Vector2i const& iPos, AABB2Di const& iBox)
+    unsigned int GetOffset(Vec2i const& iPos, AABB2Di const& iBox)
     {
-      return iPos.X() - iBox.m_Data[0].X() + (iPos.Y() - iBox.m_Data[0].Y())*(iBox.m_Data[1].X() - iBox.m_Data[0].X());
+      return iPos.x - iBox.m_Data[0].x + (iPos.y - iBox.m_Data[0].y)*(iBox.m_Data[1].x - iBox.m_Data[0].x);
     }
 
 #if 0
-    void DumpGrid(Vector<char> const& iGrid, AABB2Di const& iBox, Vector<Vector2i> const& iBorders, Vector2i const& iCurPos, Vector2i const& iNeigh)
+    void DumpGrid(Vector<char> const& iGrid, AABB2Di const& iBox, Vector<Vec2i> const& iBorders, Vec2i const& iCurPos, Vec2i const& iNeigh)
     {
-      Vector2i size = iBox.GetSize();
-      Vector<char> image(size.X() * size.Y() * 3);
+      Vec2i size = iBox.GetSize();
+      Vector<char> image(size.x * size.y * 3);
       if (!image.empty())
       {
         for (unsigned int i = 0; i < iGrid.size(); ++i)
@@ -79,16 +79,16 @@ namespace eXl
         }
         //if(!iBorders.empty())
         //{
-        //  Vector2i curPt = iBorders[0];
+        //  Vec2i curPt = iBorders[0];
         //  for(unsigned int i = 1; i<iBorders.size(); ++i)
         //  {
-        //    Vector2i nextPt = iBorders[i];
-        //    Vector2i diff = nextPt - curPt;
-        //    unsigned int dist = Mathi::Max(Mathi::Abs(diff.X()), Mathi::Abs(diff.Y()));
+        //    Vec2i nextPt = iBorders[i];
+        //    Vec2i diff = nextPt - curPt;
+        //    unsigned int dist = Mathi::Max(Mathi::Abs(diff.x), Mathi::Abs(diff.y));
         //    diff = diff / dist;
         //    for(unsigned int j = 0; j<dist; ++j)
         //    {
-        //      Vector2i pt = (curPt + diff * j) / 2;
+        //      Vec2i pt = (curPt + diff * j) / 2;
         //
         //    }
         //  }
@@ -115,34 +115,34 @@ namespace eXl
     }
 #endif
   }
-  uint32_t GatherNeighbours(Vector2i const& iPos, Vector<char> const& iMap, AABB2Di const& iBox
+  uint32_t GatherNeighbours(Vec2i const& iPos, Vector<char> const& iMap, AABB2Di const& iBox
     , Vector<uint32_t>& oCompMap, char const*(&oNeigh)[4], uint32_t* (&oNeighLabel)[4])
   {
     uint32_t neighMask = 0;
-    if (CheckCoord(iPos - Vector2i::UNIT_X, iBox))
+    if (CheckCoord(iPos - UnitX<Vec2i>(), iBox))
     {
-      uint32_t const offset = GetOffset(iPos - Vector2i::UNIT_X, iBox);
+      uint32_t const offset = GetOffset(iPos - UnitX<Vec2i>(), iBox);
       neighMask |= 1;
       oNeigh[0] = iMap.data() + offset;
       oNeighLabel[0] = oCompMap.data() + offset;
     }
-    if (CheckCoord(iPos + Vector2i::UNIT_X, iBox))
+    if (CheckCoord(iPos + UnitX<Vec2i>(), iBox))
     {
-      uint32_t const offset = GetOffset(iPos + Vector2i::UNIT_X, iBox);
+      uint32_t const offset = GetOffset(iPos + UnitX<Vec2i>(), iBox);
       neighMask |= 2;
       oNeigh[1] = iMap.data() + offset;
       oNeighLabel[1] = oCompMap.data() + offset;
     }
-    if (CheckCoord(iPos - Vector2i::UNIT_Y, iBox))
+    if (CheckCoord(iPos - UnitY<Vec2i>(), iBox))
     {
-      uint32_t const offset = GetOffset(iPos - Vector2i::UNIT_Y, iBox);
+      uint32_t const offset = GetOffset(iPos - UnitY<Vec2i>(), iBox);
       neighMask |= 4;
       oNeigh[2] = iMap.data() + offset;
       oNeighLabel[2] = oCompMap.data() + offset;
     }
-    if (CheckCoord(iPos + Vector2i::UNIT_Y, iBox))
+    if (CheckCoord(iPos + UnitY<Vec2i>(), iBox))
     {
-      uint32_t const offset = GetOffset(iPos + Vector2i::UNIT_Y, iBox);
+      uint32_t const offset = GetOffset(iPos + UnitY<Vec2i>(), iBox);
       neighMask |= 8;
       oNeigh[3] = iMap.data() + offset;
       oNeighLabel[3] = oCompMap.data() + offset;
@@ -157,15 +157,15 @@ namespace eXl
     Vector<std::unique_ptr<Set<uint32_t>>> setStorage;
     Vector<Set<uint32_t>*> equivalenceSet;
 
-    //Vector2i size = iBox.GetSize();
+    //Vec2i size = iBox.GetSize();
 
     uint32_t maxSet = 0;
 
-    for (int32_t y = iBox.m_Data[0].Y(); y < iBox.m_Data[1].Y(); ++y)
+    for (int32_t y = iBox.m_Data[0].y; y < iBox.m_Data[1].y; ++y)
     {
-      for (int32_t x = iBox.m_Data[0].X(); x < iBox.m_Data[1].X(); ++x)
+      for (int32_t x = iBox.m_Data[0].x; x < iBox.m_Data[1].x; ++x)
       {
-        Vector2i curPt(x, y);
+        Vec2i curPt(x, y);
         uint32_t offset = GetOffset(curPt, iBox);
         if (iMap[offset] == In_Tag)
         {
@@ -231,11 +231,11 @@ namespace eXl
       repLabel.push_back(insertRes.first->second);
     }
     
-    for (int32_t y = iBox.m_Data[0].Y(); y < iBox.m_Data[1].Y(); ++y)
+    for (int32_t y = iBox.m_Data[0].y; y < iBox.m_Data[1].y; ++y)
     {
-      for (int32_t x = iBox.m_Data[0].X(); x < iBox.m_Data[1].X(); ++x)
+      for (int32_t x = iBox.m_Data[0].x; x < iBox.m_Data[1].x; ++x)
       {
-        Vector2i curPt(x, y);
+        Vec2i curPt(x, y);
         uint32_t offset = GetOffset(curPt, iBox);
         if (iMap[offset] == In_Tag)
         {
@@ -247,7 +247,7 @@ namespace eXl
     return uniqueLabels.size();
   }
 
-  bool FloodFill::ExamineNeigh(Vector<Vector2i>& ioList, Vector<char>& iGrid, Vector2i const& iPos, AABB2Di const& iBox)
+  bool FloodFill::ExamineNeigh(Vector<Vec2i>& ioList, Vector<char>& iGrid, Vec2i const& iPos, AABB2Di const& iBox)
   {
     if (CheckCoord(iPos, iBox))
     {
@@ -266,68 +266,68 @@ namespace eXl
 
   void FloodFill::MakePolygon(Vector<char>& iExtendedBitmap, AABB2Di const& iExtendedBox, AABB2DPolygoni& oPoly)
   {
-    Vector<Vector2i> outBorder;
+    Vector<Vec2i> outBorder;
     Fill(iExtendedBox.m_Data[0], iExtendedBitmap, outBorder, true, iExtendedBox);
 
     oPoly = AABB2DPolygoni(outBorder);
 
-    Vector<Vector<Vector2i> > holes;
+    Vector<Vector<Vec2i> > holes;
 
-    Vector2i dim = iExtendedBox.GetSize();
+    Vec2i dim = iExtendedBox.GetSize();
 
-    for (int i = 0; i < dim.Y() - 2; ++i)
+    for (int i = 0; i < dim.y - 2; ++i)
     {
-      unsigned int offsetDest = 1 + (i + 1) * dim.X();
-      for (int j = 0; j < dim.X() - 2; ++j)
+      unsigned int offsetDest = 1 + (i + 1) * dim.x;
+      for (int j = 0; j < dim.x - 2; ++j)
       {
         if (iExtendedBitmap[offsetDest] == Out_Tag)
         {
-          holes.push_back(Vector<Vector2i>());
-          Fill(Vector2i(j + 1, i + 1) + iExtendedBox.m_Data[0], iExtendedBitmap, holes.back(), false, iExtendedBox);
+          holes.push_back(Vector<Vec2i>());
+          Fill(Vec2i(j + 1, i + 1) + iExtendedBox.m_Data[0], iExtendedBitmap, holes.back(), false, iExtendedBox);
         }
         ++offsetDest;
       }
     }
     oPoly.Holes() = holes;
 
-    oPoly.Translate(Vector2i::ONE);
+    oPoly.Translate(One<Vec2i>());
     oPoly.Scale(1, 2);
 
     oPoly.RemoveUselessPoints();
   }
 
-  void FloodFill::Fill(Vector2i const& iStartPt, Vector<char>& iGrid , Vector<Vector2i>& oBorder, bool iExt, AABB2Di const& iBox)
+  void FloodFill::Fill(Vec2i const& iStartPt, Vector<char>& iGrid , Vector<Vec2i>& oBorder, bool iExt, AABB2Di const& iBox)
   {
-    Vector<Vector2i> ioList;
+    Vector<Vec2i> ioList;
     ioList.push_back(iStartPt);
 
-    Vector2i origPos = iStartPt;
-    Vector2i borderStart(iBox.m_Data[1]);
+    Vec2i origPos = iStartPt;
+    Vec2i borderStart(iBox.m_Data[1]);
 
     while(!ioList.empty())
     {
-      Vector2i curPt = ioList.back();
+      Vec2i curPt = ioList.back();
       ioList.pop_back();
       iGrid[GetOffset(curPt, iBox)] = Corner_Tag;
 
-      if(ExamineNeigh(ioList, iGrid, curPt + Vector2i::UNIT_X, iBox))
+      if(ExamineNeigh(ioList, iGrid, curPt + UnitX<Vec2i>(), iBox))
       {
-        borderStart = curPt < borderStart ? curPt : borderStart;
+        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
-      if(ExamineNeigh(ioList, iGrid, curPt - Vector2i::UNIT_X, iBox))
+      if(ExamineNeigh(ioList, iGrid, curPt - UnitX<Vec2i>(), iBox))
       {
-        borderStart = curPt < borderStart ? curPt : borderStart;
+        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
-      if(ExamineNeigh(ioList, iGrid, curPt + Vector2i::UNIT_Y, iBox))
+      if(ExamineNeigh(ioList, iGrid, curPt + UnitY<Vec2i>(), iBox))
       {
-        borderStart = curPt < borderStart ? curPt : borderStart;
+        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
-      if(ExamineNeigh(ioList, iGrid, curPt - Vector2i::UNIT_Y, iBox))
+      if(ExamineNeigh(ioList, iGrid, curPt - UnitY<Vec2i>(), iBox))
       {
-        borderStart = curPt < borderStart ? curPt : borderStart;
+        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
     }
@@ -335,13 +335,13 @@ namespace eXl
 
     int nextDir[2][4] = {{2,3,1,0}, {3,2,0,1}};
 
-    Vector2i curBorderPos = borderStart;
+    Vec2i curBorderPos = borderStart;
     int startBorderDir = 4;
     for(int dir = 0; dir<4; ++dir)
     {
-      Vector2i expectedFilledPos;
+      Vec2i expectedFilledPos;
       int expectedDir = nextDir[iExt][dir];
-      expectedFilledPos.m_Data[expectedDir / 2] = 2*(expectedDir%2) - 1;
+      expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
       expectedFilledPos += borderStart;
 
       if(CheckCoord(expectedFilledPos, iBox)
@@ -357,21 +357,21 @@ namespace eXl
       return;
     }
 
-    Vector2i expectedFilledPos;
+    Vec2i expectedFilledPos;
     int expectedDir = nextDir[iExt][startBorderDir];
-    expectedFilledPos.m_Data[expectedDir / 2] = 2*(expectedDir%2) - 1;
-    expectedFilledPos.m_Data[startBorderDir / 2] = 1 - 2*(startBorderDir%2);
+    expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
+    expectedFilledPos[startBorderDir / 2] = 1 - 2*(startBorderDir%2);
     unsigned int curBorderDir = startBorderDir;
     oBorder.push_back(curBorderPos * 2 + expectedFilledPos);
 
     do
     {
-      Vector2i neigh;
-      neigh.m_Data[curBorderDir / 2] = 2*(curBorderDir%2) - 1;
+      Vec2i neigh;
+      neigh[curBorderDir / 2] = 2*(curBorderDir%2) - 1;
       neigh += curBorderPos;
 
-      Vector2i neighExpected;
-      neighExpected.m_Data[expectedDir / 2] = 2*(expectedDir%2) - 1;
+      Vec2i neighExpected;
+      neighExpected[expectedDir / 2] = 2*(expectedDir%2) - 1;
       neighExpected += neigh;
 
       if(CheckCoord(neigh, iBox)
@@ -391,10 +391,10 @@ namespace eXl
         {
           oBorder.push_back(neigh * 2 + expectedFilledPos);
           curBorderDir = nextDir[!iExt][curBorderDir];
-          expectedFilledPos = Vector2i::ZERO;
+          expectedFilledPos = Zero<Vec2i>();
           expectedDir = nextDir[iExt][curBorderDir];
-          expectedFilledPos.m_Data[expectedDir / 2] = 2*(expectedDir%2) - 1;
-          expectedFilledPos.m_Data[curBorderDir / 2] = 1 - 2*(curBorderDir%2);
+          expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
+          expectedFilledPos[curBorderDir / 2] = 1 - 2*(curBorderDir%2);
         }
         break;
         case Out_Tag:
@@ -409,7 +409,7 @@ namespace eXl
         {
           oBorder.push_back(neigh * 2 + expectedFilledPos);
           curBorderDir = nextDir[iExt][curBorderDir];
-          neigh.m_Data[curBorderDir / 2] += 2*(curBorderDir%2) - 1;
+          neigh[curBorderDir / 2] += 2*(curBorderDir%2) - 1;
           bool cond = CheckCoord(neigh, iBox) && iGrid[GetOffset(neigh, iBox)] == -4;
           eXl_ASSERT_MSG(cond, "Bad");
           if(!cond)
@@ -418,10 +418,10 @@ namespace eXl
             return;
           }
           curBorderPos = neigh;
-          expectedFilledPos = Vector2i::ZERO;
+          expectedFilledPos = Zero<Vec2i>();
           expectedDir = nextDir[iExt][curBorderDir];
-          expectedFilledPos.m_Data[expectedDir / 2] = 2*(expectedDir%2) - 1;
-          expectedFilledPos.m_Data[curBorderDir / 2] = 1 - 2*(curBorderDir%2);
+          expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
+          expectedFilledPos[curBorderDir / 2] = 1 - 2*(curBorderDir%2);
         }
         break;
         case Border_Tag:
@@ -440,16 +440,16 @@ namespace eXl
     while(curBorderPos != borderStart || curBorderDir != startBorderDir);
   }
 
-  unsigned int FloodFill::MakeGradientMap(AABB2DPolygoni const& iPoly, Vector<unsigned int>& oValues, Vector<Vector2i>& oGradient)
+  unsigned int FloodFill::MakeGradientMap(AABB2DPolygoni const& iPoly, Vector<unsigned int>& oValues, Vector<Vec2i>& oGradient)
   {
     Vector<AABB2DPolygoni> currentPoly;
     Vector<AABB2DPolygoni> nextPoly;
     currentPoly.push_back(iPoly);
 
     AABB2Di box = iPoly.GetAABB();
-    Vector2i dim = box.GetSize();
-    oValues.resize(dim.X() * dim.Y(), 0);
-    oGradient.resize(dim.X() * dim.Y(), Vector2i::ZERO);
+    Vec2i dim = box.GetSize();
+    oValues.resize(dim.x * dim.y, 0);
+    oGradient.resize(dim.x * dim.y, Zero<Vec2i>());
 
     unsigned int currentValue = 1;
     while(!currentPoly.empty())
@@ -482,11 +482,11 @@ namespace eXl
           polyR.GetBoxes(boxes);
           for(auto curBox : boxes)
           {
-            for(int i = curBox.m_Data[0].Y(); i<curBox.m_Data[1].Y(); ++i)
+            for(int i = curBox.m_Data[0].y; i<curBox.m_Data[1].y; ++i)
             {
-              for(int j = curBox.m_Data[0].X(); j<curBox.m_Data[1].X(); ++j)
+              for(int j = curBox.m_Data[0].x; j<curBox.m_Data[1].x; ++j)
               {
-                unsigned int offsetI = GetOffset(Vector2i(j,i), box);
+                unsigned int offsetI = GetOffset(Vec2i(j,i), box);
                 oValues[offsetI] = currentValue;
               }
             }
@@ -503,38 +503,38 @@ namespace eXl
 
     //Now compute gradient
     unsigned int offset = 0;
-    for(int i = box.m_Data[0].Y(); i< box.m_Data[1].Y(); ++i)
+    for(int i = box.m_Data[0].y; i< box.m_Data[1].y; ++i)
     {
-      for(int j = box.m_Data[0].X(); j< box.m_Data[1].X(); ++j)
+      for(int j = box.m_Data[0].x; j< box.m_Data[1].x; ++j)
       {
-        Vector2i grad;
+        Vec2i grad;
         int neighSizeX = 0;
         int neighSizeY = 0;
         int value = oValues[offset];
-        if( i > box.m_Data[0].Y())
+        if( i > box.m_Data[0].y)
         {
-          grad.Y() += value - oValues[offset - dim.X()];
+          grad.y += value - oValues[offset - dim.x];
           ++neighSizeY;
         }
-        if( i < box.m_Data[1].Y() - 1)
+        if( i < box.m_Data[1].y - 1)
         {
-          grad.Y() += oValues[offset + dim.X()] - value;
+          grad.y += oValues[offset + dim.x] - value;
           ++neighSizeY;
         }
-        if( j > box.m_Data[0].X())
+        if( j > box.m_Data[0].x)
         {
-          grad.X() += value - oValues[offset - 1];
+          grad.x += value - oValues[offset - 1];
           ++neighSizeX;
         }
-        if( j < box.m_Data[1].X() - 1)
+        if( j < box.m_Data[1].x - 1)
         {
-          grad.X() += oValues[offset + 1] - value;
+          grad.x += oValues[offset + 1] - value;
           ++neighSizeX;
         }
         neighSizeX = Mathi::Clamp(neighSizeX, 1, 2);
         neighSizeY = Mathi::Clamp(neighSizeY, 1, 2);
-        oGradient[offset].X() = grad.X() / neighSizeX;
-        oGradient[offset].Y() = grad.Y() / neighSizeY;
+        oGradient[offset].x = grad.x / neighSizeX;
+        oGradient[offset].y = grad.y / neighSizeY;
         ++offset;
       }
     }

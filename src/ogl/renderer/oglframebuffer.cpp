@@ -14,8 +14,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  OGLFramebuffer::OGLFramebuffer(Vector2i const& iSize)
-    :m_Size(iSize)
+  OGLFramebuffer::OGLFramebuffer(Vec2u const& iSize)
+    : m_Size(iSize)
   {
 #ifdef EXL_WITH_OGL
 #ifndef __ANDROID__
@@ -64,7 +64,7 @@ namespace eXl
       GLuint renderBuffer;
       glGenRenderbuffers(1, &renderBuffer);
       glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-      glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, m_Size.X(), m_Size.Y());
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, m_Size.x, m_Size.y);
       glBindFramebuffer(GL_FRAMEBUFFER, m_Id);
       glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + m_ColorAttachements.size(), GL_RENDERBUFFER, renderBuffer);
 
@@ -100,7 +100,7 @@ namespace eXl
         GLuint renderBuffer;
         glGenRenderbuffers(1, &renderBuffer);
         glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Size.X(), m_Size.Y());
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Size.x, m_Size.y);
         glBindFramebuffer(GL_FRAMEBUFFER, m_Id);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
         m_DepthStencilAttachement.m_IsTexture = false;

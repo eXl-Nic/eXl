@@ -31,7 +31,7 @@ namespace eXl
 
     unsigned int GetNumLayers() const;
 
-    void GetLayer(unsigned int iLayer, Vector<Vector2d>& oPoints) const;
+    void GetLayer(unsigned int iLayer, Vector<Vec2d>& oPoints) const;
 
   protected:
     PoissonDiskSampling_Impl* m_Impl;

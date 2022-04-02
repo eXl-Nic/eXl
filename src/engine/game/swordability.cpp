@@ -109,19 +109,19 @@ namespace eXl
     GfxSystem& gfxSys = *world.GetSystem<GfxSystem>();
     GfxSpriteComponent* gfxComp = gfxSys.GetSpriteComponent(state.m_SwordActor);
 
-    if (state.m_SwingDirection.Dot(Vector2f::UNIT_X) > 0.5)
+    if (state.m_SwingDirection.Dot(UnitX<Vector2f>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_right"));
     }
-    if (state.m_SwingDirection.Dot(-Vector2f::UNIT_X) > 0.5)
+    if (state.m_SwingDirection.Dot(-UnitX<Vector2f>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_left"));
     }
-    if (state.m_SwingDirection.Dot(Vector2f::UNIT_Y) > 0.5)
+    if (state.m_SwingDirection.Dot(UnitY<Vector2f>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_up"));
     }
-    if (state.m_SwingDirection.Dot(-Vector2f::UNIT_Y) > 0.5)
+    if (state.m_SwingDirection.Dot(-UnitY<Vector2f>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_down"));
     }

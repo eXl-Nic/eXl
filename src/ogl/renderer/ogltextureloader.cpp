@@ -49,7 +49,7 @@ namespace eXl
   {
     OGLTexture* res = nullptr;
 #ifdef EXL_WITH_OGL
-    if(iSize.X() > 0 && iSize.Y() > 0)
+    if(iSize.x > 0 && iSize.y > 0)
     {
       GLuint texId;
       glGenTextures(1, &texId);
@@ -135,7 +135,7 @@ namespace eXl
         glGenerateMipmap(GL_TEXTURE_2D);
       }
 #endif
-      glTexImage2D(GL_TEXTURE_2D,0, GetGLInternalTextureFormat(internalFormat), iSize.X(), iSize.Y(), 0, dataComponents, dataType, iData);
+      glTexImage2D(GL_TEXTURE_2D,0, GetGLInternalTextureFormat(internalFormat), iSize.x, iSize.y, 0, dataComponents, dataType, iData);
 
       res = eXl_NEW OGLTexture(iSize, OGLTextureType::TEXTURE_2D, internalFormat);
       res->m_TexId = texId;
@@ -145,13 +145,13 @@ namespace eXl
   }
 
   template <class T, uint32_t iNumCol>
-  void SwapRB(Vector2<uint32_t> const& iSize, void* iData, uint32_t iRowStride)
+  void SwapRB(Vec2u const& iSize, void* iData, uint32_t iRowStride)
   {
     uint8_t* dataPtr = reinterpret_cast<uint8_t*>(iData);
-    for(uint32_t i = 0; i < iSize.Y(); ++i)
+    for(uint32_t i = 0; i < iSize.y; ++i)
     {
       T* curRow = (T*)dataPtr;
-      for(uint32_t j = 0; j<iSize.X(); ++j)
+      for(uint32_t j = 0; j<iSize.x; ++j)
       {
         std::swap(curRow[0], curRow[2]);
         curRow += iNumCol;
@@ -394,21 +394,21 @@ namespace eXl
 #endif
       )
     {
-      for (uint32_t i = 0; i < imgSize.Y(); ++i)
+      for (uint32_t i = 0; i < imgSize.y; ++i)
       {
         GLenum textureFaceUpdate = iTextureType == GL_TEXTURE_CUBE_MAP ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + iFace : iTextureType;
-        //uint8_t const* pixelsDataRev = pixelsData + ((imgSize.Y() - 1) - i) * iImage->GetRowStride();
+        //uint8_t const* pixelsDataRev = pixelsData + ((imgSize.y - 1) - i) * iImage->GetRowStride();
         uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
-        glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.X(), 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
+        glTexSubImage2D(textureFaceUpdate, 0, 0, i, imgSize.x, 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
       }
     }
     else if (iTextureType == GL_TEXTURE_2D_ARRAY
       || iTextureType == GL_TEXTURE_3D)
     {
-      for (uint32_t i = 0; i < imgSize.Y(); ++i)
+      for (uint32_t i = 0; i < imgSize.y; ++i)
       {
         uint8_t const* pixelRow = pixelsData + i * iImage.GetRowStride();
-        glTexSubImage3D(iTextureType, 0, 0, i, iFace, imgSize.X(), 1, 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
+        glTexSubImage3D(iTextureType, 0, 0, i, iFace, imgSize.x, 1, 1, GetGLTextureFormat(dataComponents), GetGLTextureElementType(dataType), pixelRow);
       }
     }
 
@@ -476,7 +476,7 @@ namespace eXl
         || (oImage->GetRowStride() % 8 != 0 
          && oImage->GetRowStride() % 4 != 0 
          && oImage->GetRowStride() % 2 != 0 
-         && oImage->GetRowStride() != oImage->GetSize().X()))
+         && oImage->GetRowStride() != oImage->GetSize().x))
           oImage = NULL;
       }
 
@@ -538,7 +538,7 @@ namespace eXl
 
         oImage = eXl_NEW Image(NULL, iTexture->GetSize(), comps, fmt, 4);
       }
-      uint32_t align = oImage->GetRowStride() - oImage->GetSize().X();
+      uint32_t align = oImage->GetRowStride() - oImage->GetSize().x;
 
       if(align > 4)
         glPixelStorei(GL_PACK_ALIGNMENT,8);
@@ -554,7 +554,7 @@ namespace eXl
       glGetTexImage(textureFaceTarget, 0, GetGLTextureFormat(imgDataComponents), GetGLTextureElementType(imgDataType), oImage->GetPixel(0,0));
 #endif
 
-      //glReadPixels(iBox.m_Data[0].X(), iBox.m_Data[0].Y(), iBox.GetSize().X(), iBox.GetSize().Y(), imgInternalFormat, imgDataType, oImage->GetPixel(0,0));
+      //glReadPixels(iBox.m_Data[0].x, iBox.m_Data[0].y, iBox.GetSize().x, iBox.GetSize().y, imgInternalFormat, imgDataType, oImage->GetPixel(0,0));
       glBindTexture(textureTarget, 0);
       return Err::Success;
     }

@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "oglrendercommand.hpp"
 #include <ogl/oglexp.hpp>
-#include <math/vector2.hpp>
 #include <vector>
 #include <map>
 #include <set>
@@ -39,17 +38,17 @@ namespace eXl
 
     void InitForRender();
 
-    void SetDefaultViewport(Vector2i const& iOrig, Vector2i const& iSize);
+    void SetDefaultViewport(Vec2i const& iOrig, Vec2i const& iSize);
 
     void SetDefaultDepth(bool iWriteZ, bool iReadZ);
 
-    void SetDefaultScissor(Vector2i const& iScissorOrig, Vector2i const& iScissorSize);
+    void SetDefaultScissor(Vec2i const& iScissorOrig, Vec2i const& iScissorSize);
 
     void SetDefaultBlend(bool iEnabled, OGLBlend iSrc, OGLBlend iDst);
 
-    void SetViewport(Vector2i const& iOrig, Vector2i const& iSize);
+    void SetViewport(Vec2i const& iOrig, Vec2i const& iSize);
 
-    void SetScissor(Vector2i const& iScissorOrig, Vector2i const& iScissorSize);
+    void SetScissor(Vec2i const& iScissorOrig, Vec2i const& iScissorSize);
 
     void SetDepth(bool iWriteZ, bool iReadZ);
 
@@ -70,7 +69,7 @@ namespace eXl
     void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances);
 #endif
 
-    void Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vector4f const& iColor = Vector4f::ZERO, float iDepth = 1.0);
+    void Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vec4 const& iColor = Zero<Vec4>(), float iDepth = 1.0);
 
     void Render(OGLRenderContext* iCtx, OGLFramebuffer* iFBO = NULL);
 

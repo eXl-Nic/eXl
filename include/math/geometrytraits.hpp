@@ -97,12 +97,12 @@ namespace boost
 
         static inline coordinate_type get(eXl::AABB2D<Real> const& b)
         {
-          return b.m_Data[Corner].m_Data[Dimension];
+          return b.m_Data[Corner][Dimension];
         }
 
         static inline void set(eXl::AABB2D<Real>& b, coordinate_type const& value)
         {
-          b.m_Data[Corner].m_Data[Dimension] = value;
+          b.m_Data[Corner][Dimension] = value;
         }
       };
 

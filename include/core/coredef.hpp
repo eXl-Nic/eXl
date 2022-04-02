@@ -64,7 +64,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define eXl_TO_STR(s) eXl_TO_STR_(s)
 #define eXl_CONCAT(s,r) s##r
 #define eXl_FORMAT(s, ...) (::eXl::StringUtil::Format(s, __VA_ARGS__).c_str())
-#if !defined(_MSC_VER) || !defined(EXL_BUILD_SHARED)
+#if !defined(_MSC_VER) && !defined(EXL_BUILD_SHARED)
 #define eXl_TEMPLATE_EXTERN extern
 #else
 #define eXl_TEMPLATE_EXTERN

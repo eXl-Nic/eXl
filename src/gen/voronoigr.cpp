@@ -19,54 +19,54 @@ namespace eXl
   {
   public:
     /** Vertical segment at (0,0)*/
-    static Real NearestPointVSeg(Real iHalfLength, Vector2<Real> const& iPos, Vector2<Real>& oVect)
+    static Real NearestPointVSeg(Real iHalfLength, glm::vec<2, Real> const& iPos, glm::vec<2, Real>& oVect)
     {
-      if (Math<Real>::FAbs(iPos.Y()) < iHalfLength)
+      if (Math<Real>::FAbs(iPos.y) < iHalfLength)
       {
-        oVect = Vector2<Real>(-iPos.X(), 0.0);
-        return Math<Real>::FAbs(iPos.X());
+        oVect = glm::vec<2, Real>(-iPos.x, 0.0);
+        return Math<Real>::FAbs(iPos.x);
       }
       else
       {
-        oVect = Vector2<Real>(-iPos.X(), -iPos.Y() - (iPos.Y() > 0.0 ? -1.0 : 1.0) * iHalfLength);
-        return oVect.Normalize();
+        oVect = glm::vec<2, Real>(-iPos.x, -iPos.y - (iPos.y > 0.0 ? -1.0 : 1.0) * iHalfLength);
+        return NormalizeAndGetLength(oVect);
       }
     }
 
     /**Rect is at (0,0)*/
-    static Real NearestPointRect(Vector2<Real> const& iHalfDim, Vector2<Real> const& iPos, Vector2<Real>& oVect, unsigned int& oSelDist)
+    static Real NearestPointRect(glm::vec<2, Real> const& iHalfDim, glm::vec<2, Real> const& iPos, glm::vec<2, Real>& oVect, unsigned int& oSelDist)
     {
-      Vector2<Real> dists[4];
+      glm::vec<2, Real> dists[4];
 
-      dists[0].X() = -iHalfDim.X() - iPos.X();
-      dists[1].X() = +iHalfDim.X() - iPos.X();
+      dists[0].x = -iHalfDim.x - iPos.x;
+      dists[1].x = +iHalfDim.x - iPos.x;
 
-      if (iPos.Y() > iHalfDim.Y())
+      if (iPos.y > iHalfDim.y)
       {
-        dists[0].Y() = dists[1].Y() = iHalfDim.Y() - iPos.Y();
+        dists[0].y = dists[1].y = iHalfDim.y - iPos.y;
       }
-      else if (iPos.Y() < -iHalfDim.Y())
+      else if (iPos.y < -iHalfDim.y)
       {
-        dists[0].Y() = dists[1].Y() = -iHalfDim.Y() - iPos.Y();
+        dists[0].y = dists[1].y = -iHalfDim.y - iPos.y;
       }
 
-      dists[2].Y() = -iHalfDim.Y() - iPos.Y();
-      dists[3].Y() = +iHalfDim.Y() - iPos.Y();
+      dists[2].y = -iHalfDim.y - iPos.y;
+      dists[3].y = +iHalfDim.y - iPos.y;
 
-      if (iPos.X() > iHalfDim.X())
+      if (iPos.x > iHalfDim.x)
       {
-        dists[2].X() = dists[3].X() = iHalfDim.X() - iPos.X();
+        dists[2].x = dists[3].x = iHalfDim.x - iPos.x;
       }
-      else if (iPos.X() < -iHalfDim.X())
+      else if (iPos.x < -iHalfDim.x)
       {
-        dists[2].X() = dists[3].X() = -iHalfDim.X() - iPos.X();
+        dists[2].x = dists[3].x = -iHalfDim.x - iPos.x;
       }
 
       oSelDist = 0;
-      Real curMin = dists[0].Length();
+      Real curMin = length(dists[0]);
       for (unsigned int i = 1; i < 4; ++i)
       {
-        Real curDist = dists[i].Length();
+        Real curDist = length(dists[i]);
         if (curDist < curMin)
         {
           curMin = curDist;
@@ -75,14 +75,14 @@ namespace eXl
       }
 
       oVect = dists[oSelDist];
-      return oVect.Normalize();
+      return NormalizeAndGetLength(oVect);
     }
   };
 
   class wall_Rect : public voro::wall
   {
   public:
-    wall_Rect(Vector2f const& iHalfDim, int iId) : wall()
+    wall_Rect(Vec2 const& iHalfDim, int iId) : wall()
       , m_HalfDim(iHalfDim)
       , w_id(iId)
     {
@@ -91,44 +91,44 @@ namespace eXl
 
     virtual bool point_inside(double x, double y, double z)
     {
-      Vector2f traj(x - m_Pos.X(), y - m_Pos.Y());
-      Vector2f trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
-      Vector2f trajInRect = Vector2f(traj.X() * trigAngle.X() + traj.Y() * trigAngle.Y(),
-        traj.Y() * trigAngle.X() - traj.X() * trigAngle.Y());
-      AABB2Df box = AABB2Df::FromCenterAndSize(Vector2f::ZERO, m_HalfDim * 2);
+      Vec2 traj(x - m_Pos.x, y - m_Pos.y);
+      Vec2 trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
+      Vec2 trajInRect = Vec2(traj.x * trigAngle.x + traj.y * trigAngle.y,
+        traj.y * trigAngle.x - traj.x * trigAngle.y);
+      AABB2Df box = AABB2Df::FromCenterAndSize(Zero<Vec2>(), m_HalfDim * 2.f);
       return !box.Contains(trajInRect);
     }
 
     template <class vcell>
     bool cut_cell_base(vcell& c, double x, double y, double z)
     {
-      Vector2f traj(x - m_Pos.X(), y - m_Pos.Y());
-      Vector2f trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
-      Vector2f trajInRect = Vector2f(traj.X() * trigAngle.X() + traj.Y() * trigAngle.Y(),
-        traj.Y() * trigAngle.X() - traj.X() * trigAngle.Y());
+      Vec2 traj(x - m_Pos.x, y - m_Pos.y);
+      Vec2 trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
+      Vec2 trajInRect = Vec2(traj.x * trigAngle.x + traj.y * trigAngle.y,
+        traj.y * trigAngle.x - traj.x * trigAngle.y);
 
-      AABB2Df box(Vector2f::ZERO, m_HalfDim * 2);
+      AABB2Df box(Zero<Vec2>(), m_HalfDim * 2);
       if (box.Contains(trajInRect))
         return false;
 
-      float const shrinkCoeff = 0.0 * (m_HalfDim.X() > m_HalfDim.Y() ? m_HalfDim.Y() : m_HalfDim.X());
+      float const shrinkCoeff = 0.0 * (m_HalfDim.x > m_HalfDim.y ? m_HalfDim.y : m_HalfDim.x);
 
-      Vector2f const halfDim(m_HalfDim.X(), m_HalfDim.Y());
-      Vector2f normalVect;
+      Vec2 const halfDim(m_HalfDim.x, m_HalfDim.y);
+      Vec2 normalVect;
       unsigned int selDist;
       float curMin = Primitive_Distance<float>::NearestPointRect(halfDim, trajInRect, normalVect, selDist);
 
-      normalVect.Normalize();
-      normalVect = Vector2f(normalVect.X() * trigAngle.X() - normalVect.Y() * trigAngle.Y(),
-        normalVect.Y() * trigAngle.X() + normalVect.X() * trigAngle.Y());
-      //float dq = traj.X() * traj.X() + traj.Y() * traj.Y();
+      normalVect = normalize(normalVect);
+      normalVect = Vec2(normalVect.x * trigAngle.x - normalVect.y * trigAngle.y,
+        normalVect.y * trigAngle.x + normalVect.x * trigAngle.y);
+      //float dq = traj.x * traj.x + traj.y * traj.y;
 
       float dq = 2 * (curMin - shrinkCoeff);
-      return c.nplane(normalVect.X(), normalVect.Y(), 0.0, dq, w_id);
+      return c.nplane(normalVect.x, normalVect.y, 0.0, dq, w_id);
 
     }
 
-    void SetPos(Vector2f const& iPos, float iAngle)
+    void SetPos(Vec2 const& iPos, float iAngle)
     {
       m_Pos = iPos;
       m_Angle = iAngle;
@@ -144,11 +144,11 @@ namespace eXl
       return cut_cell_base(c, x, y, z);
     }
 
-    inline Vector2f const& GetHalfDim() const { return m_HalfDim; }
+    inline Vec2 const& GetHalfDim() const { return m_HalfDim; }
 
   protected:
-    Vector2f m_HalfDim;
-    Vector2f m_Pos;
+    Vec2 m_HalfDim;
+    Vec2 m_Pos;
     float m_Angle;
     const int w_id;
   };
@@ -166,10 +166,10 @@ namespace eXl
 
     virtual bool point_inside(double x, double y, double z)
     {
-      Vector2f traj(x - m_Pos.X(), y - m_Pos.Y());
-      Vector2f trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
-      Vector2f trajInCaps = Vector2f(traj.X() * trigAngle.X() + traj.Y() * trigAngle.Y(),
-        traj.Y() * trigAngle.X() - traj.X() * trigAngle.Y());
+      Vec2 traj(x - m_Pos.x, y - m_Pos.y);
+      Vec2 trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
+      Vec2 trajInCaps = Vec2(traj.x * trigAngle.x + traj.y * trigAngle.y,
+        traj.y * trigAngle.x - traj.x * trigAngle.y);
 
       return Primitive_Distance<float>::NearestPointVSeg(m_Length / 2.0, trajInCaps, traj) > m_Radius;
     }
@@ -177,29 +177,29 @@ namespace eXl
     template <class vcell>
     bool cut_cell_base(vcell& c, double x, double y, double z)
     {
-      Vector2f traj(x - m_Pos.X(), y - m_Pos.Y());
-      Vector2f trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
-      Vector2f trajInCaps = Vector2f(traj.X() * trigAngle.X() + traj.Y() * trigAngle.Y(),
-        traj.Y() * trigAngle.X() - traj.X() * trigAngle.Y());
+      Vec2 traj(x - m_Pos.x, y - m_Pos.y);
+      Vec2 trigAngle(Mathf::Cos(m_Angle), Mathf::Sin(m_Angle));
+      Vec2 trajInCaps = Vec2(traj.x * trigAngle.x + traj.y * trigAngle.y,
+        traj.y * trigAngle.x - traj.x * trigAngle.y);
 
       if (!(Primitive_Distance<float>::NearestPointVSeg(m_Length / 2.0, trajInCaps, traj) > m_Radius))
         return false;
 
-      float const shrinkCoeff = 0.0; //0.1 * (m_HalfDim.X() > m_HalfDim.Y() ? m_HalfDim.Y() : m_HalfDim.X());
+      float const shrinkCoeff = 0.0; //0.1 * (m_HalfDim.x > m_HalfDim.y ? m_HalfDim.y : m_HalfDim.x);
 
-      Vector2f trajToPoint;
+      Vec2 trajToPoint;
       float dist = Primitive_Distance<float>::NearestPointVSeg(m_Length / 2.0, trajInCaps, trajToPoint);
 
-      Vector2f normalVect = trajToPoint;
-      normalVect.Normalize();
-      normalVect = Vector2f(normalVect.X() * trigAngle.X() - normalVect.Y() * trigAngle.Y(),
-        normalVect.Y() * trigAngle.X() + normalVect.X() * trigAngle.Y());
+      Vec2 normalVect = trajToPoint;
+      normalVect = normalize(normalVect);
+      normalVect = Vec2(normalVect.x * trigAngle.x - normalVect.y * trigAngle.y,
+        normalVect.y * trigAngle.x + normalVect.x * trigAngle.y);
 
       float dq = 2 * (dist - m_Radius);
-      return c.nplane(normalVect.X(), normalVect.Y(), 0.0, dq, w_id);
+      return c.nplane(normalVect.x, normalVect.y, 0.0, dq, w_id);
     }
 
-    void SetPos(Vector2f const& iPos, float iAngle)
+    void SetPos(Vec2 const& iPos, float iAngle)
     {
       m_Pos = iPos;
       m_Angle = iAngle;
@@ -221,24 +221,24 @@ namespace eXl
   protected:
     float m_Radius;
     float m_Length;
-    Vector2f m_Pos;
+    Vec2 m_Pos;
     float m_Angle;
     const int w_id;
   };
 
   void Circle::GetAABB(AABB2Df& oBox) const
   {
-    oBox = AABB2Df::FromCenterAndSize(m_Pos, Vector2f(radius, radius) * 2.0);
+    oBox = AABB2Df::FromCenterAndSize(m_Pos, Vec2(radius, radius) * 2.f);
   }
 
-  Rect::Rect(unsigned int iId, Vector2f const& iHalfDim, int iWallId)
+  Rect::Rect(unsigned int iId, Vec2 const& iHalfDim, int iWallId)
     :Wall(iId)
     , m_Wall(new wall_Rect(iHalfDim, iWallId))
   {
     m_Flags |= CK_Rectangle;
   }
-  //inline Vector2f& GetHalfDim() { return halfDim; }
-  Vector2f const& Rect::GetHalfDim() const { return static_cast<wall_Rect const*>(m_Wall)->GetHalfDim(); }
+  //inline Vec2& GetHalfDim() { return halfDim; }
+  Vec2 const& Rect::GetHalfDim() const { return static_cast<wall_Rect const*>(m_Wall)->GetHalfDim(); }
   voro::wall& Rect::GetWall()
   {
     static_cast<wall_Rect*>(m_Wall)->SetPos(GetPos(), GetAngle());
@@ -247,7 +247,7 @@ namespace eXl
 
   void Rect::GetAABB(AABB2Df& oBox) const
   {
-    oBox = AABB2Df::FromCenterAndSize(m_Pos, Vector2f(static_cast<wall_Rect*>(m_Wall)->GetHalfDim()) * 2.0);
+    oBox = AABB2Df::FromCenterAndSize(m_Pos, Vec2(static_cast<wall_Rect*>(m_Wall)->GetHalfDim()) * 2.f);
     oBox.Rotate(GetAngle());
   }
 
@@ -269,7 +269,7 @@ namespace eXl
 
   void Capsule::GetAABB(AABB2Df& oBox) const
   {
-    oBox = AABB2Df::FromCenterAndSize(m_Pos, Vector2f(GetRadius(), GetLength() + GetRadius() * 2.0));
+    oBox = AABB2Df::FromCenterAndSize(m_Pos, Vec2(GetRadius(), GetLength() + GetRadius() * 2.0));
     oBox.Rotate(GetAngle());
   }
 
@@ -293,21 +293,21 @@ namespace eXl
   {
     if (m_Diagram == nullptr)
     {
-      m_Diagram = new VoronoiDiagram(m_AABB.m_Data[0].X(), m_AABB.m_Data[1].X(), m_AABB.m_Data[0].Y(), m_AABB.m_Data[1].Y(), 0, 1, blockXSize, blockYSize, 1, false, false, false, m_Circles.size());
+      m_Diagram = new VoronoiDiagram(m_AABB.m_Data[0].x, m_AABB.m_Data[1].x, m_AABB.m_Data[0].y, m_AABB.m_Data[1].y, 0, 1, blockXSize, blockYSize, 1, false, false, false, m_Circles.size());
       for (uint32_t i = 0; i < m_Walls.size(); ++i)
       {
         m_Diagram->add_wall(m_Walls[i]->GetWall());
       }
     }
     m_Diagram->clear();
-    m_Diagram->update_box_size(m_AABB.m_Data[0].X(), m_AABB.m_Data[1].X(), m_AABB.m_Data[0].Y(), m_AABB.m_Data[1].Y(), 0, 1);
-    //m_Diagram->ax = m_AABB.m_Data[0].X();
-    //m_Diagram->ay = m_AABB.m_Data[0].Y();
-    //m_Diagram->bx = m_AABB.m_Data[1].X();
-    //m_Diagram->by = m_AABB.m_Data[1].Y();
+    m_Diagram->update_box_size(m_AABB.m_Data[0].x, m_AABB.m_Data[1].x, m_AABB.m_Data[0].y, m_AABB.m_Data[1].y, 0, 1);
+    //m_Diagram->ax = m_AABB.m_Data[0].x;
+    //m_Diagram->ay = m_AABB.m_Data[0].y;
+    //m_Diagram->bx = m_AABB.m_Data[1].x;
+    //m_Diagram->by = m_AABB.m_Data[1].y;
     for (uint32_t i = 0; i<m_Circles.size(); ++i)
     {
-      m_Diagram->put(i, m_Circles[i]->GetPos().X(), m_Circles[i]->GetPos().Y(), 0.5, m_Circles[i]->GetRadius());
+      m_Diagram->put(i, m_Circles[i]->GetPos().x, m_Circles[i]->GetPos().y, 0.5, m_Circles[i]->GetRadius());
     }
   }
 
@@ -342,7 +342,7 @@ namespace eXl
     m_Diagram = nullptr;
   }
 
-  uint32_t VoronoiGraph::AddCircle(float iRadius, Vector2f const& iPos)
+  uint32_t VoronoiGraph::AddCircle(float iRadius, Vec2 const& iPos)
   {
     ClearDiagram();
     AABB2Df newAABB;
@@ -372,7 +372,7 @@ namespace eXl
   }
 
 
-  uint32_t VoronoiGraph::AddCapsuleWall(float iRadius, float iLength, Vector2f const& iPos, float iAngle)
+  uint32_t VoronoiGraph::AddCapsuleWall(float iRadius, float iLength, Vec2 const& iPos, float iAngle)
   {
     ClearDiagram();
     AABB2Df newAABB;
@@ -397,7 +397,7 @@ namespace eXl
   }
 
 
-  uint32_t VoronoiGraph::AddRectangleWall(Vector2f const& iHalfDims, Vector2f const& iPos, float iAngle)
+  uint32_t VoronoiGraph::AddRectangleWall(Vec2 const& iHalfDims, Vec2 const& iPos, float iAngle)
   {
     ClearDiagram();
     AABB2Df newAABB;
@@ -431,7 +431,7 @@ namespace eXl
     {
       //cellRef = 0;
     }
-    Vector2f m_Pos;
+    Vec2 m_Pos;
     uint32_t m_Identifier;
     //mutable int cellRef;
     //mutable std::list<CellEdgeMap::iterator > outEdges;
@@ -492,20 +492,20 @@ namespace eXl
     bool m_Initialized;
     int m_Id;
     uint32_t m_DiagPid;
-    //Vector2f m_RelPos;
+    //Vec2 m_RelPos;
     double origPos[3];
     float m_Radius;
     CellEdgeMap m_Edges;
     //Vector<int> m_Neighbours;
   };
 
-  bool ComparePoints(std::list<GridPoint> const& gridCase, Vector2f const& iPoint, float iTol, CIPointRef& oRef)
+  bool ComparePoints(std::list<GridPoint> const& gridCase, Vec2 const& iPoint, float iTol, CIPointRef& oRef)
   {
   
     for (std::list<GridPoint>::const_iterator iter = gridCase.begin(), iterEnd = gridCase.end();
       iter != iterEnd; ++iter)
     {
-      if ((iPoint - iter->m_Pos).Length() < iTol)
+      if (length(iPoint - iter->m_Pos) < iTol)
       {
         oRef.listIter = iter;
         return true;
@@ -514,33 +514,33 @@ namespace eXl
     return false;
   }
 
-  CIPointRef InsertPoint(PointGrid& ioGrid, Vector2f const& iPoint, Vector2f const& iIncr, Vector2i const& iSize, float iTol, uint32_t& oNumPts)
+  CIPointRef InsertPoint(PointGrid& ioGrid, Vec2 const& iPoint, Vec2 const& iIncr, Vec2i const& iSize, float iTol, uint32_t& oNumPts)
   {
-    Vector2i gridCoord(iPoint.X() / iIncr.X(), iPoint.Y() / iIncr.Y());
+    Vec2i gridCoord(iPoint.x / iIncr.x, iPoint.y / iIncr.y);
     CIPointRef oRef;
-    oRef.gridLoc = gridCoord.Y() * iSize.X() + gridCoord.X();
+    oRef.gridLoc = gridCoord.y * iSize.x + gridCoord.x;
     if (ComparePoints(ioGrid[oRef.gridLoc], iPoint, iTol, oRef))
     {
       return oRef;
     }
-    if (gridCoord.X() > 0 && ComparePoints(ioGrid[oRef.gridLoc - 1], iPoint, iTol, oRef))
+    if (gridCoord.x > 0 && ComparePoints(ioGrid[oRef.gridLoc - 1], iPoint, iTol, oRef))
     {
       oRef.gridLoc -= 1;
       return oRef;
     }
-    if (gridCoord.X() + 1 < iSize.X() && ComparePoints(ioGrid[oRef.gridLoc + 1], iPoint, iTol, oRef))
+    if (gridCoord.x + 1 < iSize.x && ComparePoints(ioGrid[oRef.gridLoc + 1], iPoint, iTol, oRef))
     {
       oRef.gridLoc += 1;
       return oRef;
     }
-    if (gridCoord.Y() > 0 && ComparePoints(ioGrid[oRef.gridLoc - iSize.X()], iPoint, iTol, oRef))
+    if (gridCoord.y > 0 && ComparePoints(ioGrid[oRef.gridLoc - iSize.x], iPoint, iTol, oRef))
     {
-      oRef.gridLoc -= iSize.X();
+      oRef.gridLoc -= iSize.x;
       return oRef;
     }
-    if (gridCoord.Y() + 1 < iSize.Y() && ComparePoints(ioGrid[oRef.gridLoc + iSize.X()], iPoint, iTol, oRef))
+    if (gridCoord.y + 1 < iSize.y && ComparePoints(ioGrid[oRef.gridLoc + iSize.x], iPoint, iTol, oRef))
     {
-      oRef.gridLoc += iSize.X();
+      oRef.gridLoc += iSize.x;
       return oRef;
     }
     GridPoint newPoint;
@@ -560,10 +560,10 @@ namespace eXl
 
   struct ParticleKey
   {
-    ParticleKey(Vector2d const& iPos)
+    ParticleKey(Vec2d const& iPos)
     {
-      pos[0] = iPos.X();
-      pos[1] = iPos.Y();
+      pos[0] = iPos.x;
+      pos[1] = iPos.y;
     }
     inline bool operator <(ParticleKey const& iOther)const
     {
@@ -579,10 +579,10 @@ namespace eXl
     };
   };
 
-  //typedef std::map<ParticleKey, Vector2d> WallMap;
+  //typedef std::map<ParticleKey, Vec2d> WallMap;
   typedef std::list<std::pair<uint32_t, CIEdge> > BorderEdgeList;
 
-  typedef std::map<int, Vector2d> WallMap;
+  typedef std::map<int, Vec2d> WallMap;
   struct BorderCut
   {
     CellEdgeMap::iterator iterCell;
@@ -590,14 +590,14 @@ namespace eXl
     int commonPoint;
     BorderEdgeList::iterator iterBorder;
     //WallMap::iterator positionInMap;
-    //Vector2d direction;
-    //Vector2d positionOnSeg;
-    //Vector2d otherPosition;
+    //Vec2d direction;
+    //Vec2d positionOnSeg;
+    //Vec2d otherPosition;
   };
 
   typedef std::map<std::pair<uint32_t, uint32_t>, BorderCut > EdgeTwinMap;
 
-  bool GetEdgeFromFaces(std::vector<double> const& iVertices, std::vector<int> const& iFaceO, std::vector<int>const& iFaceV, uint32_t iIdx, uint32_t iOffset, Vector2d& oPt1, Vector2d& oPt2)
+  bool GetEdgeFromFaces(std::vector<double> const& iVertices, std::vector<int> const& iFaceO, std::vector<int>const& iFaceV, uint32_t iIdx, uint32_t iOffset, Vec2d& oPt1, Vec2d& oPt2)
   {
     int indic = 0;
     for (int j = 0; j < iFaceO[iIdx]; ++j)
@@ -620,10 +620,10 @@ namespace eXl
         if ((iVertices[3 * iFaceV[iOffset + j] + 2] < 0.5 && iVertices[3 * iFaceV[iOffset + j + 1] + 2] < 0.5)
           || (iVertices[3 * iFaceV[iOffset + j] + 2] > 0.5 && iVertices[3 * iFaceV[iOffset + j + 1] + 2] > 0.5))
         {
-          oPt1.X() = iVertices[3 * iFaceV[iOffset + j + 0] + 0];
-          oPt1.Y() = iVertices[3 * iFaceV[iOffset + j + 0] + 1];
-          oPt2.X() = iVertices[3 * iFaceV[iOffset + j + 1] + 0];
-          oPt2.Y() = iVertices[3 * iFaceV[iOffset + j + 1] + 1];
+          oPt1.x = iVertices[3 * iFaceV[iOffset + j + 0] + 0];
+          oPt1.y = iVertices[3 * iFaceV[iOffset + j + 0] + 1];
+          oPt2.x = iVertices[3 * iFaceV[iOffset + j + 1] + 0];
+          oPt2.y = iVertices[3 * iFaceV[iOffset + j + 1] + 1];
           break;
         }
       }
@@ -633,7 +633,7 @@ namespace eXl
   }
 
   uint32_t FindCellEges(std::vector<double> const& iVertices, std::vector<int> const& iFaceO, std::vector<int>const& iFaceV, std::vector<int> const& iNeighs,
-    uint32_t iOrigIdx, Vector2d iRefPt, Vector2d& oPt1, Vector2d& oPt2, unsigned char& ioHandledWallsMask)
+    uint32_t iOrigIdx, Vec2d iRefPt, Vec2d& oPt1, Vec2d& oPt2, unsigned char& ioHandledWallsMask)
   {
     uint32_t res = 0;
     uint32_t numNh = iNeighs.size();
@@ -651,8 +651,8 @@ namespace eXl
           && iNeighs[res] != -5
           && iNeighs[res] != -6)
         {
-          Vector2d curEdgePt1;
-          Vector2d curEdgePt2;
+          Vec2d curEdgePt1;
+          Vec2d curEdgePt2;
 
           GetEdgeFromFaces(iVertices, iFaceO, iFaceV, res, offsetI, curEdgePt1, curEdgePt2);
           if (curEdgePt1 == iRefPt)
@@ -710,7 +710,7 @@ namespace eXl
     return iEdges.end();
   }
 
-  void InitializeBorderPlanes(WallMap& additionalWalls, VoronoiDiagram& iDiagram, Vector<CellInfo>& cells, Vector<Circle*> const& iCircles, Vector2f iMin, Vector<uint32_t>& mapping, bool iSmoothBorder)
+  void InitializeBorderPlanes(WallMap& additionalWalls, VoronoiDiagram& iDiagram, Vector<CellInfo>& cells, Vector<Circle*> const& iCircles, Vec2 iMin, Vector<uint32_t>& mapping, bool iSmoothBorder)
   {
     voro::voronoicell_neighbor cell;
     {
@@ -731,7 +731,7 @@ namespace eXl
             CellInfo& newCell = cells[loopStep];
             Circle& part = *iCircles[pid];
             looper.pos(newCell.origPos[0], newCell.origPos[1], newCell.origPos[2]);
-            Vector2d partPos(newCell.origPos[0], newCell.origPos[1]);
+            Vec2d partPos(newCell.origPos[0], newCell.origPos[1]);
             //newCell.m_RelPos = partPos - iMin;
             newCell.m_Id = part.GetId();
             mapping[newCell.m_Id] = loopStep;
@@ -757,8 +757,8 @@ namespace eXl
             {
               if (iSmoothBorder && neighs[i] < 0 && neighs[i] > -5)
               {
-                Vector2d pt1;
-                Vector2d pt2;
+                Vec2d pt1;
+                Vec2d pt2;
                 uint32_t curNeighbour = -1 - neighs[i];
 
                 if ((1 << curNeighbour) & handledWallMask)
@@ -766,20 +766,20 @@ namespace eXl
 
                 GetEdgeFromFaces(vertices, faceO, faceV, i, offsetI, pt1, pt2);
 
-                Vector2d edge1Pt1;
-                Vector2d edge1Pt2;
-                Vector2d edge2Pt1;
-                Vector2d edge2Pt2;
+                Vec2d edge1Pt1;
+                Vec2d edge1Pt2;
+                Vec2d edge2Pt1;
+                Vec2d edge2Pt2;
 
                 uint32_t adjEdge1 = FindCellEges(vertices, faceO, faceV, neighs, i, pt1, edge1Pt1, edge1Pt2, handledWallMask);
                 uint32_t adjEdge2 = FindCellEges(vertices, faceO, faceV, neighs, i, pt2, edge2Pt1, edge2Pt2, handledWallMask);
 
                 handledWallMask |= 1 << curNeighbour;
 
-                Vector2d outDir;
-                outDir.m_Data[curNeighbour / 2] = -1.0 + (curNeighbour % 2) * 2.0;
-                Vector2d oPoint;
-                Vector2d dir;
+                Vec2d outDir;
+                outDir[curNeighbour / 2] = -1.0 + (curNeighbour % 2) * 2.0;
+                Vec2d oPoint;
+                Vec2d dir;
                 uint32_t res = Segmentd::Intersect(edge1Pt1, edge1Pt2, edge2Pt1, edge2Pt2, oPoint);
                 if (res & Segmentd::PointFound)
                 {
@@ -790,16 +790,16 @@ namespace eXl
                   // // segments.
                   dir = edge1Pt2 - edge1Pt1;
                 }
-                dir.Normalize();
-                if (dir.Dot(outDir) < 0.0)
+                dir = normalize(dir);
+                if (dot(dir, outDir) < 0.0)
                   dir = dir * -1.0;
-                Vector2d normalVect(-dir.Y(), dir.X());
+                Vec2d normalVect(-dir.y, dir.x);
 
                 float currentDist = part.GetRadius();
-                oPoint = partPos + dir * currentDist;
+                oPoint = partPos + dir * static_cast<double>(currentDist);
 
-                Vector2d posOnSeg1;
-                Vector2d posOnSeg2;
+                Vec2d posOnSeg1;
+                Vec2d posOnSeg2;
 
                 res = Segmentd::NearestPointOnSeg1(edge1Pt1, edge1Pt2, oPoint, oPoint + normalVect, posOnSeg1);
                 res = Segmentd::NearestPointOnSeg1(edge2Pt1, edge2Pt2, oPoint, oPoint + normalVect, posOnSeg2);
@@ -872,17 +872,17 @@ namespace eXl
   void SplitCellEdgeBorder(CellInfo& iCell, CellEdgeMap::iterator borderEdgeIter, CellEdgeMap::iterator edgeIter, CIEdge iBorderEdge, /*CIEdge& oBorderEdge,*/ EdgeTwinMap& oTwinMap, BorderEdgeList& oBorders, float iEpsilon)
   {
     CIEdge& ioCellEdge = edgeIter->second;
-    Vector2f cellEdgePt1 = ioCellEdge.point[0].listIter->m_Pos;
-    Vector2f cellEdgePt2 = ioCellEdge.point[1].listIter->m_Pos;
+    Vec2 cellEdgePt1 = ioCellEdge.point[0].listIter->m_Pos;
+    Vec2 cellEdgePt2 = ioCellEdge.point[1].listIter->m_Pos;
 
-    Vector2f borderEdgePt1 = iBorderEdge.point[0].listIter->m_Pos;
-    Vector2f borderEdgePt2 = iBorderEdge.point[1].listIter->m_Pos;
+    Vec2 borderEdgePt1 = iBorderEdge.point[0].listIter->m_Pos;
+    Vec2 borderEdgePt2 = iBorderEdge.point[1].listIter->m_Pos;
 
-    Vector2f dir = cellEdgePt2 - cellEdgePt1;
-    float cellEdgeLength = dir.Normalize();
+    Vec2 dir = cellEdgePt2 - cellEdgePt1;
+    float cellEdgeLength = NormalizeAndGetLength(dir);
 
-    float dist1 = (borderEdgePt1 - cellEdgePt1).Dot(dir);
-    float dist2 = (borderEdgePt2 - cellEdgePt1).Dot(dir);
+    float dist1 = dot((borderEdgePt1 - cellEdgePt1), dir);
+    float dist2 = dot((borderEdgePt2 - cellEdgePt1), dir);
     if (dist1 > -iEpsilon && dist1 - iEpsilon < cellEdgeLength)
     {
       if (dist2 > -iEpsilon && dist2 - iEpsilon < cellEdgeLength)
@@ -903,8 +903,8 @@ namespace eXl
       }
       else
       {
-        float dist3 = Mathf::FAbs((borderEdgePt2 - cellEdgePt1).Dot(dir));
-        float dist4 = Mathf::FAbs((borderEdgePt2 - cellEdgePt2).Dot(dir));
+        float dist3 = Mathf::FAbs(dot((borderEdgePt2 - cellEdgePt1), dir));
+        float dist4 = Mathf::FAbs(dot((borderEdgePt2 - cellEdgePt2), dir));
         if (dist3 < dist4)
         {
           InsertAndAdjust<0, 0>(iCell, borderEdgeIter, edgeIter, iBorderEdge, oTwinMap, oBorders);
@@ -922,8 +922,8 @@ namespace eXl
     
       if (dist2 > -iEpsilon && dist2 - iEpsilon < cellEdgeLength)
       {
-        float dist3 = Mathf::FAbs((borderEdgePt1 - cellEdgePt1).Dot(dir));
-        float dist4 = Mathf::FAbs((borderEdgePt1 - cellEdgePt2).Dot(dir));
+        float dist3 = Mathf::FAbs(dot((borderEdgePt1 - cellEdgePt1), dir));
+        float dist4 = Mathf::FAbs(dot((borderEdgePt1 - cellEdgePt2), dir));
         if (dist3 < dist4)
         {
           //+ proche de cellEdgePt1
@@ -981,26 +981,26 @@ namespace eXl
       return;
     }
 
-    Vector2f levelSize = m_AABB.GetSize();
+    Vec2 levelSize = m_AABB.GetSize();
     levelSize = levelSize /** 1.25*/;
 
-    Vector2f gridOrig = m_AABB.GetCenter() - levelSize * 0.5;
+    Vec2 gridOrig = m_AABB.GetCenter() - levelSize * 0.5f;
 
     uint32_t const baseSize = 128;
-    Vector2i gridSize;
-    if (levelSize.X() > levelSize.Y())
+    Vec2i gridSize;
+    if (levelSize.x > levelSize.y)
     {
-      gridSize.X() = baseSize + 1;
-      gridSize.Y() = ((levelSize.Y() / levelSize.X()) * baseSize) + 1;
+      gridSize.x = baseSize + 1;
+      gridSize.y = ((levelSize.y / levelSize.x) * baseSize) + 1;
     }
     else
     {
-      gridSize.Y() = baseSize + 1;
-      gridSize.X() = ((levelSize.X() / levelSize.Y()) * baseSize) + 1;
+      gridSize.y = baseSize + 1;
+      gridSize.x = ((levelSize.x / levelSize.y) * baseSize) + 1;
     }
-    Vector2f gridInc(levelSize.X() / (gridSize.X() - 1), levelSize.Y() / (gridSize.Y() - 1));
+    Vec2 gridInc(levelSize.x / (gridSize.x - 1), levelSize.y / (gridSize.y - 1));
 
-    PointGrid grid(gridSize.X() * gridSize.Y());
+    PointGrid grid(gridSize.x * gridSize.y);
 
     MakeDiagram();
 
@@ -1017,14 +1017,14 @@ namespace eXl
       {
         if (m_Diagram->compute_cell(cell, looper))
         {
-          Vector3d pos;
-          looper.pos(pos.X(), pos.Y(), pos.Z());
+          Vec3d pos;
+          looper.pos(pos.x, pos.y, pos.z);
           std::vector<double> vertices;
-          cell.vertices(pos.X(), pos.Y(), pos.Z(), vertices);
-          Vector<Vector2d> pts;
+          cell.vertices(pos.x, pos.y, pos.z, vertices);
+          Vector<Vec2d> pts;
           for(uint32_t i = 0; i<vertices.size() / 3; ++i)
           {
-            pts.push_back(Vector2d(vertices[3*i + 0], vertices[3*i + 1]));
+            pts.push_back(Vec2d(vertices[3*i + 0], vertices[3*i + 1]));
           }
           Polygond::ConvexHull(pts, oCells[looper.pid()]);
         }
@@ -1044,26 +1044,26 @@ namespace eXl
       return;
     }
 
-    Vector2f levelSize = m_AABB.GetSize();
+    Vec2 levelSize = m_AABB.GetSize();
     levelSize = levelSize /** 1.25*/;
 
-    Vector2f gridOrig = m_AABB.GetCenter() - levelSize * 0.5;
+    Vec2 gridOrig = m_AABB.GetCenter() - levelSize * 0.5f;
 
     uint32_t const baseSize = 128;
-    Vector2i gridSize;
-    if (levelSize.X() > levelSize.Y())
+    Vec2i gridSize;
+    if (levelSize.x > levelSize.y)
     {
-      gridSize.X() = baseSize + 1;
-      gridSize.Y() = ((levelSize.Y() / levelSize.X()) * baseSize) + 1;
+      gridSize.x = baseSize + 1;
+      gridSize.y = ((levelSize.y / levelSize.x) * baseSize) + 1;
     }
     else
     {
-      gridSize.Y() = baseSize + 1;
-      gridSize.X() = ((levelSize.X() / levelSize.Y()) * baseSize) + 1;
+      gridSize.y = baseSize + 1;
+      gridSize.x = ((levelSize.x / levelSize.y) * baseSize) + 1;
     }
-    Vector2f gridInc(levelSize.X() / (gridSize.X() - 1), levelSize.Y() / (gridSize.Y() - 1));
+    Vec2 gridInc(levelSize.x / (gridSize.x - 1), levelSize.y / (gridSize.y - 1));
 
-    PointGrid grid(gridSize.X() * gridSize.Y());
+    PointGrid grid(gridSize.x * gridSize.y);
 
     //ClearDiagram();
     MakeDiagram();
@@ -1083,16 +1083,16 @@ namespace eXl
     InitializeBorderPlanes(additionalWalls, *m_Diagram, cells, m_Circles, m_AABB.m_Data[0], mapping, iSmoothBorder);
   
     float invSqrt2 = 1.0 / Mathf::Sqrt(2.0);
-    Vector2f octahedron[8] =
+    Vec2 octahedron[8] =
     {
-      Vector2f(1.0, 0.0),
-      Vector2f(-1.0, 0.0),
-      Vector2f(0.0, 1.0),
-      Vector2f(0.0, -1.0),
-      Vector2f(invSqrt2, invSqrt2),
-      Vector2f(-invSqrt2, invSqrt2),
-      Vector2f(invSqrt2, -invSqrt2),
-      Vector2f(-invSqrt2, -invSqrt2)
+      Vec2(1.0, 0.0),
+      Vec2(-1.0, 0.0),
+      Vec2(0.0, 1.0),
+      Vec2(0.0, -1.0),
+      Vec2(invSqrt2, invSqrt2),
+      Vec2(-invSqrt2, invSqrt2),
+      Vec2(invSqrt2, -invSqrt2),
+      Vec2(-invSqrt2, -invSqrt2)
     };
 
     std::multimap<int, std::pair<int, CIEdge> > borderEdgeMap;
@@ -1138,9 +1138,9 @@ namespace eXl
               //float dist = newCell.m_Radius * 8;
               //for (uint32_t fNum = 0; fNum < 8; ++fNum)
               //{
-              //  Vector2f cellPos(newCell.origPos[0], newCell.origPos[1]);
-              //  Vector2f fCenter = cellPos + octahedron[fNum] * dist;
-              //  cell.nplane(octahedron[fNum].X(), octahedron[fNum].Y(), 0.0, dist * 2, outCell.m_Id);
+              //  Vec2 cellPos(newCell.origPos[0], newCell.origPos[1]);
+              //  Vec2 fCenter = cellPos + octahedron[fNum] * dist;
+              //  cell.nplane(octahedron[fNum].x, octahedron[fNum].y, 0.0, dist * 2, outCell.m_Id);
               //}
 
               WallMap::iterator iter = additionalWalls.find(looper.pid());
@@ -1148,14 +1148,14 @@ namespace eXl
               {
                 cell_comp = cell;
               
-                Vector2d const& point = iter->second;
-                Vector2d normalVect = point - Vector2d(newCell.origPos[0], newCell.origPos[1]);
+                Vec2d const& point = iter->second;
+                Vec2d normalVect = point - Vec2d(newCell.origPos[0], newCell.origPos[1]);
               
-                double dq = 2 * normalVect.Normalize();
-                cell.nplane(normalVect.X(), normalVect.Y(), 0.0, dq, outCell.m_Id);
-                cell_comp.translate(-normalVect.X() * dq, -normalVect.Y() * dq, 0.0);
-                cell_comp.nplane(-normalVect.X(), -normalVect.Y(), 0.0, 0.0, outCell.m_Id);
-                cell_comp.translate(normalVect.X() * dq, normalVect.Y() * dq, 0.0);
+                double dq = 2 * NormalizeAndGetLength(normalVect);
+                cell.nplane(normalVect.x, normalVect.y, 0.0, dq, outCell.m_Id);
+                cell_comp.translate(-normalVect.x * dq, -normalVect.y * dq, 0.0);
+                cell_comp.nplane(-normalVect.x, -normalVect.y, 0.0, 0.0, outCell.m_Id);
+                cell_comp.translate(normalVect.x * dq, normalVect.y * dq, 0.0);
 
                 vertices.clear();
                 faceO.clear();
@@ -1168,15 +1168,15 @@ namespace eXl
                 cell_comp.neighbors(neighs);
                 uint32_t offsetI = 1;
                 //bool foundBorder1 = false;
-                //Vector2d ptBorder1;
-                //Vector2d ptBorder2;
+                //Vec2d ptBorder1;
+                //Vec2d ptBorder2;
                 //
                 //for (uint32_t i = 0; i < neighs.size(); ++i)
                 //{
                 //  if (neighs[i] < 0 && neighs[i] > -5)
                 //  {
-                //    Vector2d pt1;
-                //    Vector2d pt2;
+                //    Vec2d pt1;
+                //    Vec2d pt2;
                 //    GetEdgeFromFaces(vertices, faceO, faceV, i, offsetI, pt1, pt2);
                 //    if (foundBorder1)
                 //    {
@@ -1205,8 +1205,8 @@ namespace eXl
                   {
                     if (neighs[i] >= 0)
                     {
-                      Vector2d pt1;
-                      Vector2d pt2;
+                      Vec2d pt1;
+                      Vec2d pt2;
                       GetEdgeFromFaces(vertices, faceO, faceV, i, offsetI, pt1, pt2);
                       //if (!foundBorder1 ||
                       //  (pt1 != ptBorder1 && pt1 != ptBorder2
@@ -1216,8 +1216,8 @@ namespace eXl
                         int curNeigh = neighs[i];
                         //if (curNeigh >= 0 || (curNeigh < -6 /*&& curNeigh != outCell.m_Id*/))
                         {
-                          Vector2f relPt1 = Vector2f(pt1.X() - gridOrig.X(), pt1.Y() - gridOrig.Y());
-                          Vector2f relPt2 = Vector2f(pt2.X() - gridOrig.X(), pt2.Y() - gridOrig.Y());
+                          Vec2 relPt1 = Vec2(pt1.x - gridOrig.x, pt1.y - gridOrig.y);
+                          Vec2 relPt2 = Vec2(pt2.x - gridOrig.x, pt2.y - gridOrig.y);
                           CIPointRef pt1Ref = InsertPoint(grid, relPt1, gridInc, gridSize, m_Epsilon, pointAlloc);
                           CIPointRef pt2Ref = InsertPoint(grid, relPt2, gridInc, gridSize, m_Epsilon, pointAlloc);
                           if (pt1Ref != pt2Ref)
@@ -1253,15 +1253,15 @@ namespace eXl
               {
                 if (neighs[i] > -5 || neighs[i] < -6)
                 {
-                  Vector2d pt1;
-                  Vector2d pt2;
+                  Vec2d pt1;
+                  Vec2d pt2;
                   GetEdgeFromFaces(vertices, faceO, faceV, i, offsetI, pt1, pt2);
 
                   int curNeigh = neighs[i];
                   //if (curNeigh >= 0 || (curNeigh < -6 /*&& curNeigh != outCell.m_Id*/))
                   {
-                    Vector2f relPt1 = Vector2f(pt1.X() - gridOrig.X(), pt1.Y() - gridOrig.Y());
-                    Vector2f relPt2 = Vector2f(pt2.X() - gridOrig.X(), pt2.Y() - gridOrig.Y());
+                    Vec2 relPt1 = Vec2(pt1.x - gridOrig.x, pt1.y - gridOrig.y);
+                    Vec2 relPt2 = Vec2(pt2.x - gridOrig.x, pt2.y - gridOrig.y);
                     CIPointRef pt1Ref = InsertPoint(grid, relPt1, gridInc, gridSize, m_Epsilon, pointAlloc);
                     CIPointRef pt2Ref = InsertPoint(grid, relPt2, gridInc, gridSize, m_Epsilon, pointAlloc);
                     if (pt1Ref != pt2Ref)
@@ -1330,8 +1330,8 @@ namespace eXl
           if (numBorders == 2
           && additionalWalls.find(curCell.m_DiagPid) == additionalWalls.end())
           {
-            Vector2f commonPt;
-            Vector2f extPts[2];
+            Vec2 commonPt;
+            Vec2 extPts[2];
             bool foundCommon = false;
             if (curCellBorder[0].point[0] == curCellBorder[1].point[0])
             { 
@@ -1369,31 +1369,31 @@ namespace eXl
                 extPts[0] += m_AABB.m_Data[0];
                 extPts[1] += m_AABB.m_Data[0];
 
-                Vector2d cellPos(curCell.origPos[0], curCell.origPos[1]);
+                Vec2d cellPos(curCell.origPos[0], curCell.origPos[1]);
                 needLoop = true;
-                Vector2d dir = Vector2d(commonPt.X() - cellPos.X(), commonPt.Y() - cellPos.Y());
-                dir.Normalize();
-                Vector2d normalVect(-dir.Y(), dir.X());
+                Vec2d dir = Vec2d(commonPt.x - cellPos.x, commonPt.y - cellPos.y);
+                dir = normalize(dir);
+                Vec2d normalVect(-dir.y, dir.x);
 
                 float currentDist = curCell.m_Radius;
-                Vector2d oPoint = cellPos + dir * currentDist;
+                Vec2d oPoint = cellPos + dir * static_cast<double>(currentDist);
 
-                Vector2d edge1Pt1(commonPt.X(), commonPt.Y());
-                Vector2d edge1Pt2(extPts[0].X(), extPts[0].Y());
-                Vector2d edge2Pt1(commonPt.X(), commonPt.Y());
-                Vector2d edge2Pt2(extPts[1].X(), extPts[1].Y());
+                Vec2d edge1Pt1(commonPt.x, commonPt.y);
+                Vec2d edge1Pt2(extPts[0].x, extPts[0].y);
+                Vec2d edge2Pt1(commonPt.x, commonPt.y);
+                Vec2d edge2Pt2(extPts[1].x, extPts[1].y);
 
-                Vector2d posOnSeg1;
-                Vector2d posOnSeg2;
+                Vec2d posOnSeg1;
+                Vec2d posOnSeg2;
 
                 Segmentd::NearestPointOnSeg1(edge1Pt1, edge1Pt2, oPoint, oPoint + normalVect, posOnSeg1);
                 Segmentd::NearestPointOnSeg1(edge2Pt1, edge2Pt2, oPoint, oPoint + normalVect, posOnSeg2);
                 float newDist;
-                if ((newDist = (posOnSeg1 - cellPos).Dot(dir)) > currentDist)
+                if ((newDist = dot((posOnSeg1 - cellPos), dir)) > currentDist)
                   currentDist = newDist;
-                if ((newDist = (posOnSeg2 - cellPos).Dot(dir)) > currentDist)
+                if ((newDist = dot((posOnSeg2 - cellPos), dir)) > currentDist)
                   currentDist = newDist;
-                oPoint = cellPos + dir * currentDist;
+                oPoint = cellPos + dir * static_cast<double>(currentDist);
 
                 additionalWalls.insert(std::make_pair(curCell.m_DiagPid, oPoint));
               }
@@ -1460,18 +1460,18 @@ namespace eXl
           if (!res.second)
           {
           
-            Vector2f points[4] =
+            Vec2 points[4] =
             { res.first->second.point[0].listIter->m_Pos,
               res.first->second.point[1].listIter->m_Pos,
               iter->second.point[0].listIter->m_Pos,
               iter->second.point[1].listIter->m_Pos };
           
             float lengths[5] = {
-              (points[0] - points[1]).Length(),
-              (points[0] - points[2]).Length(),
-              (points[0] - points[3]).Length(),
-              (points[1] - points[2]).Length(),
-              (points[1] - points[3]).Length() };
+              length(points[0] - points[1]),
+              length(points[0] - points[2]),
+              length(points[0] - points[3]),
+              length(points[1] - points[2]),
+              length(points[1] - points[3]) };
           
             uint32_t curMax = 0;
             for (uint32_t k = 1; k < 5; ++k)
@@ -1542,7 +1542,7 @@ namespace eXl
 
       Particle const* part1 = GetParticle(iter->first.first);
       Particle const* part2 = GetParticle(iter->first.second);
-      propMapW[edgeDesc] = (part2->GetPos() - part1->GetPos()).Length();
+      propMapW[edgeDesc] = length(part2->GetPos() - part1->GetPos());
 
       oGraph.m_Edges[edgeDesc] = newEdge;
       eList.push_back(edgeDesc);
@@ -1558,7 +1558,7 @@ namespace eXl
       newEdge.m_Pt1 = iter->second.point[0].listIter->m_Identifier;
       newEdge.m_Pt2 = iter->second.point[1].listIter->m_Identifier;
       propMapE[edgeDesc] = eList.size();
-      propMapW[edgeDesc] = Mathf::MAX_REAL;
+      propMapW[edgeDesc] = Mathf::MaxReal();
       oGraph.m_Edges[edgeDesc] = newEdge;
       eList.push_back(edgeDesc);
     }

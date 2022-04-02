@@ -43,8 +43,8 @@ namespace eXl
   {
     FullInteraction fullInter;
     unsigned int oneHotIdx;
-    Vector2d dir1 = iInter.dir1;
-    Vector2d dir2 = iInter.dir2;
+    Vec2d dir1 = iInter.dir1;
+    Vec2d dir2 = iInter.dir2;
 
     if (iInter.elem2 == -1)
     {
@@ -56,8 +56,8 @@ namespace eXl
     }
     else
     {
-      dir2 = MathTools::GetLocal(iInter.dir2, Vector2d::UNIT_X);
-      dir1 = MathTools::GetLocal(iInter.dir2, iInter.dir1 * -1);
+      dir2 = MathTools::GetLocal(iInter.dir2, UnitX<Vec2d>());
+      dir1 = MathTools::GetLocal(iInter.dir2, iInter.dir1 * -1.);
 
       oneHotIdx = iBuilder.BuildOneHot(iInter.elem2, iCell.elem1 - iInter.elem2, MathTools::GetAngleFromVec(dir2));
     }
@@ -77,7 +77,7 @@ namespace eXl
     float const randAngle = Mathf::Clamp(distrib(randw) * (iAngRange * 0.33), -iAngRange, iAngRange);
     float const randDist = Mathf::Clamp(Mathf::Abs(distrib(randw)) * iRadius * 0.33, -iRadius, iRadius);
 
-    Vector2f newDir(dir1.X() * Mathf::Cos(randAngle) - dir1.Y() * Mathf::Sin(randAngle), dir1.X() * Mathf::Sin(randAngle) + dir1.Y() * Mathf::Cos(randAngle));
+    Vec2 newDir(dir1.x * Mathf::Cos(randAngle) - dir1.y * Mathf::Sin(randAngle), dir1.x * Mathf::Sin(randAngle) + dir1.y * Mathf::Cos(randAngle));
 
     dist = Mathf::Max(randDist + dist, 0);
     dir1 = MathTools::ToDVec(newDir);
@@ -194,7 +194,7 @@ namespace eXl
     {
     }
 
-    PlacedElementAndBox(Vector2i const& iPos, float iAngle, int iElement, int iShapeNum, AABB2Di const& iBox)
+    PlacedElementAndBox(Vec2i const& iPos, float iAngle, int iElement, int iShapeNum, AABB2Di const& iBox)
     {
       m_Pos = iPos;
       m_Angle = iAngle;
@@ -226,20 +226,20 @@ namespace eXl
   template <typename T>
   using PointIndex = boost::geometry::index::rtree< SpIdxValue<T>, /*boost::geometry::index::rstar<16, 4>*/boost::geometry::index::linear<16, 4> >;
 
-  bool GetNearestPlaneDir(Polygoni const& iRefPoly, Polygoni const& iOtherPoly, Vector2d& oDir, double& oDist)
+  bool GetNearestPlaneDir(Polygoni const& iRefPoly, Polygoni const& iOtherPoly, Vec2d& oDir, double& oDist)
   {
     bool found = false;
 
-    Vector2d centroid = MathTools::ToDVec(iOtherPoly.GetAABB().GetCenter());
-    oDist = Mathd::MAX_REAL;
-    Vector2d chosenSeg[2];
-    Vector2d prevPt = MathTools::ToDVec(iRefPoly.Border().back());
+    Vec2d centroid = MathTools::ToDVec(iOtherPoly.GetAABB().GetCenter());
+    oDist = Mathd::MaxReal();
+    Vec2d chosenSeg[2];
+    Vec2d prevPt = MathTools::ToDVec(iRefPoly.Border().back());
     for(unsigned int i = 0; i < iRefPoly.Border().size(); ++i)
     {
-      Vector2d curPt = MathTools::ToDVec(iRefPoly.Border()[i]);
+      Vec2d curPt = MathTools::ToDVec(iRefPoly.Border()[i]);
       if(curPt != prevPt)
       {
-        Vector2d oDir;
+        Vec2d oDir;
         double curDist = Segmentd::NearestPointSeg(prevPt, curPt, centroid, oDir);
         if(curDist < oDist)
         {
@@ -253,22 +253,22 @@ namespace eXl
       prevPt = curPt;
     }
     auto perpDir = MathTools::Perp(chosenSeg[0] - chosenSeg[1]);
-    perpDir.Normalize();
-    double dotPerp = (chosenSeg[0] - centroid).Dot(perpDir);
+    perpDir = normalize(perpDir);
+    double dotPerp = dot((chosenSeg[0] - centroid), perpDir);
     dotPerp = dotPerp >= 0.0 ? 1.0 : -1.0;
     oDir = perpDir * dotPerp;
     return found;
   }
 
-  bool GetSeparatingPlaneDir(Polygoni const& iRefPoly, Polygoni const& iOtherPoly, Vector2d& oDir)
+  bool GetSeparatingPlaneDir(Polygoni const& iRefPoly, Polygoni const& iOtherPoly, Vec2d& oDir)
   {
     unsigned int numSep = 0;
-    Vector2d curVec;
+    Vec2d curVec;
 
-    Vector2d prevPt = MathTools::ToDVec(iRefPoly.Border().back());
+    Vec2d prevPt = MathTools::ToDVec(iRefPoly.Border().back());
     for(unsigned int i = 0; i < iRefPoly.Border().size(); ++i)
     {
-      Vector2d curPt = MathTools::ToDVec(iRefPoly.Border()[i]);
+      Vec2d curPt = MathTools::ToDVec(iRefPoly.Border()[i]);
       if(curPt != prevPt)
       {
         bool sepPlane = true;
@@ -282,8 +282,7 @@ namespace eXl
         }
         if(sepPlane)
         {
-          Vector2d dir = MathTools::Perp(curPt - prevPt);
-          dir.Normalize();
+          Vec2d dir = normalize(MathTools::Perp(curPt - prevPt));
           curVec = curVec + dir;
           ++numSep;
         }
@@ -305,25 +304,25 @@ namespace eXl
     if(iToroidal && iQueryBox.Intersect(iSceneBox, 1))
     {
       AABB2Di boxes[4] = {iQueryBox};
-      Vector2i offset[4];
+      Vec2i offset[4];
       int numBoxes = 1;
       for(int dim = 0; dim < 2; ++dim)
       {
-        int diffMin = iSceneBox.m_Data[0].m_Data[dim] - iQueryBox.m_Data[0].m_Data[dim];
+        int diffMin = iSceneBox.m_Data[0][dim] - iQueryBox.m_Data[0][dim];
         if(diffMin > 0)
         {
           for(int box = 0; box<numBoxes; ++box)
           {
             boxes[box + numBoxes] = boxes[box];
             offset[box + numBoxes] = offset[box];
-            boxes[box].m_Data[0].m_Data[dim] = iSceneBox.m_Data[0].m_Data[dim];
+            boxes[box].m_Data[0][dim] = iSceneBox.m_Data[0][dim];
           }
 
           for(int loopedBox = numBoxes; loopedBox<numBoxes * 2; ++loopedBox)
           {
-            offset[loopedBox].m_Data[dim] = iSceneBox.GetSize().m_Data[dim];
-            boxes[loopedBox].m_Data[0].m_Data[dim] = iSceneBox.m_Data[1].m_Data[dim] - diffMin;
-            boxes[loopedBox].m_Data[1].m_Data[dim] = iSceneBox.m_Data[1].m_Data[dim];
+            offset[loopedBox][dim] = iSceneBox.GetSize()[dim];
+            boxes[loopedBox].m_Data[0][dim] = iSceneBox.m_Data[1][dim] - diffMin;
+            boxes[loopedBox].m_Data[1][dim] = iSceneBox.m_Data[1][dim];
           }
 
           numBoxes *= 2;
@@ -331,21 +330,21 @@ namespace eXl
         else
         {
           //Let's assume the sample box is not bigger in both directions...
-          int diffMax = iQueryBox.m_Data[1].m_Data[dim] - iSceneBox.m_Data[1].m_Data[dim];
+          int diffMax = iQueryBox.m_Data[1][dim] - iSceneBox.m_Data[1][dim];
           if(diffMax > 0)
           {
             for(int box = 0; box<numBoxes; ++box)
             {
               boxes[box + numBoxes] = boxes[box];
               offset[box + numBoxes] = offset[box];
-              boxes[box].m_Data[1].m_Data[dim] = iSceneBox.m_Data[1].m_Data[dim];
+              boxes[box].m_Data[1][dim] = iSceneBox.m_Data[1][dim];
             }
 
             for(int loopedBox = numBoxes; loopedBox<numBoxes * 2; ++loopedBox)
             {
-              offset[loopedBox].m_Data[dim] = -iSceneBox.GetSize().m_Data[dim];
-              boxes[loopedBox].m_Data[0].m_Data[dim] = iSceneBox.m_Data[0].m_Data[dim];
-              boxes[loopedBox].m_Data[1].m_Data[dim] = iSceneBox.m_Data[0].m_Data[dim] + diffMax;
+              offset[loopedBox][dim] = -iSceneBox.GetSize()[dim];
+              boxes[loopedBox].m_Data[0][dim] = iSceneBox.m_Data[0][dim];
+              boxes[loopedBox].m_Data[1][dim] = iSceneBox.m_Data[0][dim] + diffMax;
             }
             numBoxes *= 2;
           }
@@ -386,7 +385,7 @@ namespace eXl
     }
     else
     {
-      iCache.m_Poly1 = Polygoni(AABB2Di(iCurElem.m_Pos, Vector2i::ONE * 2));
+      iCache.m_Poly1 = Polygoni(AABB2Di(iCurElem.m_Pos, One<Vec2i>() * 2));
       dirM1 = eCentroidal;
     }
     for(auto value : iCache.m_RetVal)
@@ -401,7 +400,7 @@ namespace eXl
 
       if(otherElem <= 0)
       {
-        Vector2d dir;
+        Vec2d dir;
         double dist = 0.0;
         Polygoni const& curWall = iCache.m_Walls[otherElem * -1];
 
@@ -414,16 +413,16 @@ namespace eXl
       {
         float otherAngle = iHandler.GetAngle(value);
 
-        Vector2i otherPos = iHandler.GetPos(value);
+        Vec2i otherPos = iHandler.GetPos(value);
         int subElem = iHandler.GetSubElement(value);
         iCache.m_Poly2 = iElements[otherElem - 1].m_Shapes[subElem];
         iCache.m_Poly2.Rotate(otherAngle);
         iCache.m_Poly2.Translate(otherPos);
 
-        Vector2d centroidalDir = MathTools::ToDVec(iCache.m_Poly2.GetAABB().GetCenter() - iCache.m_Poly1.GetAABB().GetCenter());
-        double dist = centroidalDir.Normalize();
-        Vector2d dir1;
-        Vector2d dir2;
+        Vec2d centroidalDir = MathTools::ToDVec(iCache.m_Poly2.GetAABB().GetCenter() - iCache.m_Poly1.GetAABB().GetCenter());
+        double dist = NormalizeAndGetLength(centroidalDir);
+        Vec2d dir1;
+        Vec2d dir2;
 
         switch(dirM1)
         {
@@ -578,7 +577,7 @@ namespace eXl
       return iVal.second->m_Angle;
     }
     
-    inline Vector2i const& GetPos(SpIdxValList const& iVal)
+    inline Vec2i const& GetPos(SpIdxValList const& iVal)
     {
       return iVal.second->m_Pos;
     }
@@ -590,7 +589,7 @@ namespace eXl
       return true;
     }
 
-    inline bool Handle(Polygoni const& iPoly1, Polygoni const& iPoly2, Vector<Polygoni>& iPoly3, float dist, Vector2d const& iDir1, Vector2d const& iDir2, unsigned int iElem, float iAngle, unsigned int iOtherElem, float iOtherAngle, bool iSameLayer)
+    inline bool Handle(Polygoni const& iPoly1, Polygoni const& iPoly2, Vector<Polygoni>& iPoly3, float dist, Vec2d const& iDir1, Vec2d const& iDir2, unsigned int iElem, float iAngle, unsigned int iOtherElem, float iOtherAngle, bool iSameLayer)
     {
       MCMC2D::Debug::ElemInteraction interaction;
 
@@ -600,10 +599,9 @@ namespace eXl
 
       float prevValue = m_AcceptanceRate;
 
-      Vector2f baseMine(Mathf::Cos(iAngle), Mathf::Sin(iAngle));
+      Vec2 baseMine(Mathf::Cos(iAngle), Mathf::Sin(iAngle));
 
-      Vector2f dir1 = Vector2f(iDir1.X(), iDir1.Y());
-      dir1.Normalize();
+      Vec2 dir1 = normalize(Vec2(iDir1.x, iDir1.y));
 
       dir1 = MathTools::GetLocal(baseMine, dir1);
 
@@ -630,16 +628,14 @@ namespace eXl
           unsigned int const idx0 = swapId ? iOtherElem - 1 : iElem - 1;
           unsigned int const idx1 = swapId ? iElem - iOtherElem : iOtherElem - iElem;
 
-          Vector2f baseOther(Mathf::Cos(iOtherAngle), Mathf::Sin(iOtherAngle));
+          Vec2 baseOther(Mathf::Cos(iOtherAngle), Mathf::Sin(iOtherAngle));
 
-          Vector2f dir2 = MathTools::GetLocal(baseMine, baseOther);
-
-          dir2.Normalize();
+          Vec2 dir2 = normalize(MathTools::GetLocal(baseMine, baseOther));
 
           if(swapId)
           {
-            dir2 = MathTools::GetLocal(dir2, Vector2f::UNIT_X);
-            dir1 = MathTools::GetLocal(dir2, dir1 * -1);
+            dir2 = MathTools::GetLocal(dir2, UnitX<Vec2>());
+            dir1 = MathTools::GetLocal(dir2, dir1 * -1.);
           }
 
           MCMC2D::FullInteraction inter;
@@ -672,17 +668,17 @@ namespace eXl
 
             if(m_outGrad.size() >= 3)
             {
-              Vector2f gradient(dir1.X() + grad.dir1.X(), dir1.Y() + grad.dir2.X());
+              Vec2 gradient(dir1.x + grad.dir1.x, dir1.y + grad.dir2.x);
               gradient *= (len + grad.dist);
               gradient -= dir1 * len;
               if(swapId)
               {
-                gradient = baseOther * gradient.X() + MathTools::GetPerp(baseOther) * gradient.Y();
+                gradient = baseOther * gradient.x + MathTools::GetPerp(baseOther) * gradient.y;
                 m_MoveGrad += MathTools::ToDVec(gradient);
               }
               else
               {
-                gradient = baseMine * gradient.X() + MathTools::GetPerp(baseMine) * gradient.Y();
+                gradient = baseMine * gradient.x + MathTools::GetPerp(baseMine) * gradient.y;
                 m_MoveGrad -= MathTools::ToDVec(gradient);
               }
             }
@@ -709,11 +705,11 @@ namespace eXl
 
             if(m_outGrad.size() >= 3)
             {
-              Vector2f gradient(dir1.X() + grad.dir1.X(), dir1.Y() + grad.dir2.X());
+              Vec2 gradient(dir1.x + grad.dir1.x, dir1.y + grad.dir2.x);
               gradient *= (len + grad.dist);
               gradient -= dir1 * len;
 
-              gradient = baseMine * gradient.X() + MathTools::GetPerp(baseMine) * gradient.Y();
+              gradient = baseMine * gradient.x + MathTools::GetPerp(baseMine) * gradient.y;
               m_MoveGrad -= MathTools::ToDVec(gradient);
             }
           }
@@ -747,7 +743,7 @@ namespace eXl
     }
 
     Vector<float> cacheInput;
-    Vector2d       m_MoveGrad; 
+    Vec2d       m_MoveGrad; 
     Vector<float>  m_outGrad;
     MCMC2D::LearnedModel& m_Model;
     MCMC2D::Debug* m_Debug;
@@ -807,10 +803,10 @@ namespace eXl
       
       float maxQuery = iMaxDist;
 
-      querySize[i].m_Data[0].X() -= maxQuery;
-      querySize[i].m_Data[0].Y() -= maxQuery;
-      querySize[i].m_Data[1].X() += maxQuery;
-      querySize[i].m_Data[1].Y() += maxQuery;
+      querySize[i].m_Data[0].x -= maxQuery;
+      querySize[i].m_Data[0].y -= maxQuery;
+      querySize[i].m_Data[1].x += maxQuery;
+      querySize[i].m_Data[1].y += maxQuery;
     }
 
     unsigned int cumulatedDensity = 0;
@@ -837,12 +833,12 @@ namespace eXl
 
     unsigned int area = iParams.m_Shape.Area() /*/ (iQuerySize * iQuerySize * 0.25 )*/;
 
-    Vector2i samplingAreaSize = iParams.m_Shape.GetAABB().GetSize();
+    Vec2i samplingAreaSize = iParams.m_Shape.GetAABB().GetSize();
 
-    boost::random::uniform_real_distribution<double> distribX(0, samplingAreaSize.X());
-    boost::random::uniform_real_distribution<double> distribY(0, samplingAreaSize.Y());
+    boost::random::uniform_real_distribution<double> distribX(0, samplingAreaSize.x);
+    boost::random::uniform_real_distribution<double> distribY(0, samplingAreaSize.y);
 
-    if(samplingAreaSize.X() <= 0 || samplingAreaSize.Y() <= 0)
+    if(samplingAreaSize.x <= 0 || samplingAreaSize.y <= 0)
     {
       return;
     }
@@ -862,7 +858,7 @@ namespace eXl
     RunHandler queryHandler(*iModel, builder, iDebug);
     //queryHandler.m_MaxDist = ;
 
-    Polygoni outerBorder(AABB2Di(iParams.m_Shape.GetAABB().m_Data[0] - Vector2i::ONE * 50, iParams.m_Shape.GetAABB().GetSize() + Vector2i::ONE * 100));
+    Polygoni outerBorder(AABB2Di(iParams.m_Shape.GetAABB().m_Data[0] - One<Vec2i>() * 50, iParams.m_Shape.GetAABB().GetSize() + One<Vec2i>() * 100));
     Vector<Polygoni> negShape;
     outerBorder.Difference(iParams.m_Shape, negShape);
 
@@ -879,7 +875,7 @@ namespace eXl
         for(auto trap : trapezoids)
         {
           trap.RemoveUselessPoints();
-          PlacedElementAndBox element(Vector2i::ZERO, 0.0, -int(queryCache.m_Walls.size()), 0, trap.GetAABB());
+          PlacedElementAndBox element(Zero<Vec2i>(), 0.0, -int(queryCache.m_Walls.size()), 0, trap.GetAABB());
           wallList.push_back(element);
           SpIdxValList value = std::make_pair(trap.GetAABB(), std::prev(wallList.end()));
           values.push_back(value);
@@ -999,7 +995,7 @@ namespace eXl
           //}
           //else
           {
-            currentElement.m_Pos = Vector2i(distribX(rand),distribY(rand));
+            currentElement.m_Pos = Vec2i(distribX(rand),distribY(rand));
             unsigned int turn = m_Elements[currentElement.m_Element - 1].m_Turn;
             currentElement.m_Angle = turn > 1 ? (iRand.Generate() % turn) * (Mathf::Pi() * 2 / float(turn)) : 0.0;
             currentElement.m_Pos += iParams.m_Shape.GetAABB().m_Data[0];
@@ -1007,13 +1003,13 @@ namespace eXl
           Element const& elemDef = m_Elements[currentElement.m_Element - 1];
           if(elemDef.m_GridX > 1)
           {
-            currentElement.m_Pos.X() = currentElement.m_Pos.X() - Mathi::Mod(currentElement.m_Pos.X(), elemDef.m_GridX);
-            currentElement.m_Pos.X() += elemDef.m_GridX / 2;
+            currentElement.m_Pos.x = currentElement.m_Pos.x - Mathi::Mod(currentElement.m_Pos.x, elemDef.m_GridX);
+            currentElement.m_Pos.x += elemDef.m_GridX / 2;
           }
           if(elemDef.m_GridY > 1)
           {
-            currentElement.m_Pos.Y() = currentElement.m_Pos.Y() - Mathi::Mod(currentElement.m_Pos.Y(), elemDef.m_GridY);
-            currentElement.m_Pos.Y() += elemDef.m_GridY / 2;
+            currentElement.m_Pos.y = currentElement.m_Pos.y - Mathi::Mod(currentElement.m_Pos.y, elemDef.m_GridY);
+            currentElement.m_Pos.y += elemDef.m_GridY / 2;
           }
 
           inShape = iParams.m_Shape.ContainsPoint(currentElement.m_Pos);
@@ -1033,7 +1029,7 @@ namespace eXl
       }
 
       unsigned int element = currentElement.m_Element - 1;
-      //AABB2Di sampleBox(MathTools::ToDVec(origPt), Vector2d::ONE * 2 * iQuerySize + MathTools::ToDVec(m_Elements[element - 1].m_Shape.GetAABB().GetSize()));
+      //AABB2Di sampleBox(MathTools::ToDVec(origPt), Vec2d::ONE * 2 * iQuerySize + MathTools::ToDVec(m_Elements[element - 1].m_Shape.GetAABB().GetSize()));
       //Polygoni samplePoly(querySize[element]);
       //samplePoly.Rotate(currentElement.m_Angle);
 
@@ -1061,7 +1057,7 @@ namespace eXl
 
       queryHandler.m_Birth = birth;
       queryHandler.m_ComputeGrad = false;//birth;
-      Vector2i prevPos = currentElement.m_Pos;
+      Vec2i prevPos = currentElement.m_Pos;
       bool superiorGrad = true;
       unsigned int const numGradMove = queryHandler.m_ComputeGrad ? 10 : 1;
 
@@ -1072,12 +1068,12 @@ namespace eXl
 
         if(gradMove > 1)
         {
-          double moveNorm = queryHandler.m_MoveGrad.Normalize();
+          double moveNorm = NormalizeAndGetLength(queryHandler.m_MoveGrad);
           if(moveNorm > Mathf::ZeroTolerance())
           {
             //queryHandler.m_MoveGrad *= m_MaxDist * (0.1 - 0.05 * float(iRand.Generate() % 1000) / 1000.0 );
 
-            currentElement.m_Pos += Vector2i(Mathf::Round(queryHandler.m_MoveGrad.X()), Mathf::Round(queryHandler.m_MoveGrad.Y())); 
+            currentElement.m_Pos += Vec2i(Mathf::Round(queryHandler.m_MoveGrad.x), Mathf::Round(queryHandler.m_MoveGrad.y)); 
           }
           else
           {
@@ -1092,7 +1088,7 @@ namespace eXl
         queryHandler.m_AcceptanceRate = m_Elements[element].m_AbsDensity * globArea / ((numPlaced + (birth ? 1 : 0)));
 #endif
 
-        queryHandler.m_MoveGrad = Vector2d::ZERO;
+        queryHandler.m_MoveGrad = Zero<Vec2d>();
         Query(m_Elements, queryCache, queryHandler, elemIter, sampleBox, currentElement, iModel->IsToroidal(), iParams.m_Shape.GetAABB());
 
         if(iDebug)
@@ -1209,7 +1205,7 @@ namespace eXl
       return m_Elements[iVal.second - 1].m_Angle;
     }
     
-    inline Vector2i const& GetPos(SpIdxValue<int> const& iVal)
+    inline Vec2i const& GetPos(SpIdxValue<int> const& iVal)
     {
       return m_Elements[iVal.second - 1].m_Pos;
     }
@@ -1236,12 +1232,12 @@ namespace eXl
       return curSum == iOther.curSum && numInter == iOther.numInter && weight == iOther.weight;
     }
 
-    Vector3d curSum;
+    Vec3d curSum;
     unsigned int numInter;
     double weight;
   };
 
-  typedef std::pair<Vector3d, MidPoint> InterIdxValue;
+  typedef std::pair<Vec3d, MidPoint> InterIdxValue;
 
   using InteractionIndex = boost::geometry::index::rtree<InterIdxValue, /*boost::geometry::index::rstar<16, 4>*/boost::geometry::index::linear<16, 4> >;
 
@@ -1256,12 +1252,11 @@ namespace eXl
 
     LearnCountHandler(MCMC2D::InputBuilder& iBuilder, Vector<MCMC2D::PlacedElement > const& iElements, MCMC2D::SamplingCell& iCell, Vector<MCMC2D::LearnedModel::DistParams> const& iParams, bool iAllowOverlap = false) : LearnHandler(iElements), m_Builder(iBuilder), m_Cell(iCell), m_DistParams(iParams), m_AllowOverlap(iAllowOverlap){}
 
-    inline bool Handle(Polygoni& iPoly1, Polygoni const& iPoly2, Vector<Polygoni>& iPoly3, float dist, Vector2d const& iDir1, Vector2d const& iDir2, unsigned int iElem, float iAngle, unsigned int iOtherElem, float iOtherAngle, bool iSameLayer)
+    inline bool Handle(Polygoni& iPoly1, Polygoni const& iPoly2, Vector<Polygoni>& iPoly3, float dist, Vec2d const& iDir1, Vec2d const& iDir2, unsigned int iElem, float iAngle, unsigned int iOtherElem, float iOtherAngle, bool iSameLayer)
     {
-      Vector2d dir1 = iDir1;
-      dir1.Normalize();
+      Vec2d dir1 = normalize(iDir1);
 
-      Vector2d baseMine = Vector2d(Mathd::Cos(iAngle), Mathd::Sin(iAngle));
+      Vec2d baseMine = Vec2d(Mathd::Cos(iAngle), Mathd::Sin(iAngle));
       dir1 = MathTools::GetLocal(baseMine, dir1);
 
       //float angle1 = GetAngleFromVec(dir) - iAngle;
@@ -1280,13 +1275,13 @@ namespace eXl
 
       if(m_AllowOverlap || !overlaps)
       {
-        float maxOverlappingLen = 0.5 * (iPoly1.GetAABB().GetSize().Length() + iPoly2.GetAABB().GetSize().Length());
+        float maxOverlappingLen = 0.5 * (length(Vec2(iPoly1.GetAABB().GetSize())) + length(Vec2(iPoly2.GetAABB().GetSize())));
         float len = overlaps ? (centroidalLen - maxOverlappingLen) : (iSameLayer ? boost::geometry::distance(iPoly1, iPoly2) : centroidalLen);
         MCMC2D::ElementInter newInter;
         if(iOtherElem > 0)
         {
-          Vector2d baseOther = Vector2d(Mathd::Cos(iOtherAngle), Mathd::Sin(iOtherAngle));
-          Vector2d dir2 = MathTools::GetLocal(baseMine, baseOther);
+          Vec2d baseOther = Vec2d(Mathd::Cos(iOtherAngle), Mathd::Sin(iOtherAngle));
+          Vec2d dir2 = MathTools::GetLocal(baseMine, baseOther);
           newInter.distance = len;
           newInter.dir1 = dir1;
           newInter.dir2 = dir2;
@@ -1296,7 +1291,7 @@ namespace eXl
         {
           newInter.distance = len;
           newInter.dir1 = dir1;
-          newInter.dir2 = Vector2d::ZERO;
+          newInter.dir2 = Zero<Vec2d>();
           newInter.elem2 = - 1;
         }
         auto fullInter = MCMC2D::FullInteraction::Make(m_Builder, m_Cell, newInter);
@@ -1324,7 +1319,7 @@ namespace eXl
         {
           if(elem1.m_ShapeNum == elem2.m_ShapeNum)
           {
-            return elem1.m_Pos < elem2.m_Pos;
+            return LexicographicCompare(elem1.m_Pos, elem2.m_Pos);
           }
           return elem1.m_ShapeNum < elem2.m_ShapeNum;
         }
@@ -1354,12 +1349,12 @@ namespace eXl
       return true;
     }
 
-    inline bool Handle(Polygoni& iPoly1, Polygoni const& iPoly2, Vector<Polygoni>& iPoly3, float dist, Vector2d const& iDir1, Vector2d const& iDir2, unsigned int iElem, float iAngle, unsigned int iOtherElem, float iOtherAngle, bool iSameLayer)
+    inline bool Handle(Polygoni& iPoly1, Polygoni const& iPoly2, Vector<Polygoni>& iPoly3, float dist, Vec2d const& iDir1, Vec2d const& iDir2, unsigned int iElem, float iAngle, unsigned int iOtherElem, float iOtherAngle, bool iSameLayer)
     {
       MCMC2D::PlacedElement curHit;
 
       auto origPoly = iPoly1;
-      Vector2i curPos = iPoly1.GetAABB().GetCenter();
+      Vec2i curPos = iPoly1.GetAABB().GetCenter();
       for(unsigned int i = 0; i<m_ElementsDesc.size(); ++i)
       {
         //Skip if it's an exemplar
@@ -1371,10 +1366,9 @@ namespace eXl
 
         float centroidalLen = dist;
 
-        Vector2d dirOrig = iDir1;
-        dirOrig.Normalize();
+        Vec2d dirOrig = normalize(iDir1);
 
-        Vector2d baseOther = Vector2d(Mathd::Cos(iOtherAngle), Mathd::Sin(iOtherAngle));
+        Vec2d baseOther = Vec2d(Mathd::Cos(iOtherAngle), Mathd::Sin(iOtherAngle));
 
         MCMC2D::Element const& curElem = m_ElementsDesc[i];
         iSameLayer = iOtherElem > 0 ? (curElem.m_Layer & m_ElementsDesc[iOtherElem - 1].m_Layer) != 0 : true;
@@ -1387,9 +1381,9 @@ namespace eXl
           {
             iAngle = (Mathf::Pi() * 2.0f / float (numAngleSampling)) * turn;
 
-            Vector2d baseMine = Vector2d(Mathd::Cos(iAngle), Mathd::Sin(iAngle));
-            Vector2d dir1 = MathTools::GetLocal(baseMine, dirOrig);
-            Vector2d dir2 = MathTools::GetLocal(baseMine, baseOther);
+            Vec2d baseMine = Vec2d(Mathd::Cos(iAngle), Mathd::Sin(iAngle));
+            Vec2d dir1 = MathTools::GetLocal(baseMine, dirOrig);
+            Vec2d dir2 = MathTools::GetLocal(baseMine, baseOther);
 
             curHit.m_Angle = iAngle;
 
@@ -1439,7 +1433,7 @@ namespace eXl
                 MCMC2D::ElementInter newAbs;
                 newAbs.distance = len;
                 newAbs.dir1 = dir1;
-                newAbs.dir2 = Vector2d::ZERO;
+                newAbs.dir2 = Zero<Vec2d>();
                 newAbs.elem2 = -1;
                 m_Cells[i].interactions.push_back(newAbs);
               }
@@ -1518,7 +1512,7 @@ namespace eXl
     return 0.5*alpha + (1.0 - alpha) * constant;
   }
 
-  void MCMC2D::QuantileCullParams::ComputeDistribution(unsigned int iIdx, double iDist, Vector2d const& iDir, double& oConstant, double& oAlpha)
+  void MCMC2D::QuantileCullParams::ComputeDistribution(unsigned int iIdx, double iDist, Vec2d const& iDir, double& oConstant, double& oAlpha)
   {
     auto const& freqMap = m_Vectors[iIdx];
     double accumValue = 0;
@@ -1526,11 +1520,11 @@ namespace eXl
     double locValue = 0.0;
     for(unsigned int k = 0; k<freqMap.size(); ++k)
     {
-      double otherDist = freqMap[k].X();
-      Vector2d otherDir(freqMap[k].Y(), freqMap[k].Z());
+      double otherDist = freqMap[k].x;
+      Vec2d otherDir(freqMap[k].y, freqMap[k].z);
 
       // == 0.5 * (2 * (1 - cos(theta))) == 0.5 * ||a - b||²
-      double dirCoeff = 0.5 * (iDir - otherDir).SquaredLength();
+      double dirCoeff = 0.5 * distance2(iDir, otherDir);
 
       if(m_DebugDisplayPos)
       {
@@ -1668,8 +1662,8 @@ namespace eXl
     std::vector<unsigned int> relDensity;
     std::vector<AABB2Di> querySize(elements.size());
     //float totalDensity = 0;
-    Vector2i boxSize = iExamples.m_Shape.GetAABB().GetSize();
-    Vector2f iGridStep(float(boxSize.X()) / GetParams().m_GridStep, float(boxSize.Y()) / GetParams().m_GridStep);
+    Vec2i boxSize = iExamples.m_Shape.GetAABB().GetSize();
+    Vec2 iGridStep(float(boxSize.x) / GetParams().m_GridStep, float(boxSize.y) / GetParams().m_GridStep);
     float globArea = iExamples.m_Shape.Area();
     Vector<float> elementArea(elements.size(), 0.0);
 
@@ -1688,10 +1682,10 @@ namespace eXl
       
         accumArea += elements[i].m_Shapes[j].Area();
       }
-      //querySize[i].m_Data[0].X() -= iMaxDist + 1;
-      //querySize[i].m_Data[0].Y() -= iMaxDist + 1;
-      //querySize[i].m_Data[1].X() += iMaxDist + 1;
-      //querySize[i].m_Data[1].Y() += iMaxDist + 1;
+      //querySize[i].m_Data[0].x -= iMaxDist + 1;
+      //querySize[i].m_Data[0].y -= iMaxDist + 1;
+      //querySize[i].m_Data[1].x += iMaxDist + 1;
+      //querySize[i].m_Data[1].y += iMaxDist + 1;
       //
       //if(maxQuery.Empty())
       //  maxQuery = querySize[i];
@@ -1712,12 +1706,12 @@ namespace eXl
     //for(auto ex : iExamples)
     LearnExample const& ex = iExamples;
     //{
-    Vector2i areaSize = ex.m_Shape.GetAABB().GetSize();
-    Vector2i gridSize(areaSize.X() / iGridStep.X(), areaSize.Y() / iGridStep.Y());
-    if(areaSize.X() % int(iGridStep.X()) != 0)
-      ++gridSize.X();
-    if(areaSize.Y() % int(iGridStep.Y()) != 0)
-      ++gridSize.Y();
+    Vec2i areaSize = ex.m_Shape.GetAABB().GetSize();
+    Vec2i gridSize(areaSize.x / iGridStep.x, areaSize.y / iGridStep.y);
+    if(areaSize.x % int(iGridStep.x) != 0)
+      ++gridSize.x;
+    if(areaSize.y % int(iGridStep.y) != 0)
+      ++gridSize.y;
 
     QueryCache<PointIndex<int> > queryCache;
 
@@ -1726,7 +1720,7 @@ namespace eXl
 
       if(!m_Params.m_Toroidal)
       {
-        Polygoni outerBorder(AABB2Di(ex.m_Shape.GetAABB().m_Data[0] - Vector2i::ONE * 50, ex.m_Shape.GetAABB().GetSize() + Vector2i::ONE * 100));
+        Polygoni outerBorder(AABB2Di(ex.m_Shape.GetAABB().m_Data[0] - One<Vec2i>() * 50, ex.m_Shape.GetAABB().GetSize() + One<Vec2i>() * 100));
         Vector<Polygoni> negShape;
         outerBorder.Difference(ex.m_Shape, negShape);
 
@@ -1738,7 +1732,7 @@ namespace eXl
         for(auto trap : trapezoids)
         {
           trap.RemoveUselessPoints();
-          //PlacedElement element = {Vector2i::ZERO, 0.0, -walls.size()};
+          //PlacedElement element = {Vec2i::ZERO, 0.0, -walls.size()};
           //wallList.push_back(element);
           SpIdxValue<int> value = std::make_pair(trap.GetAABB(), -int(queryCache.m_Walls.size()));
           //queryCache.m_Index.insert(value);
@@ -1771,39 +1765,47 @@ namespace eXl
       //elements[i].m_RelDensity = 1.0;//float(numElements[i]) / ex.elements.size();
     }
 
-    unsigned int gridTotSize = gridSize.X() * gridSize.Y();
+    unsigned int gridTotSize = gridSize.x * gridSize.y;
 
-    std::map<Vector2i, std::pair<float, int> > weightMap;
+    struct WhMapPred 
+    {
+      bool operator()(Vec2i const& iVal1, Vec2i const& iVal2) const
+      {
+        return LexicographicCompare(iVal1, iVal2);
+      }
+    };
+
+    std::map<Vec2i, std::pair<float, int> , WhMapPred> weightMap;
     
     auto makePointPosForElem = [this, &elements](PlacedElement const& elem)
     {
-      return Vector2i(
-        elem.m_Pos.X() + elements[elem.m_Element - 1].m_Shapes[elem.m_ShapeNum].GetAABB().GetCenter().X(), 
-        elem.m_Pos.Y() + elements[elem.m_Element - 1].m_Shapes[elem.m_ShapeNum].GetAABB().GetCenter().Y());
+      return Vec2i(
+        elem.m_Pos.x + elements[elem.m_Element - 1].m_Shapes[elem.m_ShapeNum].GetAABB().GetCenter().x, 
+        elem.m_Pos.y + elements[elem.m_Element - 1].m_Shapes[elem.m_ShapeNum].GetAABB().GetCenter().y);
     };
 
     VoronoiGraph gr;
     unsigned int numCells = 0;
     for(auto elem : ex.m_Elements)
     {
-      //Vector2i gridPos((elem.m_Pos.X() - ex.m_Shape.GetAABB().m_Data[0].X()) / iGridStep.X(), 
-      //  (elem.m_Pos.Y() - ex.m_Shape.GetAABB().m_Data[0].Y()) / iGridStep.Y());
-      Vector2i exPoint = makePointPosForElem(elem);
+      //Vec2i gridPos((elem.m_Pos.x - ex.m_Shape.GetAABB().m_Data[0].x) / iGridStep.x, 
+      //  (elem.m_Pos.y - ex.m_Shape.GetAABB().m_Data[0].y) / iGridStep.y);
+      Vec2i exPoint = makePointPosForElem(elem);
       weightMap.insert(std::make_pair(exPoint, std::make_pair(0.0f, numCells++)));
-      //weightMap[gridPos.Y() * gridSize.X() + gridPos.X()];
-      gr.AddCircle(1.0, Vector2f(exPoint.X(), exPoint.Y()));
+      //weightMap[gridPos.y * gridSize.x + gridPos.x];
+      gr.AddCircle(1.0, Vec2(exPoint.x, exPoint.y));
     }
     unsigned int egCells = numCells;
-    for(int i = 0; i<gridSize.Y(); ++i)
+    for(int i = 0; i<gridSize.y; ++i)
     {
-      for(int j = 0; j<gridSize.X(); ++j)
+      for(int j = 0; j<gridSize.x; ++j)
       {
-        Vector2i posGrid(j * iGridStep.X(), i * iGridStep.Y());
+        Vec2i posGrid(j * iGridStep.x, i * iGridStep.y);
         posGrid += ex.m_Shape.GetAABB().m_Data[0];
 
         if(weightMap.find(posGrid) == weightMap.end())
         {
-          gr.AddCircle(1.0, Vector2f(posGrid.X(), posGrid.Y()));
+          gr.AddCircle(1.0, Vec2(posGrid.x, posGrid.y));
           weightMap.insert(std::make_pair(posGrid, std::make_pair(0.0f, numCells++)));
         }
       }
@@ -1845,7 +1847,7 @@ namespace eXl
       sampleBox.m_Data[0] += currentElement.m_Pos;
       sampleBox.m_Data[1] += currentElement.m_Pos;
 
-      Vector2i pos = makePointPosForElem(currentElement);
+      Vec2i pos = makePointPosForElem(currentElement);
 
       auto iter = weightMap.find(pos);
       if(iter != weightMap.end())
@@ -1872,7 +1874,7 @@ namespace eXl
 
             auto& curMap = m_Mask->m_Vectors[fullInter.oneHotIdx];
 
-            curMap.push_back(Vector3d(fullInter.dist, fullInter.dir1.X(), fullInter.dir1.Y()));
+            curMap.push_back(Vec3d(fullInter.dist, fullInter.dir1.x, fullInter.dir1.y));
             freqMapToCellInter[fullInter.oneHotIdx].push_back(std::make_pair(i, j));
           }
         }
@@ -1893,13 +1895,13 @@ namespace eXl
       for(unsigned int idx = 0; idx < builder.oneHotSize; ++idx)
       {
         // Map of the accumulated PDF for each direction.
-        // Map<Vector2f, float> dirDistribution;
+        // Map<Vec2, float> dirDistribution;
         Vector<float> individualValue;
         auto const& freqMap = m_Mask->m_Vectors[idx];
         for(unsigned int j = 0; j<freqMap.size(); ++j)
         {
-          double pointDist = freqMap[j].X();
-          Vector2d pointDir(freqMap[j].Y(), freqMap[j].Z());
+          double pointDist = freqMap[j].x;
+          Vec2d pointDir(freqMap[j].y, freqMap[j].z);
       
           double alpha;
           double constant;
@@ -1940,7 +1942,7 @@ namespace eXl
     {
       cellToSamples.push_back(Vector<unsigned int>());
 
-      Vector2i const& gridPos = wh.first;
+      Vec2i const& gridPos = wh.first;
       float cellWh = wh.second.first;
       
       int presIdx = -1;
@@ -2062,13 +2064,13 @@ namespace eXl
           
           for(auto& inter : newCell.interactions)
           {
-            Vector2d point = inter.dir1 * inter.distance;
-            double angle = MathTools::RandFloatIn(rand, -Mathd::PI, Mathd::PI);
+            Vec2d point = inter.dir1 * static_cast<double>(inter.distance);
+            double angle = MathTools::RandFloatIn(rand, -Mathd::Pi(), Mathd::Pi());
             double dist = MathTools::RandNormFloatIn(rand, 0.0, double(GetParams().m_Dispersion * iMaxDist));
 
-            point += Vector2d(Mathd::Cos(angle), Mathd::Sin(angle)) * dist;
+            point += Vec2d(Mathd::Cos(angle), Mathd::Sin(angle)) * dist;
 
-            inter.distance = point.Normalize();
+            inter.distance = NormalizeAndGetLength(point);
             inter.dir1 = point;
           }
 
@@ -2192,21 +2194,21 @@ namespace eXl
   {
     const int imgSize = 256;
 
-    Vector2f range;
-    range.X() = FLT_MAX;
-    range.Y() = -FLT_MAX;
+    Vec2 range;
+    range.x = FLT_MAX;
+    range.y = -FLT_MAX;
 
     Vector<InteractionGeom> interactions;
     for (int j = 0; j < imgSize; ++j)
     {
       for (int k = 0; k < imgSize; ++k)
       {
-        Vector2f dir(k - imgSize / 2, j - imgSize / 2);
+        Vec2 dir(k - imgSize / 2, j - imgSize / 2);
         dir *= (2.0 / imgSize);
-        float len = dir.Normalize();
+        float len = NormalizeAndGetLength(dir);
 
         InteractionGeom inter;
-        inter.dir1 = Vector2d(dir.X(), dir.Y());
+        inter.dir1 = Vec2d(dir.x, dir.y);
         inter.dist = len * iModel->GetMaxDist(iOneHotIdx);
 
         interactions.push_back(inter);
@@ -2217,13 +2219,13 @@ namespace eXl
 
     for (auto score : out)
     {
-      range.Y() = Mathd::Max(score, range.Y());
-      range.X() = Mathd::Min(score, range.X());
+      range.y = Mathd::Max(score, range.y);
+      range.x = Mathd::Min(score, range.x);
     }
 
     Vector<int> image(imgSize * imgSize);
-    double amplitude = range.X() != range.Y() ? range.Y() - range.X() : range.Y();
-    double minVal = range.X() != range.Y() ? range.X() : 0.0;
+    double amplitude = range.x != range.y ? range.y - range.x : range.y;
+    double minVal = range.x != range.y ? range.x : 0.0;
     for (unsigned int pix = 0; pix < image.size(); ++pix)
     {
       double val = (out[pix] - minVal) / amplitude;

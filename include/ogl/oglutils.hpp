@@ -8,8 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <math/quaternion.hpp>
-#include <math/vector3.hpp>
+#include <math/math.hpp>
 #include <ogl/oglexp.hpp>
 
 #define CHECKOGL() OGLUtils::CheckOGLState(__FILE__,__LINE__)
@@ -23,9 +22,6 @@ namespace eXl
     static void Init();
 
     static void CheckOGLState(char const* iFile, int iLine);
-
-    //static void MakeOGLMatrix(float (&oMatrix) [16], Quaternionf const& iOrient, Vector3f const& iPos);
-    static void MakeOGLMatrix(float* oMatrix, Quaternionf const& iOrient, Vector3f const& iPos);
 
     static uint32_t CompileVertexShader(char const* iSource);
     static uint32_t CompileFragmentShader(char const* iSource);

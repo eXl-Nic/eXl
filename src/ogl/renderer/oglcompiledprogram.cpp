@@ -84,12 +84,12 @@ namespace eXl
     {
       void Init()
       {
-        m_ListingException.insert(TypeManager::GetType<Vector4f>());
-        m_ListingException.insert(TypeManager::GetType<Vector3f>());
-        m_ListingException.insert(TypeManager::GetType<Vector2f>());
-        m_ListingException.insert(TypeManager::GetType<Vector4i>());
-        m_ListingException.insert(TypeManager::GetType<Vector3i>());
-        m_ListingException.insert(TypeManager::GetType<Vector2i>());
+        m_ListingException.insert(TypeManager::GetType<Vec4>());
+        m_ListingException.insert(TypeManager::GetType<Vec3>());
+        m_ListingException.insert(TypeManager::GetType<Vec2>());
+        m_ListingException.insert(TypeManager::GetType<Vec4i>());
+        m_ListingException.insert(TypeManager::GetType<Vec3i>());
+        m_ListingException.insert(TypeManager::GetType<Vec2i>());
       }
 
       bool IsException(Type const* iType)
@@ -111,15 +111,15 @@ namespace eXl
 
       void Init()
       {
-        m_Map.insert(std::make_pair(TypeManager::GetType<Vector4f>(), GLenum(GL_FLOAT_VEC4)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<Vector3f>(), GLenum(GL_FLOAT_VEC3)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<Vector2f>(), GLenum(GL_FLOAT_VEC2)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<float>(),    GLenum(GL_FLOAT)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<Vector4i>(), GLenum(GL_INT_VEC4)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<Vector3i>(), GLenum(GL_INT_VEC3)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<Vector2i>(), GLenum(GL_INT_VEC2)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<int>(),      GLenum(GL_INT)));
-        m_Map.insert(std::make_pair(TypeManager::GetType<Matrix4f>(), GLenum(GL_FLOAT_MAT4)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Vec4>(), GLenum(GL_FLOAT_VEC4)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Vec3>(), GLenum(GL_FLOAT_VEC3)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Vec2>(), GLenum(GL_FLOAT_VEC2)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<float>(), GLenum(GL_FLOAT)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Vec4i>(), GLenum(GL_INT_VEC4)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Vec3i>(), GLenum(GL_INT_VEC3)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Vec2i>(), GLenum(GL_INT_VEC2)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<int>(),   GLenum(GL_INT)));
+        m_Map.insert(std::make_pair(TypeManager::GetType<Mat4>(), GLenum(GL_FLOAT_MAT4)));
       }
 
       void GetType(Type const* iType, GLenum& oType)

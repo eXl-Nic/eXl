@@ -170,10 +170,10 @@ namespace eXl
     {
       static const Vector3f dirs[] =
       {
-        Vector3f::UNIT_X *  1.0,
-        Vector3f::UNIT_X * -1.0,
-        Vector3f::UNIT_Y *  1.0,
-        Vector3f::UNIT_Y * -1.0,
+        UnitX<Vector3f>() *  1.0,
+        UnitX<Vector3f>() * -1.0,
+        UnitY<Vector3f>() *  1.0,
+        UnitY<Vector3f>() * -1.0,
       };
       Vector3f dir;
       for (unsigned int i = 0; i < 4; ++i)

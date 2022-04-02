@@ -72,7 +72,7 @@ namespace eXl
         };
         *rotMat[0] = FROM_BTVECT(m_Object->getInterpolationLinearVelocity());
         rotMat[0]->Normalize();
-        *rotMat[2] = Vector3f::UNIT_Z;
+        *rotMat[2] = UnitZ<Vector3f>();
         *rotMat[1] = rotMat[2]->Cross(*rotMat[0]);
       }
 

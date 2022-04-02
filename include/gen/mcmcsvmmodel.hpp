@@ -70,7 +70,7 @@ namespace eXl
       {}
 
       template <unsigned int VectorDim1, unsigned int VectorDim2>
-      double operator()(double const (&iVec1)[VectorDim1], double const (&iVec2)[VectorDim2]) const
+      double operator()(glm::vec<VectorDim1, double> const& iVec1, glm::vec<VectorDim2, double> const& iVec2) const
       {
         static_assert(VectorDim1 == VectorDim2, "Incompatible vectors");
         double res = 0;
@@ -112,15 +112,13 @@ namespace eXl
       struct SupportVector
       {
         double m_Coeff;
-        double m_Position[Dim];
+        glm::vec<Dim, double> m_Position;
       };
 
       typedef Vector<SupportVector> Supports; 
 
-      template <unsigned int VectorDim>
-      double operator()(double const (&iVector)[VectorDim]) 
+      double operator()(glm::vec<Dim, double> const& iVector) 
       {
-        static_assert(VectorDim == Dim, "Incompatible vectors");
         double res = 0.0;
         for(auto const& support : m_Supports)
         {

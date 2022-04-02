@@ -62,24 +62,24 @@ namespace eXl
 #ifndef __ANDROID__
     case OGLTextureType::TEXTURE_1D:
       glTexImage1D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat), 
-        m_Size.X(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+        m_Size.x, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
       break;
     case OGLTextureType::TEXTURE_1D_ARRAY:
 #endif
     case OGLTextureType::TEXTURE_2D:
       glTexImage2D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat),
-        m_Size.X(), m_Size.Y(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+        m_Size.x, m_Size.y, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
       break;
     case OGLTextureType::TEXTURE_2D_ARRAY:
     case OGLTextureType::TEXTURE_3D:
       glTexImage3D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat),
-        m_Size.X(), m_Size.Y(), m_NumSlices, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+        m_Size.x, m_Size.y, m_NumSlices, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
       break;
     case OGLTextureType::TEXTURE_CUBE_MAP:
       for (GLenum faceUpdate = GL_TEXTURE_CUBE_MAP_POSITIVE_X; faceUpdate < GL_TEXTURE_CUBE_MAP_POSITIVE_X + 6; ++faceUpdate)
       {
         glTexImage2D(faceUpdate, 0, GetGLInternalTextureFormat(m_InternalFormat),
-          m_Size.X(), m_Size.Y(), 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+          m_Size.x, m_Size.y, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
       }
       break;
     case OGLTextureType::TEXTURE_BUFFER:
@@ -207,17 +207,17 @@ namespace eXl
 #ifndef __ANDROID__
       if (m_TextureType == OGLTextureType::TEXTURE_1D)
       {
-        Vector2i boxSize = iBox.GetSize();
-        if (iBox.MaxX() > m_Size.X()
+        Vec2i boxSize = iBox.GetSize();
+        if (iBox.MaxX() > m_Size.x
           || iBox.MinX() < 0
-          || boxSize.X() <= 0)
+          || boxSize.x <= 0)
         {
           eXl_FAIL_MSG_RET("Invalid box dimensions", void());
         }
         
         glBindTexture(textureTarget, m_TexId);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexSubImage1D(textureTarget, iMip, iBox.MinX(), boxSize.X(), GetGLTextureFormat(iFormat), GetGLTextureElementType(iType), iData);
+        glTexSubImage1D(textureTarget, iMip, iBox.MinX(), boxSize.x, GetGLTextureFormat(iFormat), GetGLTextureElementType(iType), iData);
       }
 #endif
       if (m_TextureType == OGLTextureType::TEXTURE_2D
@@ -229,10 +229,10 @@ namespace eXl
       {
         GLenum textureFaceUpdate = IsCubeMap() ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + iSlice : GL_TEXTURE_2D;
 
-        Vector2i boxSize = iBox.GetSize();
-        if (iBox.MaxX() > m_Size.X() || iBox.MaxY() > m_Size.Y()
+        Vec2i boxSize = iBox.GetSize();
+        if (iBox.MaxX() > m_Size.x || iBox.MaxY() > m_Size.y
           || iBox.MinX() < 0 || iBox.MinY() < 0
-          || boxSize.X() <= 0 && boxSize.Y() <= 0)
+          || boxSize.x <= 0 && boxSize.y <= 0)
         {
           eXl_FAIL_MSG_RET("Invalid box dimensions", void());
         }
@@ -240,16 +240,16 @@ namespace eXl
         
         glBindTexture(textureTarget, m_TexId);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexSubImage2D(textureFaceUpdate, iMip, iBox.MinX(), iBox.MinY(), boxSize.X(), boxSize.Y(), inputFormat, inputType, iData);
+        glTexSubImage2D(textureFaceUpdate, iMip, iBox.MinX(), iBox.MinY(), boxSize.x, boxSize.y, inputFormat, inputType, iData);
       }
 
       if (m_TextureType == OGLTextureType::TEXTURE_2D_ARRAY
         || m_TextureType == OGLTextureType::TEXTURE_3D)
       {
-        Vector2i boxSize = iBox.GetSize();
-        if (iBox.MaxX() > m_Size.X() || iBox.MaxY() > m_Size.Y()
+        Vec2i boxSize = iBox.GetSize();
+        if (iBox.MaxX() > m_Size.x || iBox.MaxY() > m_Size.y
           || iBox.MinX() < 0 || iBox.MinY() < 0
-          || boxSize.X() <= 0 && boxSize.Y() <= 0)
+          || boxSize.x <= 0 && boxSize.y <= 0)
         {
           eXl_FAIL_MSG_RET("Invalid box dimensions", void());
         }
@@ -258,7 +258,7 @@ namespace eXl
         glBindTexture(textureTarget, m_TexId);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         
-        glTexSubImage3D(textureTarget, iMip, iBox.MinX(), iBox.MinY(), iSlice, boxSize.X(), boxSize.Y(), 1, inputFormat, inputType, iData);
+        glTexSubImage3D(textureTarget, iMip, iBox.MinX(), iBox.MinY(), iSlice, boxSize.x, boxSize.y, 1, inputFormat, inputType, iData);
         
       }
     }

@@ -16,7 +16,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  //class DataVault;
   class OGLTexture;
   class Image;
 
@@ -36,8 +35,6 @@ namespace eXl
       RGBA32F
     };
 
-    //OGLTextureLoader(std::list<DataVault*> const& iSource);
-
     static OGLTexture* Create(Image::Size const& iSize, Format iFormat);
 
     static OGLTexture* CreateFromBuffer(Image::Size const& iSize, Format iFormat, void const* iData, bool iGenMipMap);
@@ -49,14 +46,6 @@ namespace eXl
     static OGLTexture* CreateCubeMap(Image const* const* iImage, bool iGenMipMap);
 
     static Err ReadTexture(OGLTexture* iTexture, Image*& oImage, int iFace = -1);
-
-    //void ForgetTexture(OGLTexture const* iTexture);
-
-  protected:
-
-    //std::list<DataVault*> m_Source;
-
-    //typedef std::map<String, OGLTexture*> TextureMap;
-    //TextureMap m_TextureCache;
+  
   };
 }

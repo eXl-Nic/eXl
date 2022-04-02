@@ -50,18 +50,18 @@ namespace eXl
     void Generate(Pattern<unsigned int>& ioResult, Random& iRand, float iTemperature, int iIterations, bool iInitRand = false, Pattern<float> const* iTemp = NULL);
 
     typedef Map<uint32_t, float> WorkMap;
-    typedef Map<Vector2i, WorkMap> OpenList;
+    typedef Map<Vec2i, WorkMap> OpenList;
 
     struct RemovedPot
     {
-      Vector2i coord;
+      Vec2i coord;
       uint32_t locOffset;
       uint32_t val;
     };
 
     struct InfPot
     {
-      Vector2i coord;
+      Vec2i coord;
       uint32_t locOffset;
       uint32_t val;
       float inf;
@@ -69,17 +69,17 @@ namespace eXl
 
     struct Operation
     {
-      Vector2i m_Pos;
+      Vec2i m_Pos;
       uint32_t m_Val;
       WorkMap m_Pot;
-      Vector<Vector2i> m_OpenedPositions;
+      Vector<Vec2i> m_OpenedPositions;
       Vector<InfPot> m_Inf;
       Vector<RemovedPot> m_Removed;
     };
 
     struct ClosedList : Pattern<bool>
     {
-      void SetSize(Vector2i const& iSize)
+      void SetSize(Vec2i const& iSize)
       {
         Pattern<bool>::SetSize(iSize);
         std::fill(GetBitmap().begin(), GetBitmap().end(), false);
@@ -93,7 +93,7 @@ namespace eXl
       ClosedList m_closedList;
 
       Vector<Operation> m_Operations;
-      Set<std::pair<Vector2i, uint32_t>> m_DeadEnds;
+      Set<std::pair<Vec2i, uint32_t>> m_DeadEnds;
 
       void Backtrack()
       {
@@ -132,7 +132,7 @@ namespace eXl
         }
       }
 
-      bool ValidCandidate(ConvMemory& iMem, Vector2i const& iCoord, uint32_t iVal) const
+      bool ValidCandidate(ConvMemory& iMem, Vec2i const& iCoord, uint32_t iVal) const
       {
         if(m_DeadEnds.count(std::make_pair(iCoord, iVal)) > 0)
         {
@@ -148,12 +148,12 @@ namespace eXl
         {
           for(int j = -FieldSize + 1; j<FieldSize; ++j)
           {
-            //Vector2i coord((iCoord.X() + j + m_workArea.GetSize().X()) % m_workArea.GetSize().X(), 
-            //  (iCoord.Y() + i + m_workArea.GetSize().Y()) % m_workArea.GetSize().Y());
+            //Vec2i coord((iCoord.x + j + m_workArea.GetSize().x) % m_workArea.GetSize().x, 
+            //  (iCoord.y + i + m_workArea.GetSize().y) % m_workArea.GetSize().y);
       
-            Vector2i coord((iCoord.X() + j), (iCoord.Y() + i));
-            if(!(coord.X() >= 0 && coord.X() < m_workArea.GetSize().X()
-              && coord.Y() >= 0 && coord.Y() < m_workArea.GetSize().Y()))
+            Vec2i coord((iCoord.x + j), (iCoord.y + i));
+            if(!(coord.x >= 0 && coord.x < m_workArea.GetSize().x
+              && coord.y >= 0 && coord.y < m_workArea.GetSize().y))
             {
               continue;
             }
@@ -194,7 +194,7 @@ namespace eXl
       }
 
 
-      void CollapseCell(ConvMemory& iMem, Vector2i const& iCoord, uint32_t iVal)
+      void CollapseCell(ConvMemory& iMem, Vec2i const& iCoord, uint32_t iVal)
       {
         uint32_t offsetWk = m_workArea.GetOffset(iCoord);
         {
@@ -219,12 +219,12 @@ namespace eXl
         {
           for(int j = -FieldSize + 1; j<FieldSize; ++j)
           {
-            //Vector2i coord((iCoord.X() + j + m_workArea.GetSize().X()) % m_workArea.GetSize().X(), 
-            //  (iCoord.Y() + i + m_workArea.GetSize().Y()) % m_workArea.GetSize().Y());
+            //Vec2i coord((iCoord.x + j + m_workArea.GetSize().x) % m_workArea.GetSize().x, 
+            //  (iCoord.y + i + m_workArea.GetSize().y) % m_workArea.GetSize().y);
 
-            Vector2i coord((iCoord.X() + j), (iCoord.Y() + i));
-            if(!(coord.X() >= 0 && coord.X() < m_workArea.GetSize().X()
-              && coord.Y() >= 0 && coord.Y() < m_workArea.GetSize().Y()))
+            Vec2i coord((iCoord.x + j), (iCoord.y + i));
+            if(!(coord.x >= 0 && coord.x < m_workArea.GetSize().x
+              && coord.y >= 0 && coord.y < m_workArea.GetSize().y))
             {
               continue;
             }
@@ -291,12 +291,12 @@ namespace eXl
 
     void Step(Pattern<unsigned int>& ioResult, Random& iRand, float iTemperature, GenCtx& ioCtx)
     {
-      Vector2i coord;
+      Vec2i coord;
       
 
       if(ioCtx.m_Operations.empty())
       {
-        Vector2i resSize = ioResult.GetSize();
+        Vec2i resSize = ioResult.GetSize();
         unsigned int resVectSize = ioResult.GetBitmap().size();
 
         eXl_ASSERT_MSG(!UseDictionnary || m_Dict.size() >0, "Empty dict");
@@ -304,7 +304,7 @@ namespace eXl
         ioCtx.m_workArea.SetSize(ioResult.GetSize());
         ioCtx.m_closedList.SetSize(ioResult.GetSize());
 
-        coord = Vector2i(iRand.Generate() % ioResult.GetSize().X(), iRand.Generate() % ioResult.GetSize().Y());
+        coord = Vec2i(iRand.Generate() % ioResult.GetSize().x, iRand.Generate() % ioResult.GetSize().y);
         uint32_t bootstrapVal;
         if(UseDictionnary)
         {
@@ -441,15 +441,15 @@ namespace eXl
       Vector<Vector<Vector<unsigned int> > > absenceSampling;
 
       unsigned int const middleOffset = ((FieldSize - 1) * RowSize + FieldSize - 1);
-      float totSym = iSample.GetSize().X() * iSample.GetSize().Y();
+      float totSym = iSample.GetSize().x * iSample.GetSize().y;
       unsigned int numPatterns = iRotateSym ? 8 : 1;
       Pattern<unsigned int> p[8];
-      for (int y = 0; y < iSample.GetSize().Y(); y++) 
+      for (int y = 0; y < iSample.GetSize().y; y++) 
       {
-        for (int x = 0; x < iSample.GetSize().X(); x++)
+        for (int x = 0; x < iSample.GetSize().x; x++)
         {
 
-          ComputePatternReceptor(p[0], iSample, Vector2i(x, y));
+          ComputePatternReceptor(p[0], iSample, Vec2i(x, y));
           m_SymbolWheights[p[0].GetBitmap()[middleOffset]] += 1.0;
           if(iRotateSym)
           {
@@ -547,11 +547,11 @@ namespace eXl
       return newVal;
     }
 
-    void ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vector2i const& iCoord);
+    void ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vec2i const& iCoord);
 
     //typename WeightsMap::iterator ComputeReceptorIndex(Pattern<unsigned int> const& iReceptor, bool iCreate);
 
-    //double ComputeEnergy(Pattern<unsigned int>& temp, Pattern<unsigned int> const& iSample, Vector2i const& iCoord);
+    //double ComputeEnergy(Pattern<unsigned int>& temp, Pattern<unsigned int> const& iSample, Vec2i const& iCoord);
 
     Vector<unsigned int> m_Dict;
     Map<unsigned int, unsigned int> m_RevDict;
@@ -585,17 +585,17 @@ namespace eXl
   }
 
   template <unsigned int N, unsigned int TFieldSize, bool UseDictionnary>
-  void ConvMemory<N, TFieldSize, UseDictionnary>::ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vector2i const& iCoord)
+  void ConvMemory<N, TFieldSize, UseDictionnary>::ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vec2i const& iCoord)
   {
-    oPattern.SetSize(2*(Vector2i(FieldSize, FieldSize) - Vector2i::ONE) + Vector2i::ONE);
+    oPattern.SetSize(2*(Vec2i(FieldSize, FieldSize) - Vec2i::ONE) + Vec2i::ONE);
     unsigned int localOffset = 0;
     for(int i = -FieldSize + 1; i<FieldSize; ++i)
     {
       for(int j = -FieldSize + 1; j<FieldSize; ++j)
       {
-        Vector2i coord((iCoord.X() + j), (iCoord.Y() + i));
-        if(coord.X() >= 0 && coord.X() < iSample.GetSize().X()
-          && coord.Y() >= 0 && coord.Y() < iSample.GetSize().Y()) 
+        Vec2i coord((iCoord.x + j), (iCoord.y + i));
+        if(coord.x >= 0 && coord.x < iSample.GetSize().x
+          && coord.y >= 0 && coord.y < iSample.GetSize().y) 
         {
           oPattern.GetBitmap()[localOffset] = iSample.GetBitmap()[iSample.GetOffset(coord)];
         }
@@ -604,8 +604,8 @@ namespace eXl
           oPattern.GetBitmap()[localOffset] = UseDictionnary ? m_Dict.size() : N;
         }
 
-        //Vector2i coord((iCoord.X() + j + iSample.GetSize().X()) % iSample.GetSize().X(), 
-        //  (iCoord.Y() + i + iSample.GetSize().Y()) % iSample.GetSize().Y());
+        //Vec2i coord((iCoord.x + j + iSample.GetSize().x) % iSample.GetSize().x, 
+        //  (iCoord.y + i + iSample.GetSize().y) % iSample.GetSize().y);
         //
         //oPattern.GetBitmap()[localOffset] = iSample.GetBitmap()[iSample.GetOffset(coord)];
 
@@ -617,7 +617,7 @@ namespace eXl
   template <unsigned int N, unsigned int TFieldSize, bool UseDictionnary>
   void ConvMemory<N, TFieldSize, UseDictionnary>::Generate(Pattern<unsigned int>& ioResult, Random& iRand, float iTemperature, int iIterations, bool iInitRand, Pattern<float> const* iTemp = NULL)
   {
-    Vector2i resSize = ioResult.GetSize();
+    Vec2i resSize = ioResult.GetSize();
     unsigned int resVectSize = ioResult.GetBitmap().size();
     if(iTemp != NULL)
       eXl_ASSERT_MSG(iTemp->GetSize() == resSize,"Wrong size for temp map");
@@ -682,7 +682,7 @@ namespace eXl
       //
 
       unsigned int scoreOffset = 0;
-      Vector2i baseCoord(iRand.Generate() % resSize.X(), iRand.Generate() % resSize.Y());
+      Vec2i baseCoord(iRand.Generate() % resSize.x, iRand.Generate() % resSize.y);
       //
       //for(int yy = -2*FieldSize + 1; yy<2*FieldSize; ++yy)
       //{
@@ -690,7 +690,7 @@ namespace eXl
       //  {
       //    for(unsigned int i = 0; i<scoreMap.size(); ++i)
       //    {
-      //      scoreMap[scoreOffset][ioResult.Get(baseCoord + Vector2i(xx, yy))] = 1.0;
+      //      scoreMap[scoreOffset][ioResult.Get(baseCoord + Vec2i(xx, yy))] = 1.0;
       //      ++scoreOffset;
       //    }
       //  }
@@ -708,7 +708,7 @@ namespace eXl
             //float prob1 = scoreMap[scoreOffset][i];
             //if(val > 0.0)
             {
-              Vector2i coord = baseCoord ;//+ vector2i(xx, yy);
+              Vec2i coord = baseCoord ;//+ vector2i(xx, yy);
               ComputePatternReceptor(receptor, ioResult, coord);
 
               unsigned int localOffset = 0;
@@ -716,8 +716,8 @@ namespace eXl
               {
                 for(int x = -FieldSize + 1; x<FieldSize; ++x)
                 {
-                  Vector2i revCoord = Vector2i(FieldSize - 1 - x, FieldSize - 1 - y);
-                  unsigned int revOffset = revCoord.Y() * RowSize + revCoord.X(); 
+                  Vec2i revCoord = Vec2i(FieldSize - 1 - x, FieldSize - 1 - y);
+                  unsigned int revOffset = revCoord.y * RowSize + revCoord.x; 
                   //unsigned int otherScoreOffset = y * RowSize + x; 
                   //for(unsigned int j = 0; j<scoreMap[scoreOffset].size(); ++i)
                   {
@@ -734,7 +734,7 @@ namespace eXl
                         auto const& curScore = m_PatternScores[value][revOffset];
                         for(auto const& entry : curScore)
                         {
-                          //scoreMapWk[coord.X() + coord.Y() * resSize.X()][entry.first] *= curProb * entry.second;
+                          //scoreMapWk[coord.x + coord.y * resSize.x][entry.first] *= curProb * entry.second;
                           //score[entry.first] *= pow((1.0 + entry.second * prob), log(m_SymbolWheights.size()));
                           score[entry.first] += entry.second;
                         }
@@ -757,7 +757,7 @@ namespace eXl
       {
         //for(int xx = -FieldSize + 1; xx<FieldSize; ++xx)
         {
-          //Vector2i coord = baseCoord + vector2i(xx, yy);
+          //Vec2i coord = baseCoord + vector2i(xx, yy);
           float counter = 0.0;
 
           for(unsigned int j = 0; j < score.size(); ++j)
@@ -808,11 +808,11 @@ namespace eXl
       /*
       unsigned int bootstrap = iRand.Generate() % resVectSize;
 
-      for(unsigned int y = 0; y<resSize.Y(); ++y)
+      for(unsigned int y = 0; y<resSize.y; ++y)
       {
-      for(unsigned int x = 0; x<resSize.X(); ++x)
+      for(unsigned int x = 0; x<resSize.x; ++x)
       {
-      Vector2i baseCoord(x,y);
+      Vec2i baseCoord(x,y);
       auto const& values = scoreMap[ioResult.GetOffset(baseCoord)];
       for(unsigned int value = 0; value < values.size(); ++value)
       {
@@ -825,11 +825,11 @@ namespace eXl
       {
       for(int j = -FieldSize + 1; j<FieldSize; ++j)
       {
-      Vector2i coord((baseCoord.X() + j + resSize.X()) % resSize.X(), 
-      (baseCoord.Y() + i + resSize.Y()) % resSize.Y());
+      Vec2i coord((baseCoord.x + j + resSize.x) % resSize.x, 
+      (baseCoord.y + i + resSize.y) % resSize.y);
       for(auto const& entry : map[localOffset])
       {
-      float& val = scoreMapWk[coord.X() + coord.Y() * resSize.X()][entry.first];
+      float& val = scoreMapWk[coord.x + coord.y * resSize.x][entry.first];
       if(val == 0.0)
       val = pow((1.0 + entry.second * curProb), log(m_SymbolWheights.size()));
       else

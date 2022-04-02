@@ -82,7 +82,7 @@ namespace eXl
     struct EXL_ENGINE_API ViewInfo
     {
       Vector2i viewportSize;
-      Vector3f basis[3] = { Vector3f::UNIT_X, Vector3f::UNIT_Y, Vector3f::UNIT_Z};
+      Vector3f basis[3] = { UnitX<Vector3f>(), UnitY<Vector3f>(), UnitZ<Vector3f>()};
       Vector3f pos;
       Vector4f backgroundColor = Vector4f::ZERO;
       Projection projection = Perspective;

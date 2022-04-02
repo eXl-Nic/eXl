@@ -19,15 +19,15 @@ namespace eXl
 {
   namespace 
   {
-    bool CheckCoord(Vector2i const& iPos, AABB2Di const& iBox)
+    bool CheckCoord(Vec2i const& iPos, AABB2Di const& iBox)
     {
-      return (iPos.X() >= iBox.m_Data[0].X() && iPos.X() < iBox.m_Data[1].X())
-          && (iPos.Y() >= iBox.m_Data[0].Y() && iPos.Y() < iBox.m_Data[1].Y());
+      return (iPos.x >= iBox.m_Data[0].x && iPos.x < iBox.m_Data[1].x)
+          && (iPos.y >= iBox.m_Data[0].y && iPos.y < iBox.m_Data[1].y);
     }
 
-    unsigned int GetOffset(Vector2i const& iPos, AABB2Di const& iBox)
+    unsigned int GetOffset(Vec2i const& iPos, AABB2Di const& iBox)
     {
-      return iPos.X() - iBox.m_Data[0].X() + (iPos.Y() - iBox.m_Data[0].Y())*(iBox.m_Data[1].X() - iBox.m_Data[0].X() );
+      return iPos.x - iBox.m_Data[0].x + (iPos.y - iBox.m_Data[0].y)*(iBox.m_Data[1].x - iBox.m_Data[0].x );
     }
   }
 
@@ -37,6 +37,8 @@ namespace eXl
 
   HamiltonianPath::HamiltonianPath(Polygoni const& iPoly, unsigned int iGridSize)
   {
+    int const gridSize = iGridSize;
+
     m_NumPoints = 0;
     Vector<Polygoni> temp;
     iPoly.Shrink(Mathf::Ceil((iGridSize / 2) * Mathf::Sqrt(2.0)) , temp);
@@ -44,24 +46,24 @@ namespace eXl
     if(!temp.empty() && !temp[0].Border().empty())
     {
       Polygoni const& wkPoly = temp[0];
-      //Vector2i startPt = wkPoly.Border()[0];
-      Vector2i startPt = wkPoly.GetAABB().GetCenter();
-      Vector2i startNeigh;
-      if(wkPoly.ContainsPoint(startPt + Vector2i::UNIT_X * iGridSize))
+      //Vec2i startPt = wkPoly.Border()[0];
+      Vec2i startPt = wkPoly.GetAABB().GetCenter();
+      Vec2i startNeigh;
+      if(wkPoly.ContainsPoint(startPt + UnitX<Vec2i>() * gridSize))
       {
-        startNeigh = startPt + Vector2i::UNIT_X * iGridSize;
+        startNeigh = startPt + UnitX<Vec2i>() * gridSize;
       }
-      else if(wkPoly.ContainsPoint(startPt - Vector2i::UNIT_X * iGridSize))
+      else if(wkPoly.ContainsPoint(startPt - UnitX<Vec2i>() * gridSize))
       {
-        startNeigh = startPt - Vector2i::UNIT_X * iGridSize;
+        startNeigh = startPt - UnitX<Vec2i>() * gridSize;
       }
-      else if(wkPoly.ContainsPoint(startPt + Vector2i::UNIT_Y * iGridSize))
+      else if(wkPoly.ContainsPoint(startPt + UnitY<Vec2i>() * gridSize))
       {
-        startNeigh = startPt + Vector2i::UNIT_Y * iGridSize;
+        startNeigh = startPt + UnitY<Vec2i>() * gridSize;
       }
-      else if(wkPoly.ContainsPoint(startPt - Vector2i::UNIT_Y * iGridSize))
+      else if(wkPoly.ContainsPoint(startPt - UnitY<Vec2i>() * gridSize))
       {
-        startNeigh = startPt - Vector2i::UNIT_Y * iGridSize;
+        startNeigh = startPt - UnitY<Vec2i>() * gridSize;
       }
       else
         return;
@@ -69,15 +71,15 @@ namespace eXl
       startPt = startPt / iGridSize;
       startNeigh = startNeigh / iGridSize;
 
-      m_Offset = wkPoly.GetAABB().GetCenter() - startPt * iGridSize;
+      m_Offset = wkPoly.GetAABB().GetCenter() - Vec2i(startPt * iGridSize);
 
       m_GridBox = iPoly.GetAABB();
       m_GridSize = iGridSize;
-      m_GridBox.m_Data[0] = m_GridBox.m_Data[0] / iGridSize - Vector2i::ONE;
-      m_GridBox.m_Data[1] = m_GridBox.m_Data[1] / iGridSize + Vector2i::ONE;
-      Vector2i gridSize = m_GridBox.GetSize();
+      m_GridBox.m_Data[0] = m_GridBox.m_Data[0] / gridSize - One<Vec2i>();
+      m_GridBox.m_Data[1] = m_GridBox.m_Data[1] / gridSize + One<Vec2i>();
+      Vec2i gridSize = m_GridBox.GetSize();
 
-      m_Grid.resize((gridSize.X()) * (gridSize.Y()), -1);
+      m_Grid.resize((gridSize.x) * (gridSize.y), -1);
       std::list<Segment> toConsider;
       {
         m_Start = 0;
@@ -102,30 +104,30 @@ namespace eXl
         Segment curSeg = toConsider.front();
         toConsider.pop_front();
 
-        int dim = m_Points[curSeg.pt1].pos.X() == m_Points[curSeg.pt2].pos.X() ? 0 : 1;
+        int dim = m_Points[curSeg.pt1].pos.x == m_Points[curSeg.pt2].pos.x ? 0 : 1;
 
-        Vector2i candidate1 = m_Points[curSeg.pt1].pos;
-        Vector2i candidate2 = m_Points[curSeg.pt2].pos;
+        Vec2i candidate1 = m_Points[curSeg.pt1].pos;
+        Vec2i candidate2 = m_Points[curSeg.pt2].pos;
 
         bool validCand = false;
 
-        ++candidate1.m_Data[dim];
-        ++candidate2.m_Data[dim];
+        ++candidate1[dim];
+        ++candidate2[dim];
         if(CheckCoord(candidate1, m_GridBox) && m_Grid[GetOffset(candidate1, m_GridBox)] == -1
         && CheckCoord(candidate1, m_GridBox) && m_Grid[GetOffset(candidate2, m_GridBox)] == -1
-        && wkPoly.ContainsPoint(candidate1 * iGridSize + m_Offset)
-        && wkPoly.ContainsPoint(candidate2 * iGridSize + m_Offset))
+        && wkPoly.ContainsPoint(candidate1 * gridSize + m_Offset)
+        && wkPoly.ContainsPoint(candidate2 * gridSize + m_Offset))
         {
           validCand = true;
         }
         else
         {
-          candidate1.m_Data[dim] -= 2;
-          candidate2.m_Data[dim] -= 2;
+          candidate1[dim] -= 2;
+          candidate2[dim] -= 2;
           if(CheckCoord(candidate1, m_GridBox) && m_Grid[GetOffset(candidate1, m_GridBox)] == -1
           && CheckCoord(candidate2, m_GridBox) && m_Grid[GetOffset(candidate2, m_GridBox)] == -1
-          && wkPoly.ContainsPoint(candidate1 * iGridSize + m_Offset)
-          && wkPoly.ContainsPoint(candidate2 * iGridSize + m_Offset))
+          && wkPoly.ContainsPoint(candidate1 * gridSize + m_Offset)
+          && wkPoly.ContainsPoint(candidate2 * gridSize + m_Offset))
           {
             validCand = true;
           }
@@ -174,24 +176,24 @@ namespace eXl
     {
       if(box.Empty())
       {
-        box = AABB2Di(iIter.GetGridCoord(), Vector2i::ONE);
+        box = AABB2Di(iIter.GetGridCoord(), Vec2i::ONE);
       }
       else
       {
-        box.Absorb(AABB2Di(iIter.GetGridCoord(), Vector2i::ONE));
+        box.Absorb(AABB2Di(iIter.GetGridCoord(), Vec2i::ONE));
       }
     }
   };
 
   struct Vtx
   {
-    Vtx(LevelGrammar_Old::Graph::vertex_descriptor iVtx, Vector2i const& iPos, MultiGrid::Direction iDirPrev) 
+    Vtx(LevelGrammar_Old::Graph::vertex_descriptor iVtx, Vec2i const& iPos, MultiGrid::Direction iDirPrev) 
       : vtx(iVtx)
       , smallGridPos(iPos)
       , dirPrev(iDirPrev)
       {}
     LevelGrammar_Old::Graph::vertex_descriptor vtx;
-    Vector2i smallGridPos;
+    Vec2i smallGridPos;
     MultiGrid::Direction dirPrev;
   };
 
@@ -207,28 +209,28 @@ namespace eXl
       grid.AddGenerator(MultiGrid::YDim, MultiGrid::Generator(1, 1, 0));
       BBoxVisitor visitor;
       visitor.box = AABB2Di();
-      GraphVisitor::Visit(visitor, iGraph, *boost::vertices(iGraph).first, grid.StartGrid(Vector2i::ZERO));
+      GraphVisitor::Visit(visitor, iGraph, *boost::vertices(iGraph).first, grid.StartGrid(Vec2i::ZERO));
 
       m_GridBox = visitor.box;
       m_GridBox.m_Data[0] *= 2;
       m_GridBox.m_Data[1] *= 2;
       m_GridSize = iGridSize;
-      Vector2i gridSize = m_GridBox.GetSize();
-      m_Grid.resize(gridSize.X() * gridSize.Y(), -1);
+      Vec2i gridSize = m_GridBox.GetSize();
+      m_Grid.resize(gridSize.x * gridSize.y, -1);
 
       m_Start = 0;
 
       //std::set<LevelGrammar_Old::Graph::vertex_descriptor> visitedSet;
-      std::set<Vector2i> visitedSet;
+      std::set<Vec2i> visitedSet;
       std::list<Vtx> visitList;
-      visitedSet.insert(Vector2i::ZERO);
-      visitList.push_back(Vtx(*boost::vertices(iGraph).first, Vector2i::ZERO, MultiGrid::RightDir));
+      visitedSet.insert(Vec2i::ZERO);
+      visitList.push_back(Vtx(*boost::vertices(iGraph).first, Vec2i::ZERO, MultiGrid::RightDir));
       while(!visitList.empty())
       {
         Vtx curVtx = visitList.front();
         visitList.pop_front();
 
-        Vector2i offsets[4] = {Vector2i::ZERO, Vector2i::UNIT_X, Vector2i::UNIT_Y, Vector2i::ONE};
+        Vec2i offsets[4] = {Vec2i::ZERO, UnitX<Vec2i>(), UnitY<Vec2i>(), Vec2i::ONE};
         for(unsigned int i = 0; i<4; ++i)
         {
           m_Points.push_back(Point(curVtx.smallGridPos * 2 + offsets[i]));
@@ -242,7 +244,7 @@ namespace eXl
         {
           unsigned int dir = boost::get(boost::edge_name, iGraph, *edges.first);
           eXl_ASSERT_MSG(0 == (dir & ~3) || (1<<2) == (dir & ~3), "Unsupported");
-          Vector2i nextDir = curVtx.smallGridPos;
+          Vec2i nextDir = curVtx.smallGridPos;
           nextDir.m_Data[(dir & 2) / 2] += 2*(int(dir) & 1) - 1;
 
           if(visitedSet.count(nextDir) == 0)
@@ -256,7 +258,7 @@ namespace eXl
         {
           unsigned int dir = boost::get(boost::edge_name, iGraph, *edges.first);
           eXl_ASSERT_MSG(0 == (dir & ~3) || (1<<2) == (dir & ~3), "Unsupported");
-          Vector2i nextDir = curVtx.smallGridPos;
+          Vec2i nextDir = curVtx.smallGridPos;
           nextDir.m_Data[(dir & 2) / 2] += 2*((1 - int(dir)) & 1) - 1;
           if(visitedSet.count(nextDir) == 0)
           {
@@ -315,7 +317,7 @@ namespace eXl
         }
         if(m_NumPoints > 4)
         {
-          Vector2i offset = curVtx.smallGridPos;
+          Vec2i offset = curVtx.smallGridPos;
           offset.m_Data[(curVtx.dirPrev / 2) & 1] += 2*(int(curVtx.dirPrev) & 1) - 1;
 
           int reverseDir = (curVtx.dirPrev & 2) | (1 - (int(curVtx.dirPrev) & 1));
@@ -363,13 +365,13 @@ namespace eXl
   {
     if(!iFilled)
     {
-      Vector<Vector2i> poly;
+      Vector<Vec2i> poly;
       int prevPt = -1;
       int curPt = m_Start;
       while(curPt != -1)
       {
         int nextPt = m_Points[curPt].neigh1 == prevPt ? m_Points[curPt].neigh2 : m_Points[curPt].neigh1;
-        poly.push_back(m_Points[curPt].pos * m_GridSize + m_Offset);
+        poly.push_back(m_Points[curPt].pos * int(m_GridSize) + m_Offset);
         prevPt = curPt;
         curPt = nextPt;
       }
@@ -389,13 +391,13 @@ namespace eXl
     int& extremity = iRand.Generate() % 2 == 0 ? m_Start : m_End;
     int& otherExtremity = extremity == m_Start ? m_End : m_Start;
 
-    Vector2i gridPos = m_Points[extremity].pos;
+    Vec2i gridPos = m_Points[extremity].pos;
     int neigh[4] = {-1, -1, -1, -1};
     bool gotNeigh = false;
     for(unsigned int i = 0; i<4; ++i)
     {
-      Vector2i offsetPos = gridPos;
-      offsetPos.m_Data[i / 2] += (2*(i % 2) - 1);
+      Vec2i offsetPos = gridPos;
+      offsetPos[i / 2] += (2*(i % 2) - 1);
       if(CheckCoord(offsetPos, m_GridBox))
       {
         neigh[i] = m_Grid[GetOffset(offsetPos, m_GridBox)];
@@ -496,7 +498,7 @@ namespace eXl
     return ( m_Points[numPt].neigh1 != -1 || m_Points[numPt].neigh2 != -1);
   }
 
-  void HamiltonianPath::Cull(Random& iRand, float iReduc, Vector2f iPathRange, Vector<HamiltonianPath>* oPathes)
+  void HamiltonianPath::Cull(Random& iRand, float iReduc, Vec2 iPathRange, Vector<HamiltonianPath>* oPathes)
   {
     if(oPathes)
       oPathes->clear();
@@ -519,8 +521,8 @@ namespace eXl
       }
 
       unsigned int origNumPoints = m_NumPoints;
-      unsigned int maxPathSize = Mathi::Clamp(iPathRange.Y() * m_NumPoints, 4, m_NumPoints / 2);
-      unsigned int minPathSize = Mathi::Clamp(iPathRange.X() * m_NumPoints, 4, m_NumPoints / 2);
+      unsigned int maxPathSize = Mathi::Clamp(iPathRange.y * m_NumPoints, 4, m_NumPoints / 2);
+      unsigned int minPathSize = Mathi::Clamp(iPathRange.x * m_NumPoints, 4, m_NumPoints / 2);
       unsigned int numTries = 0;
       while(numTries < m_NumPoints
          && float(m_NumPoints) / float(origNumPoints) > iReduc)
@@ -532,7 +534,7 @@ namespace eXl
         int ptNum = iRand.Generate() % m_Points.size();
         if(ptNum != m_Start && ptNum != m_End && ConnectedPoint(ptNum))
         {
-          Vector2i curPos = m_Points[ptNum].pos;
+          Vec2i curPos = m_Points[ptNum].pos;
           int curPtDist = distances[ptNum];
           eXl_ASSERT_MSG(curPtDist >= 0, "");
           ++numTries;
@@ -544,9 +546,9 @@ namespace eXl
           RandomSetWalk walk(4, iRand);
           while(candidate == -1 && walk.Next(curDir))
           {
-            Vector2i dir;
-            dir.m_Data[curDir/2] = 2*(curDir % 2) - 1;
-            Vector2i neighCoord = curPos + dir;
+            Vec2i dir;
+            dir[curDir/2] = 2*(curDir % 2) - 1;
+            Vec2i neighCoord = curPos + dir;
             //while(CheckCoord(neighCoord, m_GridBox) 
             //  && m_Grid[GetOffset(neighCoord, m_GridBox)] != -1
             //  && !ConnectedPoint(m_Grid[GetOffset(neighCoord, m_GridBox)]))
@@ -604,8 +606,8 @@ namespace eXl
           //  {
           //    if(curPathLength >= minPathSize)
           //    {
-          //      Vector2i posNeigh = m_Points[curPt].pos;
-          //      int equCoord = posNeigh.X() == curPos.X() ? 0 : (posNeigh.Y() == curPos.Y() ? 1 : -1);
+          //      Vec2i posNeigh = m_Points[curPt].pos;
+          //      int equCoord = posNeigh.x == curPos.x ? 0 : (posNeigh.y == curPos.y ? 1 : -1);
           //      if(equCoord >= 0)
           //      {
           //        int sign = posNeigh.m_Data[1-equCoord] - curPos.m_Data[1-equCoord];
@@ -617,7 +619,7 @@ namespace eXl
           //        {
           //          for(; j<length; ++j)
           //          {
-          //            Vector2i offset = curPos;
+          //            Vec2i offset = curPos;
           //            offset.m_Data[1-equCoord] += j * sign;
           //            int ptToCheck;
           //            if(!CheckCoord(offset, m_GridBox)
@@ -654,7 +656,7 @@ namespace eXl
             newPath.m_Offset = m_Offset;
             newPath.m_Start = 0;
             //Point newPt(m_Points[curPt].pos);
-            //newPath.m_GridBox = AABB2Di(newPt.pos, Vector2i::ONE);
+            //newPath.m_GridBox = AABB2Di(newPt.pos, Vec2i::ONE);
             //newPath.m_Points.push_back(newPt);
             newPath.m_NumPoints = 0;
 
@@ -674,7 +676,7 @@ namespace eXl
                 }
                 else
                 {
-                  newPath.m_GridBox = AABB2Di(newPt.pos, Vector2i::ZERO);
+                  newPath.m_GridBox = AABB2Di(newPt.pos, Zero<Vec2i>());
                 }
                 ++newPath.m_NumPoints;
                 newPath.m_Points.push_back(newPt);
@@ -692,9 +694,9 @@ namespace eXl
 
             if(oPathes)
             {
-              newPath.m_GridBox.m_Data[1] += Vector2i::ONE;
-              Vector2i newGridSize = newPath.m_GridBox.GetSize();
-              newPath.m_Grid.resize(newGridSize.X() * newGridSize.Y(), -1);
+              newPath.m_GridBox.m_Data[1] += One<Vec2i>();
+              Vec2i newGridSize = newPath.m_GridBox.GetSize();
+              newPath.m_Grid.resize(newGridSize.x * newGridSize.y, -1);
               //newPath.m_Offset += newPath.m_GridBox.m_Data[0];
               for(unsigned int i = 0; i<newPath.m_Points.size(); ++i)
               {
@@ -712,11 +714,11 @@ namespace eXl
             else
               neighCand = 1;
 
-            Vector2i posNeigh = m_Points[candidate].pos;
-            int equCoord = posNeigh.X() == curPos.X() ? 0 : (posNeigh.Y() == curPos.Y() ? 1 : -1);
+            Vec2i posNeigh = m_Points[candidate].pos;
+            int equCoord = posNeigh.x == curPos.x ? 0 : (posNeigh.y == curPos.y ? 1 : -1);
             if(equCoord >= 0)
             {
-              int sign = posNeigh.m_Data[1-equCoord] - curPos.m_Data[1-equCoord];
+              int sign = posNeigh[1-equCoord] - curPos[1-equCoord];
               int length = Mathi::Abs(sign);
               sign = sign / length;
               if(length == 1)
@@ -737,8 +739,8 @@ namespace eXl
                 int prevLink = ptNum;
                 for(; j<length; ++j)
                 {
-                  Vector2i offset;
-                  offset.m_Data[1-equCoord] = j * sign;
+                  Vec2i offset;
+                  offset[1-equCoord] = j * sign;
                   int newLink = m_Grid[GetOffset(curPos + offset, m_GridBox)];
                   if(j == 1)
                   {

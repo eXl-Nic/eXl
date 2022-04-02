@@ -108,21 +108,21 @@ namespace eXl
         float entropy;
       };
 
-      bool Outside(Vector2i& ioPos)
+      bool Outside(Vec2i& ioPos)
       {
         auto const& wkAreaSize = m_State.GetSize();
 
         if(m_Toroidal)
         {
-          Vector2i coord((ioPos.X() + wkAreaSize.X()) % wkAreaSize.X(), 
-            (ioPos.Y() + wkAreaSize.Y()) % wkAreaSize.Y());
+          Vec2i coord((ioPos.x + wkAreaSize.x) % wkAreaSize.x, 
+            (ioPos.y + wkAreaSize.y) % wkAreaSize.y);
           ioPos = coord;
           return false;
         }
         else
         {
-          if(ioPos.X() < 0 || ioPos.X() >= (wkAreaSize.X() /*- FieldSize*/)
-          || ioPos.Y() < 0 || ioPos.Y() >= (wkAreaSize.Y() /*- FieldSize*/))
+          if(ioPos.x < 0 || ioPos.x >= (wkAreaSize.x /*- FieldSize*/)
+          || ioPos.y < 0 || ioPos.y >= (wkAreaSize.y /*- FieldSize*/))
           {
             return true;
           }
@@ -142,7 +142,7 @@ namespace eXl
           {
             for (int x = xmin; x < xmax; x++) 
             {
-              if (iP1[Vector2i(x, y)] != iP2[Vector2i(x - dx, (y - dy))]) 
+              if (iP1[Vec2i(x, y)] != iP2[Vec2i(x - dx, (y - dy))]) 
               {
                 return false;
               }
@@ -154,7 +154,7 @@ namespace eXl
         int DX[4] = {1, -1, 0, 0};
         int DY[4] = {0, 0, 1, -1};
 
-        Vector<Pattern<uint32_t>> extracted(numSymbols, Pattern<uint32_t> (Vector2i(FieldSize, FieldSize)));
+        Vector<Pattern<uint32_t>> extracted(numSymbols, Pattern<uint32_t> (Vec2i(FieldSize, FieldSize)));
 
         for (int sym = 0; sym < numSymbols; ++sym)
         {
@@ -190,7 +190,7 @@ namespace eXl
       }
 
 
-      void Init(ConvChains const& iMem, Vector2i const& iSize)
+      void Init(ConvChains const& iMem, Vec2i const& iSize)
       {
         m_Toroidal = iMem.m_Toroidal;
 
@@ -226,17 +226,17 @@ namespace eXl
 
       boost::optional<bool> Observe(Random& iRand)
       {
-        uint32_t const stateSize = m_State.GetSize().X() * m_State.GetSize().Y();
+        uint32_t const stateSize = m_State.GetSize().x * m_State.GetSize().y;
 
         float min = 1.0e3;
         int argmin = -1;
-        Vector2i selectedPos;
+        Vec2i selectedPos;
         uint32_t offset = 0;
-        for (int y = 0; y < m_State.GetSize().Y(); ++y)
+        for (int y = 0; y < m_State.GetSize().y; ++y)
         {
-          for (int x = 0; x < m_State.GetSize().X(); ++x)
+          for (int x = 0; x < m_State.GetSize().x; ++x)
           {
-            if (Outside(Vector2i(x, y)))
+            if (Outside(Vec2i(x, y)))
             {
               ++offset;
               continue;
@@ -258,7 +258,7 @@ namespace eXl
               if (entropy + noise < min)
               {
                 min = entropy + noise;
-                selectedPos = Vector2i(x, y);
+                selectedPos = Vec2i(x, y);
                 argmin = offset;
               }
             }
@@ -326,7 +326,7 @@ namespace eXl
         return boost::none;
       }
 
-      void Ban(Vector2i pos, uint32_t sym)
+      void Ban(Vec2i pos, uint32_t sym)
       {
         auto& cellState = m_State[pos];
         cellState.possible[sym] = false;
@@ -341,7 +341,7 @@ namespace eXl
         cellState.sumOfOnes -= 1;
         if(cellState.sumOfOnes == 0)
         {
-          printf("Termination reached at (%i,%i)", pos.X(), pos.Y());
+          printf("Termination reached at (%i,%i)", pos.x, pos.y);
         }
         cellState.sumOfWeights -= m_PatternDict[sym]->second.weight;
         cellState.sumOfWeightsLogWeight -= m_WeightLogWeights[sym];
@@ -357,7 +357,7 @@ namespace eXl
           auto cell = m_Stack.back();
           m_Stack.pop_back();
 
-          Vector2i const& pos = cell.first;
+          Vec2i const& pos = cell.first;
 
           uint32_t const& sym = cell.second;
 
@@ -365,7 +365,7 @@ namespace eXl
           {
             for (int signIdx = 0; signIdx < 2; ++signIdx)
             {
-              Vector2i otherPos = pos;
+              Vec2i otherPos = pos;
               otherPos.m_Data[dim] += 1 - 2*signIdx;
 
               if(Outside(otherPos))
@@ -402,9 +402,9 @@ namespace eXl
       void Clear()
       {
         uint32_t localOffset = 0;
-        for (int y = 0; y < m_State.GetSize().Y(); ++y)
+        for (int y = 0; y < m_State.GetSize().y; ++y)
         {
-          for (int x = 0; x < m_State.GetSize().X(); ++x)
+          for (int x = 0; x < m_State.GetSize().x; ++x)
           {
             CellState& state = m_State.GetBitmap()[localOffset];
 
@@ -429,15 +429,15 @@ namespace eXl
         }
         if(!m_Toroidal)
         {
-          for (int y = 0; y < (int)m_State.GetSize().Y() - FieldSize; ++y)
+          for (int y = 0; y < (int)m_State.GetSize().y - FieldSize; ++y)
           {
-            for (int x = 0; x < (int)m_State.GetSize().X() - FieldSize; ++x)
+            for (int x = 0; x < (int)m_State.GetSize().x - FieldSize; ++x)
             {
               for (int sym = 0; sym < numSymbols; ++sym)
               {
                 if(m_PatternDict[sym]->second.isBorder)
                 {
-                  Ban(Vector2i(x,y), sym);
+                  Ban(Vec2i(x,y), sym);
                 }
               }
             }
@@ -465,7 +465,7 @@ namespace eXl
       uint32_t m_RestartCounter = 0;
 
       Vector<typename WeightsMap::const_iterator> m_PatternDict;
-      Vector<std::pair<Vector2i, uint32_t>> m_Stack;
+      Vector<std::pair<Vec2i, uint32_t>> m_Stack;
     };
 
     void Wave(Pattern<unsigned int>& ioResult, Random& iRand, uint32_t numIter, WaveState& ioState, bool iInit = false)
@@ -493,27 +493,27 @@ namespace eXl
       }
 
       uint32_t globOffset = 0;
-      for (int y = 0; y < ioState.m_State.GetSize().Y(); ++y)
+      for (int y = 0; y < ioState.m_State.GetSize().y; ++y)
       {
-        for (int x = 0; x < ioState.m_State.GetSize().X(); ++x)
+        for (int x = 0; x < ioState.m_State.GetSize().x; ++x)
         {
-          Vector2i curPos(x,y);
+          Vec2i curPos(x,y);
 
           uint32_t sym = ioState.m_CollapsedState.GetBitmap()[globOffset];
           if(sym != ioState.numSymbols)
           {
-            Pattern<uint32_t> pattern(Vector2i(FieldSize, FieldSize));
+            Pattern<uint32_t> pattern(Vec2i(FieldSize, FieldSize));
             ioState.m_PatternDict[sym]->first.Extract(pattern);
-            //ioResult[curPos] = m_Dict[pattern[Vector2i::ZERO]];
+            //ioResult[curPos] = m_Dict[pattern[Vec2i::ZERO]];
             for (int ly = 0; ly < FieldSize; ++ly) 
             {
               for (int lx = 0; lx < FieldSize; ++lx) 
               {
-                Vector2i localPos(lx, ly);
-                Vector2i otherPos = curPos;
-                otherPos += Vector2i (lx, ly);
-                if(otherPos.X() >=0 && otherPos.X() < ioState.m_State.GetSize().X()
-                && otherPos.Y() >=0 && otherPos.Y() < ioState.m_State.GetSize().Y())
+                Vec2i localPos(lx, ly);
+                Vec2i otherPos = curPos;
+                otherPos += Vec2i (lx, ly);
+                if(otherPos.x >=0 && otherPos.x < ioState.m_State.GetSize().x
+                && otherPos.y >=0 && otherPos.y < ioState.m_State.GetSize().y)
                 {
                   ioResult[otherPos] = m_Dict[pattern[localPos]];
                 }
@@ -551,9 +551,9 @@ namespace eXl
       Image outImg(nullptr, imageSize, Image::RGBA, Image::Char, 1);
       memset(outImg.GetImageData(), 0, outImg.GetByteSize());
 
-      Vector2i curPos;
+      Vec2i curPos;
 
-      Pattern<uint32_t> pattern(Vector2i::ONE * FieldSize);
+      Pattern<uint32_t> pattern(Vec2i::ONE * FieldSize);
       for(auto rIter = patternSort.rbegin(); rIter != patternSort.rend(); ++rIter)
       {
         patternDict[rIter->second]->first.Extract(pattern);
@@ -562,20 +562,20 @@ namespace eXl
         {
           for(uint32_t x = 0; x<FieldSize; ++x)
           {
-            Vector2i locPos(x,y);
-            Vector2i globPos = curPos + locPos;
-            *((uint32_t*)outImg.GetPixel(globPos.Y(), globPos.X())) = pattern[locPos] == 1 ? 0 : 0xFFFFFFFF;
+            Vec2i locPos(x,y);
+            Vec2i globPos = curPos + locPos;
+            *((uint32_t*)outImg.GetPixel(globPos.y, globPos.x)) = pattern[locPos] == 1 ? 0 : 0xFFFFFFFF;
           }
         }
 
-        if(curPos.X() + FieldSize < imageSize.X())
+        if(curPos.x + FieldSize < imageSize.x)
         {
-          curPos.X() += FieldSize + 1;
+          curPos.x += FieldSize + 1;
         }
         else
         {
-          curPos.X() = 0;
-          curPos.Y() += FieldSize + 1;
+          curPos.x = 0;
+          curPos.y += FieldSize + 1;
         }
       }
 
@@ -592,13 +592,13 @@ namespace eXl
     
     unsigned int GetValue(unsigned int iOldValue, Random& iRand);
 
-    void ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vector2i const& iCoord) const;
+    void ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vec2i const& iCoord) const;
 
     typename WeightsMap::iterator ComputeReceptorIndex(Pattern<unsigned int> const& iReceptor, bool iCreate);
 
     typename WeightsMap::iterator ComputeReceptorIndex(Pattern<unsigned int> const& iReceptor) const;
 
-    double ComputeEnergy(Pattern<unsigned int>& temp, Pattern<unsigned int> const& iSample, Vector2i const& iCoord);
+    double ComputeEnergy(Pattern<unsigned int>& temp, Pattern<unsigned int> const& iSample, Vec2i const& iCoord);
     
     Vector<unsigned int> m_Dict;
     Map<unsigned int, unsigned int> m_RevDict;

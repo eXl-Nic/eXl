@@ -170,7 +170,7 @@ namespace eXl
       float lowLimit;
       UpdateSightRange(reinterpret_cast<Vector2f const (&)[2]>(newObstacle.m_BlockingSegment), newObstacle.m_RelDir, lowLimit);
 
-      if(IsInSightRange(Vector2f::UNIT_X, newObstacle.m_RelDir, lowLimit))
+      if(IsInSightRange(UnitX<Vector2f>(), newObstacle.m_RelDir, lowLimit))
       {
         m_DesiredDirValid = false;
       }
@@ -311,9 +311,9 @@ namespace eXl
 
     UpdateSightRange(sightRange, midSeg, lowLimit);
 
-    if(!IsInSightRange(Vector2f::UNIT_X, midSeg, lowLimit))
+    if(!IsInSightRange(UnitX<Vector2f>(), midSeg, lowLimit))
     {
-      m_ValidDirs.push_back(Vector2f::UNIT_X);
+      m_ValidDirs.push_back(UnitX<Vector2f>());
     }
 
     auto checkDirs = [&]()

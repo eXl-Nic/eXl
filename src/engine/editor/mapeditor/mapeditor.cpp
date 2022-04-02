@@ -217,7 +217,7 @@ namespace eXl
         m_GameWidget->SetGfxSystem(m_World.GetWorld().GetSystem<GfxSystem>());
 
         GfxSystem::ViewInfo& view = m_GameWidget->GetViewInfo();
-        view.pos = Vector3f::UNIT_Z + Vector3f::UNIT_X * 2;
+        view.pos = UnitZ<Vector3f>() + UnitX<Vector3f>() * 2;
         view.projection = GfxSystem::Orthographic;
         m_World.GetCamera().view.displayedSize = view.displayedSize = EngineCommon::s_WorldToPixel * 20;
         view.backgroundColor = Vector4f::ONE;

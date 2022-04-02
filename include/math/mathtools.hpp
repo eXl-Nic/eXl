@@ -331,8 +331,8 @@ namespace eXl
     template <typename Real>
     static inline Real GetAngleFromVec(glm::vec<2,Real> const& iDir)
     {
-      return Math<Real>::Abs(iDir.x) < Math<Real>::Epsilon() ? (iDir.y > 0.0 ? Math<Real>::PI * 0.5 : Math<Real>::PI * 1.5) 
-        : (iDir.x > 0.0 ? Math<Real>::ATan(iDir.y / iDir.x) : Math<Real>::PI - Math<Real>::ATan(iDir.y / (-1.0 * iDir.x)));
+      return Math<Real>::Abs(iDir.x) < Math<Real>::Epsilon() ? (iDir.y > 0.0 ? Math<Real>::Pi() * 0.5 : Math<Real>::Pi() * 1.5) 
+        : (iDir.x > 0.0 ? Math<Real>::ATan(iDir.y / iDir.x) : Math<Real>::Pi() - Math<Real>::ATan(iDir.y / (-1.0 * iDir.x)));
     }
 
     template<typename Real>

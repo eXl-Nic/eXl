@@ -89,8 +89,8 @@ namespace eXl
   {
     float dotProd[] =
     {
-      iDir.Dot(Vector3f::UNIT_X),
-      iDir.Dot(Vector3f::UNIT_Y),
+      iDir.Dot(UnitX<Vector3f>()),
+      iDir.Dot(UnitY<Vector3f>()),
     };
 
     uint32_t dirIdx = Mathf::Abs(dotProd[0]) > Mathf::Abs(dotProd[1]) ? 0 : 1;
@@ -276,16 +276,16 @@ namespace eXl
       switch (entry->m_CurState & (uint32_t)CharacterSystem::StateFlags::DirMask)
       {
       case (uint32_t)CharacterSystem::StateFlags::DirLeft:
-        dir = Vector3f::UNIT_X * -1;
+        dir = UnitX<Vector3f>() * -1;
         break;
       case (uint32_t)CharacterSystem::StateFlags::DirRight:
-        dir = Vector3f::UNIT_X;
+        dir = UnitX<Vector3f>();
         break;
       case (uint32_t)CharacterSystem::StateFlags::DirDown:
-        dir = Vector3f::UNIT_Y * -1;
+        dir = UnitY<Vector3f>() * -1;
         break;
       case (uint32_t)CharacterSystem::StateFlags::DirUp:
-        dir = Vector3f::UNIT_Y;
+        dir = UnitY<Vector3f>();
         break;
       }
     }

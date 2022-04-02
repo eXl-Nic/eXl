@@ -22,7 +22,7 @@ TEST(DunAtk, Tileset)
   testTile.m_FrameDuration = 0.2;
   testTile.m_Size = Vector2i::ONE * 16;
   testTile.m_Frames.push_back(Vector2i::ZERO);
-  testTile.m_Frames.push_back(Vector2i::UNIT_X * 16);
+  testTile.m_Frames.push_back(UnitX<Vector2i>() * 16);
 
   newSet->AddTile(TileName("Tile1"), testTile);
 
@@ -32,7 +32,7 @@ TEST(DunAtk, Tileset)
   testTile.m_FrameDuration = 0.4;
   testTile.m_Size = Vector2i::ONE * 32;
   testTile.m_Frames.push_back(Vector2i::ZERO);
-  testTile.m_Frames.push_back(Vector2i::UNIT_Y * 32);
+  testTile.m_Frames.push_back(UnitY<Vector2i>() * 32);
 
   newSet->AddTile(TileName("Tile2"), testTile);
 

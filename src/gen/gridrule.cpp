@@ -13,16 +13,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
 
-  MultiGrid::Iterator GridRule::MoveIter(MultiGrid::Iterator const& iIter, Vector2i const& iOffset, MultiGrid::Direction iBaseDir)
+  MultiGrid::Iterator GridRule::MoveIter(MultiGrid::Iterator const& iIter, Vec2i const& iOffset, MultiGrid::Direction iBaseDir)
   {
     MultiGrid::Iterator curBox = iIter;
     for(unsigned int dim = 0; dim<2; ++dim)
     {
-      if(iOffset.m_Data[dim] != 0)
+      if(iOffset[dim] != 0)
       {
-        MultiGrid::Direction dir = (MultiGrid::Direction)(2 * dim + (iOffset.m_Data[dim] > 0 ? 1 : 0));
+        MultiGrid::Direction dir = (MultiGrid::Direction)(2 * dim + (iOffset[dim] > 0 ? 1 : 0));
         dir = LocalToWorld(dir, iBaseDir);
-        unsigned int numIter = Mathi::Abs(iOffset.m_Data[dim]);
+        unsigned int numIter = Mathi::Abs(iOffset[dim]);
         for(unsigned int k = 0; k<numIter; ++k)
           curBox.Move(dir);
       }

@@ -94,8 +94,8 @@ namespace eXl
       {
         float dotProd[] =
         {
-          dir.Dot(Vector3f::UNIT_X),
-          dir.Dot(Vector3f::UNIT_Y),
+          dir.Dot(UnitX<Vector3f>()),
+          dir.Dot(UnitY<Vector3f>()),
         };
 
         uint32_t dirIdx = Mathf::Abs(dotProd[0]) > Mathf::Abs(dotProd[1]) ? 0 : 1;

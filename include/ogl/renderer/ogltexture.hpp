@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/oglexp.hpp>
 #include <ogl/renderer/ogltypes.hpp>
 
-#include <math/vector2.hpp>
+#include <math/math.hpp>
 #include <math/aabb2d.hpp>
 #include <core/heapobject.hpp>
 #include <core/refcobject.hpp>

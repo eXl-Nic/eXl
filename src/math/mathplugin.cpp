@@ -246,13 +246,13 @@ namespace eXl
 
     //luabind::object _G = luabind::globals(iState);
     //_G["eXl"]["Vec3"]["ZERO"] = Vec3::ZERO; 
-    //_G["eXl"]["Vec3"]["UNIT_X"] = Vec3::UNIT_X; 
-    //_G["eXl"]["Vec3"]["UNIT_Y"] = Vec3::UNIT_Y; 
-    //_G["eXl"]["Vec3"]["UNIT_Z"] = Vec3::UNIT_Z;
+    //_G["eXl"]["Vec3"]["UNIT_X"] = UnitX<Vec3>(); 
+    //_G["eXl"]["Vec3"]["UNIT_Y"] = UnitY<Vec3>(); 
+    //_G["eXl"]["Vec3"]["UNIT_Z"] = UnitZ<Vec3>();
     //_G["eXl"]["Vec3"]["ONE"] = Vec3::ONE;
     //_G["eXl"]["Vec2"]["ZERO"] = Vec2::ZERO; 
-    //_G["eXl"]["Vec2"]["UNIT_X"] = Vec2::UNIT_X; 
-    //_G["eXl"]["Vec2"]["UNIT_Y"] = Vec2::UNIT_Y; 
+    //_G["eXl"]["Vec2"]["UNIT_X"] = UnitX<Vec2>(); 
+    //_G["eXl"]["Vec2"]["UNIT_Y"] = UnitY<Vec2>(); 
     //_G["eXl"]["Vec2"]["ONE"] = Vec2::ONE;
     //_G["eXl"]["Quaternionf"]["IDENTITY"] = Quaternionf::IDENTITY;
     //_G["eXl"]["Mathf"] = luabind::newtable(iState);

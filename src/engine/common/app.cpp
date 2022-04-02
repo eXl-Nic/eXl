@@ -321,9 +321,9 @@ namespace eXl
 
     float const viewAngle = 0.0 * Mathf::Pi();
 
-    view.basis[0] = Vector3f::UNIT_X;
-    view.basis[1] = Vector3f::UNIT_Y * Mathf::Cos(viewAngle) + Vector3f::UNIT_Z * Mathf::Sin(viewAngle);
-    view.basis[2] = Vector3f::UNIT_Y * -Mathf::Sin(viewAngle) + Vector3f::UNIT_Z * Mathf::Cos(viewAngle);
+    view.basis[0] = UnitX<Vector3f>();
+    view.basis[1] = UnitY<Vector3f>() * Mathf::Cos(viewAngle) + UnitZ<Vector3f>() * Mathf::Sin(viewAngle);
+    view.basis[2] = UnitY<Vector3f>() * -Mathf::Sin(viewAngle) + UnitZ<Vector3f>() * Mathf::Cos(viewAngle);
 
     view.pos = view.basis[2] * 100;
 
@@ -336,7 +336,7 @@ namespace eXl
       desc.SetFlags(PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::Kinematic | PhysicFlags::IsGhost);
       desc.AddSphere(4.0 * 0.25);
       //Matrix4f mainTrans = transforms.GetLocalTransform(cameraObj);
-      //MathTools::GetPosition2D(mainTrans) = /*roomCenter - Vector2f::UNIT_Y * 0.25*/ Vector2f::ZERO;
+      //MathTools::GetPosition2D(mainTrans) = /*roomCenter - UnitY<Vector2f>() * 0.25*/ Vector2f::ZERO;
       //transforms.UpdateTransform(cameraObj, mainTrans);
       //
       phSys.CreateComponent(cameraObj, desc);
@@ -468,10 +468,10 @@ namespace eXl
     {
       static const Vector3f dirs[] =
       {
-        Vector3f::UNIT_X *  1.0,
-        Vector3f::UNIT_X * -1.0,
-        Vector3f::UNIT_Y *  1.0,
-        Vector3f::UNIT_Y * -1.0,
+        UnitX<Vector3f>() *  1.0,
+        UnitX<Vector3f>() * -1.0,
+        UnitY<Vector3f>() *  1.0,
+        UnitY<Vector3f>() * -1.0,
       };
       Vector3f dir;
       for (unsigned int i = 0; i < 4; ++i)

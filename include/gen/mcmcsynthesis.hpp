@@ -26,7 +26,7 @@ namespace eXl
 
     struct EXL_GEN_API PlacedElement
     {
-      Vector2i     m_Pos;
+      Vec2i     m_Pos;
       float        m_Angle;
       int          m_Element;
       int          m_ShapeNum;
@@ -69,15 +69,15 @@ namespace eXl
     struct ElementInter
     {
       float distance;
-      Vector2d dir1;
-      Vector2d dir2;
+      Vec2d dir1;
+      Vec2d dir2;
       int elem2;
       float coeff = 1.0;
     };
 
     struct SamplingCell
     {
-      Vector2i position;
+      Vec2i position;
       float angle;
       unsigned int elem1;
       float weight;
@@ -168,7 +168,7 @@ namespace eXl
     struct InteractionGeom
     {
       double dist;
-      Vector2<double> dir1;
+      Vec2d dir1;
     };
 
     struct FullInteraction : InteractionGeom
@@ -178,7 +178,7 @@ namespace eXl
       void Perturbate(eXl::Random& iRand, float iRadius, float iAngRange);
 
       unsigned int oneHotIdx;
-      Vector2<double> dir2;
+      Vec2d dir2;
     };
 
     class EXL_GEN_API LearnedModel
@@ -238,7 +238,7 @@ namespace eXl
 
       float Sample(MCMC2D::FullInteraction const& iInter) override;
 
-      void ComputeDistribution(unsigned int iIdx, double iDist, Vector2d const& iDir, double& oConstant, double& oAlpha);
+      void ComputeDistribution(unsigned int iIdx, double iDist, Vec2d const& iDir, double& oConstant, double& oAlpha);
 
       QuantileCullParams* Clone() const;
 
@@ -254,7 +254,7 @@ namespace eXl
       bool m_DebugOutput = false;
       bool m_DebugDisplayPos = false;
 
-      Vector<Vector<Vector3d>> m_Vectors;
+      Vector<Vector<Vec3d>> m_Vectors;
     };
 
     float GetMaxDist_Common(unsigned int iOneHotIdx, Vector<LearnedModel::DistParams> const& iDists);

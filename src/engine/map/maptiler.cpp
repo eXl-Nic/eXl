@@ -533,8 +533,8 @@ namespace eXl
             && row[0].m_Pattern == row[1].m_Pattern
             && row[0].m_Pattern == upperRow[0].m_Pattern
             && row[0].m_Pattern == upperRow[1].m_Pattern
-            && row[0].m_Pos == Vector2f::ZERO && row[1].m_Pos == Vector2f::UNIT_X * 0.5
-            && upperRow[0].m_Pos == Vector2f::UNIT_Y * 0.5 && upperRow[1].m_Pos == Vector2f::ONE * 0.5
+            && row[0].m_Pos == Vector2f::ZERO && row[1].m_Pos == UnitX<Vector2f>() * 0.5
+            && upperRow[0].m_Pos == UnitY<Vector2f>() * 0.5 && upperRow[1].m_Pos == Vector2f::ONE * 0.5
             )
           {
             completeTiles[y * spaceDims.X() + x] = std::make_pair(row[0].m_Pattern, row[0].m_DrawElement);

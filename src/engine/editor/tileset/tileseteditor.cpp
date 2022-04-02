@@ -426,14 +426,14 @@ namespace eXl
 
     m_ImageHandle = m_World.CreateObject();
 
-    m_Transforms->AddTransform(m_ImageHandle, Matrix4f::FromPosition(-Vector3f::UNIT_Z));
+    m_Transforms->AddTransform(m_ImageHandle, Matrix4f::FromPosition(-UnitZ<Vector3f>()));
     m_Gfx->CreateComponent(m_ImageHandle);
 
     {
       GfxSystem::ViewInfo& view = m_TilePreview->GetViewInfo();
-      view.basis[0] = -Vector3f::UNIT_X;
-      view.basis[1] = Vector3f::UNIT_Y;
-      view.basis[2] = -Vector3f::UNIT_Z;
+      view.basis[0] = -UnitX<Vector3f>();
+      view.basis[1] = UnitY<Vector3f>();
+      view.basis[2] = -UnitZ<Vector3f>();
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = 1.0;
       view.backgroundColor = Vector4f::ONE;
@@ -443,11 +443,11 @@ namespace eXl
     m_AnimHandle = m_World.CreateObject();
 
     Matrix4f animPosition = Matrix4f::IDENTITY;
-    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[0]) = -Vector3f::UNIT_X;
-    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[1]) =  Vector3f::UNIT_Y;
-    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[2]) = -Vector3f::UNIT_Z;
+    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[0]) = -UnitX<Vector3f>();
+    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[1]) =  UnitY<Vector3f>();
+    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[2]) = -UnitZ<Vector3f>();
 
-    m_Transforms->AddTransform(m_AnimHandle, Matrix4f::FromPosition(Vector3f::UNIT_Z));
+    m_Transforms->AddTransform(m_AnimHandle, Matrix4f::FromPosition(UnitZ<Vector3f>()));
     GfxSpriteComponent& gfxComp = m_Gfx->CreateSpriteComponent(m_AnimHandle);
     gfxComp.SetTileset(m_Tileset);
     gfxComp.SetRotateSprite(true);

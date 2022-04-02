@@ -33,7 +33,7 @@ endif()
 
 add_library(eXl_Gen ${LIBRARY_TYPE} ${SOURCES})
 
-SETUP_EXL_LIB(eXl_Gen "LEVELGEN" DEPENDENCIES eXl_Core eXl_MathStatic eXl_Math)
+SETUP_EXL_LIB(eXl_Gen "LEVELGEN" DEPENDENCIES eXl_Core eXl_Math)
 
 target_include_directories(eXl_Gen PRIVATE 
 ${VOROPP_INCLUDE_DIR} 

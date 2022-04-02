@@ -421,7 +421,7 @@ TEST(DunAtk, DBG)
     phSys.CreateComponent(obj, desc);
 
     chars.AddCharacter(obj, systemDesc);
-    chars.SetCurDir(obj, Vector3f::UNIT_X);
+    chars.SetCurDir(obj, UnitX<Vector3f>());
     chars.SetSpeed(obj, 10.0);
     return obj;
   };

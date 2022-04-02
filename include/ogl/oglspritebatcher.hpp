@@ -45,7 +45,7 @@ namespace eXl
 
     Vector2f anim;
     Vector2f step;
-    Vector2i size;
+    Vec2i size;
     Kind animKind;
     float time;
   };
@@ -75,7 +75,7 @@ namespace eXl
 	SpriteDesc(Image* iImage, Image::Storage iStorage);
     ~SpriteDesc();
 
-    void AddAnim(AnimationDesc::Kind iAnimFlag,float iTime,Vector2f const& iOrig,Vector2f const& iStep,Vector2i const& iSize);
+    void AddAnim(AnimationDesc::Kind iAnimFlag,float iTime,Vector2f const& iOrig,Vector2f const& iStep,Vec2i const& iSize);
 
     AString const& GetFileName()const{return m_FileName;}
 
@@ -227,7 +227,7 @@ namespace eXl
       inline bool operator ()(SpriteElement const * const& iElem1, SpriteElement const* const& iElem2);
     };
 
-    void FillSpriteElem(SpriteElement& iElem, AABB2Df const& spriteRect, AABB2Df const& texRect, Vector2i const& iSpriteSize);
+    void FillSpriteElem(SpriteElement& iElem, AABB2Df const& spriteRect, AABB2Df const& texRect, Vec2i const& iSpriteSize);
 
     float* WriteGeomData(float* oGeom, SpriteElement const* iElem);
  

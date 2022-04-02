@@ -63,24 +63,24 @@ namespace eXl
       return newKey;
     }
 
-    inline static Vector2i LocalToWorld(Vector2i const& iPos, MultiGrid::Direction iBaseDir)
+    inline static Vec2i LocalToWorld(Vec2i const& iPos, MultiGrid::Direction iBaseDir)
     {
       static const unsigned int numRot[] = {2, 0, 3, 1};
-      Vector2i res = iPos;
+      Vec2i res = iPos;
       for(unsigned int i = 0; i<numRot[iBaseDir]; ++i)
       {
-        res = Vector2i(-res.Y(), res.X());
+        res = Vec2i(-res.y, res.x);
       }
       return res;
     }
 
-    inline static Vector2i WorldToLocal(Vector2i const& iPos, MultiGrid::Direction iBaseDir)
+    inline static Vec2i WorldToLocal(Vec2i const& iPos, MultiGrid::Direction iBaseDir)
     {
       static const unsigned int numRot[] = {2, 0, 3, 1};
-      Vector2i res = iPos;
+      Vec2i res = iPos;
       for(unsigned int i = 0; i<numRot[iBaseDir]; ++i)
       {
-        res = Vector2i(res.Y(), -res.X());
+        res = Vec2i(res.y, -res.x);
       }
       return res;
     }
@@ -101,12 +101,12 @@ namespace eXl
       return ret;
     }
 
-    static MultiGrid::Iterator MoveIter(MultiGrid::Iterator const& iIter, Vector2i const& iOffset, MultiGrid::Direction iDir);
+    static MultiGrid::Iterator MoveIter(MultiGrid::Iterator const& iIter, Vec2i const& iOffset, MultiGrid::Direction iDir);
 
     template <typename Identifier>
     struct PatternItem
     {
-      Vector2i localPosition;
+      Vec2i localPosition;
       Identifier Id;
     };
 
@@ -118,7 +118,7 @@ namespace eXl
       {
         friend class Pattern;
       public:
-        inline Builder& Add(Vector2i const& iPos, Identifier const& iId)
+        inline Builder& Add(Vec2i const& iPos, Identifier const& iId)
         {
           PatternItem<Identifier> newPattern = {iPos, iId};
           m_Items.push_back(newPattern);
@@ -131,11 +131,11 @@ namespace eXl
           {
             if(ret.m_Box.Empty())
             {
-              ret.m_Box = AABB2Di(item.localPosition, Vector2i::ONE);
+              ret.m_Box = AABB2Di(item.localPosition, Vec2i::ONE);
             }
             else
             {
-              ret.m_Box.Absorb(AABB2Di(item.localPosition, Vector2i::ONE));
+              ret.m_Box.Absorb(AABB2Di(item.localPosition, Vec2i::ONE));
             }
           }
           ret.m_Items.swap(m_Items);

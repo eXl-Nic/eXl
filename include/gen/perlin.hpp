@@ -11,9 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <gen/gen_exp.hpp>
-#include <math/vector2.hpp>
-#include <math/vector3.hpp>
-
+#include <math/math.hpp>
 namespace eXl
 {
   class Random;
@@ -24,8 +22,8 @@ namespace eXl
 
     Perlin() {};
     Perlin(unsigned int iDim, Random& iRand);
-    Perlin(Vector2i iDim, Random& iRand);
-    Perlin(Vector3i iDim, Random& iRand);
+    Perlin(Vec2i iDim, Random& iRand);
+    Perlin(Vec3i iDim, Random& iRand);
 
     struct FractalParameters
     {
@@ -35,26 +33,26 @@ namespace eXl
     };
 
     float GetFractal(float iCoord, FractalParameters const& iParams);
-    float GetFractal(Vector2f iCoord, FractalParameters const& iParams);
-    float GetFractal(Vector3f iCoord, FractalParameters const& iParams);
+    float GetFractal(Vec2 iCoord, FractalParameters const& iParams);
+    float GetFractal(Vec3 iCoord, FractalParameters const& iParams);
 
     float Get(float iCoord);
-    float Get(Vector2f iCoord);
-    float Get(Vector3f iCoord);
+    float Get(Vec2 iCoord);
+    float Get(Vec3 iCoord);
 
     void Reset(uint32_t iDim, Random& iRand);
-    void Reset(Vector2i iDim, Random& iRand);
-    void Reset(Vector3i iDim, Random& iRand);
+    void Reset(Vec2i iDim, Random& iRand);
+    void Reset(Vec3i iDim, Random& iRand);
 
   protected:
 
-    void _Build(Vector3i iSize, Random& iRand);
+    void _Build(Vec3i iSize, Random& iRand);
 
-    float _GetFractal(Vector3f iCoord, FractalParameters const& iParams);
-    float _Get(Vector3f iCoord, unsigned int iIter = 0);
+    float _GetFractal(Vec3 iCoord, FractalParameters const& iParams);
+    float _Get(Vec3 iCoord, unsigned int iIter = 0);
 
     Vector<float> m_Grid;
-    Vector3i      m_Size;
+    Vec3i      m_Size;
     unsigned int  m_Dimension;
     Vector<float> m_DotProds;
   };

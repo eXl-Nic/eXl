@@ -44,11 +44,11 @@ namespace eXl
         iStreamer.PopKey();
         iStreamer.PushKey("Center");
 #if SVM_VECTOR_SIZE == 2
-        static_assert(sizeof(Vector2d) == MCMC2D::SVMModel::Dim * sizeof(double), "");
-        iStreamer.Write(reinterpret_cast<Vector2d const*>(&vector.m_Position));
+        static_assert(sizeof(Vec2d) == MCMC2D::SVMModel::Dim * sizeof(double), "");
+        iStreamer.Write(reinterpret_cast<Vec2d const*>(&vector.m_Position));
 #else
-        static_assert(sizeof(Vector3d) == MCMC2D::SVMModel::Dim * sizeof(double), "");
-        iStreamer.Write(reinterpret_cast<Vector3d const*>(&vector.m_Position));
+        static_assert(sizeof(Vec3d) == MCMC2D::SVMModel::Dim * sizeof(double), "");
+        iStreamer.Write(reinterpret_cast<Vec3d const*>(&vector.m_Position));
 #endif
         iStreamer.PopKey();
         iStreamer.EndStruct();
@@ -84,9 +84,9 @@ namespace eXl
           iUnstreamer.PopKey();
           iUnstreamer.PushKey("Center");
 #if SVM_VECTOR_SIZE == 2
-          iUnstreamer.Read(reinterpret_cast<Vector2d*>(vector.m_Position));
+          iUnstreamer.Read(&vector.m_Position);
 #else
-          iUnstreamer.Read(reinterpret_cast<Vector3d*>(vector.m_Position));
+          iUnstreamer.Read(&vector.m_Position);
 #endif
           iUnstreamer.PopKey();
           iUnstreamer.EndStruct();
@@ -183,16 +183,16 @@ namespace eXl
     float SVMModel::Sample(FullInteraction const& iInter)
     {
 #if SVM_VECTOR_SIZE == 3
-      Vector3d point;
+      Vec3d point;
 #else
-      Vector2d point;
+      Vec2d point;
 #endif
-      point.m_Data[0] = iInter.dir1.X() * 0.5;
-      point.m_Data[1] = iInter.dir1.Y() * 0.5;
+      point[0] = iInter.dir1.x * 0.5;
+      point[1] = iInter.dir1.y * 0.5;
 #if SVM_VECTOR_SIZE == 2
       point *= iInter.dist / GetMaxDist(iInter.oneHotIdx);
 #else
-      point.m_Data[2] = 2*(iInter.dist / GetMaxDist(iInter.oneHotIdx)) - 1.0;
+      point[2] = 2*(iInter.dist / GetMaxDist(iInter.oneHotIdx)) - 1.0;
 #endif
      
       double alpha = 1.0;
@@ -205,7 +205,7 @@ namespace eXl
       double val = 0.0;
       for(unsigned int sigma = 0; sigma < s_NumSigma; ++sigma)
       {
-        val += m_Hyperplanes[(sigma * m_Hyperplanes.size() / s_NumSigma) + iInter.oneHotIdx](point.m_Data);
+        val += m_Hyperplanes[(sigma * m_Hyperplanes.size() / s_NumSigma) + iInter.oneHotIdx](point);
       }
 
       //DistParams const& params = m_DistParams.size() > 1 ? m_DistParams[iInter.oneHotIdx] : m_DistParams[0];
@@ -232,7 +232,7 @@ namespace eXl
         {
           Vector<SVMModel::Kernel> const& kernels;
           Vector<CellInfo> cells;
-          Vector<Vector<Vector<Vector3d>>> supportVectors;
+          Vector<Vector<Vector<Vec3d>>> supportVectors;
           Vector<Vector<unsigned int>> varOffset;
           Vector<Vector<unsigned int>> planeIdx;
           Vector<lbfgsfloatval_t> cellCache;
@@ -294,14 +294,14 @@ namespace eXl
               {
                 auto& inter = cell.interactions[i];
                 lbfgsfloatval_t interValue = 0.0;
-                Vector3d point;
-                point.m_Data[0] = inter.dir1.X() * 0.5;
-                point.m_Data[1] = inter.dir1.Y() * 0.5;
+                Vec3d point;
+                point[0] = inter.dir1.x * 0.5;
+                point[1] = inter.dir1.y * 0.5;
 
 #if SVM_VECTOR_SIZE == 2
                 point *= inter.dist / GetMaxDist_Common(inter.oneHotIdx, distParams);
 #else
-                point.m_Data[2] = 2*(inter.dist / GetMaxDist_Common(inter.oneHotIdx, distParams)) - 1;
+                point[2] = 2*(inter.dist / GetMaxDist_Common(inter.oneHotIdx, distParams)) - 1;
 #endif
                 
                 for(unsigned int kernelNum = 0; kernelNum < varOffset.size(); ++kernelNum)
@@ -310,7 +310,7 @@ namespace eXl
                   unsigned int varIdx = varOffset[kernelNum][inter.oneHotIdx];
                   for(auto& support : supportVectors[kernelNum][inter.oneHotIdx])
                   {
-                    cellCache.push_back(kernels[kernelNum](point.m_Data, support.m_Data));
+                    cellCache.push_back(kernels[kernelNum](point, support));
 #ifdef EXP_METHOD
                     interValue += cellCache[curVec] * x[varIdx];
 #else
@@ -491,7 +491,7 @@ namespace eXl
 
       uint32_t modelNumSigma = model.m_Hyperplanes.size() / builder.oneHotSize;
 
-      Vector2i curSigmaRange(0, modelNumSigma);
+      Vec2i curSigmaRange(0, modelNumSigma);
 
       Vector<Vector<SVMModel::Hyperplane>> planes(modelNumSigma, Vector<SVMModel::Hyperplane>(builder.oneHotSize));
 
@@ -520,7 +520,7 @@ namespace eXl
 
       unsigned int numVars = ctx.numBeta;
 
-      for(int numSigma = curSigmaRange.X(); numSigma < curSigmaRange.Y(); ++numSigma)
+      for(int numSigma = curSigmaRange.x; numSigma < curSigmaRange.y; ++numSigma)
       {
         ctx.planeIdx.push_back(Vector<unsigned int>());
         for(unsigned int i = 0; i < builder.oneHotSize; ++i)
@@ -530,19 +530,19 @@ namespace eXl
         }
       }
 
-      for(int numSigma = curSigmaRange.X(); numSigma < curSigmaRange.Y(); ++numSigma)
+      for(int numSigma = curSigmaRange.x; numSigma < curSigmaRange.y; ++numSigma)
       {
         ctx.varOffset.push_back(Vector<unsigned int>());
-        ctx.supportVectors.push_back(Vector<Vector<Vector3d>>());
+        ctx.supportVectors.push_back(Vector<Vector<Vec3d>>());
         for(auto& plane : planes[numSigma])
         {
-          ctx.supportVectors.back().push_back(Vector<Vector3d>());
+          ctx.supportVectors.back().push_back(Vector<Vec3d>());
           ctx.varOffset.back().push_back(numVars);
           for(auto& supportVector : plane.m_Supports)
           {
             if(supportVector.m_Coeff != 0.0)
             {
-              ctx.supportVectors.back().back().push_back(*reinterpret_cast<Vector3d const*>(supportVector.m_Position));
+              ctx.supportVectors.back().back().push_back(supportVector.m_Position);
               ++numVars;
             }
           }
@@ -584,7 +584,7 @@ namespace eXl
         ++xIter;
 #endif
 
-        for(int numSigma = curSigmaRange.X(); numSigma < curSigmaRange.Y(); ++numSigma)
+        for(int numSigma = curSigmaRange.x; numSigma < curSigmaRange.y; ++numSigma)
         {
           for(auto& plane : planes[numSigma])
           {
@@ -593,7 +593,7 @@ namespace eXl
           }
         }
 
-        for(int numSigma = curSigmaRange.X(); numSigma < curSigmaRange.Y(); ++numSigma)
+        for(int numSigma = curSigmaRange.x; numSigma < curSigmaRange.y; ++numSigma)
         {
           for(auto& plane : planes[numSigma])
           {
@@ -687,7 +687,7 @@ namespace eXl
         ++xIter;
 #endif
 
-        for(int numSigma = curSigmaRange.X(); numSigma < curSigmaRange.Y(); ++numSigma)
+        for(int numSigma = curSigmaRange.x; numSigma < curSigmaRange.y; ++numSigma)
         {
           for(auto& plane : planes[numSigma])
           {
@@ -703,7 +703,7 @@ namespace eXl
           }
         }
 
-        for(int numSigma = curSigmaRange.X(); numSigma < curSigmaRange.Y(); ++numSigma)
+        for(int numSigma = curSigmaRange.x; numSigma < curSigmaRange.y; ++numSigma)
         {
           for(auto& plane : planes[numSigma])
           {
@@ -728,7 +728,7 @@ namespace eXl
       x = nullptr;
 
       model.m_Hyperplanes.clear();
-      for(int i = curSigmaRange.X(); i< curSigmaRange.Y(); ++i)
+      for(int i = curSigmaRange.x; i< curSigmaRange.y; ++i)
       {
         auto& curSigmaPlanes = planes[i];
         model.m_Hyperplanes.insert(model.m_Hyperplanes.begin(), curSigmaPlanes.begin(), curSigmaPlanes.end());
@@ -836,29 +836,29 @@ namespace eXl
               FullInteraction fullInter = FullInteraction::Make(builder, cell, inter);
               if(fullInter.oneHotIdx == idx)
               {
-                Vector3d curVect;
+                Vec3d curVect;
                 
-                curVect.m_Data[0] = fullInter.dir1.X() * 0.5;
-                curVect.m_Data[1] = fullInter.dir1.Y() * 0.5;
+                curVect[0] = fullInter.dir1.x * 0.5;
+                curVect[1] = fullInter.dir1.y * 0.5;
 #if SVM_VECTOR_SIZE == 2
                 curVect *= fullInter.dist / GetMaxDist(fullInter.oneHotIdx);
 #else
-                curVect.m_Data[2] = 2*(fullInter.dist / GetMaxDist(fullInter.oneHotIdx)) - 1;
+                curVect[2] = 2*(fullInter.dist / GetMaxDist(fullInter.oneHotIdx)) - 1;
 #endif
 
                 //corpus[idx].Add(curVect, cell.isPresence? 1 : -1);
                 svm_node node;
                 node.index = 0;
-                node.value = curVect.m_Data[0];
+                node.value = curVect[0];
                 corpus[idx].push_back(node);
 
                 node.index = 1;
-                node.value = curVect.m_Data[1];
+                node.value = curVect[1];
                 corpus[idx].push_back(node);
 
 #if SVM_VECTOR_SIZE == 3
                 node.index = 2;
-                node.value = curVect.m_Data[2];
+                node.value = curVect[2];
                 corpus[idx].push_back(node);
 #endif
 
@@ -882,14 +882,14 @@ namespace eXl
         //for(unsigned int angleStep = 0; angleStep < numAngleSteps; ++angleStep)
         //{
         //  float curAngle = angleStep * angleIncrement;
-        //  Vector2f dir(Mathf::Cos(curAngle), Mathf::Sin(curAngle));
+        //  Vec2 dir(Mathf::Cos(curAngle), Mathf::Sin(curAngle));
         //  for(unsigned int distStep = 1; distStep < numDistStep; ++distStep)
         //  {
         //    float curDist = distIncrement * distStep;
         //    svm::Vector<2> curVect;
         //    
-        //    curVect[0] = dir.X() * curDist;
-        //    curVect[1] = dir.Y() * curDist;
+        //    curVect[0] = dir.x * curDist;
+        //    curVect[1] = dir.y * curDist;
         //    //curVect *= fullInter.dist / GetMaxDist(fullInter.oneHotIdx);
         //
         //    corpus[idx].Add(curVect, -1);
@@ -1134,13 +1134,13 @@ namespace eXl
     {
       unsigned int const otherElem = ioSuggestion.m_Element;
 
-      Vector2d baseMine(Mathd::Cos(iRefElem.m_Angle), Mathd::Sin(iRefElem.m_Angle));
+      Vec2d baseMine(Mathd::Cos(iRefElem.m_Angle), Mathd::Sin(iRefElem.m_Angle));
       unsigned int const baseElem = iRefElem.m_Element;
 
       unsigned int const idx0 = baseElem > otherElem ? otherElem - 1 : baseElem - 1;
       unsigned int const idx1 = baseElem > otherElem ? baseElem - otherElem : otherElem - baseElem;
 
-      //Vector2d baseOther(Mathd::Cos(currentElement.m_Angle), Mathd::Sin(currentElement.m_Angle));
+      //Vec2d baseOther(Mathd::Cos(currentElement.m_Angle), Mathd::Sin(currentElement.m_Angle));
 
       //inter.dir2 = GetLocal(baseMine, baseOther);
       //inter.dir2.Normalize();
@@ -1164,14 +1164,14 @@ namespace eXl
 
       unsigned int const refShapeNum = baseElem > otherElem ? ioSuggestion.m_ShapeNum : iRefElem.m_ShapeNum;
       auto box = m_Elements[idx0].m_Shapes[refShapeNum].GetAABB();
-      float const diag = box.GetSize().Length() * 0.5;
-      float smallDim = Mathi::Min(box.GetSize().X(), box.GetSize().Y());
-      float range = (box.GetSize() / 2).Length() - smallDim;
+      float const diag = length(Vec2(box.GetSize())) * 0.5;
+      float smallDim = Mathi::Min(box.GetSize().x, box.GetSize().y);
+      float range = length(Vec2(box.GetSize() / 2)) - smallDim;
 
 #if SVM_VECTOR_SIZE == 3
       float dist = (supportVector.m_Position[2] + 1) * 0.5 * GetMaxDist(iBuilder.BuildOneHot(idx0, idx1, locAngle));
       dist += smallDim + ((iRand() % 1000) / 1000.0) * range;
-      float angle1 = MathTools::GetAngleFromVec(Vector2d(supportVector.m_Position[0] * 2, supportVector.m_Position[1] * 2));
+      float angle1 = MathTools::GetAngleFromVec(Vec2d(supportVector.m_Position[0] * 2, supportVector.m_Position[1] * 2));
 #else
 #error
 #endif
@@ -1179,26 +1179,26 @@ namespace eXl
       //float dist = Mathf::Max(0.0, sampleRbf.dist + smallDim + ((iRand() % 1000) / 1000.0) * range + RandNormFloatIn(iRand, sampleRbf.distEpsilon * -3, sampleRbf.distEpsilon * 3));
       //float angle1 = sampleRbf.angle1 + RandNormFloatIn(iRand, sampleRbf.dir1Epsilon * -3, sampleRbf.dir1Epsilon);
       
-      Vector2d localOther(Mathd::Cos(locAngle), Mathd::Sin(locAngle));
+      Vec2d localOther(Mathd::Cos(locAngle), Mathd::Sin(locAngle));
 
       if(baseElem > otherElem)
       {
-        Vector2d worldOther = baseMine;
+        Vec2d worldOther = baseMine;
 
-        baseMine.X() = worldOther.X() * localOther.X() - worldOther.Y() * localOther.Y();
-        baseMine.Y() = -worldOther.Y() * localOther.X() - worldOther.X() * localOther.Y();
+        baseMine.x = worldOther.x * localOther.x - worldOther.y * localOther.y;
+        baseMine.y = -worldOther.y * localOther.x - worldOther.x * localOther.y;
         ioSuggestion.m_Angle = MathTools::GetAngleFromVec(baseMine);
         dist *= -1;
       }
       else
       {
-        Vector2d worldOther = localOther.X() * baseMine + localOther.Y() * MathTools::GetPerp(baseMine);
+        Vec2d worldOther = localOther.x * baseMine + localOther.y * MathTools::GetPerp(baseMine);
         ioSuggestion.m_Angle = MathTools::GetAngleFromVec(worldOther);
       }
       ioSuggestion.m_Angle = Mathi::Round(ioSuggestion.m_Angle / angleInc) * angleInc;
       //currentElement.m_Angle = //fmod(refElem.m_Angle, Mathd::PI * 2.0);
 
-      Vector2d dirVec = baseMine * Mathd::Cos(angle1) + MathTools::GetPerp(baseMine) * Mathd::Sin(angle1);
+      Vec2d dirVec = baseMine * Mathd::Cos(angle1) + MathTools::GetPerp(baseMine) * Mathd::Sin(angle1);
       dirVec *= dist;
 
       ioSuggestion.m_Pos = MathTools::ToIVec(MathTools::ToDVec(iRefElem.m_Pos) + dirVec);

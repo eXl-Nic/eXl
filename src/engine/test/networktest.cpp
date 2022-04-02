@@ -308,7 +308,7 @@ TEST(Network, BasicRepl)
 
   Network::ClientInputData input;
   input.m_Moving = true;
-  input.m_Dir = Vector3f::UNIT_X;
+  input.m_Dir = UnitX<Vector3f>();
   net.driver.CallServerCommand(0, net.driver.SetPlayerInput).WithArgs(input).Send();
   //client1->SetClientInput(input);
 
@@ -323,14 +323,14 @@ TEST(Network, BasicRepl)
   net.Tick(0.01);
 
   // Server ticked once.
-  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == UnitX<Vector3f>());
 
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
 
   // Server ticked twice.
-  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::UNIT_X * 2);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == UnitX<Vector3f>() * 2);
 
   localIdx = Network::Client::ConnectLoopback(net.ctx, "2");
   ASSERT_TRUE(localIdx);

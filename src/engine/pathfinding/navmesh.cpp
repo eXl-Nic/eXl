@@ -26,10 +26,10 @@ namespace eXl
 
     static const Vector2f treadMillDirs[] = 
     {
-      -Vector2f::UNIT_Y,
-       Vector2f::UNIT_X,
-       Vector2f::UNIT_Y,
-      -Vector2f::UNIT_X
+      -UnitY<Vector2f>(),
+       UnitX<Vector2f>(),
+       UnitY<Vector2f>(),
+      -UnitX<Vector2f>()
     };
 
     uint32_t quadrant;
@@ -244,9 +244,9 @@ namespace eXl
       Vector2f corners[] = 
       {
         face.m_Box.m_Data[0],
-        face.m_Box.m_Data[0] + faceDim.X() * Vector2f::UNIT_X,
-        face.m_Box.m_Data[0] + faceDim.Y() * Vector2f::UNIT_Y,
-        face.m_Box.m_Data[0] + faceDim.X() * Vector2f::UNIT_X + faceDim.Y() * Vector2f::UNIT_Y
+        face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>(),
+        face.m_Box.m_Data[0] + faceDim.Y() * UnitY<Vector2f>(),
+        face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>() + faceDim.Y() * UnitY<Vector2f>()
       };
 
       face.m_Walls.push_back(Segmentf({corners[0], corners[1]}));
@@ -351,9 +351,9 @@ namespace eXl
           Vector2f corners[] = 
           {
             face.m_Box.m_Data[0],
-            face.m_Box.m_Data[0] + faceDim.X() * Vector2f::UNIT_X,
-            face.m_Box.m_Data[0] + faceDim.Y() * Vector2f::UNIT_Y,
-            face.m_Box.m_Data[0] + faceDim.X() * Vector2f::UNIT_X + faceDim.Y() * Vector2f::UNIT_Y
+            face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>(),
+            face.m_Box.m_Data[0] + faceDim.Y() * UnitY<Vector2f>(),
+            face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>() + faceDim.Y() * UnitY<Vector2f>()
           };
 
           face.m_Walls.push_back(Segmentf({corners[2], corners[0]}));
@@ -366,10 +366,10 @@ namespace eXl
 
         Vector2f ccwDirs[4] =
         {
-           Vector2f::UNIT_Y,
-          -Vector2f::UNIT_X,
-          -Vector2f::UNIT_Y,
-           Vector2f::UNIT_X
+           UnitY<Vector2f>(),
+          -UnitX<Vector2f>(),
+          -UnitY<Vector2f>(),
+           UnitX<Vector2f>()
         };
 
         for (auto& val : face.m_HasSide) { val = false; }
@@ -547,16 +547,16 @@ namespace eXl
     switch(touchId)
     {
     case 1:
-      return Vector2f::UNIT_X * -1.0;
+      return UnitX<Vector2f>() * -1.0;
       break;
     case 2:
-      return Vector2f::UNIT_X;
+      return UnitX<Vector2f>();
       break;
     case 3:
-      return Vector2f::UNIT_Y * -1.0;
+      return UnitY<Vector2f>() * -1.0;
       break;
     case 4:
-      return Vector2f::UNIT_Y;
+      return UnitY<Vector2f>();
       break;
     default:
       //eXl_ASSERT_MSG(false, "Neighbouring faces not touching");

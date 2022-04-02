@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <math/vector2.hpp>
+#include <math/math.hpp>
 #include <math/aabb2d.hpp>
 #include <ogl/oglexp.hpp>
 
@@ -21,7 +21,7 @@ namespace eXl
   class EXL_OGL_API OGLFramebuffer
   {
   public:
-    OGLFramebuffer(Vector2i const& iSize);
+    OGLFramebuffer(Vec2u const& iSize);
 
     ~OGLFramebuffer();
 
@@ -29,7 +29,7 @@ namespace eXl
 
     void AddDepthStencilAttachement(OGLTexture* iTexture);
 
-    inline Vector2<uint32_t> const& GetSize() const {return m_Size;}
+    inline Vec2u const& GetSize() const {return m_Size;}
     inline uint32_t GetId() const{return m_Id;}
 
   protected:
@@ -47,7 +47,7 @@ namespace eXl
 
     std::vector<Attachement> m_ColorAttachements;
     Attachement              m_DepthStencilAttachement;
-    Vector2<uint32_t>        m_Size;
+    Vec2u                    m_Size;
     uint32_t                 m_Id;
   };
 }

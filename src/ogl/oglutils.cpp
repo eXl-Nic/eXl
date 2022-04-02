@@ -44,21 +44,6 @@ namespace eXl
 #endif
   }
 
-  //void OGLUtils::MakeOGLMatrix(float (&oMatrix) [16], Quaternionf const& iOrient, Vector3f const& iPos)
-  void OGLUtils::MakeOGLMatrix(float* oMatrix, Quaternionf const& iOrient, Vector3f const& iPos)
-  {
-    oMatrix[3] = oMatrix[7] = oMatrix[11] = 0.0;
-    oMatrix[15] = 1.0;
-    oMatrix[12]=iPos.X();
-    oMatrix[13]=iPos.Y();
-    oMatrix[14]=iPos.Z();
-    Vector3f rotMat[3];
-    iOrient.ToRotationMatrix(rotMat);
-    *((Vector3f*)(oMatrix + 0)) = rotMat[0];
-    *((Vector3f*)(oMatrix + 4)) = rotMat[1];
-    *((Vector3f*)(oMatrix + 8)) = rotMat[2];
-  }
-
   uint32_t OGLUtils::CompileVertexShader(char const* iSource)
   {
 #ifdef EXL_WITH_OGL

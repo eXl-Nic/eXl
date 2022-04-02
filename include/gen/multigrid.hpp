@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <gen/gen_exp.hpp>
 #include <core/containers.hpp>
-#include <math/vector2.hpp>
+#include <math/math.hpp>
 
 #include <cstdint>
 
@@ -68,8 +68,8 @@ namespace eXl
     public:
 
       inline BoxKey const&   GetKey() const{return m_Key;}
-      inline AABB2Di         GetBox() const{return AABB2Di(m_CurPos.X(), m_CurPos.Y(), m_CurPos.X() + m_Next.X(), m_CurPos.Y() + m_Next.Y());}
-      inline Vector2i const& GetGridCoord() const{return m_GridPos;}
+      inline AABB2Di         GetBox() const{return AABB2Di(m_CurPos.x, m_CurPos.y, m_CurPos.x + m_Next.x, m_CurPos.y + m_Next.y);}
+      inline Vec2i const& GetGridCoord() const{return m_GridPos;}
 
       Iterator& Up();
       Iterator& Down();
@@ -79,14 +79,14 @@ namespace eXl
       Iterator& Move(Direction iDir);
 
       //On grid
-      inline Iterator& Move(Vector2i const& iGridOffset){m_GridPos += iGridOffset; UpdateFromCurGrid(); return *this;}
+      inline Iterator& Move(Vec2i const& iGridOffset){m_GridPos += iGridOffset; UpdateFromCurGrid(); return *this;}
 
-      inline Iterator GetUp() const {return Iterator(m_Grid, m_GridPos + Vector2i(0, 1), true);}
-      inline Iterator GetDown() const {return Iterator(m_Grid, m_GridPos + Vector2i(0, -1), true);}
-      inline Iterator GetLeft() const {return Iterator(m_Grid, m_GridPos + Vector2i(-1, 0), true);}
-      inline Iterator GetRight() const {return Iterator(m_Grid, m_GridPos + Vector2i(1, 0), true);}
+      inline Iterator GetUp() const {return Iterator(m_Grid, m_GridPos + Vec2i(0, 1), true);}
+      inline Iterator GetDown() const {return Iterator(m_Grid, m_GridPos + Vec2i(0, -1), true);}
+      inline Iterator GetLeft() const {return Iterator(m_Grid, m_GridPos + Vec2i(-1, 0), true);}
+      inline Iterator GetRight() const {return Iterator(m_Grid, m_GridPos + Vec2i(1, 0), true);}
 
-      Iterator Get(Vector2i const& iGridOffset) const {return Iterator(m_Grid, m_GridPos + iGridOffset, true);}
+      Iterator Get(Vec2i const& iGridOffset) const {return Iterator(m_Grid, m_GridPos + iGridOffset, true);}
 
       Iterator Get(Direction iDir) const ;
 
@@ -94,16 +94,16 @@ namespace eXl
       
     protected:
 
-      Iterator(MultiGrid const& iGrid, Vector2i const& iPos, bool iGridPos = false);
+      Iterator(MultiGrid const& iGrid, Vec2i const& iPos, bool iGridPos = false);
 
       void UpdateFromCurPos();
       void UpdateFromCurGrid();
 
       BoxKey m_Key;
-      Vector2i m_CurPos;
-      Vector2i m_GridPos;
-      Vector2i m_Next;
-      Vector2i m_Prev;
+      Vec2i m_CurPos;
+      Vec2i m_GridPos;
+      Vec2i m_Next;
+      Vec2i m_Prev;
       MultiGrid const& m_Grid;
     };
 
@@ -132,15 +132,15 @@ namespace eXl
     inline Vector<Generator> const& GetGeneratorsX() const {return m_Generators[0];}
     inline Vector<Generator> const& GetGeneratorsY() const {return m_Generators[1];}
 
-    void Sample(Vector2i const& iGridDim, SampleVisitor const& iVisitor) const;
+    void Sample(Vec2i const& iGridDim, SampleVisitor const& iVisitor) const;
 
-    void GetBoxes(Vector2i const& iGridDim, Map<BoxKey, unsigned int> const& iMap, Vector<AABB2Di>& oBoxes, Vector<unsigned int>& oIdent ) const;
+    void GetBoxes(Vec2i const& iGridDim, Map<BoxKey, unsigned int> const& iMap, Vector<AABB2Di>& oBoxes, Vector<unsigned int>& oIdent ) const;
 
-    Vector2i GetPPCM() const;
+    Vec2i GetPPCM() const;
 
-    inline Iterator Start(Vector2i const& iPos) const {return Iterator(*this, iPos);}
+    inline Iterator Start(Vec2i const& iPos) const {return Iterator(*this, iPos);}
 
-    inline Iterator StartGrid(Vector2i const& iPos) const {return Iterator(*this, iPos, true);}
+    inline Iterator StartGrid(Vec2i const& iPos) const {return Iterator(*this, iPos, true);}
 
   protected:
 

@@ -47,7 +47,7 @@ namespace eXl
 
   struct dummyStruct
   {
-    Matrix4f dummyMat;
+    Mat4 dummyMat;
   };
 
   void OGLBaseAlgo::Init(OGLSemanticManager& iManager)
@@ -255,7 +255,7 @@ namespace eXl
 
   struct dummyColor
   {
-    Vector4f m_Color;
+    Vec4 m_Color;
   };
 
   OGLCompiledProgram const* OGLLineAlgo::CreateProgram(OGLSemanticManager& iSemantics)

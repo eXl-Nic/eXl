@@ -59,7 +59,7 @@ namespace eXl
     m_CasterDesiredDir = iDesiredDir;
     if (iDesiredDir == Vector2f::ZERO)
     {
-      m_CasterDesiredDir = Vector2f::UNIT_X;
+      m_CasterDesiredDir = UnitX<Vector2f>();
       m_PureAvoidance = true;
     }
     else
@@ -433,10 +433,10 @@ namespace eXl
   {
     Vector2f canonicalDirs[] = 
     {
-      Vector2f::UNIT_X,
-      Vector2f::UNIT_Y,
-      -Vector2f::UNIT_Y,
-      -Vector2f::UNIT_X
+      UnitX<Vector2f>(),
+      UnitY<Vector2f>(),
+      -UnitY<Vector2f>(),
+      -UnitX<Vector2f>()
     };
 
     for (uint32_t i = 0; i < /*4*/1; ++i)
@@ -503,7 +503,7 @@ namespace eXl
       bool valid = true;
       Vector2f point = (i >= 0 
         ? pts[i] 
-        : (m_PureAvoidance ? Vector2f::ZERO : Vector2f::UNIT_X )) * m_MaxVelocity;
+        : (m_PureAvoidance ? Vector2f::ZERO : UnitX<Vector2f>() )) * m_MaxVelocity;
       for (uint32_t obsIdx = 0; obsIdx < m_Obstacles.size(); ++obsIdx)
       {
         auto const& obstacle = m_Obstacles[obsIdx];
@@ -617,7 +617,7 @@ namespace eXl
             }
           }
 
-          if (Penumbra::IsInSightRange(Vector2f::UNIT_X, arc.m_MidVec, arc.m_LowLimit))
+          if (Penumbra::IsInSightRange(UnitX<Vector2f>(), arc.m_MidVec, arc.m_LowLimit))
           {
             return m_CasterDesiredDir * m_MaxVelocity;
           }
@@ -741,7 +741,7 @@ namespace eXl
           Vector2f edgeDirs[] = {-curIncoming->normDir, nextEdge.normDir};
           Vector2f midSeg = MathTools::ConeGetMidSegment(edgeDirs);
 
-          if(midSeg.Dot(Vector2f::UNIT_X) < 0)
+          if(midSeg.Dot(UnitX<Vector2f>()) < 0)
           {
             segToInspect = curIncoming - m_PolyMesh.edges.data();
             outerFace = 0;
@@ -931,7 +931,7 @@ namespace eXl
         validDir[2] = fltSeg.m_Ext2;
 
         Vector2f point;
-        auto interRes = Segmentf::Intersect(Vector2f::ZERO, Vector2f::UNIT_X * m_MaxVelocity, validDir[0], validDir[1], point);
+        auto interRes = Segmentf::Intersect(Vector2f::ZERO, UnitX<Vector2f>() * m_MaxVelocity, validDir[0], validDir[1], point);
         if((interRes & Segmentf::PointOnSegments) == Segmentf::PointOnSegments)
         {
           float curVel = point.Normalize();

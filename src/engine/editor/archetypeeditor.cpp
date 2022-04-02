@@ -463,7 +463,7 @@ namespace eXl
       gameWidget->SetGfxSystem(m_Impl->m_World.GetWorld().GetSystem<GfxSystem>());
 
       GfxSystem::ViewInfo& view = gameWidget->GetViewInfo();
-      view.pos = Vector3f::UNIT_Z * 2;
+      view.pos = UnitZ<Vector3f>() * 2;
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = 2.0;
       view.backgroundColor = Vector4f::ONE;

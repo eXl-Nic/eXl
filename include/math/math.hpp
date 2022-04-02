@@ -14,6 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/typetraits.hpp>
 #include <math/mathexp.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext.hpp>
 
 #ifdef PI
@@ -75,6 +76,38 @@ namespace eXl
     }
 
     return false;
+  }
+
+  template<typename T>
+  constexpr T UnitX()
+  {
+    auto vec = glm::zero<T>();
+    vec.x = 1;
+    return vec;
+  }
+
+  template<typename T>
+  constexpr T UnitY()
+  {
+    auto vec = glm::zero<T>();
+    vec.y = 1;
+    return vec;
+  }
+
+  template<typename T>
+  constexpr T UnitZ()
+  {
+    auto vec = glm::zero<T>();
+    vec.z = 1;
+    return vec;
+  }
+
+  template<typename T>
+  constexpr T UnitW()
+  {
+    auto vec = glm::zero<T>();
+    vec.w = 1;
+    return vec;
   }
 
   template <class Real>
@@ -246,16 +279,16 @@ namespace eXl
     {
       iStreamer.BeginStruct();
       iStreamer.PushKey("X");
-      iStreamer.Write(iObj->x);
+      iStreamer.Write(&iObj->x);
       iStreamer.PopKey();
       iStreamer.PushKey("Y");
-      iStreamer.Write(iObj->y);
+      iStreamer.Write(&iObj->y);
       iStreamer.PopKey();
       iStreamer.PushKey("Z");
-      iStreamer.Write(iObj->z);
+      iStreamer.Write(&iObj->z);
       iStreamer.PopKey();
       iStreamer.PushKey("W");
-      iStreamer.Write(iObj->w);
+      iStreamer.Write(&iObj->w);
       iStreamer.PopKey();
       iStreamer.EndStruct();
       return Err::Success;
@@ -269,13 +302,13 @@ namespace eXl
     {
       iStreamer.BeginStruct();
       iStreamer.PushKey("X");
-      iStreamer.Write(iObj->x);
+      iStreamer.Write(&iObj->x);
       iStreamer.PopKey();
       iStreamer.PushKey("Y");
-      iStreamer.Write(iObj->y);
+      iStreamer.Write(&iObj->y);
       iStreamer.PopKey();
       iStreamer.PushKey("Z");
-      iStreamer.Write(iObj->z);
+      iStreamer.Write(&iObj->z);
       iStreamer.PopKey();
       iStreamer.EndStruct();
       return Err::Success;

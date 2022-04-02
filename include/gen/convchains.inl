@@ -108,8 +108,8 @@ void ConvChains<N, FieldSize, UseDictionnary>::_AddPattern(Pattern<unsigned int>
 {
   unsigned int numPatterns = iRotateSym ? 8 : 1;
 
-  int patternEndX = iSample.GetSize().X() /*- (m_Toroidal ? 0 : FieldSize)*/;
-  int patternEndY = iSample.GetSize().Y() /*- (m_Toroidal ? 0 : FieldSize)*/;
+  int patternEndX = iSample.GetSize().x /*- (m_Toroidal ? 0 : FieldSize)*/;
+  int patternEndY = iSample.GetSize().y /*- (m_Toroidal ? 0 : FieldSize)*/;
 
   for (int y = 0; y < patternEndY; y++) 
   {
@@ -117,8 +117,8 @@ void ConvChains<N, FieldSize, UseDictionnary>::_AddPattern(Pattern<unsigned int>
     {
       Pattern<unsigned int> p[8];
 
-      p[0] = Pattern<unsigned int>(Vector2i(FieldSize, FieldSize));
-      ComputePatternReceptor(p[0], iSample, Vector2i(x, y));
+      p[0] = Pattern<unsigned int>(Vec2i(FieldSize, FieldSize));
+      ComputePatternReceptor(p[0], iSample, Vec2i(x, y));
 
       if(iRotateSym)
       {
@@ -160,30 +160,30 @@ unsigned int ConvChains<N, FieldSize, UseDictionnary>::GetValue(unsigned int iOl
 }
 
 template <unsigned int N, unsigned int FieldSize, bool UseDictionnary>
-void ConvChains<N, FieldSize, UseDictionnary>::ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vector2i const& iCoord) const
+void ConvChains<N, FieldSize, UseDictionnary>::ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vec2i const& iCoord) const
 {
-  oPattern.SetSize(Vector2i(FieldSize, FieldSize));
+  oPattern.SetSize(Vec2i(FieldSize, FieldSize));
   unsigned int localOffset = 0;
   for(unsigned int i = 0; i<FieldSize; ++i)
   {
     for(unsigned int j = 0; j<FieldSize; ++j)
     {
-      Vector2i coord;
+      Vec2i coord;
       if(m_Toroidal)
       {
-        coord = Vector2i((iCoord.X() + j + iSample.GetSize().X()) % iSample.GetSize().X(), 
-            (iCoord.Y() + i + iSample.GetSize().Y()) % iSample.GetSize().Y());
+        coord = Vec2i((iCoord.x + j + iSample.GetSize().x) % iSample.GetSize().x, 
+            (iCoord.y + i + iSample.GetSize().y) % iSample.GetSize().y);
 
         oPattern.GetBitmap()[localOffset] = iSample.GetBitmap()[iSample.GetOffset(coord)];
       }
       else
       {
-        coord = iCoord + Vector2i(j, i);
-        if(coord.X() < 0 || coord.X() >= iSample.GetSize().X()
-        || coord.Y() < 0 || coord.Y() >= iSample.GetSize().Y())
+        coord = iCoord + Vec2i(j, i);
+        if(coord.x < 0 || coord.x >= iSample.GetSize().x
+        || coord.y < 0 || coord.y >= iSample.GetSize().y)
         {
-          //coord.X() = Mathi::Clamp(coord.X(), 0, iSample.GetSize().X() - 1);
-          //coord.Y() = Mathi::Clamp(coord.Y(), 0, iSample.GetSize().Y() - 1);
+          //coord.x = Mathi::Clamp(coord.x, 0, iSample.GetSize().x - 1);
+          //coord.y = Mathi::Clamp(coord.y, 0, iSample.GetSize().y - 1);
           oPattern.GetBitmap()[localOffset] = 0;
         }
         else
@@ -232,9 +232,9 @@ typename ConvChains<N, FieldSize, UseDictionnary>::WeightsMap::iterator ConvChai
   return iter;
   //unsigned int localOffset = 0;
   //unsigned int index = 0;
-  //for (unsigned int y = 0; y < iReceptor.GetSize().Y(); y++) 
+  //for (unsigned int y = 0; y < iReceptor.GetSize().y; y++) 
   //{
-  //  for (unsigned int x = 0; x < iReceptor.GetSize().X(); x++) 
+  //  for (unsigned int x = 0; x < iReceptor.GetSize().x; x++) 
   //  {
   //    index += iReceptor.GetBitmap()[localOffset] ? 1 << localOffset : 0;
   //    ++localOffset;
@@ -250,14 +250,14 @@ typename ConvChains<N, FieldSize, UseDictionnary>::WeightsMap::iterator ConvChai
 }
 
 template <unsigned int N, unsigned int FieldSize, bool UseDictionnary>
-double ConvChains<N, FieldSize, UseDictionnary>::ComputeEnergy(Pattern<unsigned int>& temp, Pattern<unsigned int> const& iSample, Vector2i const& iCoord)
+double ConvChains<N, FieldSize, UseDictionnary>::ComputeEnergy(Pattern<unsigned int>& temp, Pattern<unsigned int> const& iSample, Vec2i const& iCoord)
 {
   double value = 1.0;
-  for (int y = iCoord.Y() - FieldSize + 1; y <= iCoord.Y() + FieldSize - 1; ++y) 
+  for (int y = iCoord.y - FieldSize + 1; y <= iCoord.y + FieldSize - 1; ++y) 
   {
-    for (int x = iCoord.X() - FieldSize + 1; x <= iCoord.X() + FieldSize - 1; ++x) 
+    for (int x = iCoord.x - FieldSize + 1; x <= iCoord.x + FieldSize - 1; ++x) 
     {
-      ComputePatternReceptor(temp, iSample, Vector2i(x,y));
+      ComputePatternReceptor(temp, iSample, Vec2i(x,y));
       auto iter = ComputeReceptorIndex(temp, false);
       if(iter == m_WeightsMap.end())
         value *= 0.1;
@@ -272,7 +272,7 @@ double ConvChains<N, FieldSize, UseDictionnary>::ComputeEnergy(Pattern<unsigned 
 template <unsigned int N, unsigned int FieldSize, bool UseDictionnary>
 void ConvChains<N, FieldSize, UseDictionnary>::Evaluate(Pattern<unsigned int> const& iPattern, Vector<double>& oRef, Vector<double>& oScore, bool iRotateSym) const
 {
-  Vector2i inSize = iPattern.GetSize();
+  Vec2i inSize = iPattern.GetSize();
 
   Pattern<unsigned int> tempPattern(inSize);
   if(UseDictionnary)
@@ -318,11 +318,11 @@ void ConvChains<N, FieldSize, UseDictionnary>::Evaluate(Pattern<unsigned int> co
   unsigned int numPatterns = iRotateSym ? 8 : 1;
   Pattern<unsigned int> p[8];
 
-  for(unsigned int y = 0; y<inSize.Y(); ++y)
+  for(unsigned int y = 0; y<inSize.y; ++y)
   {
-    for(unsigned int x = 0; x<inSize.X(); ++x)
+    for(unsigned int x = 0; x<inSize.x; ++x)
     {
-      ComputePatternReceptor(p[0], tempPattern, Vector2i(x, y));
+      ComputePatternReceptor(p[0], tempPattern, Vec2i(x, y));
 
       if(iRotateSym)
       {
@@ -398,7 +398,7 @@ void ConvChains<N, FieldSize, UseDictionnary>::Generate(Pattern<unsigned int>& i
   Pattern<unsigned int> temp;
   for (int k = 0; k < iIterations; k++)
   {
-    Vector2i coord(iRand.Generate() % ioResult.GetSize().X(), iRand.Generate() % ioResult.GetSize().Y());
+    Vec2i coord(iRand.Generate() % ioResult.GetSize().x, iRand.Generate() % ioResult.GetSize().y);
     unsigned int offset = ioResult.GetOffset(coord);
 
 

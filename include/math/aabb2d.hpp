@@ -47,7 +47,7 @@ namespace eXl
       return ret;
     }
 
-    AABB2D(glm::vec<2,Real> iMin,glm::vec<2,Real> iSize)
+    AABB2D(glm::vec<2,Real> iMin, glm::vec<2,Real> iSize)
     {
       m_Data[0] = iMin;
       m_Data[1] = iMin + iSize;

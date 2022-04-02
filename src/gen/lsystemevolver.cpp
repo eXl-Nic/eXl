@@ -229,8 +229,8 @@ namespace eXl
 
       gridGrammar.Run(agent, moves);
 
-      Vector2i sizeBox = agent.GetBox().GetSize();
-      int globArea = sizeBox.X() * sizeBox.Y();
+      Vec2i sizeBox = agent.GetBox().GetSize();
+      int globArea = sizeBox.x * sizeBox.y;
       if(globArea == 0)
       {
         oSize = 0;
@@ -253,11 +253,11 @@ namespace eXl
         
         unsigned int offset = 0;
         unsigned int offsetc = globArea - 1;
-        for(unsigned int yC = 0; yC < sizeBox.Y(); ++yC)
+        for(unsigned int yC = 0; yC < sizeBox.y; ++yC)
         {
-          unsigned int offseth = yC * sizeBox.X() + sizeBox.X() - 1;
-          unsigned int offsetv = (sizeBox.Y() - 1 - yC) * sizeBox.X();
-          for(unsigned int xC = 0; xC < sizeBox.X(); ++xC)
+          unsigned int offseth = yC * sizeBox.x + sizeBox.x - 1;
+          unsigned int offsetv = (sizeBox.y - 1 - yC) * sizeBox.x;
+          for(unsigned int xC = 0; xC < sizeBox.x; ++xC)
           {
             if(grid[offset])
             {
@@ -287,10 +287,10 @@ namespace eXl
         }
 
         float structuralComplexity = float(numTurns + numPop) / float(moves.size()) /*+ numSym / string.size()*//*boost::num_vertices(newGraph)*/;
-        float squarity = float(Mathi::Min(sizeBox.X() , sizeBox.Y()));
+        float squarity = float(Mathi::Min(sizeBox.x , sizeBox.y));
         float efficiency = float(coverage) / float(curveSize);
         //squarity *= squarity;
-        squarity /= float(Mathi::Max(sizeBox.X() , sizeBox.Y()));
+        squarity /= float(Mathi::Max(sizeBox.x , sizeBox.y));
 
         float coverageScore = 1.0 / (1.0 + exp(20 *((m_Parameters.coverageTarget - 0.05) - coveragePercent))) * 1.0 /(1.0 + exp(20 *(coveragePercent - (m_Parameters.coverageTarget + 0.05))));
         //float coverageScore = (0.25*exp(-1.0 * (coveragePercent - 0.45) * (coveragePercent - 0.45) / sigma1) 
@@ -311,8 +311,8 @@ namespace eXl
     //unsigned int ppcmSample = 1;
     //for(unsigned int i = 0; i<gridGrammar.GetNumActions(); ++i)
     //{
-    //  Vector2i paramRange = gridGrammar.GetAction(i)->GetRange();
-    //  unsigned int range = paramRange.Y() - paramRange.X();
+    //  Vec2i paramRange = gridGrammar.GetAction(i)->GetRange();
+    //  unsigned int range = paramRange.y - paramRange.x;
     //  unsigned int pgcd = Mathi::PGCD(ppcmSample, range);
     //  ppcmSample = (ppcmSample * range) / pgcd;
     //}

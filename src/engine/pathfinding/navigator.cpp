@@ -952,7 +952,7 @@ namespace eXl
               }
               else
               {
-                //penumbra.AddBox(MathTools::As2DVec(otherObs->m_Dims), otherPos2D, Vector2f::UNIT_X, otherObs->m_Speed * iTime);
+                //penumbra.AddBox(MathTools::As2DVec(otherObs->m_Dims), otherPos2D, UnitX<Vector2f>(), otherObs->m_Speed * iTime);
               }
             }
           }
