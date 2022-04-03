@@ -11,8 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/enginelib.hpp>
-#include <math/vector3.hpp>
-#include <math/quaternion.hpp>
 #include <core/heapobject.hpp>
 #include <engine/common/world.hpp>
 #include <engine/common/transforms.hpp>
@@ -42,13 +40,13 @@ namespace eXl
     PhysicsSystem(Transforms& iTransforms);
     ~PhysicsSystem();
 
-    void RayQuery(List<CollisionData>& oRes, const Vector3f& iOrig,const Vector3f& iEnd,unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1L);
+    void RayQuery(List<CollisionData>& oRes, const Vec3& iOrig,const Vec3& iEnd,unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1L);
 
-    void SphereQuery(List<CollisionData>& oRes, float iRadius,const Vector3f& iOrig,unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1);
+    void SphereQuery(List<CollisionData>& oRes, float iRadius,const Vec3& iOrig,unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1);
 
-    void CylinderQuery(List<CollisionData>& oRes, float iRay,float iH,const Vector3f& iPos,const Quaternionf& iOrient=Quaternionf::IDENTITY,unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1);
+    void CylinderQuery(List<CollisionData>& oRes, float iRay,float iH,const Vec3& iPos,const Quaternion& iOrient=Identity<Quaternion>(),unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1);
 
-    void BoxQuery(List<CollisionData>& oRes, const Vector3f& iDim,const Vector3f& iPos,const Quaternionf& iOrient=Quaternionf::IDENTITY,unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1);
+    void BoxQuery(List<CollisionData>& oRes, const Vec3& iDim,const Vec3& iPos,const Quaternion& iOrient=Identity<Quaternion>(),unsigned int maxEnt=0,unsigned short category = 1,unsigned short mask=-1);
 
     void Step(float iTime);
 
@@ -98,7 +96,7 @@ namespace eXl
 
     Vector<IntrusivePtr<PhysicComponent_Impl>> m_Components;
 
-    Vector<Matrix4f> m_MovedTransform;
+    Vector<Mat4> m_MovedTransform;
     Vector<ObjectHandle> m_MovedObject;
 
     Vector<CollisionData> m_LastCollisions;

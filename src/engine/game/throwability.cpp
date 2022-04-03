@@ -53,7 +53,7 @@ namespace eXl
       for (uint32_t i = 0; i <= numPos; ++i)
       {
         float ratio = (1.0 - float(numPos - i) / numPos);
-        newAnim.Add(Vector3f(0.0, 0.0, (1.0 - ratio * ratio) * fallAltitude), durationIncrement * i);
+        newAnim.Add(Vec3(0.0, 0.0, (1.0 - ratio * ratio) * fallAltitude), durationIncrement * i);
       }
       return newAnim;
     }();
@@ -76,7 +76,7 @@ namespace eXl
     ProjectileSystem& projectiles = *world.GetSystem<ProjectileSystem>();
     PhysicsSystem& phSys = *world.GetSystem<PhysicsSystem>();
     Transforms& transforms = *world.GetSystem<Transforms>();
-    Vector3f throwDir = characters.GetCurrentFacingDirection(state.m_User);
+    Vec3 throwDir = characters.GetCurrentFacingDirection(state.m_User);
 
     transforms.Detach(state.m_ThrownObject);
 
@@ -99,7 +99,7 @@ namespace eXl
     desc.size = 1.0;
 
     state.m_ProjectileProxy = world.CreateObject();
-    transforms.AddTransform(state.m_ProjectileProxy, &transforms.GetWorldTransform(state.m_User));
+    transforms.AddTransform(state.m_ProjectileProxy, transforms.GetWorldTransform(state.m_User));
 
     PhysicInitData phData;
     phData.SetShapeObj(state.m_ThrownObject);
@@ -107,7 +107,7 @@ namespace eXl
     phSys.CreateComponent(state.m_ProjectileProxy, phData);
 
     transforms.Attach(state.m_ThrownObject, state.m_ProjectileProxy, Transforms::AttachType::Position);
-    transforms.UpdateTransform(state.m_ThrownObject, Matrix4f::IDENTITY);
+    transforms.UpdateTransform(state.m_ThrownObject, Identity<Mat4>());
     projectiles.AddProjectile(state.m_ProjectileProxy, desc, throwDir * 20.0);
 
     auto& animMgr = *world.GetSystem<TransformAnimManager>();
@@ -123,8 +123,8 @@ namespace eXl
       Transforms& transforms = *iWorld.GetSystem<Transforms>();
       PhysicsSystem& phSys = *iWorld.GetSystem<PhysicsSystem>();
       transforms.Detach(thrownObject);
-      Matrix4f newPos = Matrix4f::IDENTITY;
-      MathTools::GetPosition(newPos) = MathTools::GetPosition(transforms.GetWorldTransform(projectile));
+      Mat4 newPos = Identity<Mat4>();
+      newPos[3] = transforms.GetWorldTransform(projectile)[3];
       transforms.UpdateTransform(thrownObject, newPos);
       iWorld.DeleteObject(projectile);
       phSys.SetComponentEnabled(thrownObject, true);

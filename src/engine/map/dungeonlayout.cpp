@@ -133,20 +133,20 @@ namespace eXl
     int const s_DoorSize = 4;
     int const s_MaxRoomSize = 5;
 
-    Vector2i SampleRoom(DungeonGraph const& iGraph, Vertex iVtx, Random& iRand)
+    Vec2i SampleRoom(DungeonGraph const& iGraph, Vertex iVtx, Random& iRand)
     {
       DungeonGraph::NodeProperties const* props = iGraph.GetProperties(iVtx);
 
-      Vector2i baseSize = Vector2i(iRand() % 10 + 4, iRand() % 10 + 4);
+      Vec2i baseSize = Vec2i(iRand() % 10 + 4, iRand() % 10 + 4);
 
       //uint32_t const roomSize = Mathi::Min(s_MaxRoomSize, props != nullptr ? props->GetSize() : 1);
       //
-      //Vector2i baseSize = Vector2i::ONE * 2 * (roomSize + 1);
+      //Vec2i baseSize = One<Vec2i>() * 2 * (roomSize + 1);
       //
       //switch(iRand() % 3)
       //{
       //case 0:
-      //  baseSize += Vector2i::ONE * Mathi::Max(roomSize / 4, 1);
+      //  baseSize += One<Vec2i>() * Mathi::Max(roomSize / 4, 1);
       //  break;
       //case 1:
       //  baseSize.m_Data[0] += roomSize / 2;
@@ -158,24 +158,24 @@ namespace eXl
       return baseSize;
     };
 
-    void AddRoomConfSpace(Vector2i const& iBoxToLayoutSize, AABB2Di const& iBox, Vector<Segmenti>& oSegs) 
+    void AddRoomConfSpace(Vec2i const& iBoxToLayoutSize, AABB2Di const& iBox, Vector<Segmenti>& oSegs) 
     {
       for(int dim = 0; dim<2; ++dim)
       {
         int otherDim = 1 - dim;
         Segmenti minSeg;
         minSeg.m_Ext1 = minSeg.m_Ext2 = iBox.m_Data[0];
-        minSeg.m_Ext1.m_Data[otherDim] -= iBoxToLayoutSize.m_Data[otherDim];
+        minSeg.m_Ext1[otherDim] -= iBoxToLayoutSize[otherDim];
         minSeg.m_Ext2 = minSeg.m_Ext1;
-        minSeg.m_Ext2.m_Data[dim] = iBox.m_Data[1].m_Data[dim];
+        minSeg.m_Ext2[dim] = iBox.m_Data[1][dim];
 
-        minSeg.m_Ext1.m_Data[dim] -= (iBoxToLayoutSize.m_Data[dim] - s_DoorSize);
-        minSeg.m_Ext2.m_Data[dim] -= s_DoorSize;
+        minSeg.m_Ext1[dim] -= (iBoxToLayoutSize[dim] - s_DoorSize);
+        minSeg.m_Ext2[dim] -= s_DoorSize;
 
         oSegs.push_back(minSeg);
 
         Segmenti maxSeg = minSeg;
-        maxSeg.m_Ext1.m_Data[otherDim] = maxSeg.m_Ext2.m_Data[otherDim] = iBox.m_Data[1].m_Data[otherDim];
+        maxSeg.m_Ext1[otherDim] = maxSeg.m_Ext2[otherDim] = iBox.m_Data[1][otherDim];
 
         oSegs.push_back(maxSeg);
       }
@@ -218,7 +218,7 @@ namespace eXl
             }
             else
             {
-              Vector2f oPoint;
+              Vec2 oPoint;
               uint32_t res = seg1.Intersect(seg2, oPoint);
               if((res & Segmentf::PointOnSegments) == Segmentf::PointOnSegments)
               {
@@ -267,8 +267,8 @@ namespace eXl
     boost::polygon::intersect_segments(segments, ioConfSpace.begin(), ioConfSpace.end());
 
     //Create graph of connected segments and get the biggest connected component.
-    Map<Vector2i, uint32_t> pointMap;
-    Vector<Vector2i> vertices;
+    UnorderedMap<Vec2i, uint32_t> pointMap;
+    Vector<Vec2i> vertices;
     Vector<Segmenti> edges;
     Vector<Set<uint32_t>> vtxMap;
     Vector<Set<uint32_t>>  edgeMap;
@@ -343,7 +343,7 @@ namespace eXl
     }
   }
 
-  Vector<Segmenti> CullConfigurationSpace(Vector2i const& iRoomSize, Vector<Segmenti> const& iConfSpace, RoomIndex const& iRoomIndex)
+  Vector<Segmenti> CullConfigurationSpace(Vec2i const& iRoomSize, Vector<Segmenti> const& iConfSpace, RoomIndex const& iRoomIndex)
   {
     Vector<Segmenti> finalConfSpace;
     Vector<RoomIndexEntry> results;
@@ -363,13 +363,13 @@ namespace eXl
       }
       else
       {
-        int dim = seg.m_Ext1.m_Data[0] != seg.m_Ext2.m_Data[0] ? 0 : 1;
+        int dim = seg.m_Ext1[0] != seg.m_Ext2[0] ? 0 : 1;
         int otherDim = 1 - dim;
 
-        int minSeg = seg.m_Ext1.m_Data[dim] < seg.m_Ext2.m_Data[dim] ? 0 : 1;
+        int minSeg = seg.m_Ext1[dim] < seg.m_Ext2[dim] ? 0 : 1;
         int maxSeg = 1 - minSeg;
 
-        Vector2i const* segPts = reinterpret_cast<Vector2i const*>(&seg);
+        Vec2i const* segPts = reinterpret_cast<Vec2i const*>(&seg);
         AABB2Di boxToTest;
         boxToTest.m_Data[0] = segPts[minSeg];
         boxToTest.m_Data[1] = segPts[maxSeg] + iRoomSize;
@@ -394,31 +394,31 @@ namespace eXl
 
         std::sort(interBoxes.begin(), interBoxes.end(), [dim](AABB2Di const& iBox1, AABB2Di const& iBox2)
         {
-          return iBox1.m_Data[0].m_Data[dim] < iBox2.m_Data[0].m_Data[dim];
+          return iBox1.m_Data[0][dim] < iBox2.m_Data[0][dim];
         });
 
         for(auto& box : interBoxes)
         {
-          if(box.m_Data[0].m_Data[dim] <= finalSeg.m_Ext1.m_Data[dim])
+          if(box.m_Data[0][dim] <= finalSeg.m_Ext1[dim])
           {
-            finalSeg.m_Ext1.m_Data[dim] = Mathi::Max(box.m_Data[1].m_Data[dim], finalSeg.m_Ext1.m_Data[dim]);
+            finalSeg.m_Ext1[dim] = Mathi::Max(box.m_Data[1][dim], finalSeg.m_Ext1[dim]);
           }
           else 
           {
-            if(box.m_Data[0].m_Data[dim] > finalSeg.m_Ext1.m_Data[dim] + iRoomSize.m_Data[dim])
+            if(box.m_Data[0][dim] > finalSeg.m_Ext1[dim] + iRoomSize[dim])
             {
               Segmenti seg;
               seg.m_Ext1 = seg.m_Ext2 = finalSeg.m_Ext1;
-              seg.m_Ext2.m_Data[dim] = box.m_Data[0].m_Data[dim] - iRoomSize.m_Data[dim];
+              seg.m_Ext2[dim] = box.m_Data[0][dim] - iRoomSize[dim];
 
               finalConfSpace.push_back(seg);
             }
 
-            finalSeg.m_Ext1.m_Data[dim] = box.m_Data[1].m_Data[dim];
+            finalSeg.m_Ext1[dim] = box.m_Data[1][dim];
           }
         }
 
-        if(finalSeg.m_Ext2.m_Data[dim] - finalSeg.m_Ext1.m_Data[dim] > 0)
+        if(finalSeg.m_Ext2[dim] - finalSeg.m_Ext1[dim] > 0)
         {
           finalConfSpace.push_back(finalSeg);
         }
@@ -455,22 +455,22 @@ namespace eXl
 
       auto size = intersectionBox.GetSize();
 
-      if(size.X() > 0 || size.Y() > 0)
+      if(size.x > 0 || size.y > 0)
       {
-        if(size.X() * size.Y() == 0)
+        if(size.x * size.y == 0)
         {
-          if(size.X() + size.Y() >= s_DoorSize)
+          if(size.x + size.y >= s_DoorSize)
           {
             touchingRooms.insert(entry.second);
           }
         }
         else
         {
-          float curArea = size.X() * size.Y();
+          float curArea = size.x * size.y;
           if(curArea > 0)
           {
             totArea += curArea;
-            if(size.X() >= s_DoorSize || size.Y() >= s_DoorSize)
+            if(size.x >= s_DoorSize || size.y >= s_DoorSize)
             {
               touchingRooms.insert(entry.second);
             }
@@ -487,7 +487,7 @@ namespace eXl
 
     iRoomIndex.insert(std::make_pair(iRoom, iRoomIdx));
 
-    Vector2f center1 = MathTools::ToFVec(iRoom.m_Data[0]) + MathTools::ToFVec(iRoom.GetSize()) * 0.5;
+    Vec2 center1 = MathTools::ToFVec(iRoom.m_Data[0]) + MathTools::ToFVec(iRoom.GetSize()) * 0.5;
 
     for(auto edge : OutEdgesIter(iGraph, iVtx))
     {
@@ -498,8 +498,8 @@ namespace eXl
 
       if(touchingRooms.count(neighIdx) == 0)
       {
-        Vector2f center2 = MathTools::ToFVec(neightRoom.m_Data[0]) + MathTools::ToFVec(neightRoom.GetSize()) * 0.5;
-        float sqDist = (center2 - center1).SquaredLength();
+        Vec2 center2 = MathTools::ToFVec(neightRoom.m_Data[0]) + MathTools::ToFVec(neightRoom.GetSize()) * 0.5;
+        float sqDist = distance2(center2, center1);
 
         auto insertRes = oMap.insert(std::make_pair(neighIdx, RoomViolation()));
         insertRes.first->second.m_MissingDoor[iRoomIdx] = sqDist;
@@ -537,7 +537,7 @@ namespace eXl
     }
   }
 
-  AABB2Di SampleConfigurationSpace(Vector2i const& iRoomSize, Random& iRand, Vector<Segmenti> const& iConfSpace, RoomIndex const& iRoomIndex)
+  AABB2Di SampleConfigurationSpace(Vec2i const& iRoomSize, Random& iRand, Vector<Segmenti> const& iConfSpace, RoomIndex const& iRoomIndex)
   {
     Vector<Segmenti> culledConfSpace = CullConfigurationSpace(iRoomSize, iConfSpace, iRoomIndex);
 
@@ -548,11 +548,11 @@ namespace eXl
     {
       // Should try to get a uniform sampling.
       auto const& seg = confSpace[iRand() % confSpace.size()];
-      Vector2i roomOrigin;
+      Vec2i roomOrigin;
       if(seg.m_Ext1 != seg.m_Ext2)
       {
-        Vector2i segDir = seg.m_Ext2 - seg.m_Ext1;
-        uint32_t segLen = Mathi::Abs(Mathi::Max(segDir.X(), segDir.Y()));
+        Vec2i segDir = seg.m_Ext2 - seg.m_Ext1;
+        int32_t segLen = Mathi::Abs(Mathi::Max(segDir.x, segDir.y));
         segDir /= segLen;
         segLen = iRand() % segLen;
 
@@ -581,7 +581,7 @@ namespace eXl
 
         auto size = intersectionBox.GetSize();
 
-        totArea += size.X() * size.Y();
+        totArea += size.x * size.y;
       }
 
       sampledPos.insert(std::make_pair(totArea, newBox));
@@ -648,7 +648,7 @@ namespace eXl
         boost::make_iterator_property_map(d.begin(), idxMap),
         boost::make_function_property_map<Edge>(dummyWhFunc),
         idxMap,
-        std::less<float>(), boost::closed_plus<float>(), Mathf::MAX_REAL, 0.0, boost::dijkstra_visitor<boost::null_visitor>());
+        std::less<float>(), boost::closed_plus<float>(), Mathf::MaxReal(), 0.0, boost::dijkstra_visitor<boost::null_visitor>());
 
       float dist1 = d[idxMap[ext1]];
       float dist2 = d[idxMap[ext2]];
@@ -761,7 +761,7 @@ namespace eXl
         boost::make_iterator_property_map(p.begin(), idxMap),
         boost::make_iterator_property_map(d.begin(), idxMap),
         boost::make_function_property_map<Edge>(dummyWhFunc), idxMap,
-        std::less<float>(), boost::closed_plus<float>(), Mathf::MAX_REAL, 0.0, boost::dijkstra_visitor<boost::null_visitor>());
+        std::less<float>(), boost::closed_plus<float>(), Mathf::MaxReal(), 0.0, boost::dijkstra_visitor<boost::null_visitor>());
 
       while (!nodeDegreeMap.empty())
       {
@@ -1009,13 +1009,13 @@ namespace eXl
           Vector<Segmenti> maxConfSpace;
           vtxToConsider.insert(chainVtx);
 
-          Vector2i roomSize = SampleRoom(iGraph, chainVtx, iRand);
+          Vec2i roomSize = SampleRoom(iGraph, chainVtx, iRand);
 
           if(curLayout.empty())
           {
             Room newRoom;
             newRoom.m_Node = chainVtx;
-            newRoom.m_Box = AABB2Di(Vector2i::ZERO, roomSize);
+            newRoom.m_Box = AABB2Di(Zero<Vec2i>(), roomSize);
             vtxToRoom[chainVtx] = curLayout.size();
             roomIndex.insert(RoomIndexEntry(newRoom.m_Box, curLayout.size()));
             curLayout.push_back(newRoom);
@@ -1129,7 +1129,7 @@ namespace eXl
               AABB2Di prevRoom = curRoom.m_Box;
               RemoveRoomAndUpdateViolations(roomIdx, curRoom.m_Box, wkIndex, violatingRoom);
 
-              Vector2i roomSize = curRoom.m_Box.GetSize();
+              Vec2i roomSize = curRoom.m_Box.GetSize();
 
               bool changeRoom = (iRand() % 10) > 7;
               if(changeRoom)

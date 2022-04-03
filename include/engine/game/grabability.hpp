@@ -34,7 +34,7 @@ namespace eXl
   {
     friend GrabAbility;
   private:
-    Vector2f m_GrabDirection;
+    Vec2 m_GrabDirection;
     ObjectHandle m_GrabbedObject;
     EffectHandle m_GrabbedEffect;
     bool m_XLocked = false;
@@ -51,8 +51,8 @@ namespace eXl
 
     GrabAbility();
 
-    static void SetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj, Vector2f const& iDir);
-    static Vector2f const& GetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj);
+    static void SetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj, Vec2 const& iDir);
+    static Vec2 const& GetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj);
     static ObjectHandle GetGrabbedObject(AbilitySystem* iSys, ObjectHandle iObj);
 
     bool CanUse(AbilitySystem& iSys, ObjectHandle iUser, ObjectHandle& ioTarget) override;

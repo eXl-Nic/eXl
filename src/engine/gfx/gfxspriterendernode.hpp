@@ -41,7 +41,7 @@ namespace eXl
     //Vector<SpriteComponents::Handle> m_ObjectToSpriteComp;
     Optional<DenseGameDataStorage<GfxSpriteComponent>> m_SpriteComp;
     UnorderedSet<GfxSpriteComponent*> m_DirtyComponents;
-    UnorderedMap<Vector3f, IntrusivePtr<GeometryInfo>> m_SpriteGeomCache;
+    UnorderedMap<Vec3, IntrusivePtr<GeometryInfo>> m_SpriteGeomCache;
 
     UniquePtr<OGLCompiledProgram const> m_SpriteProgram;
     IntrusivePtr<OGLBuffer> m_DefaultSpriteIdxBuffer;

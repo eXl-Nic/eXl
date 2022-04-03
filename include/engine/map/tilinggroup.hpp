@@ -29,7 +29,7 @@ namespace eXl
     EXL_REFLECT;
 
     TileName m_Name;
-    Vector2i m_Position;
+    Vec2i m_Position;
   };
 
   struct EXL_ENGINE_API TilingPattern
@@ -41,7 +41,7 @@ namespace eXl
       pattern.push_back(TilingGroupLocConstraint::Undefined);
     }
 
-    TilingPattern(Vector2i iPatternSize, Vector2i iAnchor,
+    TilingPattern(Vec2i iPatternSize, Vec2i iAnchor,
       Vector<TilingGroupLocConstraint> iPattern, Vector<TilingDrawElement> iDrawElement)
       : patternSize(iPatternSize)
       , anchor(iAnchor)
@@ -49,8 +49,8 @@ namespace eXl
       , drawElement(std::move(iDrawElement))
     {}
 
-    Vector2i patternSize = Vector2i::ONE;
-    Vector2i anchor;
+    Vec2i patternSize = One<Vec2i>();
+    Vec2i anchor;
     Vector<TilingGroupLocConstraint> pattern;
     Vector<TilingDrawElement> drawElement;
   };

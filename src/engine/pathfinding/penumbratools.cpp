@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
 
-  void Penumbra::Start(Vector2f const& iOrigin, float iRadius, Vector2f const& iDesiredDir, float iLookAhead)
+  void Penumbra::Start(Vec2 const& iOrigin, float iRadius, Vec2 const& iDesiredDir, float iLookAhead)
   {
     m_Obstacles.clear();
     m_OrderedPoints.clear();
@@ -31,25 +31,25 @@ namespace eXl
     m_DrawDebug = false;
   }
 
-  void Penumbra::AddPoint(Vector2f const& iOrigin, float iRadius)
+  void Penumbra::AddPoint(Vec2 const& iOrigin, float iRadius)
   {
     if((iRadius + m_CasterRadius) > 0)
     {
       Point newObstacle;
 
-      Vector2f relPos = iOrigin - m_CasterPos;
+      Vec2 relPos = iOrigin - m_CasterPos;
 
       relPos = MathTools::GetLocal(m_CasterDesiredDir, relPos);
 
       newObstacle.m_Radius = (iRadius + m_CasterRadius);
 
-      if(relPos.X() > 0 && relPos.X() < m_LookAheadDist && Mathf::Abs(relPos.Y()) < newObstacle.m_Radius)
+      if(relPos.x > 0 && relPos.x < m_LookAheadDist && Mathf::Abs(relPos.y) < newObstacle.m_Radius)
       {
         newObstacle.m_Blocking = true;
         m_DesiredDirValid = false;
       }
 
-      newObstacle.m_Distance = relPos.Normalize();
+      newObstacle.m_Distance = NormalizeAndGetLength(relPos);
       newObstacle.m_RelDir = relPos;
 
       m_Obstacles.push_back(newObstacle);
@@ -57,9 +57,9 @@ namespace eXl
     }
   }
 
-  Vector2f Penumbra::GetMidSegment(Vector2f const (&iRange)[2])
+  Vec2 Penumbra::GetMidSegment(Vec2 const (&iRange)[2])
   {
-    //Vector2f mid = (iRange[0] + iRange[1]) * 0.5;
+    //Vec2 mid = (iRange[0] + iRange[1]) * 0.5;
     //float dist = mid.Normalize();
     //if(dist < Mathf::ZeroTolerance())
     //{
@@ -71,56 +71,56 @@ namespace eXl
     return MathTools::ConeGetMidSegment(iRange);
   }
 
-  void Penumbra::UpdateSightRange(Vector2f const (&iRange)[2], Vector2f& oMid, float& oLowLimit)
+  void Penumbra::UpdateSightRange(Vec2 const (&iRange)[2], Vec2& oMid, float& oLowLimit)
   {
     MathTools::ConeUpdateRange(iRange, oMid, oLowLimit);
   }
 
-  bool Penumbra::IsInSightRange(Vector2f const& iDir, Vector2f const& iMidSeg, float iLowLimit, float iEpsilon)
+  bool Penumbra::IsInSightRange(Vec2 const& iDir, Vec2 const& iMidSeg, float iLowLimit, float iEpsilon)
   {
-    //return iDir.Dot(iMidSeg) > (iLowLimit - iEpsilon);
+    //return dot(iDir, iMidSeg) > (iLowLimit - iEpsilon);
     return MathTools::IsInCone(iDir, iMidSeg, iLowLimit, iEpsilon);
   }
 
   namespace 
   {
-    bool ComparePoints(Vector2f const& iPt1, Vector2f const& iPt2)
+    bool ComparePoints(Vec2 const& iPt1, Vec2 const& iPt2)
     {
-      float sign1 = Mathf::Sign(iPt1.Y());
-      float sign2 = Mathf::Sign(iPt2.Y());
+      float sign1 = Mathf::Sign(iPt1.y);
+      float sign2 = Mathf::Sign(iPt2.y);
 
       if(sign1 == sign2)
       {
         //Trouble when equal ?
-        return sign1 * -iPt1.X() < sign1 * -iPt2.X();
+        return sign1 * -iPt1.x < sign1 * -iPt2.x;
       }
 
       return sign1 < sign2;
     }
 
-    void FixupSegments(Vector2f (&iPts) [2])
+    void FixupSegments(Vec2 (&iPts) [2])
     {
-      if(iPts[0].X() == -1.0)
+      if(iPts[0].x == -1.0)
       {
-        if(iPts[1].Y() < 0.0)
+        if(iPts[1].y < 0.0)
         {
-          iPts[0].Y() = -0.0;
+          iPts[0].y = -0.0;
         }
         else
         {
-          iPts[0].Y() = 0.0;
+          iPts[0].y = 0.0;
         }
       }
 
-      if(iPts[1].X() == -1.0)
+      if(iPts[1].x == -1.0)
       {
-        if(iPts[0].Y() < 0.0)
+        if(iPts[0].y < 0.0)
         {
-          iPts[1].Y() = -0.0;
+          iPts[1].y = -0.0;
         }
         else
         {
-          iPts[1].Y() = 0.0;
+          iPts[1].y = 0.0;
         }
       }
     }
@@ -135,7 +135,7 @@ namespace eXl
       Point& newObstacle = m_Obstacles.back();
       newObstacle.m_Radius = m_CasterRadius + iRadius;
 
-      Vector2f relPos[] = {iSeg.m_Ext1 - m_CasterPos, iSeg.m_Ext2 - m_CasterPos};
+      Vec2 relPos[] = {iSeg.m_Ext1 - m_CasterPos, iSeg.m_Ext2 - m_CasterPos};
 
       relPos[0] = MathTools::GetLocal(m_CasterDesiredDir, relPos[0]);
       relPos[1] = MathTools::GetLocal(m_CasterDesiredDir, relPos[1]);
@@ -145,10 +145,10 @@ namespace eXl
         std::swap(relPos[0], relPos[1]);
       }
 
-      float distance1 = relPos[0].Normalize();
-      float distance2 = relPos[1].Normalize();
+      float distance1 = NormalizeAndGetLength(relPos[0]);
+      float distance2 = NormalizeAndGetLength(relPos[1]);
 
-      if(relPos[0].Y() == 0.0 && relPos[1].Y() == 0.0)
+      if(relPos[0].y == 0.0 && relPos[1].y == 0.0)
       {
         return AddPoint(distance1 > distance2 ? relPos[1] : relPos[0], iRadius);
       }
@@ -165,27 +165,27 @@ namespace eXl
 
       newObstacle.m_BlockingSegment.m_Ext2 = (horizontalFactor * relPos[1] + verticalFactor * MathTools::GetPerp(relPos[1]));
 
-      FixupSegments(reinterpret_cast<Vector2f (&)[2]>(newObstacle.m_BlockingSegment));
+      FixupSegments(reinterpret_cast<Vec2 (&)[2]>(newObstacle.m_BlockingSegment));
 
       float lowLimit;
-      UpdateSightRange(reinterpret_cast<Vector2f const (&)[2]>(newObstacle.m_BlockingSegment), newObstacle.m_RelDir, lowLimit);
+      UpdateSightRange(reinterpret_cast<Vec2 const (&)[2]>(newObstacle.m_BlockingSegment), newObstacle.m_RelDir, lowLimit);
 
-      if(IsInSightRange(UnitX<Vector2f>(), newObstacle.m_RelDir, lowLimit))
+      if(IsInSightRange(UnitX<Vec2>(), newObstacle.m_RelDir, lowLimit))
       {
         m_DesiredDirValid = false;
       }
     }
   }
 
-  void Penumbra::AddBox(Vector2f const& iDimensions, Vector2f const& iOrigin, Vector2f const& iDirection, float iRadius)
+  void Penumbra::AddBox(Vec2 const& iDimensions, Vec2 const& iOrigin, Vec2 const& iDirection, float iRadius)
   {
     bool blockingObs = false;
 
-    if(iDimensions.X() + (m_CasterRadius + iRadius) > 0 || iDimensions.Y() + (m_CasterRadius + iRadius) > 0)
+    if(iDimensions.x + (m_CasterRadius + iRadius) > 0 || iDimensions.y + (m_CasterRadius + iRadius) > 0)
     {
       //{
-      //  Vector2f projOrig = MathTools::GetLocal(iDirection, m_CasterPos);
-      //  Vector2f projDir = MathTools::GetLocal(iDirection, m_CasterDesiredDir);
+      //  Vec2 projOrig = MathTools::GetLocal(iDirection, m_CasterPos);
+      //  Vec2 projDir = MathTools::GetLocal(iDirection, m_CasterDesiredDir);
       //  AABB2Df testBox(iOrigin, iDimensions);
       //  if(testBox.SegmentTest(projOrig, projDir * m_LookAheadDist))
       //  {
@@ -199,12 +199,12 @@ namespace eXl
       pts[0].m_Radius = pts[1].m_Radius = m_CasterRadius + iRadius;
       pts[0].m_Blocking = pts[1].m_Blocking = blockingObs;
 
-      Vector2f corners[] = 
+      Vec2 corners[] = 
       {
         iOrigin,
-        iOrigin + iDimensions.X() * iDirection,
-        iOrigin + iDimensions.Y() * MathTools::Perp(iDirection),
-        iOrigin + iDimensions.X() * iDirection + iDimensions.Y() * MathTools::Perp(iDirection),
+        iOrigin + iDimensions.x * iDirection,
+        iOrigin + iDimensions.y * MathTools::Perp(iDirection),
+        iOrigin + iDimensions.x * iDirection + iDimensions.y * MathTools::Perp(iDirection),
       };
 
       //Wasteful...
@@ -227,7 +227,7 @@ namespace eXl
       m_BlockingSegment.m_Ext1 = /*distToTan **/ (horizontalFactor * m_RelDir - verticalFactor * MathTools::GetPerp(m_RelDir));
       m_BlockingSegment.m_Ext2 = /*distToTan **/ (horizontalFactor * m_RelDir + verticalFactor * MathTools::GetPerp(m_RelDir));
 
-      FixupSegments(reinterpret_cast<Vector2f (&)[2]>(m_BlockingSegment));
+      FixupSegments(reinterpret_cast<Vec2 (&)[2]>(m_BlockingSegment));
     }
   }
 
@@ -242,8 +242,8 @@ namespace eXl
 
       auto sortPredicate = [this] (uint32_t const& iPt1, uint32_t const& iPt2)
       {
-        Vector2f const& pt1 = m_Obstacles[iPt1].m_BlockingSegment.m_Ext1;
-        Vector2f const& pt2 = m_Obstacles[iPt2].m_BlockingSegment.m_Ext1;
+        Vec2 const& pt1 = m_Obstacles[iPt1].m_BlockingSegment.m_Ext1;
+        Vec2 const& pt2 = m_Obstacles[iPt2].m_BlockingSegment.m_Ext1;
 
         return ComparePoints(pt1, pt2);
       };
@@ -253,17 +253,17 @@ namespace eXl
     }
   }
 
-  Vector2f Penumbra::GetWorldDirection(Vector2f const& iDir)
+  Vec2 Penumbra::GetWorldDirection(Vec2 const& iDir)
   {
-    return m_CasterDesiredDir * iDir.X() + MathTools::GetPerp(m_CasterDesiredDir) * iDir.Y();
+    return m_CasterDesiredDir * iDir.x + MathTools::GetPerp(m_CasterDesiredDir) * iDir.y;
   }
 
-  Vector2f Penumbra::GetWorldPosition(Vector2f const& iPos)
+  Vec2 Penumbra::GetWorldPosition(Vec2 const& iPos)
   {
     return m_CasterPos + GetWorldDirection(iPos);
   }
 
-  Vector2f Penumbra::FindBestDir(Vector2f const& prevDir)
+  Vec2 Penumbra::FindBestDir(Vec2 const& prevDir)
   {
     if(m_Obstacles.empty() || m_DesiredDirValid)
     {
@@ -279,17 +279,17 @@ namespace eXl
     {
       auto drawer = DebugTool::GetDrawer();
 
-      drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(m_CasterPos + m_CasterDesiredDir * m_LookAheadDist), Vector4f(1.0, 1.0, 1.0, 1.0));
+      drawer->DrawLine(Vec3(m_CasterPos, 0), Vec3(m_CasterPos + m_CasterDesiredDir * m_LookAheadDist, 0), Vec4(1.0, 1.0, 1.0, 1.0));
     }
 
-    Vector2f firstPoint = curPt->m_BlockingSegment.m_Ext1;
-    Vector2f lastPoint = curPt->m_BlockingSegment.m_Ext2;
+    Vec2 firstPoint = curPt->m_BlockingSegment.m_Ext1;
+    Vec2 lastPoint = curPt->m_BlockingSegment.m_Ext2;
     
-    Vector2f sightRange[2];
+    Vec2 sightRange[2];
     sightRange[0] = firstPoint;
     sightRange[1] = m_Obstacles[m_OrderedPoints.back()].m_BlockingSegment.m_Ext1;
 
-    Vector2f midSeg;
+    Vec2 midSeg;
     float lowLimit;
 
     UpdateSightRange(sightRange, midSeg, lowLimit);
@@ -298,11 +298,8 @@ namespace eXl
 
     if(!closedBehind)
     {
-      Vector2f ext1 = firstPoint;
-      Vector2f ext2 = m_Obstacles[m_OrderedPoints.back()].m_BlockingSegment.m_Ext2;
-
-      ext1.Normalize();
-      ext2.Normalize();
+      Vec2 ext1 = normalize(firstPoint);
+      Vec2 ext2 = normalize(m_Obstacles[m_OrderedPoints.back()].m_BlockingSegment.m_Ext2);
 
       m_ValidDirs.push_back(ext1);
       m_ValidDirs.push_back(ext2);
@@ -311,9 +308,9 @@ namespace eXl
 
     UpdateSightRange(sightRange, midSeg, lowLimit);
 
-    if(!IsInSightRange(UnitX<Vector2f>(), midSeg, lowLimit))
+    if(!IsInSightRange(UnitX<Vec2>(), midSeg, lowLimit))
     {
-      m_ValidDirs.push_back(UnitX<Vector2f>());
+      m_ValidDirs.push_back(UnitX<Vec2>());
     }
 
     auto checkDirs = [&]()
@@ -341,24 +338,24 @@ namespace eXl
       {
         auto drawer = DebugTool::GetDrawer();
 
-        Vector2f curPos1 = GetWorldPosition(blockingSeg.m_Ext1);
-        Vector2f curPos2 = GetWorldPosition(blockingSeg.m_Ext2);
+        Vec2 curPos1 = GetWorldPosition(blockingSeg.m_Ext1);
+        Vec2 curPos2 = GetWorldPosition(blockingSeg.m_Ext2);
 
-        drawer->DrawLine(MathTools::To3DVec(curPos1), MathTools::To3DVec(curPos2), Vector4f(1.0, 1.0, 1.0, 1.0));
+        drawer->DrawLine(Vec3(curPos1, 0), Vec3(curPos2, 0), Vec4(1.0, 1.0, 1.0, 1.0));
 
         uint32_t const numSeg = 16;
         float const angleStep = Mathf::Pi() * 2 / numSeg;
         
-        Vector2f curPos = GetWorldPosition(nextPt->m_RelDir * nextPt->m_Distance);
+        Vec2 curPos = GetWorldPosition(nextPt->m_RelDir * nextPt->m_Distance);
         
         for(uint32_t seg = 0; seg < numSeg; ++seg)
         {
           float angle = seg * angleStep;
-          Vector2f arc(Mathf::Cos(angle), Mathf::Sin(angle));
-          Vector2f nextArc(Mathf::Cos(angle + angleStep), Mathf::Sin(angle + angleStep));
-          drawer->DrawLine(MathTools::To3DVec(curPos + nextPt->m_Radius * arc), 
-            MathTools::To3DVec(curPos + nextPt->m_Radius * nextArc), 
-            nextPt->m_Blocking ? Vector4f(1.0, 0.0, 0.0, 1.0) : Vector4f(1.0, 1.0, 1.0, 0.5));
+          Vec2 arc(Mathf::Cos(angle), Mathf::Sin(angle));
+          Vec2 nextArc(Mathf::Cos(angle + angleStep), Mathf::Sin(angle + angleStep));
+          drawer->DrawLine(Vec3(curPos + nextPt->m_Radius * arc, 0), 
+            Vec3(curPos + nextPt->m_Radius * nextArc, 0), 
+            nextPt->m_Blocking ? Vec4(1.0, 0.0, 0.0, 1.0) : Vec4(1.0, 1.0, 1.0, 0.5));
         }
       }
 
@@ -366,24 +363,24 @@ namespace eXl
       {
         //Min tangent is after the current max tangent, there is room to go.
         
-        Vector2f validDir2 = blockingSeg.m_Ext1;
-        Vector2f validDir1 = sightRange[1];
+        Vec2 validDir2 = blockingSeg.m_Ext1;
+        Vec2 validDir1 = sightRange[1];
         //validDir2.Normalize();
         //validDir1.Normalize();
 
-        Vector2f midDir = validDir1 + validDir2;
-        float midLen = midDir.Length();
+        Vec2 midDir = validDir1 + validDir2;
+        float midLen = length(midDir);
         
 
         if(m_DrawDebug)
         {
-          Vector2f absPos1 = GetWorldPosition(sightRange[1]);
-          Vector2f absPos2 = GetWorldPosition(blockingSeg.m_Ext1);
+          Vec2 absPos1 = GetWorldPosition(sightRange[1]);
+          Vec2 absPos2 = GetWorldPosition(blockingSeg.m_Ext1);
           
           auto drawer = DebugTool::GetDrawer();
           
-          drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(absPos1), Vector4f(0.0, 0.5, 0.5, 1.0));
-          drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(absPos2), Vector4f(0.0, 0.5, 0.5, 1.0));
+          drawer->DrawLine(Vec3(m_CasterPos, 0), Vec3(absPos1, 0), Vec4(0.0, 0.5, 0.5, 1.0));
+          drawer->DrawLine(Vec3(m_CasterPos, 0), Vec3(absPos2, 0), Vec4(0.0, 0.5, 0.5, 1.0));
         }
         
         sightRange[0] = blockingSeg.m_Ext1;
@@ -431,18 +428,18 @@ namespace eXl
     //
     //UpdateSightRange(sightRange, midSeg, lowLimit);
     //Is the range opened at the back ?
-    Vector2f bestDir;
+    Vec2 bestDir;
     bool foundValidDir = !m_ValidDirs.empty();
     if(foundValidDir)
     {
-      Vector2f locPrev = MathTools::GetLocal(m_CasterDesiredDir, prevDir);
+      Vec2 locPrev = MathTools::GetLocal(m_CasterDesiredDir, prevDir);
 
       bestDir = m_ValidDirs[0];
-      float score = /*bestDir.X() + 0.1 */ locPrev.Dot(bestDir);
+      float score = /*bestDir.x + 0.1 */ dot(locPrev, bestDir);
       for(int dirIdx = 1; dirIdx<m_ValidDirs.size(); ++dirIdx)
       {
-        Vector2f const& newDir = m_ValidDirs[dirIdx];
-        float newScore = /*newDir.X() + 0.1 */ newDir.Dot(locPrev);
+        Vec2 const& newDir = m_ValidDirs[dirIdx];
+        float newScore = /*newDir.x + 0.1 */ dot(newDir, locPrev);
         if(score < newScore)
         {
           bestDir = newDir;
@@ -453,19 +450,19 @@ namespace eXl
 
     if(foundValidDir)
     {
-      Vector2f absDir = GetWorldDirection(bestDir);
+      Vec2 absDir = GetWorldDirection(bestDir);
 
       if(m_DrawDebug)
       {
         auto drawer = DebugTool::GetDrawer();
 
-        drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(m_CasterPos + absDir * 10.0), Vector4f(1.0, 0.0, 1.0, 1.0));
+        drawer->DrawLine(Vec3(m_CasterPos, 0), Vec3(m_CasterPos + absDir * 10.0, 0), Vec4(1.0, 0.0, 1.0, 1.0));
       }
       return absDir;
     }
     else
     {
-      return Vector2f::ZERO;
+      return Zero<Vec2>();
     }
   }
 
@@ -481,14 +478,14 @@ namespace eXl
 
     Point* curPt = &m_Obstacles[m_OrderedPoints[0]];
 
-    Vector2f firstPoint = curPt->m_BlockingSegment.m_Ext1;
-    Vector2f lastPoint = curPt->m_BlockingSegment.m_Ext2;
+    Vec2 firstPoint = curPt->m_BlockingSegment.m_Ext1;
+    Vec2 lastPoint = curPt->m_BlockingSegment.m_Ext2;
 
-    Vector2f sightRange[2];
+    Vec2 sightRange[2];
     sightRange[0] = firstPoint;
     sightRange[1] = m_Obstacles[m_OrderedPoints.back()].m_BlockingSegment.m_Ext1;
 
-    Vector2f midSeg;
+    Vec2 midSeg;
     float lowLimit;
 
     UpdateSightRange(sightRange, midSeg, lowLimit);

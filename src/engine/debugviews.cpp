@@ -24,7 +24,7 @@ namespace eXl
   //  {
   //    auto& point = iPath.GetPoint(curPt);
   //
-  //    iDrawer.DrawLine(Vector3f(prevPos.X(), prevPos.Y(), 0.0), Vector3f(point.pos.X(), point.pos.Y(), 0.0), Vector4f(1.0, 0.0, 1.0, 1.0));
+  //    iDrawer.DrawLine(Vec3(prevPos.x, prevPos.y, 0.0), Vec3(point.pos.x, point.pos.y, 0.0), Vec4(1.0, 0.0, 1.0, 1.0));
   //    unsigned int nextPt = point.neigh1 == prevPt ? point.neigh2 : point.neigh1;
   //    prevPt = curPt;
   //    curPt = nextPt;
@@ -38,13 +38,13 @@ namespace eXl
     {
       auto const& box = face.m_Box;
 
-      Vector3f boxMin(box.m_Data[0].X(), box.m_Data[0].Y(), 0.0);
-      Vector3f boxMax(box.m_Data[1].X(), box.m_Data[1].Y(), 0.0);
+      Vec3 boxMin(box.m_Data[0].x, box.m_Data[0].y, 0.0);
+      Vec3 boxMax(box.m_Data[1].x, box.m_Data[1].y, 0.0);
 
-      iDrawer.DrawLine(boxMin, Vector3f(boxMin.X(), boxMax.Y()), Vector4f(1.0, 0.0, 1.0, 1.0));
-      iDrawer.DrawLine(boxMin, Vector3f(boxMax.X(), boxMin.Y()), Vector4f(1.0, 0.0, 1.0, 1.0));
-      iDrawer.DrawLine(boxMax, Vector3f(boxMin.X(), boxMax.Y()), Vector4f(1.0, 0.0, 1.0, 1.0));
-      iDrawer.DrawLine(boxMax, Vector3f(boxMax.X(), boxMin.Y()), Vector4f(1.0, 0.0, 1.0, 1.0));
+      iDrawer.DrawLine(boxMin, Vec3(boxMin.x, boxMax.y, 0), Vec4(1.0, 0.0, 1.0, 1.0));
+      iDrawer.DrawLine(boxMin, Vec3(boxMax.x, boxMin.y, 0), Vec4(1.0, 0.0, 1.0, 1.0));
+      iDrawer.DrawLine(boxMax, Vec3(boxMin.x, boxMax.y, 0), Vec4(1.0, 0.0, 1.0, 1.0));
+      iDrawer.DrawLine(boxMax, Vec3(boxMax.x, boxMin.y, 0), Vec4(1.0, 0.0, 1.0, 1.0));
     }
   }
 
@@ -56,17 +56,17 @@ namespace eXl
       {
         auto const& box = face.m_Box;
 
-        Vector3f boxMin = MathTools::To3DVec(box.m_Data[0]);
-        Vector3f boxMax = MathTools::To3DVec(box.m_Data[1]);
+        Vec3 boxMin = Vec3(box.m_Data[0], 0);
+        Vec3 boxMax = Vec3(box.m_Data[1], 0);
 
-        iDrawer.DrawLine(boxMin, Vector3f(boxMin.X(), boxMax.Y(), 0.0), Vector4f(1.0, 0.0, 1.0, 1.0));
-        iDrawer.DrawLine(boxMin, Vector3f(boxMax.X(), boxMin.Y(), 0.0), Vector4f(1.0, 0.0, 1.0, 1.0));
-        iDrawer.DrawLine(boxMax, Vector3f(boxMin.X(), boxMax.Y(), 0.0), Vector4f(1.0, 0.0, 1.0, 1.0));
-        iDrawer.DrawLine(boxMax, Vector3f(boxMax.X(), boxMin.Y(), 0.0), Vector4f(1.0, 0.0, 1.0, 1.0));
+        iDrawer.DrawLine(boxMin, Vec3(boxMin.x, boxMax.y, 0.0), Vec4(1.0, 0.0, 1.0, 1.0));
+        iDrawer.DrawLine(boxMin, Vec3(boxMax.x, boxMin.y, 0.0), Vec4(1.0, 0.0, 1.0, 1.0));
+        iDrawer.DrawLine(boxMax, Vec3(boxMin.x, boxMax.y, 0.0), Vec4(1.0, 0.0, 1.0, 1.0));
+        iDrawer.DrawLine(boxMax, Vec3(boxMax.x, boxMin.y, 0.0), Vec4(1.0, 0.0, 1.0, 1.0));
 
         for (auto const& seg : face.m_Walls)
         {
-          iDrawer.DrawLine(MathTools::To3DVec(seg.m_Ext1), MathTools::To3DVec(seg.m_Ext2), Vector4f(1.0, 1.0, 1.0, 1.0));
+          iDrawer.DrawLine(Vec3(seg.m_Ext1, 0), Vec3(seg.m_Ext2, 0), Vec4(1.0, 1.0, 1.0, 1.0));
         }
       }
 
@@ -74,8 +74,8 @@ namespace eXl
       {
         auto curVtx = *vertices.first;
         auto const& curSeg = component.m_FaceEdges[curVtx].segment;
-        Vector3f curMidSeg((curSeg.m_Ext1.X() + curSeg.m_Ext2.X()) * 0.5,
-          (curSeg.m_Ext1.Y() + curSeg.m_Ext2.Y()) * 0.5,
+        Vec3 curMidSeg((curSeg.m_Ext1.x + curSeg.m_Ext2.x) * 0.5,
+          (curSeg.m_Ext1.y + curSeg.m_Ext2.y) * 0.5,
           0.0);
 
         for (auto edges = boost::out_edges(curVtx, component.m_Graph); edges.first != edges.second; ++edges.first)
@@ -83,11 +83,11 @@ namespace eXl
           auto otherVtx = edges.first->m_source == curVtx ? edges.first->m_target : edges.first->m_source;
           auto const& otherSeg = component.m_FaceEdges[otherVtx].segment;
 
-          Vector3f otherMidSeg((otherSeg.m_Ext1.X() + otherSeg.m_Ext2.X()) * 0.5,
-            (otherSeg.m_Ext1.Y() + otherSeg.m_Ext2.Y()) * 0.5,
+          Vec3 otherMidSeg((otherSeg.m_Ext1.x + otherSeg.m_Ext2.x) * 0.5,
+            (otherSeg.m_Ext1.y + otherSeg.m_Ext2.y) * 0.5,
             0.0);
 
-          iDrawer.DrawLine(curMidSeg, otherMidSeg, Vector4f(1.0, 0.0, 0.0, 1.0));
+          iDrawer.DrawLine(curMidSeg, otherMidSeg, Vec4(1.0, 0.0, 0.0, 1.0));
         }
       }
     }
@@ -99,14 +99,12 @@ namespace eXl
     {
       NeighborhoodExtraction::Neigh const& neighs = iNeigh.GetNeigh()[obj.second];
 
-      Matrix4f const& curTrans = iTrans.GetWorldTransform(obj.first);
-      Vector3f const& curPos = *reinterpret_cast<Vector3f const*>(curTrans.m_Data + 12);
+      Mat4 const& curTrans = iTrans.GetWorldTransform(obj.first);
       for (uint32_t const* neighIdx = neighs.neighbors; neighIdx < neighs.neighbors + neighs.numNeigh; ++neighIdx)
       {
-        Matrix4f const& otherTrans = iTrans.GetWorldTransform(iNeigh.GetHandles()[*neighIdx]);
-        Vector3f const& otherPos = *reinterpret_cast<Vector3f const*>(otherTrans.m_Data + 12);
+        Mat4 const& otherTrans = iTrans.GetWorldTransform(iNeigh.GetHandles()[*neighIdx]);
 
-        iDrawer.DrawLine(curPos, otherPos, Vector4f(0.0, 0.0, 1.0, 1.0));
+        iDrawer.DrawLine(curTrans[3], otherTrans[3], Vec4(0.0, 0.0, 1.0, 1.0));
       }
     }
   }
@@ -116,23 +114,23 @@ namespace eXl
     iNav.GetAgents().Iterate([&](NavigatorSystem::Agent& agent, NavigatorSystem::Agents::Handle)
     {
       NavigatorSystem::Obstacle agentObs = iNav.GetObstacles().Get(agent.m_Obstacle);
-      Matrix4f const& curTrans = iTrans.GetWorldTransform(agentObs.m_Object);
-      Vector3f const& curPos = *reinterpret_cast<Vector3f const*>(curTrans.m_Data + 12);
+      Mat4 const& curTrans = iTrans.GetWorldTransform(agentObs.m_Object);
+      Vec3 const& curPos = curTrans[3];
 
-      Vector4f agentColor = [&]
+      Vec4 agentColor = [&]
       {
-        if (agent.m_UnstuckEnabled) return Vector4f(1.0, 1.0, 0.0, 1.0);
-        if (agent.m_PriorityAvoidance) return Vector4f(0.7, 0.0, 0.7, 1.0);
-        if (agent.m_HasPriority) return Vector4f(0.0, 1.0, 0.0, 1.0);
-        return Vector4f(1.0, 1.0, 1.0, 1.0);
+        if (agent.m_UnstuckEnabled) return Vec4(1.0, 1.0, 0.0, 1.0);
+        if (agent.m_PriorityAvoidance) return Vec4(0.7, 0.0, 0.7, 1.0);
+        if (agent.m_HasPriority) return Vec4(0.0, 1.0, 0.0, 1.0);
+        return Vec4(1.0, 1.0, 1.0, 1.0);
       }();
 
       iDrawer.DrawLine(curPos, curPos + agentObs.m_Dir * 4, agentColor);
 
-      Vector3f correctedVel = agent.m_CorrectedVelocity;
-      float len = correctedVel.Normalize();
+      Vec3 correctedVel = agent.m_CorrectedVelocity;
+      float len = NormalizeAndGetLength(correctedVel);
 
-      iDrawer.DrawLine(curPos, curPos + correctedVel * (len / agentObs.m_Speed) * 4, Vector4f(1.0, 0.0, 0.0, 1.0));
+      iDrawer.DrawLine(curPos, curPos + correctedVel * (len / agentObs.m_Speed) * 4, Vec4(1.0, 0.0, 0.0, 1.0));
 
     });
   }

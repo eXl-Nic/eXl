@@ -1,7 +1,7 @@
 #pragma once
 
 #include <engine/engineexp.hpp>
-#include <math/vector2.hpp>
+#include <math/math.hpp>
 #include <math/aabb2d.hpp>
 #include <core/resource/resource.hpp>
 #include <core/path.hpp>
@@ -15,9 +15,9 @@ namespace eXl
   {
     struct GlyphDesc
     {
-      Vector2i penOffset;
-      Vector2i penAdvance;
-      Vector2i glyphSize;
+      Vec2i penOffset;
+      Vec2i penAdvance;
+      Vec2i glyphSize;
     };
   }
 

@@ -36,10 +36,10 @@ namespace eXl
       
     }
 
-    Vector2i m_ViewportSize;
+    Vec2i m_ViewportSize;
     float m_NearP;
     float m_FarP;
-    Vector4f m_ClearColor;
+    Vec4 m_ClearColor;
     float m_ClearDepth;
     CameraMatrix m_Camera;
 
@@ -58,7 +58,7 @@ namespace eXl
       GfxRenderNode::TransformUpdateCallback m_OnTransform;
       GfxRenderNode::UpdateCallback m_OnDelete;
       Vector<ObjectHandle> m_UpdateArray;
-      Vector<Matrix4f const*> m_TransUpdateArray;
+      Vector<Mat4 const*> m_TransUpdateArray;
     };
 
     using RenderNodes = ObjectTable<RenderNodeEntry>;
@@ -76,32 +76,30 @@ namespace eXl
     return m_Impl->m_Semantics;
   }
 
-  void GfxSystem::ScreenToWorld(Vector2i const& iScreenPos, Vector3f& oWorldPos, Vector3f& oViewDir)
+  void GfxSystem::ScreenToWorld(Vec2i const& iScreenPos, Vec3& oWorldPos, Vec3& oViewDir)
   {
-    Vector2f screenSpacePos(( 2.0 * float(iScreenPos.X()) / m_Impl->m_ViewportSize.X() - 1.0), 
-      ((1.0 - 2.0 * float(iScreenPos.Y()) / m_Impl->m_ViewportSize.Y())));
-    Vector4f screenPos(screenSpacePos.X(), screenSpacePos.Y(), m_Impl->m_NearP, 1.0);
-    Vector4f screenPosF(screenSpacePos.X(), screenSpacePos.Y(), m_Impl->m_NearP + (m_Impl->m_FarP - m_Impl->m_NearP) * 0.1, 1.0);
+    Vec2 screenSpacePos(( 2.0 * float(iScreenPos.x) / m_Impl->m_ViewportSize.x - 1.0), 
+      ((1.0 - 2.0 * float(iScreenPos.y) / m_Impl->m_ViewportSize.y)));
+    Vec4 screenPos(screenSpacePos.x, screenSpacePos.y, m_Impl->m_NearP, 1.0);
+    Vec4 screenPosF(screenSpacePos.x, screenSpacePos.y, m_Impl->m_NearP + (m_Impl->m_FarP - m_Impl->m_NearP) * 0.1, 1.0);
 
-    Matrix4f invMat = m_Impl->m_Camera.projMatrix * m_Impl->m_Camera.viewMatrix;
-    invMat = invMat.Inverse();
+    Mat4 invMat = inverse(m_Impl->m_Camera.projMatrix * m_Impl->m_Camera.viewMatrix);
 
-    Vector4f worldPt = invMat * screenPos;
-    Vector4f worldPtF = invMat * screenPosF;
+    Vec4 worldPt = invMat * screenPos;
+    Vec4 worldPtF = invMat * screenPosF;
 
-    oWorldPos = reinterpret_cast<Vector3f&>(worldPt);
-    oViewDir = reinterpret_cast<Vector3f&>(worldPtF) - oWorldPos;
-    oViewDir.Normalize();
+    oWorldPos = worldPt;
+    oViewDir = normalize(Vec3(worldPtF) - oWorldPos);
   }
 
-  Vector2i GfxSystem::WorldToScreen(Vector3f const& iWorldPos)
+  Vec2i GfxSystem::WorldToScreen(Vec3 const& iWorldPos)
   {
-    Vector4f worldPos(iWorldPos.X(), iWorldPos.Y(), iWorldPos.Z(), 1.0);
+    Vec4 worldPos(iWorldPos.x, iWorldPos.y, iWorldPos.z, 1.0);
 
-    Vector4f projectedPt = m_Impl->m_Camera.projMatrix * m_Impl->m_Camera.viewMatrix * worldPos;
+    Vec4 projectedPt = m_Impl->m_Camera.projMatrix * m_Impl->m_Camera.viewMatrix * worldPos;
 
-    return Vector2i(((projectedPt.X() * 0.5) + 0.5) * m_Impl->m_ViewportSize.X()
-      , (0.5 - ((projectedPt.Y() * 0.5))) * m_Impl->m_ViewportSize.Y());
+    return Vec2i(((projectedPt.x * 0.5) + 0.5) * m_Impl->m_ViewportSize.x
+      , (0.5 - ((projectedPt.y * 0.5))) * m_Impl->m_ViewportSize.y);
   }
 
   void GfxSystem::StaticInit()
@@ -219,14 +217,14 @@ namespace eXl
 		ComponentManager::DeleteComponent(iObject);
   }
 
-  Vector2i GfxSystem::GetViewportSize() const
+  Vec2i GfxSystem::GetViewportSize() const
   {
     return m_Impl->m_ViewportSize;
   }
 
   void GfxSystem::SynchronizeTransforms()
   {
-    m_Impl->m_Transforms.IterateOverDirtyTransforms([this](Matrix4f const& iMat, ObjectHandle iObj)
+    m_Impl->m_Transforms.IterateOverDirtyTransforms([this](Mat4 const& iMat, ObjectHandle iObj)
     {
       if (m_Impl->m_ObjectToNode.size() > iObj.GetId()
         && m_Impl->m_ObjectToNode[iObj.GetId()].IsAssigned())
@@ -259,10 +257,10 @@ namespace eXl
   void GfxSystem::SetView(ViewInfo const& iInfo)
   {
     m_Impl->m_ViewportSize = iInfo.viewportSize;
-    m_Impl->m_Camera.projMatrix.MakeZero();
-    m_Impl->m_Camera.viewInverseMatrix.MakeIdentity();
+    m_Impl->m_Camera.projMatrix = Zero<Mat4>();
+    m_Impl->m_Camera.viewInverseMatrix = Identity<Mat4>();
 
-    float screenRatio = float(m_Impl->m_ViewportSize.X()) / float(m_Impl->m_ViewportSize.Y());
+    float screenRatio = float(m_Impl->m_ViewportSize.x) / float(m_Impl->m_ViewportSize.y);
     bool ortho = iInfo.projection == Orthographic;
 
     if (ortho)
@@ -270,38 +268,34 @@ namespace eXl
       m_Impl->m_NearP = 0.0001;
       m_Impl->m_FarP = iInfo.displayedSize * 100.0;
 
-      m_Impl->m_Camera.projMatrix.m_Data[0] = 2.0 / (iInfo.displayedSize * screenRatio);
-      m_Impl->m_Camera.projMatrix.m_Data[5] = 2.0 / iInfo.displayedSize;
-      m_Impl->m_Camera.projMatrix.m_Data[10] = -2.0 / (m_Impl->m_FarP - m_Impl->m_NearP);
-      m_Impl->m_Camera.projMatrix.m_Data[14] = -(m_Impl->m_FarP + m_Impl->m_NearP) / (m_Impl->m_FarP - m_Impl->m_NearP);
-      m_Impl->m_Camera.projMatrix.m_Data[15] = 1.0;
+      m_Impl->m_Camera.projMatrix[0][0] = 2.0 / (iInfo.displayedSize * screenRatio);
+      m_Impl->m_Camera.projMatrix[1][1] = 2.0 / iInfo.displayedSize;
+      m_Impl->m_Camera.projMatrix[2][2] = -2.0 / (m_Impl->m_FarP - m_Impl->m_NearP);
+      m_Impl->m_Camera.projMatrix[3][2] = -(m_Impl->m_FarP + m_Impl->m_NearP) / (m_Impl->m_FarP - m_Impl->m_NearP);
+      m_Impl->m_Camera.projMatrix[3][3] = 1.0;
     }
     else
     {
       m_Impl->m_NearP = iInfo.displayedSize * 0.5 / tan(iInfo.fov * 0.5);
       m_Impl->m_FarP = iInfo.displayedSize * 1000;
 
-      m_Impl->m_Camera.projMatrix.m_Data[0] = 2.0 * m_Impl->m_NearP / screenRatio;
-      m_Impl->m_Camera.projMatrix.m_Data[5] = 2.0 * m_Impl->m_NearP;
-      m_Impl->m_Camera.projMatrix.m_Data[10] = -1.0* (m_Impl->m_NearP + m_Impl->m_FarP) / (m_Impl->m_FarP - m_Impl->m_NearP);
-      m_Impl->m_Camera.projMatrix.m_Data[14] = -2.0 * m_Impl->m_NearP * m_Impl->m_FarP / (m_Impl->m_FarP - m_Impl->m_NearP);
-      m_Impl->m_Camera.projMatrix.m_Data[11] = -1.0;
+      m_Impl->m_Camera.projMatrix[0][0] = 2.0 * m_Impl->m_NearP / screenRatio;
+      m_Impl->m_Camera.projMatrix[1][1] = 2.0 * m_Impl->m_NearP;
+      m_Impl->m_Camera.projMatrix[2][2] = -1.0* (m_Impl->m_NearP + m_Impl->m_FarP) / (m_Impl->m_FarP - m_Impl->m_NearP);
+      m_Impl->m_Camera.projMatrix[3][2] = -2.0 * m_Impl->m_NearP * m_Impl->m_FarP / (m_Impl->m_FarP - m_Impl->m_NearP);
+      m_Impl->m_Camera.projMatrix[2][3] = -1.0;
     }
 
-    Vector3f basisX = iInfo.basis[0];
-    Vector3f basisY = iInfo.basis[1];
-    Vector3f basisZ = iInfo.basis[2];
+    Vec3 basisX = iInfo.basis[0];
+    Vec3 basisY = iInfo.basis[1];
+    Vec3 basisZ = iInfo.basis[2];
 
-    memcpy(m_Impl->m_Camera.viewInverseMatrix.m_Data + 0, &basisX, sizeof(Vector3f));
-    memcpy(m_Impl->m_Camera.viewInverseMatrix.m_Data + 4, &basisY, sizeof(Vector3f));
-    memcpy(m_Impl->m_Camera.viewInverseMatrix.m_Data + 8, &basisZ, sizeof(Vector3f));
+    m_Impl->m_Camera.viewInverseMatrix[0] = Vec4(basisX, 0);
+    m_Impl->m_Camera.viewInverseMatrix[1] = Vec4(basisY, 0);
+    m_Impl->m_Camera.viewInverseMatrix[2] = Vec4(basisZ, 0);
+    m_Impl->m_Camera.viewInverseMatrix[3] = Vec4(iInfo.pos, 1);
 
-    //Vector3f transPos = basisX * (-iInfo.pos.X()) + basisY * (-iInfo.pos.Y()) + basisZ * (-iInfo.pos.Z());
-    m_Impl->m_Camera.viewInverseMatrix.m_Data[12] = iInfo.pos.X();
-    m_Impl->m_Camera.viewInverseMatrix.m_Data[13] = iInfo.pos.Y();
-    m_Impl->m_Camera.viewInverseMatrix.m_Data[14] = iInfo.pos.Z();
-
-    m_Impl->m_Camera.viewMatrix = m_Impl->m_Camera.viewInverseMatrix.Inverse();
+    m_Impl->m_Camera.viewMatrix = inverse(m_Impl->m_Camera.viewInverseMatrix);
 
     // Will work for ortho, but not persp.
     m_Impl->m_DebugDrawer->m_CurrentScreenSize = iInfo.displayedSize;
@@ -327,9 +321,9 @@ namespace eXl
 
     OGLDisplayList list(GetSemanticManager());
 
-    list.SetDefaultViewport(Vector2i::ZERO, m_Impl->m_ViewportSize);
+    list.SetDefaultViewport(Zero<Vec2i>(), m_Impl->m_ViewportSize);
     list.SetDefaultDepth(true, true);
-    list.SetDefaultScissor(Vector2i(0,0),Vector2i(-1,-1));
+    list.SetDefaultScissor(Vec2i(0,0),Vec2i(-1,-1));
     list.SetDefaultBlend(true, OGLBlend::SRC_ALPHA, OGLBlend::ONE_MINUS_SRC_ALPHA);
 
     list.InitForPush();

@@ -142,33 +142,33 @@ namespace eXl
     iChild.Release();
   }
 
-  Vector3f GetCorrectedDir(Vector3f const& iTouchingNormal, Vector3f iOldMove, float iDotDirNormal, float iCollisionDepth, bool iCanBounce)
+  Vec3 GetCorrectedDir(Vec3 const& iTouchingNormal, Vec3 iOldMove, float iDotDirNormal, float iCollisionDepth, bool iCanBounce)
   {
-    Vector3f newMove = iOldMove;
-    float oldMoveLen = newMove.Normalize();
+    Vec3 newMove = iOldMove;
+    float oldMoveLen = NormalizeAndGetLength(newMove);
 
     iDotDirNormal /= oldMoveLen;
     
-    Vector3f perpDir = newMove - iTouchingNormal * iDotDirNormal;
-    if (!iCanBounce && perpDir.Length() > Mathf::ZeroTolerance())
+    Vec3 perpDir = newMove - iTouchingNormal * iDotDirNormal;
+    if (!iCanBounce && length(perpDir) > Mathf::ZeroTolerance())
     {
-      perpDir.Normalize();
-      newMove = perpDir * iOldMove.Dot(perpDir) + iTouchingNormal * iOldMove.Dot(iTouchingNormal) * iCollisionDepth;
+      perpDir = normalize(perpDir);
+      newMove = perpDir * dot(iOldMove, perpDir) + iTouchingNormal * dot(iOldMove, iTouchingNormal) * iCollisionDepth;
     }
     else
     {
-      newMove = iTouchingNormal * iOldMove.Dot(iTouchingNormal) * iCollisionDepth;
+      newMove = iTouchingNormal * dot(iOldMove, iTouchingNormal) * iCollisionDepth;
     }
 
     return newMove;
   }
 
   bool MovementManagerBase::AttemptMove(PhysicComponent_Impl& iPhComp, 
-    Vector3f const& iCurPos, 
+    Vec3 const& iCurPos, 
     bool iCanBounce,
-    Vector3f& ioNextPos, 
+    Vec3& ioNextPos, 
     std::function<bool(PhysicComponent_Impl*)>& iIgnore,
-    Optional<Vector3f>& oCollideNormal)
+    Optional<Vec3>& oCollideNormal)
   {
     bool originalMoveSucceeded = true;
     CollisionData collision;
@@ -178,17 +178,17 @@ namespace eXl
       && iCurPos != ioNextPos
       && SweepTest(iPhComp, iCurPos, ioNextPos, collision, iIgnore, EngineCommon::s_MovementSensorMask))
     {
-      if (collision.normal1To2 != Vector3f::ZERO)
+      if (collision.normal1To2 != Zero<Vec3>())
       {
         oCollideNormal = collision.normal1To2;
-        Vector3f const& touchingNormal = collision.normal1To2;
-        Vector3f oldDir = ioNextPos - iCurPos;
-        float dot = touchingNormal.Dot(oldDir);
-        if (dot < 0.0)
+        Vec3 const& touchingNormal = collision.normal1To2;
+        Vec3 oldDir = ioNextPos - iCurPos;
+        float dotProd = dot(touchingNormal, oldDir);
+        if (dotProd < 0.0)
         {
           originalMoveSucceeded = false;
-          ioNextPos = iCurPos + GetCorrectedDir(touchingNormal, oldDir, dot, collision.depth, iCanBounce);
-          ioNextPos.Z() = iCurPos.Z();
+          ioNextPos = iCurPos + GetCorrectedDir(touchingNormal, oldDir, dotProd, collision.depth, iCanBounce);
+          ioNextPos.z = iCurPos.z;
         }
         --numAttempts;
       }
@@ -219,15 +219,15 @@ namespace eXl
 
       if (entry.UseTransform())
       {
-        Matrix4f const& worldTrans = transforms.GetWorldTransform(entry.GetPhComp()->m_ObjectId);
+        Mat4 const& worldTrans = transforms.GetWorldTransform(entry.GetPhComp()->m_ObjectId);
 
-        Vector3f curPhPos = GetPosition(*entry.GetPhComp());
-        Vector3f const& curPos = MathTools::GetPosition(worldTrans);
+        Vec3 curPhPos = GetPosition(*entry.GetPhComp());
+        Vec3 const& curPos = worldTrans[3];
         if (curPhPos == curPos)
         {
           if (!entry.m_Asleep)
           {
-            ApplyLinearVelocity(*entry.GetPhComp(), Vector3f::ZERO, iTime);
+            ApplyLinearVelocity(*entry.GetPhComp(), Zero<Vec3>(), iTime);
             entry.m_Asleep = true;
 
             for (auto child : entry.m_AttachedObjects)
@@ -237,13 +237,13 @@ namespace eXl
                 KinematicEntry& childEntry = m_KinematicEntries.Get(KinematicEntryHandle(child.second));
                 childEntry.m_Asleep = true;
               }
-              ApplyLinearVelocity(*child.first, Vector3f::ZERO, iTime);
+              ApplyLinearVelocity(*child.first, Zero<Vec3>(), iTime);
             }
           }
         }
         else
         {
-          Vector3f linVel = (curPos - curPhPos) / iTime;
+          Vec3 linVel = (curPos - curPhPos) / iTime;
           ApplyLinearVelocity(*entry.GetPhComp(), linVel, iTime);
           entry.m_Asleep = false;
           for (auto child : entry.m_AttachedObjects)
@@ -259,8 +259,8 @@ namespace eXl
       }
       else
       {
-        Vector3f curPos = GetPosition(*entry.GetPhComp());
-        Vector3f correctedPos = curPos;
+        Vec3 curPos = GetPosition(*entry.GetPhComp());
+        Vec3 correctedPos = curPos;
 
         if (entry.m_NeedDepenetration)
         {
@@ -272,22 +272,22 @@ namespace eXl
             penetration = RecoverFromPenetration(*entry.GetPhComp(), correctedPos);
             --numAttempts;
           } while (penetration && numAttempts > 0);
-          correctedPos.Z() = curPos.Z();
+          correctedPos.z = curPos.z;
         }
 
         bool posWasCorrected = curPos != correctedPos;
 
-        Vector3f candidateMove;
-        Vector3f moveDir = candidateMove = entry.m_Dir * entry.m_Speed * iTime;
+        Vec3 candidateMove;
+        Vec3 moveDir = candidateMove = entry.m_Dir * entry.m_Speed * iTime;
         if (posWasCorrected)
         {
           candidateMove = correctedPos - curPos;
-          Vector3f touchingNormal = candidateMove;
-          float depth = touchingNormal.Normalize();
-          float dot = moveDir.Dot(touchingNormal);
-          if (dot < 0.0)
+          Vec3 touchingNormal = candidateMove;
+          float depth = NormalizeAndGetLength(touchingNormal);
+          float dotProd = dot(moveDir, touchingNormal);
+          if (dotProd < 0.0)
           {
-            moveDir = GetCorrectedDir(touchingNormal, moveDir, dot, depth, false);
+            moveDir = GetCorrectedDir(touchingNormal, moveDir, dotProd, depth, false);
           }
           candidateMove = correctedPos + moveDir - curPos;
         }
@@ -296,7 +296,7 @@ namespace eXl
           candidateMove = moveDir;
         }
 
-        if (moveDir.Length() > Mathf::ZeroTolerance())
+        if (length(moveDir) > Mathf::ZeroTolerance())
         {
           std::function<bool(PhysicComponent_Impl*)> attachedFilter = [&entry](PhysicComponent_Impl* iComp)
           {
@@ -315,10 +315,10 @@ namespace eXl
             return false;
           };
 
-          Optional<Vector3f> collideNormal;
+          Optional<Vec3> collideNormal;
           if (!entry.IsGhost())
           {
-            Vector3f nextPos = curPos + candidateMove;
+            Vec3 nextPos = curPos + candidateMove;
             bool moveSucceeded = AttemptMove(*entry.GetPhComp(),
               curPos,
               entry.m_CanBounce,
@@ -328,7 +328,7 @@ namespace eXl
             if (collideNormal && entry.m_CanBounce)
             {
               auto newDir = MathTools::Reflect(entry.m_Dir, -(*collideNormal));
-              newDir.Z() = entry.m_Dir.Z();
+              newDir.z = entry.m_Dir.z;
               entry.m_Dir = newDir;
 
             }
@@ -342,13 +342,13 @@ namespace eXl
           {
             for (auto child : entry.m_AttachedObjects)
             {
-              Vector3f curPos = GetPosition(*child.first);
-              Vector3f nextPos = curPos + candidateMove;
+              Vec3 curPos = GetPosition(*child.first);
+              Vec3 nextPos = curPos + candidateMove;
               bool moveSucceeded = AttemptMove(*child.first, curPos, entry.m_CanBounce, nextPos, attachedFilter, collideNormal);
               if (!moveSucceeded)
               {
-                Vector3f childCandidateMove = (nextPos - curPos);
-                if (childCandidateMove.SquaredLength() < candidateMove.SquaredLength())
+                Vec3 childCandidateMove = (nextPos - curPos);
+                if (length2(childCandidateMove) < length2(candidateMove))
                 {
                   candidateMove = childCandidateMove;
                 }
@@ -357,7 +357,7 @@ namespace eXl
           }
         }
 
-        if (candidateMove.SquaredLength() > Mathf::ZeroTolerance())
+        if (length2(candidateMove) > Mathf::ZeroTolerance())
         {
           ApplyLinearVelocity(*entry.GetPhComp(), candidateMove / iTime, iTime);
           entry.m_Asleep = false;
@@ -373,7 +373,7 @@ namespace eXl
         }
         else if (!entry.m_Asleep)
         {
-          ApplyLinearVelocity(*entry.GetPhComp(), Vector3f::ZERO, iTime);
+          ApplyLinearVelocity(*entry.GetPhComp(), Zero<Vec3>(), iTime);
           entry.m_Asleep = true;
           for (auto child : entry.m_AttachedObjects)
           {
@@ -382,7 +382,7 @@ namespace eXl
               KinematicEntry& childEntry = m_KinematicEntries.Get(KinematicEntryHandle(child.second));
               childEntry.m_Asleep = true;
             }
-            ApplyLinearVelocity(*child.first, Vector3f::ZERO, iTime);
+            ApplyLinearVelocity(*child.first, Zero<Vec3>(), iTime);
           }
         }
       }

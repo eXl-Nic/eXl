@@ -65,7 +65,7 @@ namespace eXl
     StartLocal(iWorld);
   }
 
-  ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld, Vector3f const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo)
+  ObjectHandle Scenario_Base::SpawnCharacter(World& iWorld, Vec3 const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo)
   {
     Archetype const* toSpawn = nullptr;
     if ((toSpawn = m_MainCharacter.GetOrLoad()) == nullptr
@@ -83,7 +83,7 @@ namespace eXl
 
     ObjectHandle newChar = iWorld.CreateObject(iInfo);
     Transforms& trans = *iWorld.GetSystem<Transforms>();
-    trans.AddTransform(newChar, Matrix4f::FromPosition(iPos));
+    trans.AddTransform(newChar, translate(Identity<Mat4>(), iPos));
     toSpawn->Instantiate(newChar, iWorld, &customData);
 
     return newChar;
@@ -91,7 +91,7 @@ namespace eXl
 
   void Scenario_Base::StartLocal(World& iWorld)
   {
-    m_MainChar = SpawnCharacter(iWorld, MathTools::To3DVec(m_SpawnPos), EngineCommon::CharacterControlKind::PlayerControl);
+    m_MainChar = SpawnCharacter(iWorld, Vec3(m_SpawnPos, 0), EngineCommon::CharacterControlKind::PlayerControl);
 
     auto& transforms = *iWorld.GetSystem<Transforms>();
     transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
@@ -103,7 +103,7 @@ namespace eXl
     InputSystem& iInputs = app.GetInputSystem();
 
     GfxSystem* gfxSys = iWorld.GetSystem<GfxSystem>();
-    Vector2i vptSize = gfxSys ? gfxSys->GetViewportSize() : Vector2i::ONE;
+    Vec2i vptSize = gfxSys ? gfxSys->GetViewportSize() : One<Vec2i>();
 
     AbilitySystem& abilities = *iWorld.GetSystem<AbilitySystem>();
     
@@ -168,14 +168,14 @@ namespace eXl
     }
     if (keyChanged)
     {
-      static const Vector3f dirs[] =
+      static const Vec3 dirs[] =
       {
-        UnitX<Vector3f>() *  1.0,
-        UnitX<Vector3f>() * -1.0,
-        UnitY<Vector3f>() *  1.0,
-        UnitY<Vector3f>() * -1.0,
+        UnitX<Vec3>() *  1.0,
+        UnitX<Vec3>() * -1.0,
+        UnitY<Vec3>() *  1.0,
+        UnitY<Vec3>() * -1.0,
       };
-      Vector3f dir;
+      Vec3 dir;
       for (unsigned int i = 0; i < 4; ++i)
       {
         if (dirMask & (1 << i))

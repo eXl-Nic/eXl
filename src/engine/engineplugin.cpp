@@ -243,7 +243,7 @@ namespace eXl
     baseManifest.RegisterPropertySheet<TriggerComponentDesc>(TriggerComponentDesc::PropertyName());
     baseManifest.RegisterPropertySheet<CharacterDesc>(CharacterDesc::PropertyName());
 
-    baseManifest.RegisterPropertySheet<Vector3f>(VelocityName(), false);
+    baseManifest.RegisterPropertySheet<Vec3>(VelocityName(), false);
 
     return baseManifest;
   }
@@ -355,7 +355,7 @@ namespace eXl
           switch (shape.m_Type)
           {
           case PhysicsShapeType::Sphere:
-            initData.AddSphere(shape.m_Dims.X(), shape.m_Offset);
+            initData.AddSphere(shape.m_Dims.x, shape.m_Offset);
             break;
           case PhysicsShapeType::Box:
             initData.AddBox(shape.m_Dims, shape.m_Offset);
@@ -399,7 +399,7 @@ namespace eXl
 
         if (shapeDesc->IsSimpleSphere())
         {
-          def.m_Geom = GeomDef::MakeSphere(shapeDesc->m_Shapes[0].m_Dims.X());
+          def.m_Geom = GeomDef::MakeSphere(shapeDesc->m_Shapes[0].m_Dims.x);
         }
         else if (shapeDesc->IsSimpleBox())
         {

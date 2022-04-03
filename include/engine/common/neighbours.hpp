@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/containers.hpp>
 #include <core/heapobject.hpp>
 #include <engine/common/object.hpp>
-#include <math/vector3.hpp>
+#include <math/math.hpp>
 
 namespace eXl
 {
@@ -41,9 +41,9 @@ namespace eXl
 
     virtual void AddObject(ObjectHandle iObj, float iRadius, bool iPopulateNeigh) = 0;
 
-    virtual void AddObject(ObjectHandle iObj, Vector3f const& iBoxDim, bool iPopulateNeigh) = 0;
+    virtual void AddObject(ObjectHandle iObj, Vec3 const& iBoxDim, bool iPopulateNeigh) = 0;
 
-    virtual void Run(Vector3f const& iForwardOffset, float iRadiusSearch) = 0;
+    virtual void Run(Vec3 const& iForwardOffset, float iRadiusSearch) = 0;
 
     Vector<Neigh> const& GetNeigh() const { return m_ObjectsNeigh; }
     UnorderedMap<ObjectHandle, uint32_t> const& GetObjects() const { return m_Objects; }

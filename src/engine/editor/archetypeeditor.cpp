@@ -463,10 +463,10 @@ namespace eXl
       gameWidget->SetGfxSystem(m_Impl->m_World.GetWorld().GetSystem<GfxSystem>());
 
       GfxSystem::ViewInfo& view = gameWidget->GetViewInfo();
-      view.pos = UnitZ<Vector3f>() * 2;
+      view.pos = UnitZ<Vec3>() * 2;
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = 2.0;
-      view.backgroundColor = Vector4f::ONE;
+      view.backgroundColor = One<Vec4>();
 
       m_Impl->m_World.GetCamera().view = view;
 

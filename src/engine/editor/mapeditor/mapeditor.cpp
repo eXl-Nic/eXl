@@ -217,10 +217,10 @@ namespace eXl
         m_GameWidget->SetGfxSystem(m_World.GetWorld().GetSystem<GfxSystem>());
 
         GfxSystem::ViewInfo& view = m_GameWidget->GetViewInfo();
-        view.pos = UnitZ<Vector3f>() + UnitX<Vector3f>() * 2;
+        view.pos = UnitZ<Vec3>() + UnitX<Vec3>() * 2;
         view.projection = GfxSystem::Orthographic;
         m_World.GetCamera().view.displayedSize = view.displayedSize = EngineCommon::s_WorldToPixel * 20;
-        view.backgroundColor = Vector4f::ONE;
+        view.backgroundColor = One<Vec4>();
 
         m_World.GetCamera().view = view;
 
@@ -345,8 +345,8 @@ namespace eXl
         newBlock.m_Layer = iIsland.m_Layer;
         newBlock.m_Shape = iIsland.m_IslandPoly;
         MapResource::Terrain& terrainGroup = map->m_Terrains[insertRes.first->second];
-        Vector2i tilingSize = TerrainTool::SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
-        newBlock.m_Shape.ScaleComponents(1, 1, tilingSize.X(), tilingSize.Y());
+        Vec2i tilingSize = TerrainTool::SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
+        newBlock.m_Shape.ScaleComponents(1, 1, tilingSize.x, tilingSize.y);
         terrainGroup.m_Blocks.push_back(std::move(newBlock));
       });
 
@@ -362,7 +362,7 @@ namespace eXl
       });
   }
 
-  ObjectHandle MapEditor::Place(Resource::UUID const& iUUID, Name iSubobject, Vector2i const& iPos)
+  ObjectHandle MapEditor::Place(Resource::UUID const& iUUID, Name iSubobject, Vec2i const& iPos)
   {
     Resource::Header const* header = ResourceManager::GetHeader(iUUID);
     if (header == nullptr)

@@ -18,8 +18,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <ogl/renderer/oglbuffer.hpp>
 #include <ogl/oglspritealgo.hpp>
 #include <ogl/renderer/oglrendercommand.hpp>
-#include <math/matrix4.hpp>
-
 #include <engine/common/transforms.hpp>
 #include <engine/gfx/tileset.hpp>
 #include <engine/game/commondef.hpp>
@@ -97,7 +95,7 @@ namespace eXl
     {
       m_Program = iProgram;
     }
-    void SetTransform(Matrix4f const& iTransform);
+    void SetTransform(Mat4 const& iTransform);
 
     void SetGeometry(GeometryInfo* iGeom);
     inline void SetGeometry(IntrusivePtr<GeometryInfo> const& iGeom) { SetGeometry(iGeom.get()); }
@@ -146,7 +144,7 @@ namespace eXl
     friend class GfxSystem;
     
     ObjectHandle m_Object;
-    Matrix4f m_Transform;
+    Mat4 m_Transform;
 
     Vector<Draw> m_Draws;
     IntrusivePtr<GeometryInfo> m_Geometry;
@@ -165,10 +163,10 @@ namespace eXl
     // TODO : Put that into the Tileset
     // TODO : Make a cache somewhere.
 		
-		Matrix4f m_Transform;
-    Matrix4f m_BillboardTransform;
-    Vector2f m_CurScale;
-    Vector2f m_CurOffset;
+		Mat4 m_Transform;
+    Mat4 m_BillboardTransform;
+    Vec2 m_CurScale;
+    Vec2 m_CurOffset;
 
 
     IntrusivePtr<OGLTexture const> m_Texture;
@@ -185,7 +183,7 @@ namespace eXl
     bool m_Rotate;
     bool m_Billboard = false;
 
-		static IntrusivePtr<OGLBuffer> MakeSpriteGeometry(Vector2f iSize, bool iFlat);
+		static IntrusivePtr<OGLBuffer> MakeSpriteGeometry(Vec2 iSize, bool iFlat);
     static IntrusivePtr<OGLBuffer> MakeSpriteIdxBuffer();
 
 		void Push(OGLDisplayList& iList);
@@ -207,9 +205,9 @@ namespace eXl
 
       ResourceHandle<Tileset> m_Tileset;
       TileName m_TileName;
-      Vector4f m_Tint = Vector4f(1.0, 1.0, 1.0, 1.0);
-      Vector2f m_Size = Vector2f(1.0 / EngineCommon::s_WorldToPixel, 1.0 / EngineCommon::s_WorldToPixel);
-      Vector2f m_Offset = Vector2f(0.0, 0.0);
+      Vec4 m_Tint = Vec4(1.0, 1.0, 1.0, 1.0);
+      Vec2 m_Size = Vec2(1.0 / EngineCommon::s_WorldToPixel, 1.0 / EngineCommon::s_WorldToPixel);
+      Vec2 m_Offset = Vec2(0.0, 0.0);
       float m_AnimSpeed = 1.0;
       uint8_t m_Layer = 0;
       bool m_RotateSprite = false;
@@ -220,14 +218,14 @@ namespace eXl
 
     void SetDesc(Desc const& iDesc);
 
-    void SetOffset(Vector2f const& iOffset);
-		void SetSize(Vector2f const& iSize);
+    void SetOffset(Vec2 const& iOffset);
+		void SetSize(Vec2 const& iSize);
 		void SetTileset(Tileset const* iTileset);
 		void SetTileName(TileName iName);
 		void SetAnimationSpeed(float iSpeed);
     void SetRotateSprite(bool iRotate);
     void SetLayer(uint8_t iLayer);
-    void SetTint(Vector4f const& iTint);
+    void SetTint(Vec4 const& iTint);
     void SetFlat(bool iValue);
 		
 	protected:

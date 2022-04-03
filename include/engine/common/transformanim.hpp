@@ -23,8 +23,8 @@ namespace eXl
 
     LinearPositionAnimation* m_Anim;
     ObjectHandle m_Object;
-    Matrix4f m_PreTransform;
-    Matrix4f m_PostTransform;
+    Mat4 m_PreTransform;
+    Mat4 m_PostTransform;
   };
 
   class EXL_ENGINE_API TransformAnimManager : public TimelineManager<TransformAnimation, TransformAnimManager>
@@ -35,12 +35,12 @@ namespace eXl
 
     TimelineHandle Start(ObjectHandle iObject
       , LinearPositionAnimation& iAnim
-      , Matrix4f const& iPreTrans = Matrix4f::IDENTITY
-      , Matrix4f const& iPostTrans = Matrix4f::IDENTITY);
+      , Mat4 const& iPreTrans = Identity<Mat4>()
+      , Mat4 const& iPostTrans = Identity<Mat4>());
 
     TimelineHandle StartLooping(ObjectHandle iObject, LinearPositionAnimation& iAnim, float iLoopTime
-      , Matrix4f const& iPreTrans = Matrix4f::IDENTITY
-      , Matrix4f const& iPostTrans = Matrix4f::IDENTITY);
+      , Mat4 const& iPreTrans = Identity<Mat4>()
+      , Mat4 const& iPostTrans = Identity<Mat4>());
 
   protected:
 

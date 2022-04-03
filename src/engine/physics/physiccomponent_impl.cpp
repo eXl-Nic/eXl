@@ -16,7 +16,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/physics/physics_detail.hpp>
 #include <engine/physics/physicsys.hpp>
 
-#include <math/quaternion.hpp>
+#include <math/math.hpp>
 #include <math/mathtools.hpp>
 
 namespace eXl
@@ -55,33 +55,31 @@ namespace eXl
     }
 
     {
+      Vec3 upDir = FROM_BTVECT(m_CachedTransform.getBasis()[1]);
+
       m_CachedTransform = worldTrans;
-      Matrix4f mat;
-      mat.m_Data[15] = 1;
-      worldTrans.getOpenGLMatrix(mat.m_Data);
+      
+      Quaternion rot = FROM_BTQUAT(worldTrans.getRotation());
 
       if ((m_InitData.GetFlags() & PhysicFlags::AlignRotToVelocity)
         && (m_InitData.GetFlags() & (PhysicFlags::IsGhost | PhysicFlags::Kinematic)) == 0
         && !m_Object->getInterpolationLinearVelocity().isZero())
       {
-        Vector3f* rotMat[] =
+        Vec3 frontDir = normalize(FROM_BTVECT(m_Object->getInterpolationLinearVelocity()));
+        
+        if (Mathf::Abs(dot(frontDir, upDir) > 1 - Mathf::ZeroTolerance()))
         {
-          reinterpret_cast<Vector3f*>(mat.m_Data + 0),
-          reinterpret_cast<Vector3f*>(mat.m_Data + 4),
-          reinterpret_cast<Vector3f*>(mat.m_Data + 8),
-        };
-        *rotMat[0] = FROM_BTVECT(m_Object->getInterpolationLinearVelocity());
-        rotMat[0]->Normalize();
-        *rotMat[2] = UnitZ<Vector3f>();
-        *rotMat[1] = rotMat[2]->Cross(*rotMat[0]);
+          upDir = FROM_BTVECT(m_CachedTransform.getBasis()[0]);
+        }
+        Vec3 sideDir = cross(frontDir, upDir);
+        rot = Quaternion(frontDir, sideDir);
       }
-
-      m_System.m_MovedTransform.push_back(mat);
+      m_System.m_MovedTransform.push_back(translate(Mat4(rot), FROM_BTVECT(worldTrans.getOrigin())));
       m_System.m_MovedObject.push_back(m_ObjectId);
     }
   }
 
-  bool PhysicComponent_Impl::SweepTest(Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)
+  bool PhysicComponent_Impl::SweepTest(Vec3 const& iFrom, Vec3 const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)
   {
     return m_System.m_Impl->SweepTest(this, iFrom, iTo, oRes, iIgnore, iMask);
   }
@@ -112,10 +110,11 @@ namespace eXl
     }
     uint32_t flags = iInitData.GetFlags();
 
-    Matrix4f const& transform = m_System.m_Transforms.GetWorldTransform(iTransform);
+    Mat4 const& transform = m_System.m_Transforms.GetWorldTransform(iTransform);
 
     btTransform trans;
-    trans.setFromOpenGLMatrix(transform.m_Data);
+    trans.setOrigin(TO_BTVECT(transform[3]));
+    trans.getBasis().setFromOpenGLSubMatrix(value_ptr(transpose(transform)));
 
     if(flags & PhysicFlags::IsGhost)
     {

@@ -54,8 +54,8 @@ namespace eXl
       Real cross = Cross(iPoint - iSegPt1, dir);
       if(Math<Real>::Abs(cross) > iEpsilon)
         return false;
-      Real proj = (iPoint - iSegPt1).Dot(dir);
-      if(proj < -iEpsilon || proj > dir.Dot(dir) + iEpsilon)
+      Real proj = dot((iPoint - iSegPt1), dir);
+      if(proj < -iEpsilon || proj > dot(dir, dir) + iEpsilon)
         return false;
 
       return true;

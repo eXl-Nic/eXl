@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/enginelib.hpp>
 #include <core/coredef.hpp>
-#include <math/matrix4.hpp>
+#include <math/math.hpp>
 #include <core/idgenerator.hpp>
 #include <core/type/typetraits.hpp>
 #include <engine/common/world.hpp>
@@ -33,18 +33,18 @@ namespace eXl
     Transforms();
     ~Transforms();
 
-    Err AddTransform(ObjectHandle iObj, Optional<Matrix4f> const& iTrans = {});
-    void UpdateTransform(ObjectHandle, Matrix4f const& iTransform);
+    Err AddTransform(ObjectHandle iObj, Optional<Mat4> const& iTrans = {});
+    void UpdateTransform(ObjectHandle, Mat4 const& iTransform);
     void DeleteComponent(ObjectHandle) override;
 
     void Attach(ObjectHandle iChild, ObjectHandle iParent, AttachType iAttach = PositionRotation);
     void Detach(ObjectHandle iChild);
 
     bool HasTransform(ObjectHandle) const;
-    Matrix4f const& GetLocalTransform(ObjectHandle) const;
+    Mat4 const& GetLocalTransform(ObjectHandle) const;
 
     // Caution : can do some computation if the transform is out of date
-    Matrix4f const& GetWorldTransform(ObjectHandle);
+    Mat4 const& GetWorldTransform(ObjectHandle);
 
     //void Update();
     void NextFrame();
@@ -117,8 +117,8 @@ namespace eXl
       uint32_t m_Used = 0;
       void* m_Buffer;
 
-      Matrix4f* m_WorldTransform;
-      Matrix4f* m_LocalTransform;
+      Mat4* m_WorldTransform;
+      Mat4* m_LocalTransform;
       ObjectHandle* m_Owner;
       uint32_t* m_Timestamps;
       uint32_t* m_GlobId;
@@ -127,8 +127,8 @@ namespace eXl
 
     struct Entry
     {
-      inline Matrix4f& WorldTransform();
-      inline Matrix4f& LocalTransform();
+      inline Mat4& WorldTransform();
+      inline Mat4& LocalTransform();
       inline ObjectHandle& Owner();
       inline uint32_t& Timestamp();
       inline uint32_t& GlobId();
@@ -172,11 +172,11 @@ namespace eXl
     uint32_t m_TotAlloc = 0;
   };
 
-  Matrix4f& Transforms::Entry::WorldTransform()
+  Mat4& Transforms::Entry::WorldTransform()
   {
     return m_Page->m_WorldTransform[m_LocalPos];
   }
-  Matrix4f& Transforms::Entry::LocalTransform()
+  Mat4& Transforms::Entry::LocalTransform()
   {
     return m_Page->m_LocalTransform[m_LocalPos];
   }

@@ -17,19 +17,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  Vector2f NavMesh::Face::GetTreadmillDir(Vector2f const& iPos) const
+  Vec2 NavMesh::Face::GetTreadmillDir(Vec2 const& iPos) const
   {
-    Vector2f faceCenter = m_Box.GetCenter();
-    Vector2f halfSize = m_Box.GetSize() * 0.5;
-    Vector2f otherCorner(halfSize.X(), -halfSize.Y());
-    Vector2f relPos = iPos - faceCenter;
+    Vec2 faceCenter = m_Box.GetCenter();
+    Vec2 halfSize = m_Box.GetSize() * 0.5;
+    Vec2 otherCorner(halfSize.x, -halfSize.y);
+    Vec2 relPos = iPos - faceCenter;
 
-    static const Vector2f treadMillDirs[] = 
+    static const Vec2 treadMillDirs[] = 
     {
-      -UnitY<Vector2f>(),
-       UnitX<Vector2f>(),
-       UnitY<Vector2f>(),
-      -UnitX<Vector2f>()
+      -UnitY<Vec2>(),
+       UnitX<Vec2>(),
+       UnitY<Vec2>(),
+      -UnitX<Vec2>()
     };
 
     uint32_t quadrant;
@@ -63,7 +63,7 @@ namespace eXl
 
     int32_t axis = quadrant % 2;
     int32_t otherAxis = (1 - axis);
-    int32_t sign = relPos.m_Data[otherAxis] > 0 ? 1 : 0;
+    int32_t sign = relPos[otherAxis] > 0 ? 1 : 0;
     quadrant = otherAxis + sign * 2;
     if (m_HasSide[quadrant])
     {
@@ -78,42 +78,42 @@ namespace eXl
   {
     Segment<Real> res;
 
-    if(iBox2.m_Data[1].Y() - iBox1.m_Data[0].Y() >= Math<Real>::ZeroTolerance() && iBox1.m_Data[1].Y() - iBox2.m_Data[0].Y() >= Math<Real>::ZeroTolerance())
+    if(iBox2.m_Data[1].y - iBox1.m_Data[0].y >= Math<Real>::ZeroTolerance() && iBox1.m_Data[1].y - iBox2.m_Data[0].y >= Math<Real>::ZeroTolerance())
     {
-      res.m_Ext1.Y() = Math<Real>::Max(iBox1.m_Data[0].Y(), iBox2.m_Data[0].Y());
-      res.m_Ext2.Y() = Math<Real>::Min(iBox1.m_Data[1].Y(), iBox2.m_Data[1].Y());
+      res.m_Ext1.y = Math<Real>::Max(iBox1.m_Data[0].y, iBox2.m_Data[0].y);
+      res.m_Ext2.y = Math<Real>::Min(iBox1.m_Data[1].y, iBox2.m_Data[1].y);
 
-      Real val = iBox1.m_Data[0].X() - iBox2.m_Data[1].X();
+      Real val = iBox1.m_Data[0].x - iBox2.m_Data[1].x;
       if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
-        res.m_Ext1.X() = res.m_Ext2.X() = iBox1.m_Data[0].X();
+        res.m_Ext1.x = res.m_Ext2.x = iBox1.m_Data[0].x;
         return res;
       }
 
-      val = iBox1.m_Data[1].X() - iBox2.m_Data[0].X();
+      val = iBox1.m_Data[1].x - iBox2.m_Data[0].x;
       if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
-        res.m_Ext1.X() = res.m_Ext2.X() = iBox1.m_Data[1].X();
+        res.m_Ext1.x = res.m_Ext2.x = iBox1.m_Data[1].x;
         return res;
       }
     }
 
-    if(iBox2.m_Data[1].X() - iBox1.m_Data[0].X() >= Math<Real>::ZeroTolerance() && iBox1.m_Data[1].X() - iBox2.m_Data[0].X() >= Math<Real>::ZeroTolerance())
+    if(iBox2.m_Data[1].x - iBox1.m_Data[0].x >= Math<Real>::ZeroTolerance() && iBox1.m_Data[1].x - iBox2.m_Data[0].x >= Math<Real>::ZeroTolerance())
     {
-      res.m_Ext1.X() = Math<Real>::Max(iBox1.m_Data[0].X(), iBox2.m_Data[0].X());
-      res.m_Ext2.X() = Math<Real>::Min(iBox1.m_Data[1].X(), iBox2.m_Data[1].X());
+      res.m_Ext1.x = Math<Real>::Max(iBox1.m_Data[0].x, iBox2.m_Data[0].x);
+      res.m_Ext2.x = Math<Real>::Min(iBox1.m_Data[1].x, iBox2.m_Data[1].x);
 
-      Real val = iBox1.m_Data[0].Y() - iBox2.m_Data[1].Y();
+      Real val = iBox1.m_Data[0].y - iBox2.m_Data[1].y;
       if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
-        res.m_Ext1.Y() = res.m_Ext2.Y() = iBox1.m_Data[0].Y(); 
+        res.m_Ext1.y = res.m_Ext2.y = iBox1.m_Data[0].y; 
         return res;
       }
 
-      val = iBox1.m_Data[1].Y() - iBox2.m_Data[0].Y();
+      val = iBox1.m_Data[1].y - iBox2.m_Data[0].y;
       if(val <= Math<Real>::ZeroTolerance() && val >= -Math<Real>::ZeroTolerance())
       {
-        res.m_Ext1.Y() = res.m_Ext2.Y() = iBox1.m_Data[1].Y(); 
+        res.m_Ext1.y = res.m_Ext2.y = iBox1.m_Data[1].y; 
         return res;
       }
     }
@@ -163,8 +163,8 @@ namespace eXl
       Vector<BoxIndexEntry> results;
 
       AABB2Df queryBox = boxEntry.first;
-      queryBox.m_Data[0] -= Vector2f::ONE;
-      queryBox.m_Data[1] += Vector2f::ONE;
+      queryBox.m_Data[0] -= One<Vec2>();
+      queryBox.m_Data[1] += One<Vec2>();
 
       index.query(
         /*boost::geometry::index::satisfies([&box](BoxIndexEntry const& iEntry)
@@ -239,14 +239,14 @@ namespace eXl
       Face& face = resMesh.m_Faces.back();
       face.m_Box = tempFaces[0].m_Box;
 
-      Vector2f faceDim = face.m_Box.GetSize();
+      Vec2 faceDim = face.m_Box.GetSize();
 
-      Vector2f corners[] = 
+      Vec2 corners[] = 
       {
         face.m_Box.m_Data[0],
-        face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>(),
-        face.m_Box.m_Data[0] + faceDim.Y() * UnitY<Vector2f>(),
-        face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>() + faceDim.Y() * UnitY<Vector2f>()
+        face.m_Box.m_Data[0] + faceDim.x * UnitX<Vec2>(),
+        face.m_Box.m_Data[0] + faceDim.y * UnitY<Vec2>(),
+        face.m_Box.m_Data[0] + faceDim.x * UnitX<Vec2>() + faceDim.y * UnitY<Vec2>()
       };
 
       face.m_Walls.push_back(Segmentf({corners[0], corners[1]}));
@@ -330,10 +330,10 @@ namespace eXl
         auto const& seg1 = curRes.m_FaceEdges[curVtx];
         auto const& seg2 = curRes.m_FaceEdges[otherVtx];
 
-        Vector2f vec = (seg1.segment.m_Ext1 + seg1.segment.m_Ext2) * 0.5 - (seg2.segment.m_Ext1 + seg2.segment.m_Ext2) * 0.5;
+        Vec2 vec = (seg1.segment.m_Ext1 + seg1.segment.m_Ext2) * 0.5 - (seg2.segment.m_Ext1 + seg2.segment.m_Ext2) * 0.5;
         boost::property_map<Graph, boost::edge_weight_t>::type propMapW = boost::get(boost::edge_weight, curRes.m_Graph);
 
-        boost::put(propMapW, edgeId.first, vec.Length());
+        boost::put(propMapW, edgeId.first, length(vec));
       }
     }
 
@@ -343,17 +343,17 @@ namespace eXl
     {
       for(auto& face : component.m_Faces)
       {
-        Vector2f faceCenter = face.m_Box.GetCenter();
-        Vector2f faceDim = face.m_Box.GetSize();
+        Vec2 faceCenter = face.m_Box.GetCenter();
+        Vec2 faceDim = face.m_Box.GetSize();
 
         if(face.m_Edges.empty())
         {
-          Vector2f corners[] = 
+          Vec2 corners[] = 
           {
             face.m_Box.m_Data[0],
-            face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>(),
-            face.m_Box.m_Data[0] + faceDim.Y() * UnitY<Vector2f>(),
-            face.m_Box.m_Data[0] + faceDim.X() * UnitX<Vector2f>() + faceDim.Y() * UnitY<Vector2f>()
+            face.m_Box.m_Data[0] + faceDim.x * UnitX<Vec2>(),
+            face.m_Box.m_Data[0] + faceDim.y * UnitY<Vec2>(),
+            face.m_Box.m_Data[0] + faceDim.x * UnitX<Vec2>() + faceDim.y * UnitY<Vec2>()
           };
 
           face.m_Walls.push_back(Segmentf({corners[2], corners[0]}));
@@ -364,12 +364,12 @@ namespace eXl
           continue;
         }
 
-        Vector2f ccwDirs[4] =
+        Vec2 ccwDirs[4] =
         {
-           UnitY<Vector2f>(),
-          -UnitX<Vector2f>(),
-          -UnitY<Vector2f>(),
-           UnitX<Vector2f>()
+           UnitY<Vec2>(),
+          -UnitX<Vec2>(),
+          -UnitY<Vec2>(),
+           UnitX<Vec2>()
         };
 
         for (auto& val : face.m_HasSide) { val = false; }
@@ -378,20 +378,20 @@ namespace eXl
           float sign = dirIdx >= 2 ? -1.0: 1.0;
           int32_t axis = dirIdx % 2;
           
-          Vector2f dir;
-          dir.m_Data[axis] = sign;
+          Vec2 dir;
+          dir[axis] = sign;
 
-          openings.Start(faceCenter, 0.0, dir, faceDim.SquaredLength());
+          openings.Start(faceCenter, 0.0, dir, length2(faceDim));
 
-          openings.AddSegment(Segmentf({faceCenter - dir, faceCenter + faceDim.m_Data[axis] * dir - faceDim.m_Data[1 - axis] * MathTools::Perp(dir)}), 0.0);
-          openings.AddSegment(Segmentf({faceCenter - dir, faceCenter + faceDim.m_Data[axis] * dir + faceDim.m_Data[1 - axis] * MathTools::Perp(dir)}), 0.0);
+          openings.AddSegment(Segmentf({faceCenter - dir, faceCenter + faceDim[axis] * dir - faceDim[1 - axis] * MathTools::Perp(dir)}), 0.0);
+          openings.AddSegment(Segmentf({faceCenter - dir, faceCenter + faceDim[axis] * dir + faceDim[1 - axis] * MathTools::Perp(dir)}), 0.0);
 
           for(auto segIdx : face.m_Edges)
           {
             Segmentf const& seg = component.m_FaceEdges[segIdx].segment;
-            Vector2f segDir = seg.m_Ext2 - seg.m_Ext1;
-            int32_t segAxis = segDir.X() == 0 ? 0 : 1;
-            float segSign = Mathf::Sign(seg.m_Ext1.m_Data[axis] - faceCenter.m_Data[axis]);
+            Vec2 segDir = seg.m_Ext2 - seg.m_Ext1;
+            int32_t segAxis = segDir.x == 0 ? 0 : 1;
+            float segSign = Mathf::Sign(seg.m_Ext1[axis] - faceCenter[axis]);
 
             if(segAxis == axis && segSign == sign)
             {
@@ -412,15 +412,15 @@ namespace eXl
 
             face.m_Walls.push_back(Segmentf());
             Segmentf& newWall = face.m_Walls.back();
-            newWall.m_Ext1.X() = faceDim.m_Data[axis] * 0.5;
-            newWall.m_Ext1.Y() = newWall.m_Ext1.X() * localRanges.m_Ext1.Y() / localRanges.m_Ext1.X();
-            newWall.m_Ext1 = faceCenter + newWall.m_Ext1.X() * dir + newWall.m_Ext1.Y() * MathTools::GetPerp(dir);
+            newWall.m_Ext1.x = faceDim[axis] * 0.5;
+            newWall.m_Ext1.y = newWall.m_Ext1.x * localRanges.m_Ext1.y / localRanges.m_Ext1.x;
+            newWall.m_Ext1 = faceCenter + newWall.m_Ext1.x * dir + newWall.m_Ext1.y * MathTools::GetPerp(dir);
 
-            newWall.m_Ext2.X() = faceDim.m_Data[axis] * 0.5;
-            newWall.m_Ext2.Y() = newWall.m_Ext2.X() * localRanges.m_Ext2.Y() / localRanges.m_Ext2.X();
-            newWall.m_Ext2 = faceCenter + newWall.m_Ext2.X() * dir + newWall.m_Ext2.Y() * MathTools::GetPerp(dir);
+            newWall.m_Ext2.x = faceDim[axis] * 0.5;
+            newWall.m_Ext2.y = newWall.m_Ext2.x * localRanges.m_Ext2.y / localRanges.m_Ext2.x;
+            newWall.m_Ext2 = faceCenter + newWall.m_Ext2.x * dir + newWall.m_Ext2.y * MathTools::GetPerp(dir);
 
-            if ((newWall.m_Ext2 - newWall.m_Ext1).Dot(ccwDirs[dirIdx]) < 0)
+            if (dot(newWall.m_Ext2 - newWall.m_Ext1, ccwDirs[dirIdx]) < 0)
             {
               std::swap(newWall.m_Ext2, newWall.m_Ext1);
             }
@@ -435,12 +435,12 @@ namespace eXl
     return result;
   }
 
-  Optional<NavMesh::FoundFace> NavMesh::FindFace(Vector2f const& iPos) const
+  Optional<NavMesh::FoundFace> NavMesh::FindFace(Vec2 const& iPos) const
   {
     Vector<BoxIndexEntry> results;
     AABB2Df queryBox;
-    queryBox.m_Data[0] = iPos - Vector2f::ONE;
-    queryBox.m_Data[1] = iPos + Vector2f::ONE;
+    queryBox.m_Data[0] = iPos - One<Vec2>();
+    queryBox.m_Data[1] = iPos + One<Vec2>();
 
     for (uint32_t i = 0; i< m_Components.size(); ++i)
     {
@@ -501,7 +501,7 @@ namespace eXl
     {
     public:
       typedef boost::graph_traits<NavMesh::Graph>::vertex_descriptor Vertex;
-      distance_heuristic(NavMesh::EdgeMap const& iEdges, Vector2f iGoalPt) 
+      distance_heuristic(NavMesh::EdgeMap const& iEdges, Vec2 iGoalPt) 
         : m_Edges(iEdges)
         , m_GoalPt(iGoalPt)
       {}
@@ -512,16 +512,16 @@ namespace eXl
         auto const& desc = m_Edges[u];
         //if(desc != m_Edges.end())
         {
-          Vector2f edgeCenter = (desc.segment.m_Ext1 + desc.segment.m_Ext2) * 0.5;
+          Vec2 edgeCenter = (desc.segment.m_Ext1 + desc.segment.m_Ext2) * 0.5;
 
-          return (edgeCenter - m_GoalPt).Length();
+          return length(edgeCenter - m_GoalPt);
         }
 
-        return Mathf::MAX_REAL;
+        return Mathf::MaxReal();
       }
     private:
       NavMesh::EdgeMap const& m_Edges;
-      Vector2f m_GoalPt;
+      Vec2 m_GoalPt;
     };
   }
 
@@ -541,31 +541,31 @@ namespace eXl
     return {};
   }
 
-  Vector2f GetDirToFace(AABB2Df const& iOrigFace, AABB2Df const& iDestFace)
+  Vec2 GetDirToFace(AABB2Df const& iOrigFace, AABB2Df const& iDestFace)
   {
     int touchId = iOrigFace.Touch(iDestFace);
     switch(touchId)
     {
     case 1:
-      return UnitX<Vector2f>() * -1.0;
+      return UnitX<Vec2>() * -1.0;
       break;
     case 2:
-      return UnitX<Vector2f>();
+      return UnitX<Vec2>();
       break;
     case 3:
-      return UnitY<Vector2f>() * -1.0;
+      return UnitY<Vec2>() * -1.0;
       break;
     case 4:
-      return UnitY<Vector2f>();
+      return UnitY<Vec2>();
       break;
     default:
       //eXl_ASSERT_MSG(false, "Neighbouring faces not touching");
-      return Vector2f::ZERO;
+      return Zero<Vec2>();
       break;
     }
   }
 
-  Optional<NavMesh::Path> NavMesh::FindPath(Vector2f const& iStart, Vector2f const& iEnd) const
+  Optional<NavMesh::Path> NavMesh::FindPath(Vec2 const& iStart, Vec2 const& iEnd) const
   {
     Optional<FoundFace> faceStartId = FindFace(iStart);
     Optional<FoundFace> faceEndId = FindFace(iEnd);
@@ -605,7 +605,7 @@ namespace eXl
         catch(found_goal& goal)
         {
           uint32_t curFaceId = faceEndId->m_Face;
-          Vector2f goalPt(iEnd.X(), iEnd.Y());
+          Vec2 goalPt(iEnd.x, iEnd.y);
           Path res;
           res.m_Component = faceStartId->m_Component;
           for(auto v = goal.outEdge;; v = p[v]) 
@@ -624,10 +624,9 @@ namespace eXl
 
               auto dirToGoal = goalPt - midPt;
 
-              if(dirToGoal.Length() < Mathf::ZeroTolerance())
+              if(length(dirToGoal) < Mathf::ZeroTolerance())
               {
-                dirToGoal = (seg.m_Ext1 - seg.m_Ext2);
-                dirToGoal.Normalize();
+                dirToGoal = normalize(seg.m_Ext1 - seg.m_Ext2);
                 res.m_EdgeDirs.push_back(dirToGoal);
               }
               else

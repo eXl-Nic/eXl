@@ -47,11 +47,11 @@ namespace eXl
       };
 
       ObjectHandle m_Object;
-      Vector3f m_Dims;
+      Vec3 m_Dims;
       ObstacleKind m_ObsKind;
 
-      Vector3f m_Dir;
-      //Vector3f m_LinVel;
+      Vec3 m_Dir;
+      //Vec3 m_LinVel;
       float m_Speed = 0;
       float m_ImmobilityFactor = 0.0;
       float m_ImmTimestamp;
@@ -68,8 +68,8 @@ namespace eXl
     struct Agent
     {
       // public data
-      Vector3f m_Dest;
-      Vector3f m_CorrectedVelocity;
+      Vec3 m_Dest;
+      Vec3 m_CorrectedVelocity;
       
       // private data
       AABB2Df m_CurFace;
@@ -79,9 +79,9 @@ namespace eXl
       NavMesh::Path m_CurrentPath;
 
       // Anti-stuck mechanism
-      Vector3f m_PriorityAvoidanceDir;
-      Vector3f m_PrevPos;
-      Vector2f m_TreadmillDir;
+      Vec3 m_PriorityAvoidanceDir;
+      Vec3 m_PrevPos;
+      Vec2 m_TreadmillDir;
       float m_AvoidanceFactor = 0.0;
       float m_AvoidanceDelta = 0.0;
       uint32_t m_Rank = 0;
@@ -105,13 +105,13 @@ namespace eXl
 
     void DeleteComponent(ObjectHandle iObject) override;
 
-    Err SetDestination(ObjectHandle iObject, Vector3f iDest);
+    Err SetDestination(ObjectHandle iObject, Vec3 iDest);
 
     Obstacle const* AddObstacle(ObjectHandle iObject, float iRadius);
 
-    //void SetObstacleSpeed(ObjectHandle iObject, Vector3f iSpeed);
+    //void SetObstacleSpeed(ObjectHandle iObject, Vec3 iSpeed);
 
-    Obstacle const* AddObstacle(ObjectHandle iObject, Vector3f iBoxDims);
+    Obstacle const* AddObstacle(ObjectHandle iObject, Vec3 iBoxDims);
 
     void Tick(float iTime, NeighborhoodExtraction& iNeighbours);
 

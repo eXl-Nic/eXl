@@ -49,19 +49,19 @@ namespace eXl
       PhysicKind kind;
     };
 
-    static void Build(World& iWorld, ObjectHandle iObject, Vector3f const& iPosition, Desc const& iDesc);
+    static void Build(World& iWorld, ObjectHandle iObject, Vec3 const& iPosition, Desc const& iDesc);
     void Register(World& iWorld) override;
 
 		void AddCharacter(ObjectHandle iObj, Desc const& iDesc);
     void DeleteComponent(ObjectHandle iObj) override;
 
 		void SetSpeed(ObjectHandle iObj, float iSpeed);
-		void SetCurDir(ObjectHandle iObj, Vector3f const& iDir);
+		void SetCurDir(ObjectHandle iObj, Vec3 const& iDir);
     void SetState(ObjectHandle iObj, uint32_t iState);
 
     uint32_t GetCurrentState(ObjectHandle iObj);
-    static uint32_t GetStateFromDir(Vector3f const& iDir, bool iMoving);
-    Vector3f GetCurrentFacingDirection(ObjectHandle iObj);
+    static uint32_t GetStateFromDir(Vec3 const& iDir, bool iMoving);
+    Vec3 GetCurrentFacingDirection(ObjectHandle iObj);
     Desc const* GetDesc(ObjectHandle iObj);
 
     bool GrabObject(ObjectHandle iGrabber, ObjectHandle iGrabbed);

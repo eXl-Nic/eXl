@@ -11,8 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/common/world.hpp>
-#include <math/vector3.hpp>
-#include <math/vector4.hpp>
 #include <math/aabb2d.hpp>
 
 #include <iostream>
@@ -24,9 +22,9 @@ namespace eXl
     class Drawer
     {
     public:
-      virtual void DrawLine(const Vector3f& iFrom, const Vector3f& iTo, const Vector4f& iColor, bool iScreenSpace = false) = 0;
-      virtual void DrawBox(AABB2Df const& iBox, const Vector4f& iColor, bool iScreenSpace = false) = 0;
-      virtual void DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace = false) = 0;
+      virtual void DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace = false) = 0;
+      virtual void DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace = false) = 0;
+      virtual void DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace = false) = 0;
     };
 
     enum System

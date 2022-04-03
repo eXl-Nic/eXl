@@ -28,16 +28,16 @@ namespace eXl
       return false;
     }
     bool animEnded = false;
-    Vector3f newPos = m_Anim->GetValue(iTime, &animEnded);
+    Vec3 newPos = m_Anim->GetValue(iTime, &animEnded);
 
     if (animEnded)
     {
       return false;
     }
 
-    Matrix4f basePos = Matrix4f::IDENTITY;
-    Vector4f trans = m_PreTransform * Vector4f(newPos.X(), newPos.Y(), newPos.Z(), 1.0);
-    MathTools::GetPosition(basePos) = reinterpret_cast<Vector3f&>(trans);
+    Mat4 basePos = Identity<Mat4>();
+    Vec4 trans = m_PreTransform * Vec4(newPos.x, newPos.y, newPos.z, 1.0);
+    basePos[3] = trans;
     iManager.m_Transforms->UpdateTransform(m_Object, m_PostTransform * basePos);
 
     return true;
@@ -53,7 +53,7 @@ namespace eXl
     });
   }
 
-  TransformAnimManager::TimelineHandle TransformAnimManager::Start(ObjectHandle iObject, LinearPositionAnimation& iAnim, Matrix4f const& iPreTrans, Matrix4f const& iPostTrans)
+  TransformAnimManager::TimelineHandle TransformAnimManager::Start(ObjectHandle iObject, LinearPositionAnimation& iAnim, Mat4 const& iPreTrans, Mat4 const& iPostTrans)
   {
     TimelineEntry* newEntry;
     TimelineHandle newHandle = Impl_Start(newEntry);
@@ -65,7 +65,7 @@ namespace eXl
     return newHandle;
   }
 
-  TransformAnimManager::TimelineHandle TransformAnimManager::StartLooping(ObjectHandle iObject, LinearPositionAnimation& iAnim, float iLoopTime, Matrix4f const& iPreTrans, Matrix4f const& iPostTrans)
+  TransformAnimManager::TimelineHandle TransformAnimManager::StartLooping(ObjectHandle iObject, LinearPositionAnimation& iAnim, float iLoopTime, Mat4 const& iPreTrans, Mat4 const& iPostTrans)
   {
     TimelineEntry* newEntry;
     TimelineHandle newHandle = Impl_StartLooping(iLoopTime, newEntry);

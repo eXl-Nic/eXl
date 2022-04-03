@@ -130,17 +130,17 @@ namespace eXl
     {
       Image::Size const dummySize(8, 8);
 
-      uint32_t numPixels = iImageSize.X() * iImageSize.Y();
+      uint32_t numPixels = iImageSize.x * iImageSize.y;
       uint8_t* imageData = (uint8_t*)eXl_ALLOC(numPixels * 4 * sizeof(uint8_t));
 
       uint8_t* curPixel = imageData;
-      for (uint32_t y = 0; y < iImageSize.Y(); ++y)
+      for (uint32_t y = 0; y < iImageSize.y; ++y)
       {
-        uint32_t srcY = y % dummySize.Y();
-        for (uint32_t x = 0; x < iImageSize.X(); ++x)
+        uint32_t srcY = y % dummySize.y;
+        for (uint32_t x = 0; x < iImageSize.x; ++x)
         {
-          uint32_t srcX = x % dummySize.X();
-          uint32_t srcOffset = srcX + srcY * dummySize.X();
+          uint32_t srcX = x % dummySize.x;
+          uint32_t srcOffset = srcX + srcY * dummySize.x;
           uint8_t intensity = (iBitmap[srcOffset] & 127) << 1;
           uint8_t alphaValue = iBitmap[srcOffset] & 128 ? 255 : 0;
 

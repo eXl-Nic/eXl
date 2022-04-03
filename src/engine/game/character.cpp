@@ -24,7 +24,7 @@ namespace eXl
 {
   IMPLEMENT_RTTI(CharacterSystem);
 
-  void CharacterSystem::Build(World& iWorld, ObjectHandle iObject, Vector3f const& iPosition, Desc const& iDesc)
+  void CharacterSystem::Build(World& iWorld, ObjectHandle iObject, Vec3 const& iPosition, Desc const& iDesc)
   {
     eXl_ASSERT_REPAIR_RET(iWorld.IsObjectValid(iObject), void());
 
@@ -34,7 +34,7 @@ namespace eXl
 
     ObjectHandle newObject = iWorld.CreateObject();
 
-    transforms->AddTransform(newObject, Matrix4f::FromPosition(iPosition));
+    transforms->AddTransform(newObject, translate(Identity<Mat4>(), iPosition));
 
     PhysicInitData desc;
     uint32_t flags = PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity | PhysicFlags::AddSensor;
@@ -85,12 +85,12 @@ namespace eXl
     iWorld.AddTick(World::PostPhysics, [this](World&, float iDelta) { Tick(iDelta); });
   }
 
-  uint32_t CharacterSystem::GetStateFromDir(Vector3f const& iDir, bool iMoving)
+  uint32_t CharacterSystem::GetStateFromDir(Vec3 const& iDir, bool iMoving)
   {
     float dotProd[] =
     {
-      iDir.Dot(UnitX<Vector3f>()),
-      iDir.Dot(UnitY<Vector3f>()),
+      dot(iDir, UnitX<Vec3>()),
+      dot(iDir, UnitY<Vec3>()),
     };
 
     uint32_t dirIdx = Mathf::Abs(dotProd[0]) > Mathf::Abs(dotProd[1]) ? 0 : 1;
@@ -106,11 +106,11 @@ namespace eXl
   {
     Transforms* transforms = GetWorld().GetSystem<Transforms>();
     NavigatorSystem* navSys = GetWorld().GetSystem<NavigatorSystem>();
-    GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
+    GameDataView<Vec3>* velocities = EngineCommon::GetVelocities(GetWorld());
     m_Characters->Iterate([this, transforms, navSys, velocities](ObjectHandle iObject, Entry& entry)
     {
-      Vector3f linVel;
-      Vector3f dir;
+      Vec3 linVel;
+      Vec3 dir;
       bool moving = false;
 
       //if (entry.m_Desc.controlKind == ControlKind::Navigation)
@@ -120,8 +120,8 @@ namespace eXl
       //  
       //  moving = obstacle->m_LinVel.SquaredLength() > Mathf::ZeroTolerance();
       //
-      //  Matrix4f const& mat = transforms->GetWorldTransform(entry.m_Handle);
-      //  dir = *reinterpret_cast<Vector3f const*>(mat.m_Data + 0);
+      //  Mat4 const& mat = transforms->GetWorldTransform(entry.m_Handle);
+      //  dir = *reinterpret_cast<Vec3 const*>(mat.m_Data + 0);
       //}
       //else 
       if (entry.m_Desc.kind == PhysicKind::Kinematic)
@@ -136,7 +136,7 @@ namespace eXl
       {
         linVel = velocities->GetOrCreate(iObject);
         dir = linVel;
-        float vel = linVel.Normalize();
+        float vel = NormalizeAndGetLength(linVel);
         moving = vel > Mathf::ZeroTolerance();
       }
 
@@ -268,24 +268,24 @@ namespace eXl
     return 0;
   }
 
-  Vector3f CharacterSystem::GetCurrentFacingDirection(ObjectHandle iObj)
+  Vec3 CharacterSystem::GetCurrentFacingDirection(ObjectHandle iObj)
   {
-    Vector3f dir;
+    Vec3 dir;
     if (Entry*entry = m_Characters->Get(iObj))
     {
       switch (entry->m_CurState & (uint32_t)CharacterSystem::StateFlags::DirMask)
       {
       case (uint32_t)CharacterSystem::StateFlags::DirLeft:
-        dir = UnitX<Vector3f>() * -1;
+        dir = UnitX<Vec3>() * -1;
         break;
       case (uint32_t)CharacterSystem::StateFlags::DirRight:
-        dir = UnitX<Vector3f>();
+        dir = UnitX<Vec3>();
         break;
       case (uint32_t)CharacterSystem::StateFlags::DirDown:
-        dir = UnitY<Vector3f>() * -1;
+        dir = UnitY<Vec3>() * -1;
         break;
       case (uint32_t)CharacterSystem::StateFlags::DirUp:
-        dir = UnitY<Vector3f>();
+        dir = UnitY<Vec3>();
         break;
       }
     }
@@ -302,15 +302,14 @@ namespace eXl
     return nullptr;
   }
 
-	void CharacterSystem::SetCurDir(ObjectHandle iObj, Vector3f const& iDir)
+	void CharacterSystem::SetCurDir(ObjectHandle iObj, Vec3 const& iDir)
 	{
     if (Entry*entry = m_Characters->Get(iObj))
     {
       if (entry->m_KinematicEntry.IsAssigned())
       {
         KinematicEntry& kEntry = GetKinematic(entry->m_KinematicEntry);
-        kEntry.m_Dir = iDir;
-        kEntry.m_Dir.Normalize();
+        kEntry.m_Dir = normalize(iDir);
       }
 		}
 	}

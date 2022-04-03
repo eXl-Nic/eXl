@@ -149,7 +149,7 @@ namespace eXl
       {
         if (m_Selection)
         {
-          m_Selection->m_Position.X() = iNewValue;
+          m_Selection->m_Position.x = iNewValue;
           UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
           emit onEditDone();
         }
@@ -159,7 +159,7 @@ namespace eXl
       {
         if (m_Selection)
         {
-          m_Selection->m_Position.Y() = iNewValue;
+          m_Selection->m_Position.y = iNewValue;
           UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
           emit onEditDone();
         }
@@ -222,12 +222,12 @@ namespace eXl
         if (iLowLight == EnableAll || (iLowLight == Layer
           && iTile.m_Layer == m_LayerWidget->GetCurLayer()))
         {
-          sys.GetSpriteComponent(iObject)->SetTint(Vector4f::ONE);
+          sys.GetSpriteComponent(iObject)->SetTint(One<Vec4>());
         }
         if (iLowLight == DisableAll || (iLowLight == Layer
           && iTile.m_Layer != m_LayerWidget->GetCurLayer()))
         {
-          sys.GetSpriteComponent(iObject)->SetTint(Vector4f(0.8, 0.8, 0.8, 0.5));
+          sys.GetSpriteComponent(iObject)->SetTint(Vec4(0.8, 0.8, 0.8, 0.5));
         }
       });
   }
@@ -277,7 +277,7 @@ namespace eXl
   {
     SetPenToolTile();
 
-    auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
+    auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vec2i iPos, bool iWasDrawing)
     {
       ObjectHandle curTileHandle = GetAt(iPos);
       TileItemData* curTile = m_TilesView.Get(curTileHandle);
@@ -357,8 +357,8 @@ namespace eXl
 
   void TilesTool::SetupEraserTool()
   {
-    m_Tools.m_Pen->SetSnapSize(Vector2i::ONE);
-    auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
+    m_Tools.m_Pen->SetSnapSize(One<Vec2i>());
+    auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vec2i iPos, bool iWasDrawing)
     {
       ObjectHandle tile = GetAt(iPos);
       if (!m_World.IsObjectValid(tile))
@@ -378,18 +378,18 @@ namespace eXl
       GfxSystem& gfxSys = *m_World.GetSystem<GfxSystem>();
 
       AABB2Di queryBox;
-      Vector3f worldPos;
-      Vector3f viewDir;
+      Vec3 worldPos;
+      Vec3 viewDir;
       gfxSys.ScreenToWorld(iSelBox.m_Data[0], worldPos, viewDir);
       queryBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
       gfxSys.ScreenToWorld(iSelBox.m_Data[1], worldPos, viewDir);
       queryBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 
       // World and Screen space have opposite Y directions
-      std::swap(queryBox.m_Data[0].Y(), queryBox.m_Data[1].Y());
+      std::swap(queryBox.m_Data[0].y, queryBox.m_Data[1].y);
 
-      queryBox.m_Data[1].X() = Mathi::Max(queryBox.m_Data[0].X() + 1, queryBox.m_Data[1].X());
-      queryBox.m_Data[1].Y() = Mathi::Max(queryBox.m_Data[0].Y() + 1, queryBox.m_Data[1].Y());
+      queryBox.m_Data[1].x = Mathi::Max(queryBox.m_Data[0].x + 1, queryBox.m_Data[1].x);
+      queryBox.m_Data[1].y = Mathi::Max(queryBox.m_Data[0].y + 1, queryBox.m_Data[1].y);
 
       QueryResult results(m_ResultsCache);
 
@@ -435,16 +435,16 @@ namespace eXl
 
       m_SelectionTile->ForceSelection(tileDesc->m_Tileset, tileDesc->m_Tile);
       m_SelectionLayer->SetLayer(tileDesc->m_Layer);
-      m_SelectionX->setValue(tileDesc->m_Position.X());
-      m_SelectionY->setValue(tileDesc->m_Position.Y());
+      m_SelectionX->setValue(tileDesc->m_Position.x);
+      m_SelectionY->setValue(tileDesc->m_Position.y);
 
       m_Selection = tileDesc;
     }
   }
 
-  ObjectHandle TilesTool::GetAt(Vector2i iWorldPos)
+  ObjectHandle TilesTool::GetAt(Vec2i iWorldPos)
   {
-    AABB2Di queryBox(iWorldPos, Vector2i::ONE);
+    AABB2Di queryBox(iWorldPos, One<Vec2i>());
 
     QueryResult results(m_ResultsCache);
     m_TilesIdx.query(boost::geometry::index::intersects(queryBox), results.Inserter());
@@ -457,7 +457,7 @@ namespace eXl
     return ObjectHandle();
   }
 
-  ObjectHandle TilesTool::AddAt(Vector2i iPixelPos, bool iAppend)
+  ObjectHandle TilesTool::AddAt(Vec2i iPixelPos, bool iAppend)
   {
     return AddAt(m_TileSelection->GetTileset(), 
       m_TileSelection->GetTileName(), 
@@ -466,7 +466,7 @@ namespace eXl
       iPixelPos, iAppend);
   }
 
-  ObjectHandle TilesTool::AddAt(ResourceHandle<Tileset> iTileset, TileName iTile, uint32_t iLayer, TerrainTypeName iTerrain, Vector2i iPixelPos, bool iAppend)
+  ObjectHandle TilesTool::AddAt(ResourceHandle<Tileset> iTileset, TileName iTile, uint32_t iLayer, TerrainTypeName iTerrain, Vec2i iPixelPos, bool iAppend)
   {
     ObjectHandle tileHandle = m_World.CreateObject();
     TileItemData& newTile = m_TilesView.GetOrCreate(tileHandle);
@@ -511,9 +511,9 @@ namespace eXl
     Transforms& trans = *m_World.GetSystem<Transforms>();
     GfxSystem& gfx = *m_World.GetSystem<GfxSystem>();
 
-    Vector2f tilePos(iTile.m_Position.X(), iTile.m_Position.Y());
+    Vec2 tilePos(iTile.m_Position.x, iTile.m_Position.y);
     tilePos /= EngineCommon::s_WorldToPixel;
-    trans.AddTransform(iHandle, Matrix4f::FromPosition(MathTools::To3DVec(tilePos)));
+    trans.AddTransform(iHandle, translate(Identity<Mat4>(), Vec3(tilePos, 0)));
 
     GfxSpriteComponent& gfxComp = gfx.CreateSpriteComponent(iHandle);
     gfxComp.SetTileset(iTile.m_Tileset.GetOrLoad());
@@ -560,7 +560,7 @@ namespace eXl
     AABB2Di& tileBox = m_PlacedTileData.GetOrCreate(iHandle).m_BoxCache;
     BoxIndexEntry oldBoxEntry(tileBox, iHandle);
    
-    Vector2i size = SafeGetTileSize(iTile.m_Tileset, iTile.m_Tile);
+    Vec2i size = SafeGetTileSize(iTile.m_Tileset, iTile.m_Tile);
     tileBox = AABB2Di(iTile.m_Position - size / 2, size);
 
     m_World.AddTimer(0.0, false, [&iTile, iHandle](World& iWorld)
@@ -568,8 +568,8 @@ namespace eXl
         if (iWorld.IsObjectValid(iHandle))
         {
           Transforms& trans = *iWorld.GetSystem<Transforms>();
-          Matrix4f mat = trans.GetLocalTransform(iHandle);
-          MathTools::GetPosition2D(mat) = Vector2f(iTile.m_Position.X(), iTile.m_Position.Y()) / EngineCommon::s_WorldToPixel;
+          Mat4 mat = trans.GetLocalTransform(iHandle);
+          mat[3] = Vec4(Vec2(iTile.m_Position.x, iTile.m_Position.y) / EngineCommon::s_WorldToPixel, 0, 1);
           trans.UpdateTransform(iHandle, mat);
           trans.GetWorldTransform(iHandle);
         }

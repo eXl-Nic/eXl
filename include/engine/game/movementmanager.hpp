@@ -64,7 +64,7 @@ namespace eXl
 
       ContactFilterCallback contactCb;
 
-      Vector3f m_Dir;
+      Vec3 m_Dir;
       float m_Speed;
       bool m_NeedDepenetration = false;
       bool m_CanBounce = false;
@@ -101,11 +101,11 @@ namespace eXl
     void Detach(KinematicEntryHandle iParent, PhysicComponent_Impl& iChild);
 
     bool AttemptMove(PhysicComponent_Impl& iPhComp, 
-      Vector3f const& iCurPos, 
+      Vec3 const& iCurPos, 
       bool iCanBounce, 
-      Vector3f& ioNextPos, 
+      Vec3& ioNextPos, 
       std::function<bool(PhysicComponent_Impl*)>& iIgnore,
-      Optional<Vector3f>& oCollideNormal);
+      Optional<Vec3>& oCollideNormal);
     void Step(PhysicsSystem* iSys, float iTime) override;
   };
 }

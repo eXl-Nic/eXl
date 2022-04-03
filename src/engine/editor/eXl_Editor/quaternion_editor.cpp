@@ -1,7 +1,7 @@
 #include "quaternion_editor.h"
 #include "ui_quaternion_editor.h"
 
-#include <math/quaternion.hpp>
+#include <math/math.hpp>
 #include <core/type/type.hpp>
 //#include <gametk/gametkcommon.hpp>
 
@@ -31,15 +31,15 @@ void Quaternion_Editor::OnEditingFinished()
   float valZ = value.toFloat(&valid);
   if(!valid)
     return;
-  *m_Obj.CastBuffer<eXl::Quaternionf>() = eXl::Quaternionf(valW,valX,valY,valZ);
+  *m_Obj.CastBuffer<eXl::Quaternion>() = eXl::Quaternion(valW,valX,valY,valZ);
 }
 
 void Quaternion_Editor::UpdateView()
 {
-  eXl::Quaternionf tempQuat = *m_Obj.CastBuffer<eXl::Quaternionf>();
+  eXl::Quaternion tempQuat = *m_Obj.CastBuffer<eXl::Quaternion>();
   QString text("%f");
-  ui->w_Edit->setText(text.arg(tempQuat.W()));
-  ui->x_Edit->setText(text.arg(tempQuat.X()));
-  ui->y_Edit->setText(text.arg(tempQuat.Y()));  
-  ui->z_Edit->setText(text.arg(tempQuat.Z()));
+  ui->w_Edit->setText(text.arg(tempQuat.w));
+  ui->x_Edit->setText(text.arg(tempQuat.x));
+  ui->y_Edit->setText(text.arg(tempQuat.y));  
+  ui->z_Edit->setText(text.arg(tempQuat.z));
 }

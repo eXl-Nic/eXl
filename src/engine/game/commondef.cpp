@@ -16,35 +16,33 @@ namespace eXl
 {
   namespace EngineCommon
   {
-    GameDataView<Vector3f>* GetVelocities(World& iWorld)
+    GameDataView<Vec3>* GetVelocities(World& iWorld)
     {
       GameDatabase* database = iWorld.GetSystem<GameDatabase>();
       if (database)
       {
-        return database->GetView<Vector3f>(VelocityName());
+        return database->GetView<Vec3>(VelocityName());
       }
       return nullptr;
     }
 
-    Matrix4f const& GetProjectionMatrix()
+    Mat4 const& GetProjectionMatrix()
     {
-      static Matrix4f s_Proj = []
+      static Mat4 s_Proj = []
       {
-        Matrix4f newMatrix;
-        newMatrix.MakeIdentity();
-        newMatrix.m_Matrix[2][1] = 1.0 / Mathf::Sqrt(2.0);
+        Mat4 newMatrix = Identity<Mat4>();
+        newMatrix[2][1] = 1.0 / Mathf::Sqrt(2.0);
         return newMatrix;
       }();
 
       return s_Proj;
     }
 
-    Matrix4f GetRotationMatrix(Vector2f const& iDir)
+    Mat4 GetRotationMatrix(Vec2 const& iDir)
     {
-      Matrix4f newMatrix;
-      newMatrix.MakeIdentity();
-      *reinterpret_cast<Vector2f*>(newMatrix.m_Data + 0) = iDir;
-      *reinterpret_cast<Vector2f*>(newMatrix.m_Data + 4) = Vector2f(-iDir.Y(), iDir.X());
+      Mat4 newMatrix = Identity<Mat4>();
+      newMatrix[0] = Vec4(iDir, 0, 0);
+      newMatrix[1] = Vec4(-iDir.y, iDir.x, 0, 0);
 
       return newMatrix;
     }
@@ -64,17 +62,17 @@ namespace eXl
         return AABB2Df(MathTools::As2DVec(m_Offset - m_Dims * 0.5)
           , MathTools::As2DVec(m_Dims));
       }
-      return AABB2Df(m_Offset.X() - m_Dims.X(), m_Offset.Y() - m_Dims.X()
-        , m_Offset.Y() - m_Dims.X(), m_Offset.Y() - m_Dims.X());
+      return AABB2Df(m_Offset.x - m_Dims.x, m_Offset.y - m_Dims.x
+        , m_Offset.y - m_Dims.x, m_Offset.y - m_Dims.x);
     }
 
     float PhysicsShape::ComputeBoundingCircle2DRadius() const
     {
       if (m_Type == PhysicsShapeType::Box)
       {
-        return MathTools::As2DVec(m_Offset + m_Dims * 0.5).Length();
+        return length(Vec2(m_Offset + m_Dims * 0.5));
       }
-      return m_Offset.Length() + m_Dims.X();
+      return length(m_Offset) + m_Dims.x;
     }
 
     AABB2Df ObjectShapeData::Compute2DBox() const

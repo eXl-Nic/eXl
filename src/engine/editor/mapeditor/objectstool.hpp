@@ -59,7 +59,7 @@ namespace eXl
     GameDataView<MapResource::ObjectHeader> const& GetObjects() const { return m_ObjectsView; }
     DenseGameDataStorage<PlacedObject> const& GetObjectsAdditionalData() const { return m_ObjectsEditorData; }
 
-    ObjectHandle AddAt(Archetype const* iArchetype, Vector2i iPixelPos);
+    ObjectHandle AddAt(Archetype const* iArchetype, Vec2i iPixelPos);
 
     void Cleanup(ObjectHandle);
 
@@ -77,8 +77,8 @@ namespace eXl
 
 		void SetupSelectionTool();
 
-		ObjectHandle AddAt(Vector2i iPixelPos);
-		ObjectHandle GetAt(Vector2i iWorldPos);
+		ObjectHandle AddAt(Vec2i iPixelPos);
+		ObjectHandle GetAt(Vec2i iWorldPos);
     void Remove(ObjectHandle iObject);
 
 		void AddToWorld(ObjectHandle, MapResource::ObjectHeader const& iObject);

@@ -42,13 +42,13 @@ namespace eXl
 
     ImageName m_ImageName = EmptyName();
 
-    Vector2i m_Size;
-    Vector<Vector2i> m_Frames;
+    Vec2i m_Size;
+    Vector<Vec2i> m_Frames;
     float m_FrameDuration = 0.15;
     AnimationType m_AnimType = AnimationType::None;
 
-    Vector2f m_Offset = Vector2f::ZERO;
-    Vector2f m_Scale = Vector2f::ONE;
+    Vec2 m_Offset = Zero<Vec2>();
+    Vec2 m_Scale = One<Vec2>();
   };
 
   class TilesetLoader;
@@ -73,7 +73,7 @@ namespace eXl
     Image const* GetImage(ImageName iImage) const;
     IntrusivePtr<OGLTexture> GetTexture(ImageName iImage) const;
 
-    Vector2i GetImageSize(ImageName iImage) const;
+    Vec2i GetImageSize(ImageName iImage) const;
 
     Err Stream_Data(Streamer& iStreamer) const override;
     Err Unstream_Data(Unstreamer& iStreamer) override;

@@ -81,8 +81,8 @@ namespace eXl
         pen.setColor(QColor(0, 0, 0));
         iPainter.setPen(pen);
 
-        Vector2i size = m_CurSelection.GetSize();
-        iPainter.drawRect(m_CurSelection.m_Data[0].X(), m_CurSelection.m_Data[0].Y(), size.X(), size.Y());
+        Vec2i size = m_CurSelection.GetSize();
+        iPainter.drawRect(m_CurSelection.m_Data[0].x, m_CurSelection.m_Data[0].y, size.x, size.y);
       }
     }
   };
@@ -200,7 +200,7 @@ namespace eXl
   {
     for (auto const& terrainGroup : iMap.m_Terrains)
     {
-      Vector2i tilingSize = SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
+      Vec2i tilingSize = SafeGetTilingSize(terrainGroup.m_TilingGroup.GetOrLoad());
       for (auto const& block : terrainGroup.m_Blocks)
       {
         TerrainIslandItemData newIsland;
@@ -208,7 +208,7 @@ namespace eXl
         newIsland.m_Terrain = terrainGroup.m_Type;
         newIsland.m_TilingGroup = terrainGroup.m_TilingGroup;
         newIsland.m_IslandPoly = block.m_Shape;
-        newIsland.m_IslandPoly.ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
+        newIsland.m_IslandPoly.ScaleComponents(tilingSize.x, tilingSize.y, 1, 1);
 
         AddIsland(std::move(newIsland));
       }
@@ -264,11 +264,11 @@ namespace eXl
     GfxSystem& gfxSys = *m_World.GetSystem<GfxSystem>();
 
     AABB2Di screenBox;
-    screenBox.m_Data[0] = gfxSys.WorldToScreen(MathTools::To3DVec(MathTools::ToFVec(iBox.m_Data[0]) / EngineCommon::s_WorldToPixel));
-    screenBox.m_Data[1] = gfxSys.WorldToScreen(MathTools::To3DVec(MathTools::ToFVec(iBox.m_Data[1]) / EngineCommon::s_WorldToPixel));
+    screenBox.m_Data[0] = gfxSys.WorldToScreen(Vec3(iBox.m_Data[0], 0) / EngineCommon::s_WorldToPixel);
+    screenBox.m_Data[1] = gfxSys.WorldToScreen(Vec3(iBox.m_Data[1], 0) / EngineCommon::s_WorldToPixel);
 
     // World and Screen space have opposite Y directions
-    std::swap(screenBox.m_Data[0].Y(), screenBox.m_Data[1].Y());
+    std::swap(screenBox.m_Data[0].y, screenBox.m_Data[1].y);
 
     return screenBox;
   }
@@ -278,33 +278,33 @@ namespace eXl
     GfxSystem& gfxSys = *m_World.GetSystem<GfxSystem>();
 
     AABB2Di worldBox;
-    Vector3f worldPos;
-    Vector3f viewDir;
+    Vec3 worldPos;
+    Vec3 viewDir;
     gfxSys.ScreenToWorld(iBox.m_Data[0], worldPos, viewDir);
     worldBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
     gfxSys.ScreenToWorld(iBox.m_Data[1], worldPos, viewDir);
     worldBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 
     // World and Screen space have opposite Y directions
-    std::swap(worldBox.m_Data[0].Y(), worldBox.m_Data[1].Y());
+    std::swap(worldBox.m_Data[0].y, worldBox.m_Data[1].y);
 
-    //queryBox.m_Data[1].X() = Mathi::Max(queryBox.m_Data[0].X() + 1, queryBox.m_Data[1].X());
-    //queryBox.m_Data[1].Y() = Mathi::Max(queryBox.m_Data[0].Y() + 1, queryBox.m_Data[1].Y());
+    //queryBox.m_Data[1].x = Mathi::Max(queryBox.m_Data[0].x + 1, queryBox.m_Data[1].x);
+    //queryBox.m_Data[1].y = Mathi::Max(queryBox.m_Data[0].y + 1, queryBox.m_Data[1].y);
 
     AABB2Di snappedBox = worldBox;
 
     snappedBox.m_Data[1] += m_TilingSize / 2;
     snappedBox.m_Data[0] -= m_TilingSize / 2;
 
-    snappedBox.m_Data[0].X() /= m_TilingSize.X();
-    snappedBox.m_Data[0].Y() /= m_TilingSize.Y();
-    snappedBox.m_Data[1].X() /= m_TilingSize.X();
-    snappedBox.m_Data[1].Y() /= m_TilingSize.Y();
+    snappedBox.m_Data[0].x /= m_TilingSize.x;
+    snappedBox.m_Data[0].y /= m_TilingSize.y;
+    snappedBox.m_Data[1].x /= m_TilingSize.x;
+    snappedBox.m_Data[1].y /= m_TilingSize.y;
 
-    snappedBox.m_Data[0].X() *= m_TilingSize.X();
-    snappedBox.m_Data[0].Y() *= m_TilingSize.Y();
-    snappedBox.m_Data[1].X() *= m_TilingSize.X();
-    snappedBox.m_Data[1].Y() *= m_TilingSize.Y();
+    snappedBox.m_Data[0].x *= m_TilingSize.x;
+    snappedBox.m_Data[0].y *= m_TilingSize.y;
+    snappedBox.m_Data[1].x *= m_TilingSize.x;
+    snappedBox.m_Data[1].y *= m_TilingSize.y;
 
     return snappedBox;
   }
@@ -434,7 +434,7 @@ namespace eXl
       QPolygonF outer;
       for (auto const& point : iData.m_IslandPoly.Border())
       {
-        outer << QPointF(point.X(), point.Y()) / EngineCommon::s_WorldToPixel;
+        outer << QPointF(point.x, point.y) / EngineCommon::s_WorldToPixel;
       }
 
       polyPath.addPolygon(std::move(outer));
@@ -445,7 +445,7 @@ namespace eXl
       QPolygonF holePoly;
       for (auto const& point : hole)
       {
-        holePoly << QPointF(point.X(), point.Y()) / EngineCommon::s_WorldToPixel;
+        holePoly << QPointF(point.x, point.y) / EngineCommon::s_WorldToPixel;
       }
       QPainterPath holePath;
       holePath.addPolygon(std::move(holePoly));
@@ -706,18 +706,18 @@ namespace eXl
     }
   }
 
-  Vector2i SafeGetTileSize(ResourceHandle<Tileset> const& iHandle, TileName iName)
+  Vec2i SafeGetTileSize(ResourceHandle<Tileset> const& iHandle, TileName iName)
   {
     Tileset const* tileset = iHandle.GetOrLoad();
-    eXl_ASSERT_REPAIR_RET(tileset != nullptr, Vector2i::ONE);
+    eXl_ASSERT_REPAIR_RET(tileset != nullptr, One<Vec2i>());
     Tile const* tile = tileset->Find(iName);
-    eXl_ASSERT_REPAIR_RET(tile != nullptr, Vector2i::ONE);
+    eXl_ASSERT_REPAIR_RET(tile != nullptr, One<Vec2i>());
     return tile->m_Size;
   }
 
-  Vector2i TerrainTool::SafeGetTilingSize(TilingGroup const* iGroup)
+  Vec2i TerrainTool::SafeGetTilingSize(TilingGroup const* iGroup)
   {
-    eXl_ASSERT_REPAIR_RET(iGroup != nullptr, Vector2i::ONE);
+    eXl_ASSERT_REPAIR_RET(iGroup != nullptr, One<Vec2i>());
     return SafeGetTileSize(iGroup->GetTileset(), iGroup->m_DefaultTile);
   }
 
@@ -735,9 +735,9 @@ namespace eXl
           MapTiler::Blocks& block = iter->second;
           block.group = iIsland.m_TilingGroup.Get();
           Tileset const* groupTileset = block.group->GetTileset().GetOrLoad();
-          Vector2i tilingSize = SafeGetTilingSize(block.group);
+          Vec2i tilingSize = SafeGetTilingSize(block.group);
           block.islands.push_back(iIsland.m_IslandPoly);
-          block.islands.back().ScaleComponents(1, 1, tilingSize.X(), tilingSize.Y());
+          block.islands.back().ScaleComponents(1, 1, tilingSize.x, tilingSize.y);
           if (fullSize.Empty())
           {
             fullSize = block.islands.back().GetAABB();
@@ -751,8 +751,8 @@ namespace eXl
 
     if (!fullSize.Empty())
     {
-      fullSize.m_Data[0] -= Vector2i::ONE;
-      fullSize.m_Data[1] += Vector2i::ONE;
+      fullSize.m_Data[0] -= One<Vec2i>();
+      fullSize.m_Data[1] += One<Vec2i>();
       for (auto& blockEntry : blocks)
       {
         MapTiler::ComputeGfxForBlock(batcher, fullSize, blockEntry.second);

@@ -28,9 +28,9 @@ namespace eXl
 
     void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle) override;
     void Push(OGLDisplayList& iList, float iDelta) override;
-    void DrawLine(const Vector3f& iFrom, const Vector3f& iTo, const Vector4f& iColor, bool iScreenSpace = false) override;
-    void DrawBox(AABB2Df const& iBox, const Vector4f& iColor, bool iScreenSpace = false) override;
-    void DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace) override;
+    void DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace = false) override;
+    void DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace = false) override;
+    void DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace) override;
 
     OGLCompiledProgram const* GetLineProgram() { return m_LineProgram.get(); }
 
@@ -42,16 +42,16 @@ namespace eXl
     IntrusivePtr<OGLBuffer> m_GeomLines;
     IntrusivePtr<OGLBuffer> m_GeomBoxes;
 
-    Matrix4f m_IdentMatrix;
+    Mat4 m_IdentMatrix;
     OGLShaderData m_WorldTransform;
     OGLVAssembly m_GeomAssemblyL;
     OGLVAssembly m_GeomAssemblyB;
 
     // Debugdrawer data
-    Vector<Vector<Vector3f>> m_Lines;
+    Vector<Vector<Vec3>> m_Lines;
     Vector<Vector<AABB2Df>> m_Boxes;
-    Vector<Vector<Vector<Vector2f>>> m_Convex;
-    Map<Vector4f, uint32_t> m_Colors;
+    Vector<Vector<Vector<Vec2>>> m_Convex;
+    UnorderedMap<Vec4, uint32_t> m_Colors;
 
     // Rendering data
     Vector<SpriteColor> spriteInfo;

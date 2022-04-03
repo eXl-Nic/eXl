@@ -51,12 +51,12 @@ void Vector_Editor::OnEditingFinished()
   emit editingFinished();
 }
 
-static eXl::Type const* v2iId =  eXl::TypeManager::GetType<eXl::Vector2i>();
-static eXl::Type const* v3iId =  eXl::TypeManager::GetType<eXl::Vector3i>();
-static eXl::Type const* v4iId =  eXl::TypeManager::GetType<eXl::Vector4i>();                            
-static eXl::Type const* v2fId =  eXl::TypeManager::GetType<eXl::Vector2f>();
-static eXl::Type const* v3fId =  eXl::TypeManager::GetType<eXl::Vector3f>();
-static eXl::Type const* v4fId =  eXl::TypeManager::GetType<eXl::Vector4f>();
+static eXl::Type const* v2iId =  eXl::TypeManager::GetType<eXl::Vec2i>();
+static eXl::Type const* v3iId =  eXl::TypeManager::GetType<eXl::Vec3i>();
+static eXl::Type const* v4iId =  eXl::TypeManager::GetType<eXl::Vec4i>();                            
+static eXl::Type const* v2fId =  eXl::TypeManager::GetType<eXl::Vec2>();
+static eXl::Type const* v3fId =  eXl::TypeManager::GetType<eXl::Vec3>();
+static eXl::Type const* v4fId =  eXl::TypeManager::GetType<eXl::Vec4>();
 
 void Vector_Editor::UpdateView()
 {

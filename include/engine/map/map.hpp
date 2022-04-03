@@ -53,7 +53,7 @@ namespace eXl
       struct EXL_ENGINE_API Tile
       {
         EXL_REFLECT;
-        Vector2i m_Position;
+        Vec2i m_Position;
         uint32_t m_Layer = 0;
         TileName m_Name;
       };
@@ -89,7 +89,7 @@ namespace eXl
 
       static uint64_t AllocObjectID();
 
-      Vector3f m_Position;
+      Vec3 m_Position;
       ResourceHandle<Archetype> m_Archetype;
     };
 
@@ -119,7 +119,7 @@ namespace eXl
       std::unique_ptr<NavMesh> navMesh;
     };
 
-    InstanceData Instantiate(World& iWorld, const Matrix4f& iPos = Matrix4f::IDENTITY) const;
+    InstanceData Instantiate(World& iWorld, const Mat4& iPos = Identity<Mat4>()) const;
 
     Err Stream_Data(Streamer& iStreamer) const override;
     Err Unstream_Data(Unstreamer& iStreamer) override;

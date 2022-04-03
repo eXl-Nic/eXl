@@ -71,7 +71,7 @@ namespace eXl
     m_ShapeShrink->setValue(s_DefaultShapeShrink);
     m_InteractionRadius = new QSpinBox(this);
     m_InteractionRadius->setMinimum(1);
-    m_InteractionRadius->setMaximum(Mathi::MAX_REAL);
+    m_InteractionRadius->setMaximum(Mathi::MaxReal());
     m_InteractionRadius->setValue(s_DefaultInteractionRadius);
     m_UseQuantileCull = new QCheckBox(this);
 
@@ -111,7 +111,7 @@ namespace eXl
 
     m_RunIter = new QSpinBox(this);
     m_RunIter->setMinimum(1);
-    m_RunIter->setMaximum(Mathi::MAX_REAL);
+    m_RunIter->setMaximum(Mathi::MaxReal());
     m_RunIter->setValue(1000);
     makeRow(m_RunIter, "Run Iteration # :");
     
@@ -132,7 +132,7 @@ namespace eXl
   struct TempElementInfo
   {
     Set<uint32_t> layers;
-    Vector2i size;
+    Vec2i size;
     bool placeable;
     QPixmap thumbnail;
     String desc;
@@ -169,7 +169,7 @@ namespace eXl
             for (auto const& hole : iIsland.m_IslandPoly.Holes())
             {
               Polygoni runSpace(hole);
-              //runSpace.Scale(info.size.X());
+              //runSpace.Scale(info.size.x);
               m_RunSpaces.push_back(std::move(runSpace));
               m_RunSpacesHandle.push_back(iHandle);
             }
@@ -182,13 +182,13 @@ namespace eXl
       AABB2Di box = space.GetAABB();
 
       String descStr("Box at : (");
-      descStr += StringUtil::FromInt(box.m_Data[0].X());
+      descStr += StringUtil::FromInt(box.m_Data[0].x);
       descStr += ", ";
-      descStr += StringUtil::FromInt(box.m_Data[0].Y());
+      descStr += StringUtil::FromInt(box.m_Data[0].y);
       descStr += ") -> (";
-      descStr += StringUtil::FromInt(box.m_Data[1].X());
+      descStr += StringUtil::FromInt(box.m_Data[1].x);
       descStr += ", ";
-      descStr += StringUtil::FromInt(box.m_Data[1].Y());
+      descStr += StringUtil::FromInt(box.m_Data[1].y);
       descStr += ")";
 
       m_RunSpaceList->addItem(descStr.c_str());
@@ -203,11 +203,11 @@ namespace eXl
 
   void MCMCLearnTool::GetTileInfo(ResourceHandle<Tileset> const& iHandle, TileName iName, TempElementInfo& oInfo)
   {
-    oInfo.size = Vector2i::ONE;
+    oInfo.size = One<Vec2i>();
     oInfo.thumbnail = m_Cache.GetMiniature(iHandle, iName);
     if (!oInfo.thumbnail.isNull())
     {
-      oInfo.size = Vector2i(oInfo.thumbnail.size().width(), oInfo.thumbnail.size().height());
+      oInfo.size = Vec2i(oInfo.thumbnail.size().width(), oInfo.thumbnail.size().height());
     }
 
     Resource::Header const* header = ResourceManager::GetHeader(iHandle.GetUUID());
@@ -220,7 +220,7 @@ namespace eXl
     Archetype const* archetype = iArchetype.GetOrLoad();
     eXl_ASSERT_REPAIR_RET(archetype != nullptr, );
 
-    oInfo.size = Vector2i::ONE;
+    oInfo.size = One<Vec2i>();
 
     auto const& data = archetype->GetProperties();
     auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
@@ -232,8 +232,8 @@ namespace eXl
 
     GetTileInfo(gfxDesc->m_Tileset, gfxDesc->m_TileName, oInfo);
 
-    oInfo.size.X() = Mathi::Max(1, Mathf::Round(oInfo.size.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
-    oInfo.size.Y() = Mathi::Max(1, Mathf::Round(oInfo.size.Y() * gfxDesc->m_Size.Y() * EngineCommon::s_WorldToPixel));
+    oInfo.size.x = Mathi::Max(1, Mathf::Round(oInfo.size.x * gfxDesc->m_Size.x * EngineCommon::s_WorldToPixel));
+    oInfo.size.y = Mathi::Max(1, Mathf::Round(oInfo.size.y * gfxDesc->m_Size.y * EngineCommon::s_WorldToPixel));
 
     oInfo.desc = String("Object : ") + archetype->GetName();
   }
@@ -310,8 +310,8 @@ namespace eXl
           newElement.m_RelDensity = 1.0;
           AABB2Di shapeBox(element.second.size / -2, element.second.size);
           newElement.m_Shapes.push_back(Polygoni(shapeBox));
-          newElement.m_GridX = element.second.size.X();
-          newElement.m_GridY = element.second.size.Y();
+          newElement.m_GridX = element.second.size.x;
+          newElement.m_GridY = element.second.size.y;
         }
         else
         {
@@ -413,7 +413,7 @@ namespace eXl
               placedElem.m_Angle = 0.0;
               placedElem.m_Element = iter->second + 1;
               placedElem.m_ShapeNum = curShape;
-              placedElem.m_Pos = Vector2i::ZERO;
+              placedElem.m_Pos = Zero<Vec2i>();
               example.m_Elements.push_back(placedElem);
             }
           }
@@ -617,7 +617,7 @@ namespace eXl
             elem.m_Angle = 0.0;
             elem.m_Element = iter->second + 1;
             elem.m_ShapeNum = 0;
-            elem.m_Pos = iTile.m_Position * model->m_DimScaling;
+            elem.m_Pos = Vec2(iTile.m_Position) * model->m_DimScaling;
 
             if (isMCMCPlaced)
             {
@@ -678,7 +678,7 @@ namespace eXl
 
     for (auto const& placed : params.m_Placed)
     {
-      Vector2i pixelPos(Mathf::Round(placed.m_Pos.X() / model->m_DimScaling), Mathf::Round(placed.m_Pos.Y() / model->m_DimScaling));
+      Vec2i pixelPos(Mathf::Round(placed.m_Pos.x / model->m_DimScaling), Mathf::Round(placed.m_Pos.y / model->m_DimScaling));
       uint32_t refIdx = placed.m_Element - 1;
       auto const& elemRef = model->m_ElementsVector[refIdx];
       ObjectHandle newObject = m_ParentEditor->Place(elemRef.m_Resource, elemRef.m_Subobject, pixelPos);

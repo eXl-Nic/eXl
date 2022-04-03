@@ -24,26 +24,26 @@ namespace eXl
       bool m_StepAgents = false;
     };
 
-    Optional<Vector2f> PickRandomPosInBox(AABB2Df const& iBox, Random& iRand)
+    Optional<Vec2> PickRandomPosInBox(AABB2Df const& iBox, Random& iRand)
     {
-      Vector2f size = iBox.GetSize();
-      if (size.X() <= 4 || size.Y() <= 4)
+      Vec2 size = iBox.GetSize();
+      if (size.x <= 4 || size.y <= 4)
       {
         return {};
       }
       AABB2Df trimmedFace = iBox;
-      trimmedFace.m_Data[0] += Vector2f::ONE * 2.0;
-      trimmedFace.m_Data[1] -= Vector2f::ONE * 2.0;
+      trimmedFace.m_Data[0] += One<Vec2>() * 2.0;
+      trimmedFace.m_Data[1] -= One<Vec2>() * 2.0;
       size = trimmedFace.GetSize();
 
-      return trimmedFace.m_Data[0] + Vector2f(
-        size.X() * (iRand.Generate() % 1000) / 1000.0, 
-        size.Y() * (iRand.Generate() % 1000) / 1000.0);
+      return trimmedFace.m_Data[0] + Vec2(
+        size.x * (iRand.Generate() % 1000) / 1000.0, 
+        size.y * (iRand.Generate() % 1000) / 1000.0);
     };
 
-    Vector3f PickRandomPos(NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand)
+    Vec3 PickRandomPos(NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand)
     {
-      Optional<Vector2f> randPos;
+      Optional<Vec2> randPos;
       while(!randPos)
       {
         uint32_t faceIdx = iRand.Generate() % iNavMesh.GetFaces(iComponent).size();
@@ -51,17 +51,17 @@ namespace eXl
         randPos = PickRandomPosInBox(curFace, iRand);
       }
       
-      return Vector3f(randPos->X(), randPos->Y(), 0.0);
+      return Vec3(randPos->x, randPos->y, 0.0);
     };
 
-    Vector3f PickRandomDest(Vector3f const& iCurPos, NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand, NavigatorBench::ProbaTable const& iProbaTable)
+    Vec3 PickRandomDest(Vec3 const& iCurPos, NavMesh const& iNavMesh, uint32_t iComponent, Random& iRand, NavigatorBench::ProbaTable const& iProbaTable)
     {
-      auto faceIdx = iNavMesh.FindFace(Vector2f(iCurPos.X(), iCurPos.Y()));
+      auto faceIdx = iNavMesh.FindFace(Vec2(iCurPos.x, iCurPos.y));
       if (!faceIdx)
       {
         return iCurPos;
       }
-      Vector2f randPos;
+      Vec2 randPos;
       uint32_t destFaceIdx = faceIdx->m_Face;
       if (iNavMesh.GetFaces(iComponent).size() > 1)
       {
@@ -83,7 +83,7 @@ namespace eXl
 
         } while (destFaceIdx == faceIdx->m_Face);
       }
-      return Vector3f(randPos.X(), randPos.Y(), 0.0);
+      return Vec3(randPos.x, randPos.y, 0.0);
     };
 
 
@@ -95,8 +95,8 @@ namespace eXl
       for (uint32_t i = 0; i < faces.size(); ++i)
       {
         auto const& face = faces[i];
-        Vector2f size = face.m_Box.GetSize();
-        float score = Mathf::Min(size.X(), size.Y()) - Mathf::Abs(size.X() - size.Y());
+        Vec2 size = face.m_Box.GetSize();
+        float score = Mathf::Min(size.x, size.y) - Mathf::Abs(size.x - size.y);
         if (score > curScore)
         {
           biggestFace = i;
@@ -105,9 +105,9 @@ namespace eXl
       }
 
       auto const& face = faces[biggestFace];
-      Vector2f center = face.m_Box.GetCenter();
-      Vector2f size = face.m_Box.GetSize() - (Vector2f::ONE * 4 * 4);
-      float radius = Mathf::Min(size.X(), size.Y()) * 0.5;
+      Vec2 center = face.m_Box.GetCenter();
+      Vec2 size = face.m_Box.GetSize() - (One<Vec2>() * 4 * 4);
+      float radius = Mathf::Min(size.x, size.y) * 0.5;
       float perimeter = radius * 2 * Mathf::Pi();
 
       uint32_t numActors = (perimeter / (1.2 * 4));
@@ -124,16 +124,16 @@ namespace eXl
 
       for (unsigned int i = 0; i < numActors / 2; ++i)
       {
-        Vector3f curPos(Mathf::Cos(i * increment) * radius + center.X(), Mathf::Sin(i * increment) * radius + center.Y(), 0.0);
-        Vector3f destPos(Mathf::Cos(i * increment + Mathf::Pi()) * radius + center.X(), Mathf::Sin(i * increment + Mathf::Pi()) * radius + center.Y(), 0.0);
+        Vec3 curPos(Mathf::Cos(i * increment) * radius + center.x, Mathf::Sin(i * increment) * radius + center.y, 0.0);
+        Vec3 destPos(Mathf::Cos(i * increment + Mathf::Pi()) * radius + center.x, Mathf::Sin(i * increment + Mathf::Pi()) * radius + center.y, 0.0);
 
         ObjectHandle truc = iWorld.CreateObject();
-        transforms.AddTransform(truc, Matrix4f::FromPosition(curPos));
+        transforms.AddTransform(truc, translate(Identity<Mat4>(), curPos));
         iArch.Instantiate(truc, iWorld, nullptr);
         navigator.SetDestination(truc, destPos);
 
         ObjectHandle truc2 = iWorld.CreateObject();
-        transforms.AddTransform(truc2, Matrix4f::FromPosition(destPos));
+        transforms.AddTransform(truc2, translate(Identity<Mat4>(), destPos));
         iArch.Instantiate(truc2, iWorld, nullptr);
         navigator.SetDestination(truc2, curPos);
 
@@ -163,8 +163,8 @@ namespace eXl
       for (uint32_t i = 0; i< iNavMesh.GetFaces(iComponent).size(); ++i)
       {
         auto const& Face = iNavMesh.GetFaces(iComponent)[i];
-        Vector2f size = Face.m_Box.GetSize();
-        float area = size.X() * size.Y();
+        Vec2 size = Face.m_Box.GetSize();
+        float area = size.x * size.y;
         if (area < 36)
         {
           continue;
@@ -189,13 +189,13 @@ namespace eXl
 
         uint32_t faceIdx = ioData.m_Rand->Generate() % iNavMesh.GetFaces(iComponent).size();
         AABB2Df curFace = iNavMesh.GetFaces(iComponent)[faceIdx].m_Box;
-        Vector3f randPos = PickRandomPos(iNavMesh, iComponent, *ioData.m_Rand);
-        auto curPos = Vector3f(randPos.X(), randPos.Y(), 0.0);
+        Vec3 randPos = PickRandomPos(iNavMesh, iComponent, *ioData.m_Rand);
+        auto curPos = Vec3(randPos.x, randPos.y, 0.0);
 
         auto destPos = PickRandomDest(curPos, iNavMesh, iComponent, *ioData.m_Rand, probaTable);
       
         ObjectHandle truc = iWorld.CreateObject();
-        transforms.AddTransform(truc, Matrix4f::FromPosition(curPos));
+        transforms.AddTransform(truc, translate(Identity<Mat4>(), curPos));
         navigator.SetDestination(truc, destPos);
         iArch.Instantiate(truc, iWorld, nullptr);
 
@@ -212,15 +212,14 @@ namespace eXl
 
     }
 
-    ObjectHandle CreateProjectile(World& iWorld, Archetype const& iArch, Vector3f const& iPos, Vector3f const& iDir)
+    ObjectHandle CreateProjectile(World& iWorld, Archetype const& iArch, Vec3 const& iPos, Vec3 const& iDir)
     {
       auto& transforms = *iWorld.GetSystem<Transforms>();
       auto& projectiles = *iWorld.GetSystem<ProjectileSystem>();
 
       ObjectHandle projectile = iWorld.CreateObject();
-      Matrix4f objPos = Matrix4f::IDENTITY;
-      MathTools::GetPosition(objPos) = iPos;
-      transforms.AddTransform(projectile, &objPos);
+      
+      transforms.AddTransform(projectile, translate(Identity<Mat4>(), iPos));
       iArch.Instantiate(projectile, iWorld, nullptr);
 
       ProjectileSystem::Desc projDesc;
@@ -249,8 +248,8 @@ namespace eXl
       auto& navigator = *world.GetSystem<NavigatorSystem>();
       for (auto evt : navigator.DispatchEvents())
       {
-        Matrix4f transform = transforms.GetWorldTransform(evt.m_Object);
-        Vector3f const& curPos = *reinterpret_cast<Vector3f*>(transform.m_Data + 12);
+        Mat4 transform = transforms.GetWorldTransform(evt.m_Object);
+        Vec3 const& curPos = transform[3];
         navigator.SetDestination(evt.m_Object, PickRandomDest(curPos, iNavMesh, iComponent, *iData.m_Rand, iData.m_ProbaTable));
       }
     }

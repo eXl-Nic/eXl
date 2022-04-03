@@ -102,31 +102,31 @@ namespace eXl
       bool isFloat = false;
       int numFields = 0;
       Type const* type = iObj.GetType();
-      if (type == TypeManager::GetType<Vector2f>())
+      if (type == TypeManager::GetType<Vec2>())
       {
         isFloat = true;
         numFields = 2;
       }
-      if (type == TypeManager::GetType<Vector3f>())
+      if (type == TypeManager::GetType<Vec3>())
       {
         isFloat = true;
         numFields = 3;
       }
-      if (type == TypeManager::GetType<Vector4f>()
-        || type == TypeManager::GetType<Quaternionf>())
+      if (type == TypeManager::GetType<Vec4>()
+        || type == TypeManager::GetType<Quaternion>())
       {
         isFloat = true;
         numFields = 4;
       }
-      if (type == TypeManager::GetType<Vector2i>())
+      if (type == TypeManager::GetType<Vec2i>())
       {
         numFields = 2;
       }
-      if (type == TypeManager::GetType<Vector3i>())
+      if (type == TypeManager::GetType<Vec3i>())
       {
         numFields = 3;
       }
-      if (type == TypeManager::GetType<Vector4i>())
+      if (type == TypeManager::GetType<Vec4i>())
       {
         numFields = 4;
       }
@@ -298,13 +298,13 @@ namespace eXl
 
     //ObjectDelegate::RegisterFactory(Resource_Editor::Construct,TypeManager::GetCoreType<Handle<Resource const> >()->GetTypeId());
     //ObjectDelegate::RegisterFactory(ObjectPtr_Editor::Construct,TypeManager::GetCoreType<RttiOPtr >()->GetTypeId());
-    ObjectDelegate::RegisterType(&s_QuaternionHandler, TypeManager::GetType<Quaternionf>());
-    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vector2i>());
-    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vector3i>());
-    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vector4i>());
-    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vector2f>());
-    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vector3f>());
-    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vector4f>());
+    ObjectDelegate::RegisterType(&s_QuaternionHandler, TypeManager::GetType<Quaternion>());
+    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vec2i>());
+    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vec3i>());
+    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vec4i>());
+    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vec2>());
+    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vec3>());
+    ObjectDelegate::RegisterType(&s_VectorHandler, TypeManager::GetType<Vec4>());
 
     Vector<ResourceLoaderName> loaders = EditorState::GetAllRegisteredHandlers();
     for (auto loader : loaders)

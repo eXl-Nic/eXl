@@ -30,13 +30,13 @@ namespace eXl
 
     void AddObject(ObjectHandle iObj, float iRadius, bool iPopulate) override;
 
-    void AddObject(ObjectHandle iObj, Vector3f const& iBoxDim, bool iPopulateNeigh) override;
+    void AddObject(ObjectHandle iObj, Vec3 const& iBoxDim, bool iPopulateNeigh) override;
 
     void Remove(ObjectHandle iObj, PhysicComponent_Impl* iPhObj);
 
-    void Run(Vector3f const& iForwardOffset, float iRadiusSearch) override;
+    void Run(Vec3 const& iForwardOffset, float iRadiusSearch) override;
 
-    void Run(btDbvt& iTree, Vector3f const& iForwardOffset, float iRadiusSearch);
+    void Run(btDbvt& iTree, Vec3 const& iForwardOffset, float iRadiusSearch);
 
     UnorderedMap<void*, uint32_t> m_UsrDataToNum;
 
@@ -85,7 +85,7 @@ namespace eXl
     void AddContactCb(ObjectHandle iObj, ContactFilterCallback&& iCb);
     void RemoveContactCb(ObjectHandle iObj);
 
-    bool SweepTest(PhysicComponent_Impl* iShape, Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask);
+    bool SweepTest(PhysicComponent_Impl* iShape, Vec3 const& iFrom, Vec3 const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask);
 
     void HandleColQuery(const GeomDef& iDef, unsigned int iMax, unsigned int iCat, List<CollisionData>& oRes);
 

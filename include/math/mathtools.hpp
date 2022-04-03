@@ -443,7 +443,7 @@ namespace eXl
     {
       for (uint32_t i = 0; i < 2; ++i)
       {
-        ioPoint.m_Data[i] = Math<Real>::Clamp(ioPoint.m_Data[i], iBox.m_Data[0].m_Data[i], iBox.m_Data[1].m_Data[i]);
+        ioPoint[i] = Math<Real>::Clamp(ioPoint[i], iBox.m_Data[0][i], iBox.m_Data[1][i]);
       }
     }
 

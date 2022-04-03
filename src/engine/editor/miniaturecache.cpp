@@ -49,7 +49,7 @@ namespace eXl
     Tile const* tile = tileset->Find(iName);
     eXl_ASSERT_REPAIR_RET(tile != nullptr, QPixmap());
 
-    Vector2i size = tile->m_Size;
+    Vec2i size = tile->m_Size;
 
     ImageKey key = { iHandle.GetUUID(), tile->m_ImageName };
 
@@ -67,8 +67,8 @@ namespace eXl
         return QPixmap();
       }
     }
-    Vector2i orig = tile->m_Frames.size() > 0 ? tile->m_Frames[0] : Vector2i::ZERO;
-    QRect tileDim(QPoint(orig.X(), orig.Y()), QSize(size.X(), size.Y()));
+    Vec2i orig = tile->m_Frames.size() > 0 ? tile->m_Frames[0] : Zero<Vec2i>();
+    QRect tileDim(QPoint(orig.x, orig.y), QSize(size.x, size.y));
 
     QPixmap miniature = QPixmap::fromImage(iter->second.copy(tileDim));
 

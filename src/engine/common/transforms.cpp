@@ -29,7 +29,7 @@ namespace eXl
     }
   }
 
-  Err Transforms::AddTransform(ObjectHandle iObj, Optional<Matrix4f> const& iTrans)
+  Err Transforms::AddTransform(ObjectHandle iObj, Optional<Mat4> const& iTrans)
   {
     if(!GetWorld().IsObjectValid(iObj))
     {
@@ -56,8 +56,8 @@ namespace eXl
     }
     else
     {
-      page.m_WorldTransform[page.m_Used].MakeIdentity();
-      page.m_LocalTransform[page.m_Used].MakeIdentity();
+      page.m_WorldTransform[page.m_Used] = Identity<Mat4>();
+      page.m_LocalTransform[page.m_Used] = Identity<Mat4>();
     }
     new(page.m_Owner + page.m_Used) ObjectHandle(iObj);
     page.m_Timestamps[page.m_Used] = m_TimeStamp | s_NeedUpdateMask;
@@ -156,7 +156,7 @@ namespace eXl
     }
   }
 
-  void Transforms::UpdateTransform(ObjectHandle iObj, Matrix4f const& iTransform)
+  void Transforms::UpdateTransform(ObjectHandle iObj, Mat4 const& iTransform)
   {
     if (!GetWorld().IsObjectValid(iObj))
     {
@@ -298,7 +298,7 @@ namespace eXl
     return false;
   }
 
-  Matrix4f const& Transforms::GetLocalTransform(ObjectHandle iObj) const
+  Mat4 const& Transforms::GetLocalTransform(ObjectHandle iObj) const
   {
     if (GetWorld().IsObjectValid(iObj))
     {
@@ -313,12 +313,7 @@ namespace eXl
     //  eXl_ASSERT(false);
     //}
 
-    static const Matrix4f dummyMatrix = [] 
-    { 
-      Matrix4f mat; 
-      mat.MakeIdentity(); 
-      return mat;
-    }();
+    static const Mat4 dummyMatrix = Identity<Mat4>();
 
     return dummyMatrix;
   }
@@ -364,12 +359,12 @@ namespace eXl
       HierarchyInfo hierarchy = entryToUpdate.Hierarchy();
       uint32_t parentPos = hierarchy.parent;
       AttachType attach = /*PositionRotation;*/ (AttachType)hierarchy.attach;
-      Matrix4f& worldTransform = entryToUpdate.WorldTransform();
+      Mat4& worldTransform = entryToUpdate.WorldTransform();
 
       if (parentPos != s_InvalidPos)
       {
         Entry parentEntry = GetEntry(parentPos);
-        Matrix4f& parentWorldTransform = parentEntry.WorldTransform();
+        Mat4& parentWorldTransform = parentEntry.WorldTransform();
         if (attach == PositionRotation)
         {
           worldTransform = parentWorldTransform * entryToUpdate.LocalTransform();
@@ -377,9 +372,7 @@ namespace eXl
         else
         {
           worldTransform = entryToUpdate.LocalTransform();
-          worldTransform.m_Data[12] += parentWorldTransform.m_Data[12];
-          worldTransform.m_Data[13] += parentWorldTransform.m_Data[13];
-          worldTransform.m_Data[14] += parentWorldTransform.m_Data[14];
+          worldTransform[3] += Vec4(Vec3(parentWorldTransform[3]), 0);
         }
       }
       else
@@ -401,7 +394,7 @@ namespace eXl
     const_cast<Transforms*>(this)->UpdateTrans(iEntry);
   }
 
-  Matrix4f const& Transforms::GetWorldTransform(ObjectHandle iObj)
+  Mat4 const& Transforms::GetWorldTransform(ObjectHandle iObj)
   {
     if (GetWorld().IsObjectValid(iObj))
     {
@@ -428,12 +421,7 @@ namespace eXl
     //  eXl_ASSERT(false);
     //}
 
-    static const Matrix4f dummyMatrix = []
-    {
-      Matrix4f mat;
-      mat.MakeIdentity();
-      return mat;
-    }();
+    static const Mat4 dummyMatrix = Identity<Mat4>();
 
     return dummyMatrix;
   }
@@ -548,8 +536,8 @@ namespace eXl
 
       ApplyModif();
 
-      Matrix4f saveDestLTransform = destEntry.LocalTransform();
-      Matrix4f saveDestWTransform = destEntry.WorldTransform();
+      Mat4 saveDestLTransform = destEntry.LocalTransform();
+      Mat4 saveDestWTransform = destEntry.WorldTransform();
       ObjectHandle saveDestOwner = destEntry.Owner();
       uint32_t saveDestTimestamp = destEntry.Timestamp();
       HierarchyInfo saveHierarchyInfo = destEntry.Hierarchy();
@@ -572,12 +560,12 @@ namespace eXl
 
   Transforms::TransformPage::TransformPage()
   {
-    static size_t s_pageBufferSize = (2 * sizeof(Matrix4f) + sizeof(ObjectHandle) + 2*sizeof(uint32_t) + sizeof(HierarchyInfo)) * s_PageSize;
+    static size_t s_pageBufferSize = (2 * sizeof(Mat4) + sizeof(ObjectHandle) + 2*sizeof(uint32_t) + sizeof(HierarchyInfo)) * s_PageSize;
 
     m_Buffer = eXl_ALLOC(s_pageBufferSize);
 
-    m_LocalTransform = reinterpret_cast<Matrix4f*>(m_Buffer);
-    m_WorldTransform = reinterpret_cast<Matrix4f*>(m_LocalTransform + s_PageSize);
+    m_LocalTransform = reinterpret_cast<Mat4*>(m_Buffer);
+    m_WorldTransform = reinterpret_cast<Mat4*>(m_LocalTransform + s_PageSize);
     m_Owner = reinterpret_cast<ObjectHandle*>(m_WorldTransform + s_PageSize);
     m_Timestamps = reinterpret_cast<uint32_t*>(m_Owner + s_PageSize);
     m_GlobId = reinterpret_cast<uint32_t*>(m_Timestamps + s_PageSize);

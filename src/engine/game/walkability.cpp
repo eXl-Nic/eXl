@@ -27,29 +27,29 @@ namespace eXl
     m_WatchedTags.insert(YLocked());
   }
 
-  Vector2f WalkAbilityState::GetActualWalkDir()
+  Vec2 WalkAbilityState::GetActualWalkDir()
   {
     if (m_AnimLocked)
     {
-      return Vector2f::ZERO;
+      return Zero<Vec2>();
     }
 
-    Vector2f walkDir = m_WalkDirection;
+    Vec2 walkDir = m_WalkDirection;
     if (m_XLocked)
     {
-      walkDir.Y() = 0;
+      walkDir.y = 0;
     }
     if (m_YLocked)
     {
-      walkDir.X() = 0;
+      walkDir.x = 0;
     }
 
-    walkDir.Normalize();
+    walkDir = normalize(walkDir);
 
     return walkDir;
   }
 
-  void WalkAbility::SetWalkDirection(AbilitySystem* iSys, ObjectHandle iObj, Vector2f const& iDir)
+  void WalkAbility::SetWalkDirection(AbilitySystem* iSys, ObjectHandle iObj, Vec2 const& iDir)
   {
     WalkAbility* self = iSys->GetAbilityDesc<WalkAbility>(Name());
     AbilityStateHandle stateHandle = iSys->GetAbilityState(iObj, Name());
@@ -115,11 +115,11 @@ namespace eXl
   {
     World& world = m_System->GetWorld();
     CharacterSystem& controller = *world.GetSystem<CharacterSystem>();
-    Vector2f actualDir = iState.GetActualWalkDir();
+    Vec2 actualDir = iState.GetActualWalkDir();
 
-    if (actualDir != Vector2f::ZERO)
+    if (actualDir != Zero<Vec2>())
     {
-      controller.SetCurDir(iState.m_User, Vector3f(actualDir.X(), actualDir.Y(), 0.0));
+      controller.SetCurDir(iState.m_User, Vec3(actualDir.x, actualDir.y, 0.0));
       controller.SetSpeed(iState.m_User, iState.m_WalkSpeed);
     }
     else

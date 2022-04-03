@@ -40,7 +40,7 @@ namespace eXl
   protected:
     friend GfxSystem;
     using UpdateCallback = std::function<void(ObjectHandle const*, size_t)>;
-    using TransformUpdateCallback = std::function<void(ObjectHandle const*, Matrix4f const**, size_t)>;
+    using TransformUpdateCallback = std::function<void(ObjectHandle const*, Mat4 const**, size_t)>;
 
     virtual void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle)
     {
@@ -81,10 +81,10 @@ namespace eXl
 
     struct EXL_ENGINE_API ViewInfo
     {
-      Vector2i viewportSize;
-      Vector3f basis[3] = { UnitX<Vector3f>(), UnitY<Vector3f>(), UnitZ<Vector3f>()};
-      Vector3f pos;
-      Vector4f backgroundColor = Vector4f::ZERO;
+      Vec2i viewportSize;
+      Vec3 basis[3] = { UnitX<Vec3>(), UnitY<Vec3>(), UnitZ<Vec3>()};
+      Vec3 pos;
+      Vec4 backgroundColor = Zero<Vec4>();
       Projection projection = Perspective;
       float fov = Mathf::Pi() / 2.0; // Vertical FOV
 
@@ -128,11 +128,11 @@ namespace eXl
     void SetView(ViewInfo const& iInfo);
     CameraMatrix const& GetCurrentCamera();
 
-    Vector2i GetViewportSize() const;
+    Vec2i GetViewportSize() const;
 
-    void ScreenToWorld(Vector2i const& iScreenPos, Vector3f& oWorldPos, Vector3f& oViewDir);
+    void ScreenToWorld(Vec2i const& iScreenPos, Vec3& oWorldPos, Vec3& oViewDir);
 
-    Vector2i WorldToScreen(Vector3f const& iWorldPos);
+    Vec2i WorldToScreen(Vec3 const& iWorldPos);
 
     void RenderFrame(float iDelta);
 

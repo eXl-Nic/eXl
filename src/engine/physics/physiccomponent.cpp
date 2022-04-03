@@ -48,12 +48,12 @@ namespace eXl
     //}
   }
 
-  bool KinematicController::SweepTest(PhysicComponent_Impl& iComp, Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)
+  bool KinematicController::SweepTest(PhysicComponent_Impl& iComp, Vec3 const& iFrom, Vec3 const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)
   {
     return iComp.SweepTest(iFrom, iTo, oRes, iIgnore, iMask);
   }
 
-  Vector3f KinematicController::GetPosition(PhysicComponent_Impl& iComp) const
+  Vec3 KinematicController::GetPosition(PhysicComponent_Impl& iComp) const
   {
     btTransform trans = iComp.m_Object->getWorldTransform();
 
@@ -65,8 +65,8 @@ namespace eXl
     return iComp.IsControlledBy(this);
   }
 
-  //void KinematicController::SetTransform(PhysicComponent_Impl& iComp, Quaternionf const& iOrient, Vector3f const& iPos)
-  void KinematicController::ApplyLinearVelocity(PhysicComponent_Impl& iComp, Vector3f const& iLinVel, float iTimeStep)
+  //void KinematicController::SetTransform(PhysicComponent_Impl& iComp, Quaternion const& iOrient, Vec3 const& iPos)
+  void KinematicController::ApplyLinearVelocity(PhysicComponent_Impl& iComp, Vec3 const& iLinVel, float iTimeStep)
   {
     btVector3 linVel = TO_BTVECT(iLinVel);
     btRigidBody* body = btRigidBody::upcast(iComp.m_Object);
@@ -116,7 +116,7 @@ namespace eXl
     }
   }
 
-  bool KinematicController::RecoverFromPenetration(PhysicComponent_Impl& iComp, Vector3f& OutNewPos)
+  bool KinematicController::RecoverFromPenetration(PhysicComponent_Impl& iComp, Vec3& OutNewPos)
   {
     btCollisionShape* shape = iComp.m_Shape;
     btPairCachingGhostObject* sensor = iComp.m_Sensor;

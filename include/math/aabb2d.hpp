@@ -291,16 +291,16 @@ namespace eXl
       glm::vec<2, Real> res(iPoint.x - m_Data[0].x, iPoint.y - m_Data[0].y);
       for(uint32_t axis = 0; axis < 2; ++axis)
       {
-        if(!(res.m_Data[axis] < -iEpsilon))
+        if(!(res[axis] < -iEpsilon))
         {
-          res.m_Data[axis] = m_Data[1].m_Data[axis] - iPoint.m_Data[axis];
-          if(res.m_Data[axis] < -iEpsilon)
+          res[axis] = m_Data[1][axis] - iPoint[axis];
+          if(res[axis] < -iEpsilon)
           {
-            res.m_Data[axis] *= -1;
+            res[axis] *= -1;
           }
           else
           {
-            res.m_Data[axis] = 0;
+            res[axis] = 0;
           }
         }
       }

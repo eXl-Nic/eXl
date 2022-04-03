@@ -14,16 +14,16 @@ namespace eXl
 
     QRectF worldRegion = screenToWorld.mapRect(regionF);
 
-    Vector2i min(worldRegion.left() / m_CellSize.X(), worldRegion.bottom() / m_CellSize.Y());
-    Vector2i max(worldRegion.right() / m_CellSize.X(), worldRegion.top() / m_CellSize.Y());
+    Vec2i min(worldRegion.left() / m_CellSize.x, worldRegion.bottom() / m_CellSize.y);
+    Vec2i max(worldRegion.right() / m_CellSize.x, worldRegion.top() / m_CellSize.y);
 
-    std::swap(min.Y(), max.Y());
+    std::swap(min.y, max.y);
 
-    min -= Vector2i::ONE;
-    max += Vector2i::ONE;
+    min -= One<Vec2i>();
+    max += One<Vec2i>();
 
-    Vector2f minF(min.X() * m_CellSize.X(), min.Y() * m_CellSize.Y());
-    Vector2f maxF(max.X() * m_CellSize.X(), max.Y() * m_CellSize.Y());
+    Vec2 minF(min.x * m_CellSize.x, min.y * m_CellSize.y);
+    Vec2 maxF(max.x * m_CellSize.x, max.y * m_CellSize.y);
 
     QPen pen;
     pen.setStyle(Qt::SolidLine);
@@ -33,22 +33,22 @@ namespace eXl
     iPainter.setPen(pen);
 
     QTransform worldToScreen = GetWorldToScreenTransform();
-    for (int x = 0; x < max.X() - min.X(); ++x)
+    for (int x = 0; x < max.x - min.x; ++x)
     {
-      float xCoord = minF.X() + x * m_CellSize.X();
+      float xCoord = minF.x + x * m_CellSize.x;
       QLine line;
       
-      line.setP1(worldToScreen.map(QPoint(xCoord, minF.Y())));
-      line.setP2(worldToScreen.map(QPoint(xCoord, maxF.Y())));
+      line.setP1(worldToScreen.map(QPoint(xCoord, minF.y)));
+      line.setP2(worldToScreen.map(QPoint(xCoord, maxF.y)));
       iPainter.drawLine(line);
     }
 
-    for (int y = 0; y < max.Y() - min.Y(); ++y)
+    for (int y = 0; y < max.y - min.y; ++y)
     {
-      float yCoord = minF.Y() + y * m_CellSize.Y();
+      float yCoord = minF.y + y * m_CellSize.y;
       QLine line;
-      line.setP1(worldToScreen.map(QPoint(minF.X(), yCoord)));
-      line.setP2(worldToScreen.map(QPoint(maxF.X(), yCoord)));
+      line.setP1(worldToScreen.map(QPoint(minF.x, yCoord)));
+      line.setP2(worldToScreen.map(QPoint(maxF.x, yCoord)));
       iPainter.drawLine(line);
     }
   }

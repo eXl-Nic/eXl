@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <engine/enginelib.hpp>
 #include <core/containers.hpp>
-#include <math/vector2.hpp>
 #include <math/segment.hpp>
 #include <math/seginter.hpp>
 #include <math/halfedge.hpp>
@@ -27,13 +26,13 @@ namespace eXl
 
     VelocityObstacle(Random& iRand);
 
-    void Start(void* iActor, Vector2f const& iOrigin, float iRadius, Vector2f const& iDesiredDir, float iMaxVelocity);
+    void Start(void* iActor, Vec2 const& iOrigin, float iRadius, Vec2 const& iDesiredDir, float iMaxVelocity);
 
-    void AddPoint(Vector2f const& iOrigin, float iRadius, Vector2f const& iVelocity);
+    void AddPoint(Vec2 const& iOrigin, float iRadius, Vec2 const& iVelocity);
 
     void AddSegment(Segmentf const& iSeg, float iRadius);
 
-    Vector2f FindBestVelocity(Vector2f const& iPrevDir);
+    Vec2 FindBestVelocity(Vec2 const& iPrevDir);
 
     void DrawDebug();
 
@@ -43,20 +42,20 @@ namespace eXl
     {
       BestVelocity(float iDirMult);
 
-      float ComputeScore(Vector2f const& iOptimalDir, Vector2f const& iCandidateDir, float iCandidateSpeed);
-      void Update(Vector2f const& iCandidateDir, float iCandidateSpeed);
+      float ComputeScore(Vec2 const& iOptimalDir, Vec2 const& iCandidateDir, float iCandidateSpeed);
+      void Update(Vec2 const& iCandidateDir, float iCandidateSpeed);
 
       float curScore[4];
-      Vector2f curDir[4];
+      Vec2 curDir[4];
       float curSpeed[4];
       float dirMult;
     };
 
-    void AddObstacle(Vector2f const& iOrig, Vector2f const (&iDirs)[2], float iDistance);
+    void AddObstacle(Vec2 const& iOrig, Vec2 const (&iDirs)[2], float iDistance);
 
     struct Obstacle
     {
-      Vector2f m_Origin;
+      Vec2 m_Origin;
 
       float m_Velocity;
       float m_Distance;
@@ -65,9 +64,9 @@ namespace eXl
     };
 
     Random& m_Rand;
-    Vector2f m_CasterPos;
-    Vector2f m_CasterDesiredDir;
-    Vector2f m_PerpDir;
+    Vec2 m_CasterPos;
+    Vec2 m_CasterDesiredDir;
+    Vec2 m_PerpDir;
     float m_CasterRadius;
     float m_MaxVelocity;
     float m_MaxVelocitySq;
@@ -78,7 +77,7 @@ namespace eXl
     {
       void Complement();
 
-      Vector2f m_MidVec;
+      Vec2 m_MidVec;
       float m_LowLimit;
     };
 
@@ -89,7 +88,7 @@ namespace eXl
     Vector<Obstacle> m_Obstacles;
     Vector<Segmenti> m_ObstacleSegs;
     Vector<bool> m_Checked;
-    Vector<Vector2f> m_RandPts;
+    Vector<Vec2> m_RandPts;
     Vector<float> m_RandPtsScore;
     Vector<std::pair<uint32_t, Segmenti>> m_HalfSeg;
     Vector<std::pair<uint32_t, Segmenti>> m_HalfSegRev;

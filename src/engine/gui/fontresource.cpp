@@ -264,9 +264,9 @@ namespace eXl
       FT_Render_Glyph(m_Impl->m_Face->glyph, FT_RENDER_MODE_NORMAL);
     }
     Font::GlyphDesc newDesc;
-    newDesc.penOffset = Vector2i(m_Impl->m_Face->glyph->bitmap_left, m_Impl->m_Face->glyph->bitmap_top);
-    newDesc.penAdvance = Vector2i(m_Impl->m_Face->glyph->advance.x >> 6, m_Impl->m_Face->glyph->advance.y >> 6);
-    newDesc.glyphSize = Vector2i(m_Impl->m_Face->glyph->bitmap.width, m_Impl->m_Face->glyph->bitmap.rows);
+    newDesc.penOffset = Vec2i(m_Impl->m_Face->glyph->bitmap_left, m_Impl->m_Face->glyph->bitmap_top);
+    newDesc.penAdvance = Vec2i(m_Impl->m_Face->glyph->advance.x >> 6, m_Impl->m_Face->glyph->advance.y >> 6);
+    newDesc.glyphSize = Vec2i(m_Impl->m_Face->glyph->bitmap.width, m_Impl->m_Face->glyph->bitmap.rows);
 
     if (iter == m_Impl->m_GlyphMap.end())
     {

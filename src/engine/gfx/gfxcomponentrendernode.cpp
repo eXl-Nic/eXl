@@ -40,7 +40,7 @@ namespace eXl
 
   GfxRenderNode::TransformUpdateCallback GfxComponentRenderNode::GetTransformUpdateCallback()
   {
-    return [this](ObjectHandle const* iObjects, Matrix4f const** iTransforms, uint32_t iNum)
+    return [this](ObjectHandle const* iObjects, Mat4 const** iTransforms, uint32_t iNum)
     {
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects, ++iTransforms)
       {
@@ -86,7 +86,7 @@ namespace eXl
     }
     else
     {
-      newComp.m_Transform = Matrix4f::IDENTITY;
+      newComp.m_Transform = Identity<Mat4>();
     }
 
     while (m_ObjectToComp.size() <= iObject.GetId())

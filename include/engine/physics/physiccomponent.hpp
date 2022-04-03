@@ -51,17 +51,17 @@ namespace eXl
 
     virtual void Step(PhysicsSystem* iSys, float iTime)=0;
 
-    bool SweepTest(PhysicComponent_Impl& iComp, Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore = std::function<bool(PhysicComponent_Impl*)>(), uint16_t iMask = -1);
+    bool SweepTest(PhysicComponent_Impl& iComp, Vec3 const& iFrom, Vec3 const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore = std::function<bool(PhysicComponent_Impl*)>(), uint16_t iMask = -1);
 
-    Vector3f GetPosition(PhysicComponent_Impl& iComp) const;
+    Vec3 GetPosition(PhysicComponent_Impl& iComp) const;
 
     bool IsControlled(PhysicComponent_Impl& iComp);
 
-    //void SetTransform(PhysicComponent_Impl& iComp, Quaternionf const& iOrient, Vector3f const& iPos);
+    //void SetTransform(PhysicComponent_Impl& iComp, Quaternion const& iOrient, Vec3 const& iPos);
 
-    void ApplyLinearVelocity(PhysicComponent_Impl& iComp, Vector3f const& iLinVel, float iTimeStep);
+    void ApplyLinearVelocity(PhysicComponent_Impl& iComp, Vec3 const& iLinVel, float iTimeStep);
 
-    bool RecoverFromPenetration(PhysicComponent_Impl& iComp, Vector3f& OutNewPos);
+    bool RecoverFromPenetration(PhysicComponent_Impl& iComp, Vec3& OutNewPos);
 
   private:
     KinematicController(KinematicController const&);

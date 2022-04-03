@@ -284,7 +284,7 @@ namespace eXl
 
       SDL_Init(SDL_INIT_VIDEO);
 
-      Vector2i viewportSize(m_Width, m_Height);
+      Vec2i viewportSize(m_Width, m_Height);
       uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 #ifdef __ANDROID__
       SDL_DisplayMode mode;
@@ -306,7 +306,7 @@ namespace eXl
       //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
 
-      win = SDL_CreateWindow("eXl", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewportSize.X(), viewportSize.Y(), windowFlags);
+      win = SDL_CreateWindow("eXl", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewportSize.x, viewportSize.y, windowFlags);
 
       InitOGL();
 
@@ -354,8 +354,8 @@ namespace eXl
         {
           SDL_MouseMotionEvent& mouseEvt = reinterpret_cast<SDL_MouseMotionEvent&>(curEvent);
 
-          m_MousePos.X() = mouseEvt.x;
-          m_MousePos.Y() = mouseEvt.y;
+          m_MousePos.x = mouseEvt.x;
+          m_MousePos.y = mouseEvt.y;
 
           GetInputSystem().InjectMouseMoveEvent(mouseEvt.x, mouseEvt.y, mouseEvt.xrel, mouseEvt.yrel, false);
         }
@@ -393,8 +393,8 @@ namespace eXl
             PhysicsSystem& phSys = *m_World->GetWorld().GetSystem<PhysicsSystem>();
             GfxSystem& gfxSys = *m_World->GetWorld().GetSystem<GfxSystem>();
 
-            Vector3f worldPos;
-            Vector3f viewDir;
+            Vec3 worldPos;
+            Vec3 viewDir;
             gfxSys.ScreenToWorld(m_MousePos, worldPos, viewDir);
 
             List<CollisionData> colResult;
@@ -437,9 +437,9 @@ namespace eXl
           }
           if (winEvt.event == SDL_WINDOWEVENT_RESIZED)
           {
-						Vector2i viewportSize;
-            viewportSize.X() = winEvt.data1;
-            viewportSize.Y() = winEvt.data2;
+						Vec2i viewportSize;
+            viewportSize.x = winEvt.data1;
+            viewportSize.y = winEvt.data2;
 
             m_World->GetCamera().view.viewportSize = viewportSize;
           }
@@ -554,7 +554,7 @@ namespace eXl
     bool m_ConsoleOpen = true;
     LuaConsole m_Console;
     DebugVisualizerState m_DebugVisState;
-    Vector2i m_MousePos;
+    Vec2i m_MousePos;
   };
 }
 

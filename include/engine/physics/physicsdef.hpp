@@ -11,8 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <core/weakref.hpp>
-#include <math/vector3.hpp>
-#include <math/quaternion.hpp>
+#include <math/math.hpp>
 #include <engine/common/world.hpp>
 #include <engine/common/gamedata.hpp>
 
@@ -55,24 +54,24 @@ namespace eXl
       Capsule
     };
 
-    static inline GeomDef MakeSphere(float iRay,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    static inline GeomDef MakeSphere(float iRay,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
-      GeomDef ret ={iOrient, iPos, Vector3f(iRay,0.0,0.0), Sphere}; 
+      GeomDef ret ={iOrient, iPos, Vec3(iRay,0.0,0.0), Sphere}; 
       return ret;
     }
-    static inline GeomDef MakeCylinder(float iRay,float iH,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    static inline GeomDef MakeCylinder(float iRay,float iH,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
-      GeomDef ret ={iOrient, iPos,Vector3f(iRay,iH,0.0), Cylinder}; 
+      GeomDef ret ={iOrient, iPos,Vec3(iRay,iH,0.0), Cylinder}; 
       return ret;
     }
-    static inline GeomDef MakeBox(const Vector3f& iDimension,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    static inline GeomDef MakeBox(const Vec3& iDimension,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
       GeomDef ret ={iOrient, iPos, iDimension, Box}; 
       return ret;
     }
-    static inline GeomDef MakeCapsule(float iRay,float iH,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    static inline GeomDef MakeCapsule(float iRay,float iH,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
-      GeomDef ret ={iOrient, iPos, Vector3f(iRay,iH,0.0), Capsule}; 
+      GeomDef ret ={iOrient, iPos, Vec3(iRay,iH,0.0), Capsule}; 
       return ret;
     }
 
@@ -82,9 +81,9 @@ namespace eXl
         && geomData == iOther.geomData && shape == iOther.shape;
     }
 
-    Quaternionf orient;
-    Vector3f position;
-    Vector3f geomData;
+    Quaternion orient;
+    Vec3 position;
+    Vec3 geomData;
     Shape shape;
   };
 
@@ -130,8 +129,8 @@ namespace eXl
 
     }
     
-    inline void SetPosition(const Vector3f& iPos){position=iPos;}
-    inline void SetOrient(const Quaternionf& iOrient){orient=iOrient;}
+    inline void SetPosition(const Vec3& iPos){position=iPos;}
+    inline void SetOrient(const Quaternion& iOrient){orient=iOrient;}
     inline void SetMass(float iMass){mass=iMass;}
     inline void SetFlags(unsigned int iFlags){flags=iFlags;}
     inline void SetCategory(short int iCategory,short int iFilter){m_Category=iCategory;m_Filter=iFilter;}
@@ -139,37 +138,37 @@ namespace eXl
     inline short int GetCategory()const{return m_Category;}
     inline short int GetFilter()const{return m_Filter;}
 
-    void AddSphere(float iRay,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    void AddSphere(float iRay,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
       GeomDef temp;
       temp.position=iPos;
       temp.orient=iOrient;
       temp.shape = GeomDef::Sphere;
-      temp.geomData = Vector3f(iRay,0,0);
+      temp.geomData = Vec3(iRay,0,0);
       geomList.push_back(temp);
     }
 
-    void AddCylinder(float iRay,float iH,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    void AddCylinder(float iRay,float iH,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
       GeomDef temp;
       temp.position=iPos;
       temp.orient=iOrient;
       temp.shape = GeomDef::Cylinder;
-      temp.geomData = Vector3f(iRay,iH,0);
+      temp.geomData = Vec3(iRay,iH,0);
       geomList.push_back(temp);
     }
 
-    void AddCapsule(float iRay,float iH,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    void AddCapsule(float iRay,float iH,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
       GeomDef temp;
       temp.position=iPos;
       temp.orient=iOrient;
       temp.shape = GeomDef::Capsule;
-      temp.geomData = Vector3f(iRay,iH,0);
+      temp.geomData = Vec3(iRay,iH,0);
       geomList.push_back(temp);
     }
 
-    void AddBox(const Vector3f& iDimension,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient = Quaternionf::IDENTITY)
+    void AddBox(const Vec3& iDimension,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient = Identity<Quaternion>())
     {
       GeomDef temp;
       temp.position=iPos;
@@ -179,10 +178,10 @@ namespace eXl
       geomList.push_back(temp);
     }
 
-    //void AddHeightField(unsigned char* iData,float high,float low,int X,int Y,float width,float height,bool infinite,const Vector3f& iPos=Vector3f::ZERO,const Quaternionf& iOrient=Quaternionf::IDENTITY);
+    //void AddHeightField(unsigned char* iData,float high,float low,int.x,int.y,float width,float height,bool infinite,const Vec3& iPos=Zero<Vec3>(),const Quaternion& iOrient=Identity<Quaternion>());
 
-    inline const Vector3f& GetPosition()const {return position;}
-    inline const Quaternionf& GetOrient()const {return orient;}
+    inline const Vec3& GetPosition()const {return position;}
+    inline const Quaternion& GetOrient()const {return orient;}
     inline unsigned int GetFlags()const {return flags;}
     inline float GetMass()const {return mass;}
     inline const SmallVector<GeomDef, 1>& GetGeoms()const {return geomList;}
@@ -191,8 +190,8 @@ namespace eXl
   protected:
 
     SmallVector<GeomDef, 1> geomList;
-    Quaternionf orient;
-    Vector3f position;
+    Quaternion orient;
+    Vec3 position;
     ObjectHandle shapeObj;
     float mass;
     unsigned int flags;
@@ -204,8 +203,8 @@ namespace eXl
   {
     ObjectHandle obj1;
     ObjectHandle obj2;
-    Vector3f contactPosOn1;
-    Vector3f normal1To2;
+    Vec3 contactPosOn1;
+    Vec3 normal1To2;
     float depth;
     //Energy --> 1/2*Mass*RelativeVelocity^2
     float energy;

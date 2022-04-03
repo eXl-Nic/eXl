@@ -78,12 +78,12 @@ namespace yojimbo
     {
       serialize_uint64(stream, m_Object.id);
       serialize_bool(stream, m_Data.m_Moving);
-      serialize_float(stream, m_Data.m_Pos.X());
-      serialize_float(stream, m_Data.m_Pos.Y());
-      serialize_float(stream, m_Data.m_Pos.Z());
-      serialize_float(stream, m_Data.m_Dir.X());
-      serialize_float(stream, m_Data.m_Dir.Y());
-      serialize_float(stream, m_Data.m_Dir.Z());
+      serialize_float(stream, m_Data.m_Pos.x);
+      serialize_float(stream, m_Data.m_Pos.y);
+      serialize_float(stream, m_Data.m_Pos.z);
+      serialize_float(stream, m_Data.m_Dir.x);
+      serialize_float(stream, m_Data.m_Dir.y);
+      serialize_float(stream, m_Data.m_Dir.z);
       return true;
     }
 

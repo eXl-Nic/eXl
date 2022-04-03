@@ -165,9 +165,9 @@ namespace eXl
     TilesetEditor* m_Editor;
     TilesetToolboxWidget* m_Toolbox;
 
-    Vector2i m_GridSize = Vector2i::ONE;
-    Vector2i m_SelOffset = Vector2i::ZERO;
-    Vector<Vector2i> m_CurBoxes;
+    Vec2i m_GridSize = One<Vec2i>();
+    Vec2i m_SelOffset = Zero<Vec2i>();
+    Vector<Vec2i> m_CurBoxes;
     AABB2Di m_CurrentSelection;
 	};
 
@@ -224,34 +224,34 @@ namespace eXl
           {
             m_Impl->m_GridSize = selTile->m_Size;
             m_Impl->m_CurBoxes = selTile->m_Frames;
-            m_Impl->m_Toolbox->m_Ui.gridSizeX->setValue(m_Impl->m_GridSize.X());
-            m_Impl->m_Toolbox->m_Ui.gridSizeY->setValue(m_Impl->m_GridSize.Y());
+            m_Impl->m_Toolbox->m_Ui.gridSizeX->setValue(m_Impl->m_GridSize.x);
+            m_Impl->m_Toolbox->m_Ui.gridSizeY->setValue(m_Impl->m_GridSize.y);
             if (!m_Impl->m_CurBoxes.empty())
             {
-              if (m_Impl->m_GridSize.X() != 0)
+              if (m_Impl->m_GridSize.x != 0)
               {
-                m_Impl->m_SelOffset.X() = m_Impl->m_CurBoxes[0].X() % m_Impl->m_GridSize.X();
+                m_Impl->m_SelOffset.x = m_Impl->m_CurBoxes[0].x % m_Impl->m_GridSize.x;
               }
               else
               {
-                m_Impl->m_SelOffset.X() = 0;
+                m_Impl->m_SelOffset.x = 0;
               }
-              if (m_Impl->m_GridSize.Y() != 0)
+              if (m_Impl->m_GridSize.y != 0)
               {
-                m_Impl->m_SelOffset.Y() = m_Impl->m_CurBoxes[0].Y() % m_Impl->m_GridSize.Y();
+                m_Impl->m_SelOffset.y = m_Impl->m_CurBoxes[0].y % m_Impl->m_GridSize.y;
               }
               else
               {
-                m_Impl->m_SelOffset.Y() = 0;
+                m_Impl->m_SelOffset.y = 0;
               }
             }
             else
             {
-              m_Impl->m_SelOffset.X() = 0;
-              m_Impl->m_SelOffset.Y() = 0;
+              m_Impl->m_SelOffset.x = 0;
+              m_Impl->m_SelOffset.y = 0;
             }
-            m_Impl->m_Toolbox->m_Ui.offsetX->setValue(m_Impl->m_SelOffset.X());
-            m_Impl->m_Toolbox->m_Ui.offsetY->setValue(m_Impl->m_SelOffset.Y());
+            m_Impl->m_Toolbox->m_Ui.offsetX->setValue(m_Impl->m_SelOffset.x);
+            m_Impl->m_Toolbox->m_Ui.offsetY->setValue(m_Impl->m_SelOffset.y);
             m_Impl->RefreshSelectionBox();
           }
           m_Impl->UpdateTile(index);
@@ -343,22 +343,22 @@ namespace eXl
       
       QObject::connect(m_Impl->m_Toolbox->m_Ui.gridSizeX, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_GridSize.SetX(i);
+        m_Impl->m_GridSize.x = i;
         m_Impl->RefreshTilesFromSelection();
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.gridSizeY, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_GridSize.SetY(i);
+        m_Impl->m_GridSize.y = i;
         m_Impl->RefreshTilesFromSelection();
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.offsetX, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_SelOffset.SetX(i);
+        m_Impl->m_SelOffset.x = i;
         m_Impl->RefreshTilesFromSelection();
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.offsetY, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_SelOffset.SetY(i);
+        m_Impl->m_SelOffset.y = i;
         m_Impl->RefreshTilesFromSelection();
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.bootstrapButton, &QAbstractButton::pressed, [this]()
@@ -420,34 +420,34 @@ namespace eXl
       GfxSystem::ViewInfo& view = m_MainImageView->GetViewInfo();
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = 1.0;
-      view.backgroundColor = Vector4f::ONE;
+      view.backgroundColor = One<Vec4>();
       m_MainImageView->ViewInfoUpdated();
     }
 
     m_ImageHandle = m_World.CreateObject();
 
-    m_Transforms->AddTransform(m_ImageHandle, Matrix4f::FromPosition(-UnitZ<Vector3f>()));
+    m_Transforms->AddTransform(m_ImageHandle, translate(Identity<Mat4>(), -UnitZ<Vec3>()));
     m_Gfx->CreateComponent(m_ImageHandle);
 
     {
       GfxSystem::ViewInfo& view = m_TilePreview->GetViewInfo();
-      view.basis[0] = -UnitX<Vector3f>();
-      view.basis[1] = UnitY<Vector3f>();
-      view.basis[2] = -UnitZ<Vector3f>();
+      view.basis[0] = -UnitX<Vec3>();
+      view.basis[1] = UnitY<Vec3>();
+      view.basis[2] = -UnitZ<Vec3>();
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = 1.0;
-      view.backgroundColor = Vector4f::ONE;
+      view.backgroundColor = One<Vec4>();
       m_TilePreview->ViewInfoUpdated();
     }
 
     m_AnimHandle = m_World.CreateObject();
 
-    Matrix4f animPosition = Matrix4f::IDENTITY;
-    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[0]) = -UnitX<Vector3f>();
-    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[1]) =  UnitY<Vector3f>();
-    reinterpret_cast<Vector3f&>(animPosition.m_Matrix[2]) = -UnitZ<Vector3f>();
+    Mat4 animPosition = Identity<Mat4>();
+    animPosition[0] = Vec4(-UnitX<Vec3>(), 0);
+    animPosition[1] = Vec4( UnitY<Vec3>(), 0);
+    animPosition[2] = Vec4(-UnitZ<Vec3>(), 0);
 
-    m_Transforms->AddTransform(m_AnimHandle, Matrix4f::FromPosition(UnitZ<Vector3f>()));
+    m_Transforms->AddTransform(m_AnimHandle, translate(Identity<Mat4>(), UnitZ<Vec3>()));
     GfxSpriteComponent& gfxComp = m_Gfx->CreateSpriteComponent(m_AnimHandle);
     gfxComp.SetTileset(m_Tileset);
     gfxComp.SetRotateSprite(true);
@@ -506,16 +506,16 @@ namespace eXl
       Tile const* tile = m_Tileset->Find(*name);
       comp->SetTileName(*name);
 
-      float aspectRatio = float(tile->m_Size.Y()) / tile->m_Size.X();
-      float maxDim = Mathf::Max(tile->m_Size.X() * tile->m_Scale.X() / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.X())
-        , tile->m_Size.Y() * tile->m_Scale.Y() / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.Y()));
+      float aspectRatio = float(tile->m_Size.y) / tile->m_Size.x;
+      float maxDim = Mathf::Max(tile->m_Size.x * tile->m_Scale.x / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.x)
+        , tile->m_Size.y * tile->m_Scale.y / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.y));
 
       GfxSystem::ViewInfo& view = m_TilePreview->GetViewInfo();
       view.displayedSize = maxDim * 1.2;
       m_Gfx->SetView(view);
       m_TilePreview->ViewInfoUpdated();
 
-      m_RatioWidgetTile->SetAspectRatio(tile->m_Size.X(), tile->m_Size.Y());
+      m_RatioWidgetTile->SetAspectRatio(tile->m_Size.x, tile->m_Size.y);
     }
     else
     {
@@ -543,30 +543,30 @@ namespace eXl
   void TilesetEditor::Impl::RefreshTilesFromSelection()
   {
     m_CurBoxes.clear();
-    Vector2i size = m_CurrentSelection.GetSize();
-    if (size != Vector2i::ZERO)
+    Vec2i size = m_CurrentSelection.GetSize();
+    if (size != Zero<Vec2i>())
     {
       AABB2Di croppedBox;
-      Vector2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
-      croppedBox.SetCommonBox(m_CurrentSelection, AABB2Di(Vector2i::ZERO, imageSize * 2));
+      Vec2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
+      croppedBox.SetCommonBox(m_CurrentSelection, AABB2Di(Zero<Vec2i>(), imageSize * 2));
 
       AABB2Di snapBox;
-      snapBox.m_Data[0].X() = (croppedBox.m_Data[0].X() - m_SelOffset.X() + m_GridSize.X() / 2) / m_GridSize.X();
-      snapBox.m_Data[0].Y() = (croppedBox.m_Data[0].Y() - m_SelOffset.Y() + m_GridSize.Y() / 2) / m_GridSize.Y();
-      snapBox.m_Data[1].X() = (croppedBox.m_Data[1].X() - m_SelOffset.X() + m_GridSize.X() / 2) / m_GridSize.X();
-      snapBox.m_Data[1].Y() = (croppedBox.m_Data[1].Y() - m_SelOffset.Y() + m_GridSize.Y() / 2) / m_GridSize.Y();
+      snapBox.m_Data[0].x = (croppedBox.m_Data[0].x - m_SelOffset.x + m_GridSize.x / 2) / m_GridSize.x;
+      snapBox.m_Data[0].y = (croppedBox.m_Data[0].y - m_SelOffset.y + m_GridSize.y / 2) / m_GridSize.y;
+      snapBox.m_Data[1].x = (croppedBox.m_Data[1].x - m_SelOffset.x + m_GridSize.x / 2) / m_GridSize.x;
+      snapBox.m_Data[1].y = (croppedBox.m_Data[1].y - m_SelOffset.y + m_GridSize.y / 2) / m_GridSize.y;
 
-      snapBox.SetCommonBox(snapBox, AABB2Di(Vector2i::ZERO, imageSize * 2));
+      snapBox.SetCommonBox(snapBox, AABB2Di(Zero<Vec2i>(), imageSize * 2));
 
-      Vector2i snapSize = snapBox.GetSize();
-      snapSize.X() = Mathi::Max(snapSize.X(), 1);
-      snapSize.Y() = Mathi::Max(snapSize.Y(), 1);
+      Vec2i snapSize = snapBox.GetSize();
+      snapSize.x = Mathi::Max(snapSize.x, 1);
+      snapSize.y = Mathi::Max(snapSize.y, 1);
 
-      for (int32_t i = 0; i < snapSize.Y(); ++i)
+      for (int32_t i = 0; i < snapSize.y; ++i)
       {
-        for (int32_t j = 0; j < snapSize.X(); ++j)
+        for (int32_t j = 0; j < snapSize.x; ++j)
         {
-          m_CurBoxes.push_back(Vector2i((snapBox.m_Data[0].X() + j) * m_GridSize.X() + m_SelOffset.X(), (snapBox.m_Data[0].Y() + i) * m_GridSize.Y() + m_SelOffset.Y()));
+          m_CurBoxes.push_back(Vec2i((snapBox.m_Data[0].x + j) * m_GridSize.x + m_SelOffset.x, (snapBox.m_Data[0].y + i) * m_GridSize.y + m_SelOffset.y));
         }
       }
     }
@@ -581,11 +581,11 @@ namespace eXl
 
     if (m_CurrentDisplayedImage)
     {
-      Vector2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
-      float aspectRatio = float(imageSize.Y()) / imageSize.X();
+      Vec2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
+      float aspectRatio = float(imageSize.y) / imageSize.x;
 
       IntrusivePtr<GeometryInfo> geom(eXl_NEW GeometryInfo);
-      geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(Vector2f(1.0 / aspectRatio, 1.0), true);
+      geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(Vec2(1.0 / aspectRatio, 1.0), true);
 
       unsigned int indexData[] = { 0, 1, 2, 2, 1, 3 };
       geom->m_Indices = OGLBuffer::CreateBuffer(OGLBufferUsage::ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData);
@@ -594,9 +594,9 @@ namespace eXl
 
       IntrusivePtr<SpriteMaterialInfo> matInfo(eXl_NEW SpriteMaterialInfo);
       matInfo->m_Texture = m_Tileset->GetTexture(*m_CurrentDisplayedImage);
-      matInfo->m_SpriteInfo.tint = Vector4f::ONE;
+      matInfo->m_SpriteInfo.tint = One<Vec4>();
       matInfo->m_SpriteInfo.alphaMult = 1.0;
-      matInfo->m_SpriteInfo.tcScaling = Vector2f::ONE;
+      matInfo->m_SpriteInfo.tcScaling = One<Vec2>();
       matInfo->m_SpriteInfo.imageSize = MathTools::ToFVec(imageSize);
       matInfo->SetupData();
 
@@ -604,9 +604,9 @@ namespace eXl
       gfxComp->SetGeometry(geom.get());
       gfxComp->AddDraw(matInfo.get()).NumElements(6).End();
 
-      m_MainImageView->setFixedSize(QSize(imageSize.X(), imageSize.Y()));
-      //m_RatioWidgetImage->SetAspectRatio(imageSize.X(), imageSize.Y());
-      //m_RatioWidgetImage->setFixedSize(QSize(imageSize.X(), imageSize.Y()));
+      m_MainImageView->setFixedSize(QSize(imageSize.x, imageSize.y));
+      //m_RatioWidgetImage->SetAspectRatio(imageSize.x, imageSize.y);
+      //m_RatioWidgetImage->setFixedSize(QSize(imageSize.x, imageSize.y));
     }
   }
 
@@ -618,18 +618,18 @@ namespace eXl
       {
         uint32_t pixelSize = img->GetPixelSize();
         Vector<uint8_t> pixel(pixelSize);
-        Vector2i gridSize(img->GetSize().X() / m_GridSize.X(), img->GetSize().Y() / m_GridSize.Y());
-        for (int32_t y = 0; y < gridSize.Y(); ++y)
+        Vec2i gridSize(img->GetSize().x / m_GridSize.x, img->GetSize().y / m_GridSize.y);
+        for (int32_t y = 0; y < gridSize.y; ++y)
         {
-          uint8_t const* row = (uint8_t const*)img->GetRow(y * m_GridSize.Y());
-          for (int32_t x = 0; x < gridSize.X(); ++x)
+          uint8_t const* row = (uint8_t const*)img->GetRow(y * m_GridSize.y);
+          for (int32_t x = 0; x < gridSize.x; ++x)
           {
-            Vector2i offset(x * m_GridSize.X(), y * m_GridSize.Y());
+            Vec2i offset(x * m_GridSize.x, y * m_GridSize.y);
             bool validTile = false;
-            for (int32_t sY = 0; sY < m_GridSize.Y(); ++sY)
+            for (int32_t sY = 0; sY < m_GridSize.y; ++sY)
             {
               uint8_t const* subRow = row + sY * img->GetRowStride();
-              for (int32_t sX = 0; !validTile && sX < m_GridSize.X(); ++sX)
+              for (int32_t sX = 0; !validTile && sX < m_GridSize.x; ++sX)
               {
                 if (sY == 0 && sX == 0)
                 {
@@ -657,7 +657,7 @@ namespace eXl
               m_TileCollectionModel->AddTile(newName, newTile);
             }
 
-            row += m_GridSize.X() * pixelSize;
+            row += m_GridSize.x * pixelSize;
           }
         }
       }

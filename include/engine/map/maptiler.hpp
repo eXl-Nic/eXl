@@ -25,9 +25,9 @@ namespace eXl
     {
       Tileset const* m_Tileset;
       ImageName m_Name;
-      Vector2f m_VtxScaling = Vector2f::ONE;
-      Vector2f m_VtxOffset = Vector2f::ZERO;
-      Vector2f m_Tiling = Vector2f::ONE;
+      Vec2 m_VtxScaling = One<Vec2>();
+      Vec2 m_VtxOffset = Zero<Vec2>();
+      Vec2 m_Tiling = One<Vec2>();
 
       bool operator==(TexGroup const& iOther) const;
     };

@@ -110,7 +110,7 @@ namespace eXl
   };
 
   using LinearFloatAnimation = Animation<float>;
-  using LinearPositionAnimation = Animation<Vector3f>;
+  using LinearPositionAnimation = Animation<Vec3>;
 
   template <typename TimelineBehaviour, typename Impl>
   class TimelineManager : public WorldSystem

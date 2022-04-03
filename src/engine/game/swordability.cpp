@@ -56,10 +56,9 @@ namespace eXl
     gfxComp.SetRotateSprite(false);
 #endif
 
-    Matrix4f transform;
-    transform.MakeIdentity();
-    MathTools::GetPosition(transform).Z() = 0.05;
-    trans.AddTransform(state.m_SwordActor, &transform);
+    Mat4 transform = Identity<Mat4>();
+    transform[3][2] = 0.05;
+    trans.AddTransform(state.m_SwordActor, transform);
     trans.Attach(state.m_SwordActor, iUser);
 
     return stateHandle;
@@ -72,7 +71,7 @@ namespace eXl
     world.DeleteObject(state.m_SwordActor);
   }
 
-  void SwordAbility::SetSwingDirection(AbilitySystem* iSys, ObjectHandle iObj, Vector2f const& iDir)
+  void SwordAbility::SetSwingDirection(AbilitySystem* iSys, ObjectHandle iObj, Vec2 const& iDir)
   {
     SwordAbility* self = iSys->GetAbilityDesc<SwordAbility>(Name());
     AbilityStateHandle stateHandle = iSys->GetAbilityState(iObj, Name());
@@ -109,19 +108,19 @@ namespace eXl
     GfxSystem& gfxSys = *world.GetSystem<GfxSystem>();
     GfxSpriteComponent* gfxComp = gfxSys.GetSpriteComponent(state.m_SwordActor);
 
-    if (state.m_SwingDirection.Dot(UnitX<Vector2f>()) > 0.5)
+    if (dot(state.m_SwingDirection, UnitX<Vec2>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_right"));
     }
-    if (state.m_SwingDirection.Dot(-UnitX<Vector2f>()) > 0.5)
+    if (dot(state.m_SwingDirection, -UnitX<Vec2>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_left"));
     }
-    if (state.m_SwingDirection.Dot(UnitY<Vector2f>()) > 0.5)
+    if (dot(state.m_SwingDirection, UnitY<Vec2>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_up"));
     }
-    if (state.m_SwingDirection.Dot(-UnitY<Vector2f>()) > 0.5)
+    if (dot(state.m_SwingDirection, -UnitY<Vec2>()) > 0.5)
     {
       gfxComp->SetTileName(TileName("use_down"));
     }

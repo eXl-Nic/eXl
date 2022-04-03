@@ -17,23 +17,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  static Vector<Vector2f> const& GetSamples()
+  static Vector<Vec2> const& GetSamples()
   {
-    static Vector<Vector2f> s_RandomSet = []
+    static Vector<Vec2> s_RandomSet = []
     {
-      Vector<Vector2f> circlePoints;
+      Vector<Vec2> circlePoints;
       Random* rand = Random::CreateDefaultRNG(0);
       PoissonDiskSampling sampler(Polygoni(AABB2Di(-100, -100, 100, 100)), *rand);
       sampler.Sample(7.5, 7.5, 256);
 
-      Vector<Vector2d> points;
+      Vector<Vec2d> points;
       sampler.GetLayer(0, points);
 
       for (auto const& pt : points)
       {
-        if (pt.Length() < 100)
+        if (length(pt) < 100)
         {
-          circlePoints.push_back(Vector2f(pt.X() / 100, pt.Y() / 100));
+          circlePoints.push_back(Vec2(pt.x / 100, pt.y / 100));
         }
       }
 
@@ -51,15 +51,15 @@ namespace eXl
 
   }
 
-  void VelocityObstacle::Start(void* iActor, Vector2f const& iOrigin, float iRadius, Vector2f const& iDesiredDir, float iMaxVelocity)
+  void VelocityObstacle::Start(void* iActor, Vec2 const& iOrigin, float iRadius, Vec2 const& iDesiredDir, float iMaxVelocity)
   {
     m_Obstacles.clear();
     m_CircleArcs.clear();
     m_CasterPos = iOrigin;
     m_CasterDesiredDir = iDesiredDir;
-    if (iDesiredDir == Vector2f::ZERO)
+    if (iDesiredDir == Zero<Vec2>())
     {
-      m_CasterDesiredDir = UnitX<Vector2f>();
+      m_CasterDesiredDir = UnitX<Vec2>();
       m_PureAvoidance = true;
     }
     else
@@ -92,41 +92,41 @@ namespace eXl
 
   static const float s_sqrt2 = sqrt(2.0f);
 
-  void VelocityObstacle::AddObstacle(Vector2f const& iWorldOrig, Vector2f const (&iWorldVecDir)[2], float iDistance)
+  void VelocityObstacle::AddObstacle(Vec2 const& iWorldOrig, Vec2 const (&iWorldVecDir)[2], float iDistance)
   {
     static uint32_t numExec = 0;
     ++numExec;
 
     Obstacle newObstacle;
 
-    Vector2f iOrig(iWorldOrig.Dot(m_CasterDesiredDir), iWorldOrig.Dot(m_PerpDir));
+    Vec2 iOrig(dot(iWorldOrig, m_CasterDesiredDir), dot(iWorldOrig, m_PerpDir));
 
-    float const otherVel = iOrig.Length();
+    float const otherVel = length(iOrig);
 
     bool velInside = otherVel - Mathf::ZeroTolerance() < m_MaxVelocity;
 
     uint32_t numArcs = 0;
     Arc circleArcs[2];
 
-    Vector2f vecDir[2];
-    vecDir[0] = Vector2f(iWorldVecDir[0].Dot(m_CasterDesiredDir), iWorldVecDir[0].Dot(m_PerpDir));
-    vecDir[1] = Vector2f(iWorldVecDir[1].Dot(m_CasterDesiredDir), iWorldVecDir[1].Dot(m_PerpDir));
+    Vec2 vecDir[2];
+    vecDir[0] = Vec2(dot(iWorldVecDir[0], m_CasterDesiredDir), dot(iWorldVecDir[0], m_PerpDir));
+    vecDir[1] = Vec2(dot(iWorldVecDir[1], m_CasterDesiredDir), dot(iWorldVecDir[1], m_PerpDir));
 
-    AABB2Df velocityBox(-Vector2f::ONE * m_MaxVelocity, Vector2f::ONE * 2 * m_MaxVelocity);
+    AABB2Df velocityBox(-One<Vec2>() * m_MaxVelocity, One<Vec2>() * 2 * m_MaxVelocity);
 
     for (int32_t i = 0; i < 2; ++i)
     {
-      float dotDir = iOrig.Dot(vecDir[i]);
+      float dotDir = dot(iOrig, vecDir[i]);
       if (!velInside && dotDir > 0)
       {
         continue;
       }
-      Vector2f projPt = iOrig - vecDir[i] * dotDir;
+      Vec2 projPt = iOrig - vecDir[i] * dotDir;
       float kSq = m_MaxVelocitySq - (otherVel * otherVel - dotDir * dotDir);
 
       if (kSq > Mathf::ZeroTolerance())
       {
-        Vector2f ray = vecDir[i] * (otherVel + s_sqrt2 * m_MaxVelocity);
+        Vec2 ray = vecDir[i] * (otherVel + s_sqrt2 * m_MaxVelocity);
         auto boxPt = velocityBox.SegmentTest(iOrig + ray, -ray * 2.0, 0.0);
         //
         //eXl_ASSERT(!(!boxPt));
@@ -134,7 +134,7 @@ namespace eXl
         //auto circlePt = projPt + k * vecDir[i];
         //eXl_ASSERT(Mathf::Abs(circlePt.Length() - m_MaxVelocity) < Mathf::ZeroTolerance());
 
-        Vector2f(&exts)[2] = reinterpret_cast<Vector2f(&)[2]>(newObstacle.m_Segs[i]);
+        Vec2(&exts)[2] = reinterpret_cast<Vec2(&)[2]>(newObstacle.m_Segs[i]);
 
         if (velInside)
         {
@@ -154,9 +154,10 @@ namespace eXl
           //exts[1 - i] = projPt - k * vecDir[i];
           //exts[i] = circlePt;
 
-          Vector2f extNormalized[2] = {exts[1], exts[0]};
-          extNormalized[0].Normalize();
-          extNormalized[1].Normalize();
+          Vec2 extNormalized[2] = {
+            normalize(exts[1]),
+            normalize(exts[0])
+          };
 
           Penumbra::UpdateSightRange(extNormalized, circleArcs[numArcs].m_MidVec, circleArcs[numArcs].m_LowLimit);
 
@@ -182,9 +183,10 @@ namespace eXl
 
     if (velInside)
     {
-      Vector2f vecs[2] = { newObstacle.m_Segs[0].m_Ext1, newObstacle.m_Segs[1].m_Ext2 };
-      vecs[0].Normalize();
-      vecs[1].Normalize();
+      Vec2 vecs[2] = { 
+        normalize(newObstacle.m_Segs[0].m_Ext1), 
+        normalize(newObstacle.m_Segs[1].m_Ext2) 
+      };
       Penumbra::UpdateSightRange(vecs, circleArcs[0].m_MidVec, circleArcs[0].m_LowLimit);
 
 
@@ -192,7 +194,7 @@ namespace eXl
       //{
       //  auto* drawer = DebugTool::GetDrawer();
       //
-      //  drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(m_CasterPos + circleArcs[numArcs].m_MidVec * m_MaxVelocity), Vector4f(0.0, 0.0, /1.0, /1.0));
+      //  drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(m_CasterPos + circleArcs[numArcs].m_MidVec * m_MaxVelocity), Vec4(0.0, 0.0, /1.0, /1.0));
       //}
 
       ++numArcs;
@@ -244,10 +246,10 @@ namespace eXl
         {
           cutArc.Complement();
         }
-        Vector2f cutVec1;
-        Vector2f cutVec2;
+        Vec2 cutVec1;
+        Vec2 cutVec2;
         {
-          Vector2f perpDir = MathTools::GetPerp(cutArc.m_MidVec);
+          Vec2 perpDir = MathTools::GetPerp(cutArc.m_MidVec);
           float verticalFactor = Mathf::Sqrt(1.0 - cutArc.m_LowLimit * cutArc.m_LowLimit);
 
           cutVec1 = cutArc.m_MidVec * cutArc.m_LowLimit - verticalFactor * perpDir;
@@ -261,11 +263,11 @@ namespace eXl
           {
             if (Penumbra::IsInSightRange(cutVec2, arc.m_MidVec, arc.m_LowLimit))
             {
-              Vector2f perpDir = MathTools::GetPerp(arc.m_MidVec);
+              Vec2 perpDir = MathTools::GetPerp(arc.m_MidVec);
               float verticalFactor = Mathf::Sqrt(1.0 - arc.m_LowLimit * arc.m_LowLimit);
               //Cut arc in two.
-              Vector2f lowVec[2] = { arc.m_MidVec * arc.m_LowLimit - verticalFactor * perpDir, cutVec1 };
-              Vector2f highVec[2] = { cutVec2, arc.m_MidVec * arc.m_LowLimit + verticalFactor * perpDir };
+              Vec2 lowVec[2] = { arc.m_MidVec * arc.m_LowLimit - verticalFactor * perpDir, cutVec1 };
+              Vec2 highVec[2] = { cutVec2, arc.m_MidVec * arc.m_LowLimit + verticalFactor * perpDir };
 
               bool replaced = false;
 
@@ -299,9 +301,9 @@ namespace eXl
             }
             else
             {
-              Vector2f perpDir = MathTools::GetPerp(arc.m_MidVec);
+              Vec2 perpDir = MathTools::GetPerp(arc.m_MidVec);
               float verticalFactor = Mathf::Sqrt(1.0 - arc.m_LowLimit * arc.m_LowLimit);
-              Vector2f lowVec[2] = { arc.m_MidVec * arc.m_LowLimit - verticalFactor * perpDir, cutVec1 };
+              Vec2 lowVec[2] = { arc.m_MidVec * arc.m_LowLimit - verticalFactor * perpDir, cutVec1 };
 
               Penumbra::UpdateSightRange(lowVec, arc.m_MidVec, arc.m_LowLimit);
               if (arc.m_LowLimit >= arcTolerance)
@@ -313,9 +315,9 @@ namespace eXl
           }
           else if (Penumbra::IsInSightRange(cutVec2, arc.m_MidVec, arc.m_LowLimit))
           {
-            Vector2f perpDir = MathTools::GetPerp(arc.m_MidVec);
+            Vec2 perpDir = MathTools::GetPerp(arc.m_MidVec);
             float verticalFactor = Mathf::Sqrt(1.0 - arc.m_LowLimit * arc.m_LowLimit);
-            Vector2f highVec[2] = { cutVec2, arc.m_MidVec * arc.m_LowLimit + verticalFactor * perpDir };
+            Vec2 highVec[2] = { cutVec2, arc.m_MidVec * arc.m_LowLimit + verticalFactor * perpDir };
 
             Penumbra::UpdateSightRange(highVec, arc.m_MidVec, arc.m_LowLimit);
             if (arc.m_LowLimit >= arcTolerance)
@@ -334,7 +336,7 @@ namespace eXl
 
     if (m_Obstacles.empty())
     {
-      m_ObstaclesBox = AABB2Df(iOrig, Vector2f::ZERO);
+      m_ObstaclesBox = AABB2Df(iOrig, Zero<Vec2>());
     }
     else
     {
@@ -349,7 +351,7 @@ namespace eXl
     m_Obstacles.push_back(newObstacle);
   }
 
-  void VelocityObstacle::AddPoint(Vector2f const& iOrigin, float iRadius, Vector2f const& iVelocity)
+  void VelocityObstacle::AddPoint(Vec2 const& iOrigin, float iRadius, Vec2 const& iVelocity)
   {
     //if(m_CircleCut)
     //{
@@ -357,13 +359,13 @@ namespace eXl
     //}
     if ((iRadius + m_CasterRadius) > 0)
     {
-      Vector2f relPos = iOrigin - m_CasterPos;
+      Vec2 relPos = iOrigin - m_CasterPos;
 
       float totRadius = (iRadius + m_CasterRadius);
-      float distance = relPos.Normalize();
+      float distance = NormalizeAndGetLength(relPos);
       if (distance > Mathf::ZeroTolerance())
       {
-        Vector2f vecDir[2];
+        Vec2 vecDir[2];
         {
           float verticalFactor = Mathf::Min(totRadius / distance, 1.0);
           float horizontalFactor = Mathf::Sqrt(1.0 - verticalFactor * verticalFactor);
@@ -387,56 +389,56 @@ namespace eXl
       std::swap(orderedSeg.m_Ext1, orderedSeg.m_Ext2);
     }
 
-    Vector2f vecDir[2];
-    Vector2f segDir = orderedSeg.m_Ext2 - orderedSeg.m_Ext1;
-    float segLen = segDir.Normalize();
+    Vec2 vecDir[2];
+    Vec2 segDir = orderedSeg.m_Ext2 - orderedSeg.m_Ext1;
+    float segLen = NormalizeAndGetLength(segDir);
 
     vecDir[0] = (orderedSeg.m_Ext1 - segDir * iRadius) - m_CasterPos;
     vecDir[1] = (orderedSeg.m_Ext2 + segDir * iRadius) - m_CasterPos;
 
-    float disExt0 = vecDir[0].Normalize();
-    float disExt1 = vecDir[1].Normalize();
+    float disExt0 = NormalizeAndGetLength(vecDir[0]);
+    float disExt1 = NormalizeAndGetLength(vecDir[1]);
 
     auto perpDir = MathTools::GetPerp(segDir);
 
     float distance;
 
-    if (Segmentf::IsLeft(Vector2f::ZERO, perpDir, vecDir[0]) * Segmentf::IsLeft(Vector2f::ZERO, perpDir, vecDir[1]) < 0)
+    if (Segmentf::IsLeft(Zero<Vec2>(), perpDir, vecDir[0]) * Segmentf::IsLeft(Zero<Vec2>(), perpDir, vecDir[1]) < 0)
     {
-      distance = Mathf::Abs(disExt0 * vecDir[0].Dot(perpDir));
+      distance = Mathf::Abs(disExt0 * dot(vecDir[0], perpDir));
     }
     else
     {
       distance = Mathf::Min(disExt0, disExt1);
     }
 
-    AddObstacle(Vector2f::ZERO, vecDir, distance);
+    AddObstacle(Zero<Vec2>(), vecDir, distance);
   }
 
   VelocityObstacle::BestVelocity::BestVelocity(float iDirMult)
     : dirMult(iDirMult)
   {
-    std::fill(curScore, curScore + 4, -Mathf::MAX_REAL);
+    std::fill(curScore, curScore + 4, -Mathf::MaxReal());
   }
 
-  float VelocityObstacle::BestVelocity::ComputeScore(Vector2f const& iOptimalDir, Vector2f const& iCandidateDir, float iCandidateSpeed)
+  float VelocityObstacle::BestVelocity::ComputeScore(Vec2 const& iOptimalDir, Vec2 const& iCandidateDir, float iCandidateSpeed)
   {
     if (iCandidateSpeed > Mathf::ZeroTolerance() && iCandidateSpeed < (1.0 + Mathf::ZeroTolerance()))
     {
-      float score = iCandidateDir.Dot(iOptimalDir) * dirMult + iCandidateSpeed;
+      float score = dot(iCandidateDir, iOptimalDir) * dirMult + iCandidateSpeed;
       return score;
     }
-    return -Mathf::MAX_REAL;
+    return -Mathf::MaxReal();
   }
 
-  void VelocityObstacle::BestVelocity::Update(Vector2f const& iCandidateDir, float iCandidateSpeed)
+  void VelocityObstacle::BestVelocity::Update(Vec2 const& iCandidateDir, float iCandidateSpeed)
   {
-    Vector2f canonicalDirs[] = 
+    Vec2 canonicalDirs[] = 
     {
-      UnitX<Vector2f>(),
-      UnitY<Vector2f>(),
-      -UnitY<Vector2f>(),
-      -UnitX<Vector2f>()
+      UnitX<Vec2>(),
+      UnitY<Vec2>(),
+      -UnitY<Vec2>(),
+      -UnitX<Vec2>()
     };
 
     for (uint32_t i = 0; i < /*4*/1; ++i)
@@ -476,21 +478,21 @@ namespace eXl
     outputStream.flush();
   }
 
-  Vector2f VelocityObstacle::FindBestVelocity(Vector2f const& prevDir)
+  Vec2 VelocityObstacle::FindBestVelocity(Vec2 const& prevDir)
   {
     if(m_WholeCircleCut)
     {
-      return Vector2f::ZERO;
+      return Zero<Vec2>();
     }
 
     if(m_Obstacles.empty())
     {
-      return m_PureAvoidance ? Vector2f::ZERO : m_CasterDesiredDir * m_MaxVelocity;
+      return m_PureAvoidance ? Zero<Vec2>() : m_CasterDesiredDir * m_MaxVelocity;
     }
 
     BestVelocity velocities(m_PureAvoidance ? 0.0 : 0.5);
 
-    Vector<Vector2f> const& pts = GetSamples();
+    Vector<Vec2> const& pts = GetSamples();
 
 #if !defined(PRECISE_VO) || defined(OPTIMISTIC_PREAMBLE) 
     int32_t const numPts = pts.size();
@@ -501,18 +503,18 @@ namespace eXl
     for (int32_t i = -1; i<numPts; ++i)
     {
       bool valid = true;
-      Vector2f point = (i >= 0 
+      Vec2 point = (i >= 0 
         ? pts[i] 
-        : (m_PureAvoidance ? Vector2f::ZERO : UnitX<Vector2f>() )) * m_MaxVelocity;
+        : (m_PureAvoidance ? Zero<Vec2>() : UnitX<Vec2>() )) * m_MaxVelocity;
       for (uint32_t obsIdx = 0; obsIdx < m_Obstacles.size(); ++obsIdx)
       {
         auto const& obstacle = m_Obstacles[obsIdx];
-        //Vector2f const& tip = obstacle.m_Segs[0].m_Ext2;
-        Vector2f ext1_0 = obstacle.m_Segs[0].m_Ext2;
-        Vector2f ext2_0 = obstacle.m_Segs[0].m_Ext1;
+        //Vec2 const& tip = obstacle.m_Segs[0].m_Ext2;
+        Vec2 ext1_0 = obstacle.m_Segs[0].m_Ext2;
+        Vec2 ext2_0 = obstacle.m_Segs[0].m_Ext1;
 
-        Vector2f ext1_1 = obstacle.m_Segs[1].m_Ext1;
-        Vector2f ext2_1 = obstacle.m_Segs[1].m_Ext2;
+        Vec2 ext1_1 = obstacle.m_Segs[1].m_Ext1;
+        Vec2 ext2_1 = obstacle.m_Segs[1].m_Ext2;
 
         if ((ext1_0 == ext2_0 && Segmentf::IsLeft(ext1_1, ext2_1, point) < 0)
           || (ext1_1 == ext2_1 && Segmentf::IsLeft(ext1_0, ext2_0, point) > 0))
@@ -537,13 +539,13 @@ namespace eXl
 
       if (i == -1 && m_PureAvoidance && valid)
       {
-        return Vector2f::ZERO;
+        return Zero<Vec2>();
       }
 
       if (valid)
       {
-        Vector2f dir = point;
-        float speed = dir.Normalize();
+        Vec2 dir = point;
+        float speed = NormalizeAndGetLength(dir);
         velocities.Update(dir, speed / m_MaxVelocity);
       }
 
@@ -551,11 +553,11 @@ namespace eXl
       {
         auto drawer = DebugTool::GetDrawer();
 
-        auto center = m_CasterPos + m_CasterDesiredDir * point.X() + m_PerpDir * point.Y();
-        Vector4f color = valid ? Vector4f(0.0, 1.0, 0.0, 1.0) : Vector4f(1.0, 0.0, 0.0, 1.0);
+        Vec2 center = m_CasterPos + m_CasterDesiredDir * point.x + m_PerpDir * point.y;
+        Vec4 color = valid ? Vec4(0.0, 1.0, 0.0, 1.0) : Vec4(1.0, 0.0, 0.0, 1.0);
 
-        drawer->DrawLine(MathTools::To3DVec(center) + Vector3f(-1.0, -1.0, 0.0) * 0.25, MathTools::To3DVec(center) + Vector3f(1.0, 1.0, 0.0) * 0.25, color);
-        drawer->DrawLine(MathTools::To3DVec(center) + Vector3f(1.0, -1.0, 0.0) * 0.25, MathTools::To3DVec(center) + Vector3f(-1.0, 1.0, 0.0) * 0.25, color);
+        drawer->DrawLine(Vec3(center, 0) + Vec3(-1.0, -1.0, 0.0) * 0.25, Vec3(center, 0) + Vec3(1.0, 1.0, 0.0) * 0.25, color);
+        drawer->DrawLine(Vec3(center, 0) + Vec3(1.0, -1.0, 0.0) * 0.25, Vec3(center, 0) + Vec3(-1.0, 1.0, 0.0) * 0.25, color);
       }
     }
 
@@ -566,8 +568,8 @@ namespace eXl
     {
       //if (velocities.curScore[priority] > )
       {
-        return (m_CasterDesiredDir * velocities.curDir[priority].X()
-          + m_PerpDir * velocities.curDir[priority].Y())
+        return (m_CasterDesiredDir * velocities.curDir[priority].x
+          + m_PerpDir * velocities.curDir[priority].y)
           * m_MaxVelocity * velocities.curSpeed[priority];
       }
     }
@@ -586,16 +588,16 @@ namespace eXl
           {
             auto drawer = DebugTool::GetDrawer();
 
-            Vector2f perpDir = MathTools::GetPerp(arc.m_MidVec);
+            Vec2 perpDir = MathTools::GetPerp(arc.m_MidVec);
 
             float xInc = (1.0 - arc.m_LowLimit) / 8.0;
-            Vector4f color = Vector4f(0.0, 1.0, 0.0, 1.0);
+            Vec4 color = Vec4(0.0, 1.0, 0.0, 1.0);
             for (uint32_t arcSeg = 0; arcSeg < 8; ++arcSeg)
             {
               float horizontalFactor = arc.m_LowLimit + arcSeg * xInc;
               float verticalFactor = Mathf::Sqrt(1.0 - horizontalFactor * horizontalFactor);
 
-              Vector2f pts[4];
+              Vec2 pts[4];
               pts[0] = horizontalFactor * arc.m_MidVec - verticalFactor * perpDir;
               pts[2] = horizontalFactor * arc.m_MidVec + verticalFactor * perpDir;
 
@@ -607,25 +609,25 @@ namespace eXl
 
               for (auto& pt : pts)
               {
-                pt = m_CasterPos + (m_CasterDesiredDir * pt.X() + m_PerpDir * pt.Y()) * m_MaxVelocity;
+                pt = m_CasterPos + (m_CasterDesiredDir * pt.x + m_PerpDir * pt.y) * m_MaxVelocity;
 
               }
 
-              drawer->DrawLine(MathTools::To3DVec(pts[0]), MathTools::To3DVec(pts[1]), color);
-              drawer->DrawLine(MathTools::To3DVec(pts[2]), MathTools::To3DVec(pts[3]), color);
+              drawer->DrawLine(Vec3(pts[0], 0), Vec3(pts[1], 0), color);
+              drawer->DrawLine(Vec3(pts[2], 0), Vec3(pts[3], 0), color);
 
             }
           }
 
-          if (Penumbra::IsInSightRange(UnitX<Vector2f>(), arc.m_MidVec, arc.m_LowLimit))
+          if (Penumbra::IsInSightRange(UnitX<Vec2>(), arc.m_MidVec, arc.m_LowLimit))
           {
             return m_CasterDesiredDir * m_MaxVelocity;
           }
           else
           {
-            Vector2f perpDir = MathTools::GetPerp(arc.m_MidVec);
+            Vec2 perpDir = MathTools::GetPerp(arc.m_MidVec);
             float verticalFactor = Mathf::Sqrt(1.0 - arc.m_LowLimit * arc.m_LowLimit);
-            Vector2f dirs[3];
+            Vec2 dirs[3];
             dirs[0] = arc.m_MidVec;
             dirs[1] = arc.m_MidVec * arc.m_LowLimit - verticalFactor * perpDir;
             dirs[2] = arc.m_MidVec * arc.m_LowLimit + verticalFactor * perpDir;
@@ -645,11 +647,11 @@ namespace eXl
 
     const float boxRange = m_MaxVelocity;
     const int32_t c_GridSize = 1000;
-    AABB2Di intBox(Vector2i::ONE * -c_GridSize, 2 * Vector2i::ONE * (c_GridSize + 1));
+    AABB2Di intBox(One<Vec2i>() * -c_GridSize, 2 * One<Vec2i>() * (c_GridSize + 1));
 
-    float const obsBoxDiag = m_ObstaclesBox.GetSize().Length();
+    float const obsBoxDiag = length(m_ObstaclesBox.GetSize());
 
-    AABB2Df boxVel(Vector2f::ONE * -m_MaxVelocity, Vector2f::ONE * 2 *m_MaxVelocity);
+    AABB2Df boxVel(One<Vec2>() * -m_MaxVelocity, One<Vec2>() * 2 *m_MaxVelocity);
 
     for(int32_t obsIdx = 0; obsIdx < m_Obstacles.size(); ++obsIdx)
     {
@@ -660,8 +662,8 @@ namespace eXl
         MathTools::ClampToBox(seg.m_Ext1, m_ObstaclesBox);
         MathTools::ClampToBox(seg.m_Ext2, m_ObstaclesBox);
 
-        Vector2i ext1 = MathTools::ToIVec(seg.m_Ext1 * c_GridSize / boxRange);
-        Vector2i ext2 = MathTools::ToIVec(seg.m_Ext2 * c_GridSize / boxRange);
+        Vec2i ext1 = MathTools::ToIVec(seg.m_Ext1 * c_GridSize / boxRange);
+        Vec2i ext2 = MathTools::ToIVec(seg.m_Ext2 * c_GridSize / boxRange);
 
         MathTools::ClampToBox(ext1, intBox);
         MathTools::ClampToBox(ext2, intBox);
@@ -669,7 +671,7 @@ namespace eXl
         m_ObstacleSegs.push_back(Segmenti({ ext1, ext2 }));
       }
 
-      //if ((Mathi::Abs(ext1.X()) > c_GridSize || Mathi::Abs(ext1.Y()) > c_GridSize))
+      //if ((Mathi::Abs(ext1.x()) > c_GridSize || Mathi::Abs(ext1.y()) > c_GridSize))
       //{
       //  m_ObstacleSegs.push_back(Segmenti({ tip, tip }));
       //}
@@ -678,7 +680,7 @@ namespace eXl
       //  m_ObstacleSegs.push_back(Segmenti({ ext1, tip }));
       //}
       //
-      //if ((Mathi::Abs(ext2.X()) > c_GridSize || Mathi::Abs(ext2.Y()) > c_GridSize))
+      //if ((Mathi::Abs(ext2.x()) > c_GridSize || Mathi::Abs(ext2.y()) > c_GridSize))
       //{
       //  m_ObstacleSegs.push_back(Segmenti({ tip, tip }));
       //}
@@ -690,16 +692,16 @@ namespace eXl
 
     //m_Checked.resize(m_ObstacleSegs.size() * 2, false);
 
-    m_ObstacleSegs.push_back(Segmenti({Vector2i(-c_GridSize, -c_GridSize), Vector2i(-c_GridSize,  c_GridSize)}));
-    m_ObstacleSegs.push_back(Segmenti({Vector2i(-c_GridSize,  c_GridSize), Vector2i( c_GridSize,  c_GridSize)}));
-    m_ObstacleSegs.push_back(Segmenti({Vector2i( c_GridSize,  c_GridSize), Vector2i( c_GridSize, -c_GridSize)}));
-    m_ObstacleSegs.push_back(Segmenti({Vector2i( c_GridSize, -c_GridSize), Vector2i(-c_GridSize, -c_GridSize)}));
+    m_ObstacleSegs.push_back(Segmenti({Vec2i(-c_GridSize, -c_GridSize), Vec2i(-c_GridSize,  c_GridSize)}));
+    m_ObstacleSegs.push_back(Segmenti({Vec2i(-c_GridSize,  c_GridSize), Vec2i( c_GridSize,  c_GridSize)}));
+    m_ObstacleSegs.push_back(Segmenti({Vec2i( c_GridSize,  c_GridSize), Vec2i( c_GridSize, -c_GridSize)}));
+    m_ObstacleSegs.push_back(Segmenti({Vec2i( c_GridSize, -c_GridSize), Vec2i(-c_GridSize, -c_GridSize)}));
 
     //SaveSegments(m_ObstacleSegs);
 
     if(!m_Inter.IntersectSegments(m_ObstacleSegs, m_HalfSeg, m_InterParams))
     {
-      return Vector2f::ZERO;
+      return Zero<Vec2>();
     }
 
     for(int32_t i = 0; i<(int)m_HalfSeg.size(); ++i)
@@ -723,7 +725,7 @@ namespace eXl
       if(i == -1)
       {
         uint32_t leftmostPoint = m_PolyMesh.smallerPoint->second;
-        // Outerseg will have an exterior direction along -X
+        // Outerseg will have an exterior direction along .x
         PolyVertex const& leftmostVertex = m_PolyMesh.vertices[leftmostPoint];
 
         uint32_t firstIncomingEdge = leftmostVertex.firstEdge;
@@ -738,10 +740,10 @@ namespace eXl
         {
           PolyHalfEdge const& nextEdge = m_PolyMesh.edges[curIncoming->nextEdge];
 
-          Vector2f edgeDirs[] = {-curIncoming->normDir, nextEdge.normDir};
-          Vector2f midSeg = MathTools::ConeGetMidSegment(edgeDirs);
+          Vec2 edgeDirs[] = {-curIncoming->normDir, nextEdge.normDir};
+          Vec2 midSeg = MathTools::ConeGetMidSegment(edgeDirs);
 
-          if(midSeg.Dot(UnitX<Vector2f>()) < 0)
+          if(dot(midSeg, UnitX<Vec2>()) < 0)
           {
             segToInspect = curIncoming - m_PolyMesh.edges.data();
             outerFace = 0;
@@ -773,18 +775,18 @@ namespace eXl
       uint32_t curEdge = firstEdge;
 
       uint32_t testVtxId = m_PolyMesh.edges[firstEdge].dstVtx;
-      Vector2f testVtxPos = m_PolyMesh.vertices[testVtxId].positionf;
+      Vec2 testVtxPos = m_PolyMesh.vertices[testVtxId].positionf;
 
-      float minDist = Mathf::MAX_REAL;
+      float minDist = Mathf::MaxReal();
 
       while (checkCounter != 0 && (curFace.second == 0 || curEdge != firstEdge))
       {
         if(testVtxId != m_PolyMesh.edges[curEdge].srcVtx && testVtxId != m_PolyMesh.edges[curEdge].dstVtx)
         {
-          Vector2f pt1 = m_PolyMesh.vertices[m_PolyMesh.edges[curEdge].srcVtx].positionf;
-          Vector2f pt2 = m_PolyMesh.vertices[m_PolyMesh.edges[curEdge].dstVtx].positionf;
+          Vec2 pt1 = m_PolyMesh.vertices[m_PolyMesh.edges[curEdge].srcVtx].positionf;
+          Vec2 pt2 = m_PolyMesh.vertices[m_PolyMesh.edges[curEdge].dstVtx].positionf;
 
-          Vector2f dummy;
+          Vec2 dummy;
           float curDist = Segmentf::NearestPointSeg(pt1, pt2, testVtxPos, dummy);
           
           if(curDist > Mathf::Epsilon() && curDist < minDist)
@@ -801,26 +803,26 @@ namespace eXl
         checkCounter--;
       }
 
-      if(minDist < Mathf::MAX_REAL && !culledFace)
+      if(minDist < Mathf::MaxReal() && !culledFace)
       {
         PolyHalfEdge const& curPolyEdge = m_PolyMesh.edges[firstEdge];
         uint32_t nextEdge = curPolyEdge.nextEdge;
         PolyHalfEdge const& nextPolyEdge = m_PolyMesh.edges[nextEdge];
 
-        Vector2f edgeDirs[] = {-curPolyEdge.normDir, nextPolyEdge.normDir};
-        Vector2f midSeg = MathTools::ConeGetMidSegment(edgeDirs);
+        Vec2 edgeDirs[] = {-curPolyEdge.normDir, nextPolyEdge.normDir};
+        Vec2 midSeg = MathTools::ConeGetMidSegment(edgeDirs);
 
-        Vector2f point = testVtxPos + midSeg * minDist * 0.5;
+        Vec2 point = testVtxPos + midSeg * minDist * 0.5;
 
         for(uint32_t obsIdx = 0; obsIdx < m_Obstacles.size(); ++obsIdx)
         {
           auto const& obstacle = m_Obstacles[obsIdx];
-          //Vector2f const& tip = obstacle.m_Segs[0].m_Ext2;
-          Vector2f ext1_0 = obstacle.m_Segs[0].m_Ext2;
-          Vector2f ext2_0 = obstacle.m_Segs[0].m_Ext1;
+          //Vec2 const& tip = obstacle.m_Segs[0].m_Ext2;
+          Vec2 ext1_0 = obstacle.m_Segs[0].m_Ext2;
+          Vec2 ext2_0 = obstacle.m_Segs[0].m_Ext1;
           
-          Vector2f ext1_1 = obstacle.m_Segs[1].m_Ext1;
-          Vector2f ext2_1 = obstacle.m_Segs[1].m_Ext2;
+          Vec2 ext1_1 = obstacle.m_Segs[1].m_Ext1;
+          Vec2 ext2_1 = obstacle.m_Segs[1].m_Ext2;
 
           if ((ext1_0 == ext2_0 && Segmentf::IsLeft(ext1_1, ext2_1, point) < 0)
            || (ext1_1 == ext2_1 && Segmentf::IsLeft(ext1_0, ext2_0, point) > 0))
@@ -884,10 +886,10 @@ namespace eXl
 
           auto drawer = DebugTool::GetDrawer();
     
-          auto pt1 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext1.X() + m_PerpDir * fltSeg.m_Ext1.Y();
-          auto pt2 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext2.X() + m_PerpDir * fltSeg.m_Ext2.Y();
+          auto pt1 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext1.x + m_PerpDir * fltSeg.m_Ext1.y;
+          auto pt2 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext2.x + m_PerpDir * fltSeg.m_Ext2.y;
 
-          drawer->DrawLine(MathTools::To3DVec(pt1), MathTools::To3DVec(pt2), Vector4f(0.0, 1.0, 0.0, 1.0));
+          drawer->DrawLine(Vec3(pt1, 0), Vec3(pt2, 0), Vec4(0.0, 1.0, 0.0, 1.0));
         }
       }
 
@@ -899,10 +901,10 @@ namespace eXl
 
           auto drawer = DebugTool::GetDrawer();
 
-          auto pt1 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext1.X() + m_PerpDir * fltSeg.m_Ext1.Y();
-          auto pt2 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext2.X() + m_PerpDir * fltSeg.m_Ext2.Y();
+          auto pt1 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext1.x + m_PerpDir * fltSeg.m_Ext1.y;
+          auto pt2 = m_CasterPos + m_CasterDesiredDir * fltSeg.m_Ext2.x + m_PerpDir * fltSeg.m_Ext2.y;
 
-          drawer->DrawLine(MathTools::To3DVec(pt1), MathTools::To3DVec(pt2), Vector4f(1.0, 0.0, 0.0, 1.0));
+          drawer->DrawLine(Vec3(pt1, 0), Vec3(pt2, 0), Vec4(1.0, 0.0, 0.0, 1.0));
         }
       }
     }
@@ -925,23 +927,23 @@ namespace eXl
           continue;
         }
 
-        Vector2f validDir[3];
+        Vec2 validDir[3];
         validDir[0] = (fltSeg.m_Ext1 + fltSeg.m_Ext2) * 0.5;
         validDir[1] = fltSeg.m_Ext1;
         validDir[2] = fltSeg.m_Ext2;
 
-        Vector2f point;
-        auto interRes = Segmentf::Intersect(Vector2f::ZERO, UnitX<Vector2f>() * m_MaxVelocity, validDir[0], validDir[1], point);
+        Vec2 point;
+        auto interRes = Segmentf::Intersect(Zero<Vec2>(), UnitX<Vec2>() * m_MaxVelocity, validDir[0], validDir[1], point);
         if((interRes & Segmentf::PointOnSegments) == Segmentf::PointOnSegments)
         {
-          float curVel = point.Normalize();
+          float curVel = NormalizeAndGetLength(point);
           velocities.Update(point, curVel / m_MaxVelocity);
         }
         else
         {
           for(auto& dir : validDir)
           {
-            float speed = dir.Normalize();
+            float speed = NormalizeAndGetLength(dir);
             velocities.Update(dir, speed / m_MaxVelocity);
           }
         }
@@ -950,25 +952,25 @@ namespace eXl
 
     bestScore = std::max_element(velocities.curScore, velocities.curScore + 4);
     priority = bestScore - velocities.curScore;
-    if(*bestScore > -1.0/Mathf::MAX_REAL)
+    if(*bestScore > -1.0/Mathf::MaxReal())
     //for (uint32_t priority = 0; priority < 4; ++priority)
     {
       //if (velocities.curScore[priority] > )
       {
-        return (m_CasterDesiredDir * velocities.curDir[priority].X() 
-          + m_PerpDir * velocities.curDir[priority].Y()) 
+        return (m_CasterDesiredDir * velocities.curDir[priority].x 
+          + m_PerpDir * velocities.curDir[priority].y) 
           * m_MaxVelocity * velocities.curSpeed[priority];
       }
     }
 #endif
 
-    return Vector2f::ZERO;
+    return Zero<Vec2>();
 
     //if(m_DrawDebug)
     //{
     //  auto drawer = DebugTool::GetDrawer();
     //  
-    //  drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(m_CasterPos + bestDir * selectedVelocity), Vector4f(0.0, 0.0, 1.0, 1.0));
+    //  drawer->DrawLine(MathTools::To3DVec(m_CasterPos), MathTools::To3DVec(m_CasterPos + bestDir * selectedVelocity), Vec4(0.0, 0.0, 1.0, 1.0));
     //}
     //
     //return bestDir * selectedVelocity;

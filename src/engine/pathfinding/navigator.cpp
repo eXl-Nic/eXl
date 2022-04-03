@@ -33,38 +33,37 @@ namespace eXl
   {
     bool TestBoxSegmentExcept(AABB2Df const& iBox, Segmentf const& iSeg, Segmentf const& iSegToExclude, float iTrim)
     {
-      Vector2f segToExcludeDir = iSegToExclude.m_Ext2 - iSegToExclude.m_Ext1;
-      segToExcludeDir.Normalize();
+      Vec2 segToExcludeDir = normalize(iSegToExclude.m_Ext2 - iSegToExclude.m_Ext1);
 
       // Trim box for allowance.
       //AABB2Df trimmedBox = iBox;
-      //trimmedBox.m_Data[0] += Vector2f::ONE * iTrim;
-      //trimmedBox.m_Data[1] -= Vector2f::ONE * iTrim;
+      //trimmedBox.m_Data[0] += One<Vec2>() * iTrim;
+      //trimmedBox.m_Data[1] -= One<Vec2>() * iTrim;
       //
       //Segmentf trimmedSegs[] = {
-      //  {trimmedBox.m_Data[0], Vector2f(trimmedBox.m_Data[0].X(), trimmedBox.m_Data[1].Y())},
-      //  {trimmedBox.m_Data[0], Vector2f(trimmedBox.m_Data[1].X(), trimmedBox.m_Data[0].Y())},
-      //  {trimmedBox.m_Data[1], Vector2f(trimmedBox.m_Data[0].X(), trimmedBox.m_Data[1].Y())},
-      //  {trimmedBox.m_Data[1], Vector2f(trimmedBox.m_Data[1].X(), trimmedBox.m_Data[0].Y())}
+      //  {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[0].x(), trimmedBox.m_Data[1].y())},
+      //  {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[1].x(), trimmedBox.m_Data[0].y())},
+      //  {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[0].x(), trimmedBox.m_Data[1].y())},
+      //  {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[1].x(), trimmedBox.m_Data[0].y())}
       //};
 
       Segmentf segs[] = {
-        {iBox.m_Data[0], Vector2f(iBox.m_Data[0].X(), iBox.m_Data[1].Y())},
-        {iBox.m_Data[0], Vector2f(iBox.m_Data[1].X(), iBox.m_Data[0].Y())},
-        {iBox.m_Data[1], Vector2f(iBox.m_Data[0].X(), iBox.m_Data[1].Y())},
-        {iBox.m_Data[1], Vector2f(iBox.m_Data[1].X(), iBox.m_Data[0].Y())}
+        {iBox.m_Data[0], Vec2(iBox.m_Data[0].x, iBox.m_Data[1].y)},
+        {iBox.m_Data[0], Vec2(iBox.m_Data[1].x, iBox.m_Data[0].y)},
+        {iBox.m_Data[1], Vec2(iBox.m_Data[0].x, iBox.m_Data[1].y)},
+        {iBox.m_Data[1], Vec2(iBox.m_Data[1].x, iBox.m_Data[0].y)}
       };
 
       for(auto seg : segs)
       {
-        Vector2f segDir = seg.m_Ext2 - seg.m_Ext1;
-        float segLength = segDir.Normalize();
+        Vec2 segDir = seg.m_Ext2 - seg.m_Ext1;
+        float segLength = NormalizeAndGetLength(segDir);
         if (Segmentf::Cross(segDir, segToExcludeDir) < Mathf::ZeroTolerance())
         {
           continue;
         }
 
-        Vector2f interPt;
+        Vec2 interPt;
         auto intersectRes = iSeg.Intersect(seg, interPt);
         if(intersectRes & Segmentf::ConfoundSegments)
         {
@@ -94,23 +93,23 @@ namespace eXl
       Opposed
     };
 
-    void Claim(Vector2f const& iPos, Vector2f const& iDir)
+    void Claim(Vec2 const& iPos, Vec2 const& iDir)
     {
       m_Position = iPos;
       m_Direction = iDir;
       m_Radius = 5.0;
     }
 
-    void Update(Vector2f const& iPos, float iGrowth)
+    void Update(Vec2 const& iPos, float iGrowth)
     {
       m_Position = iPos;
       m_Radius *= iGrowth;
     }
 
-    Influence Test(Vector2f const& iPos, Vector2f const& iDir)
+    Influence Test(Vec2 const& iPos, Vec2 const& iDir)
     {
       float const threshold = 1.0 / Mathf::Sqrt(2.0);
-      float cone = iDir.Dot(m_Direction);
+      float cone = dot(iDir, m_Direction);
       Influence res = None;
       if (cone > threshold)
       {
@@ -123,7 +122,7 @@ namespace eXl
 
       if (res != None)
       {
-        if ((iPos - m_Position).SquaredLength() > m_Radius * m_Radius)
+        if (distance2(iPos, m_Position) > m_Radius * m_Radius)
         {
           return None;
         }
@@ -133,8 +132,8 @@ namespace eXl
     }
 
     Obstacles::Handle m_Holder;
-    Vector2f m_Position;
-    Vector2f m_Direction;
+    Vec2 m_Position;
+    Vec2 m_Direction;
     uint32_t m_Idx;
     float m_Radius;
   };
@@ -155,18 +154,18 @@ namespace eXl
 
     void Step(PhysicsSystem* iSys, float iTime) override
     {
-      GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(m_Nav.GetWorld());
+      GameDataView<Vec3>* velocities = EngineCommon::GetVelocities(m_Nav.GetWorld());
       m_Nav.Tick(iTime, iSys->GetNeighborhoodExtraction());
       m_Nav.GetAgents().Iterate([&](Agent& agent, Agents::Handle)
       {
         Obstacle& agentObs = m_Nav.m_Obstacles.Get(agent.m_Obstacle);
         if(auto physComp = iSys->GetCompImpl(agentObs.m_Object))
         {
-          if(agent.m_CorrectedVelocity != Vector3f::ZERO)
+          if(agent.m_CorrectedVelocity != Zero<Vec3>())
           {
-            Vector3f curPos = GetPosition(*physComp);
+            Vec3 curPos = GetPosition(*physComp);
             //float distance = Mathf::Max((curPos - agent.m_PrevPos).Dot(agentObs.m_Dir), 0.0);
-            float distance = (curPos - agent.m_PrevPos).Dot(agentObs.m_Dir);
+            float distance = dot((curPos - agent.m_PrevPos), agentObs.m_Dir);
 
             //agentObs.m_ImmobilityFactor *= pow(0.01, iTime);
             //agentObs.m_ImmobilityFactor += distance / iTime;
@@ -190,16 +189,16 @@ namespace eXl
               agentObs.m_ImmobilityFactor = score;
             }
 
-            Vector3f linVel;
+            Vec3 linVel;
             bool nearDest = false;
 
             if(agent.m_HasDest)
             {
-              Vector3f destDir = agent.m_Dest - curPos;
-              destDir.Z() = 0;
-              float distDest = destDir.Normalize();
+              Vec3 destDir = agent.m_Dest - curPos;
+              destDir.z = 0;
+              float distDest = NormalizeAndGetLength(destDir);
 
-              Vector3f linVel = agentObs.m_Dir * agentObs.m_Speed;
+              Vec3 linVel = agentObs.m_Dir * agentObs.m_Speed;
 
               if (distDest < Mathf::ZeroTolerance()
                 || agentObs.m_Speed * iTime > distDest)
@@ -212,10 +211,10 @@ namespace eXl
                 agent.m_CurrentPath.m_Edges.clear();
                 agent.m_CurrentPath.m_EdgeDirs.clear();
                 agent.m_CurFace = AABB2Df();
-                agentObs.m_Dir = Vector3f::ZERO;
-                agent.m_CorrectedVelocity = Vector3f::ZERO;
+                agentObs.m_Dir = Zero<Vec3>();
+                agent.m_CorrectedVelocity = Zero<Vec3>();
 
-                velocities->GetOrCreate(agentObs.m_Object) = Vector3f::ZERO;
+                velocities->GetOrCreate(agentObs.m_Object) = Zero<Vec3>();
 
                 NavigatorSystem::Event reachedEvt;
                 reachedEvt.m_EvtKind = Event::DestinationReached;
@@ -227,13 +226,13 @@ namespace eXl
             
             if(!nearDest)
             {
-              if(agent.m_CorrectedVelocity == Vector3f::ZERO)
+              if(agent.m_CorrectedVelocity == Zero<Vec3>())
               {
-                linVel = Vector3f::ZERO;
+                linVel = Zero<Vec3>();
               }
               else
               {
-                Vector3f prevVel = velocities->GetOrCreate(agentObs.m_Object);
+                Vec3 prevVel = velocities->GetOrCreate(agentObs.m_Object);
                 //prevDir.Normalize();
                 //float dotFactor = agent->m_CorrectedVelocity.Dot(agent->m_Dir);
                 //if(dotFactor < 0.0)
@@ -246,7 +245,7 @@ namespace eXl
                 {
                   //linVel = (agent->m_CorrectedVelocity + prevVel) * 0.5;
                   linVel = agent.m_CorrectedVelocity;
-                  float vel = linVel.Normalize();
+                  float vel = NormalizeAndGetLength(linVel);
                   linVel *= Mathf::Min(agentObs.m_Speed, vel);
                 }
               }
@@ -260,8 +259,8 @@ namespace eXl
           }
           else
           {
-            velocities->GetOrCreate(agentObs.m_Object) = Vector3f::ZERO;
-            ApplyLinearVelocity(*physComp, Vector3f::ZERO, iTime);
+            velocities->GetOrCreate(agentObs.m_Object) = Zero<Vec3>();
+            ApplyLinearVelocity(*physComp, Zero<Vec3>(), iTime);
           }
         }
       });
@@ -292,7 +291,7 @@ namespace eXl
       Obstacle* newObstacle = m_Obstacles.TryGet(obstacleHandle);
       newObstacle->m_Object = iObject;
       newObstacle->m_ObsKind = Obstacle::Sphere;
-      newObstacle->m_Dims.m_X = iRadius;
+      newObstacle->m_Dims.x = iRadius;
       newObstacle->m_Speed = iSpeed;
       newAgent->m_HasDest = false;
       //newAgent->m_AgentIdx = m_Agents.size();
@@ -338,7 +337,7 @@ namespace eXl
       Obstacle* newObstacle = m_Obstacles.TryGet(obstacleHandle);
       newObstacle->m_Object = iObject;
       newObstacle->m_ObsKind = Obstacle::Sphere;
-      newObstacle->m_Dims.m_X = iRadius;
+      newObstacle->m_Dims.x = iRadius;
 
       m_ObjectMap.insert(std::make_pair(iObject, obstacleHandle));
 
@@ -349,7 +348,7 @@ namespace eXl
     return nullptr;
   }
 
-  //void NavigatorSystem::SetObstacleSpeed(ObjectHandle iObject, Vector3f iSpeed)
+  //void NavigatorSystem::SetObstacleSpeed(ObjectHandle iObject, Vec3 iSpeed)
   //{
   //  if (Obstacle* obstacle = GetObstacle_Internal(iObject))
   //  {
@@ -386,20 +385,20 @@ namespace eXl
     return nullptr;
   }
 
-  Err NavigatorSystem::SetDestination(ObjectHandle iObject, Vector3f iDest)
+  Err NavigatorSystem::SetDestination(ObjectHandle iObject, Vec3 iDest)
   {
     if(auto agent = GetAgent_Internal(iObject))
     {
       auto const& transform = m_Transforms.GetWorldTransform(iObject);
 
-      Vector2f const& curPos2D = *reinterpret_cast<Vector2f const*>(transform.m_Data + 12);
-      Vector2f destPos2D(iDest.X(), iDest.Y());
+      Vec2 const& curPos2D = transform[3];
+      Vec2 destPos2D(iDest.x, iDest.y);
 
       if(auto path = m_NavMesh->FindPath(curPos2D, destPos2D))
       {
         agent->m_HasDest = true;
         agent->m_Dest = iDest;
-        agent->m_Dest.Z() = 0;
+        agent->m_Dest.z = 0;
         agent->m_CurrentPath = std::move(*path);
         agent->m_CurPathStep = agent->m_CurrentPath.m_Edges.size() - 1;
         return Err::Success;
@@ -433,9 +432,9 @@ namespace eXl
 
       Obstacle& agentObs = m_Obstacles.Get(agent.m_Obstacle);
       auto const& transform = m_Transforms.GetWorldTransform(agentObs.m_Object);
-      Vector3f const& curPos = *reinterpret_cast<Vector3f const*>(transform.m_Data + 12);
+      Vec3 const& curPos = transform[3];
 
-      Vector2f curPos2D(curPos.X(), curPos.Y());
+      Vec2 curPos2D(curPos.x, curPos.y);
 
       if (!agent.m_CurFace.Contains(curPos2D))
       {
@@ -496,21 +495,21 @@ namespace eXl
     auto debugContext = DebugTool::BeginDebug(DebugTool::Nav_Pathfinding, agentObs.m_Object);
 
     auto const& transform = m_Transforms.GetWorldTransform(agentObs.m_Object);
-    Vector3f const& curPos = *reinterpret_cast<Vector3f const*>(transform.m_Data + 12);
+    Vec3 const& curPos = transform[3];
 
-    Vector2f curPos2D(curPos.X(), curPos.Y());
+    Vec2 curPos2D(curPos.x, curPos.y);
 
-    float const agentRadius = agentObs.m_Dims.X();
+    float const agentRadius = agentObs.m_Dims.x;
 
     if (agent.m_HasDest)
     {
-      Vector3f destDir = agent.m_Dest - curPos;
-      destDir.Z() = 0;
-      float distDest = destDir.Normalize();
+      Vec3 destDir = agent.m_Dest - curPos;
+      destDir.z = 0;
+      float distDest = NormalizeAndGetLength(destDir);
 
       auto repath = [&]() -> NavMesh::Edge const*
       {
-        if (auto path = m_NavMesh->FindPath(curPos2D, Vector2f(agent.m_Dest.X(), agent.m_Dest.Y())))
+        if (auto path = m_NavMesh->FindPath(curPos2D, Vec2(agent.m_Dest.x, agent.m_Dest.y)))
         {
           //LOG_WARNING << "Replanned actor " << agentObs.m_Object.GetId() << "'s path" << "\n";
 
@@ -592,17 +591,17 @@ namespace eXl
 
           Segmentf targetSeg = targetDesc->segment;
 
-          Vector2f segDir = targetSeg.m_Ext2 - targetSeg.m_Ext1;
-          float segLength = segDir.Normalize();
+          Vec2 segDir = targetSeg.m_Ext2 - targetSeg.m_Ext1;
+          float segLength = NormalizeAndGetLength(segDir);
 
           // Trim segment for allowance.
           targetSeg.m_Ext1 += segDir * agentRadius;
           targetSeg.m_Ext2 -= segDir * agentRadius;
 
-          Vector2f oDir;
+          Vec2 oDir;
           float distance = targetSeg.NearestPointSeg(curPos2D, oDir);
 
-          float dirIndicator = oDir.Dot(agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep]);
+          float dirIndicator = dot(oDir, agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep]);
 
           if (Mathf::Abs(dirIndicator) > Mathf::ZeroTolerance() && dirIndicator < 0.0)
           {
@@ -612,7 +611,7 @@ namespace eXl
           else
           {
 
-            Vector2f pointToReach = curPos2D + oDir * distance;
+            Vec2 pointToReach = curPos2D + oDir * distance;
 
             //Aiming for the point after the segment to traverse, in the other face
             pointToReach += agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep] * agentRadius;
@@ -629,23 +628,23 @@ namespace eXl
               // Check if we are cutting corners
               {
                 AABB2Df trimmedBox = agent.m_CurFace;
-                trimmedBox.m_Data[0] += Vector2f::ONE * agentRadius;
-                trimmedBox.m_Data[1] -= Vector2f::ONE * agentRadius;
+                trimmedBox.m_Data[0] += One<Vec2>() * agentRadius;
+                trimmedBox.m_Data[1] -= One<Vec2>() * agentRadius;
 
                 if (!trimmedBox.Contains(curPos2D))
                 {
                   Segmentf segs[] = {
-                    {trimmedBox.m_Data[0], Vector2f(trimmedBox.m_Data[0].X(), trimmedBox.m_Data[1].Y())},
-                    {trimmedBox.m_Data[0], Vector2f(trimmedBox.m_Data[1].X(), trimmedBox.m_Data[0].Y())},
-                    {trimmedBox.m_Data[1], Vector2f(trimmedBox.m_Data[0].X(), trimmedBox.m_Data[1].Y())},
-                    {trimmedBox.m_Data[1], Vector2f(trimmedBox.m_Data[1].X(), trimmedBox.m_Data[0].Y())}
+                    {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[0].x, trimmedBox.m_Data[1].y)},
+                    {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[1].x, trimmedBox.m_Data[0].y)},
+                    {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[0].x, trimmedBox.m_Data[1].y)},
+                    {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[1].x, trimmedBox.m_Data[0].y)}
                   };
 
-                  Vector2f dirToPtIn;
+                  Vec2 dirToPtIn;
                   float distToPtIn = segs[0].NearestPointSeg(curPos2D, dirToPtIn);
                   for (int seg = 1; seg < 4; ++seg)
                   {
-                    Vector2f potDir;
+                    Vec2 potDir;
                     float otherDist = segs[seg].NearestPointSeg(curPos2D, potDir);
                     if (otherDist < distToPtIn)
                     {
@@ -661,10 +660,9 @@ namespace eXl
               }
             }
 
-            Vector2f dir = pointToReach - curPos2D;
-            dir.Normalize();
+            Vec2 dir = normalize(pointToReach - curPos2D);
 
-            agentObs.m_Dir = Vector3f(dir.X(), dir.Y(), 0.0);
+            agentObs.m_Dir = Vec3(dir.x, dir.y, 0.0);
 
             break;
           }
@@ -673,13 +671,13 @@ namespace eXl
     }
     else
     {
-      //agentObs.m_Dir = Vector3f::ZERO;
+      //agentObs.m_Dir = Zero<Vec3>();
       //agentObs.m_Dir = MathTools::To3DVec(agent.m_TreadmillDir);
     }
 
-    Vector2f agentDir2D = MathTools::As2DVec(agentObs.m_Dir);
+    Vec2 agentDir2D = MathTools::As2DVec(agentObs.m_Dir);
 
-    float treadmillFactor = agentDir2D.Dot(agent.m_TreadmillDir);
+    float treadmillFactor = dot(agentDir2D, agent.m_TreadmillDir);
     agent.m_HasPriority = treadmillFactor > 1.0 / Mathf::Sqrt(2.0);
   }
 
@@ -696,9 +694,9 @@ namespace eXl
     auto debugContext = DebugTool::BeginDebug(DebugTool::Nav_Avoidance, agentObs.m_Object);
 
     auto const& transform = m_Transforms.GetWorldTransform(agentObs.m_Object);
-    Vector3f const& curPos = *reinterpret_cast<Vector3f const*>(transform.m_Data + 12);
+    Vec3 const& curPos = transform[3];
 
-    Vector2f curPos2D(curPos.X(), curPos.Y());
+    Vec2 curPos2D(curPos.x, curPos.y);
 
     float avoidanceToTransmit = 0.0;
     if (agent.m_AvoidanceFactor > 0.5)
@@ -714,9 +712,9 @@ namespace eXl
       agent.m_RankTimestamp = m_Timestamp;
     }
 
-    float const agentRadius = agentObs.m_Dims.X();
+    float const agentRadius = agentObs.m_Dims.x;
 
-    Vector2f agentDir2D = MathTools::As2DVec(agentObs.m_Dir);
+    Vec2 agentDir2D = MathTools::As2DVec(agentObs.m_Dir);
 
     if (!agent.m_EnableAvoidance)
     {
@@ -733,7 +731,7 @@ namespace eXl
       for (uint32_t attempt = 0; attempt < numAttempts; ++attempt)
       {
 #ifndef USE_ORCA
-        vo.Start(&agent, curPos2D, agentRadius, agent.m_PriorityAvoidance ? Vector2f::ZERO : agentDir2D, agentObs.m_Speed);
+        vo.Start(&agent, curPos2D, agentRadius, agent.m_PriorityAvoidance ? Zero<Vec2>() : agentDir2D, agentObs.m_Speed);
 #else
         orca.agentNeighbors_.clear();
         orca.obstacleNeighbors_.clear();
@@ -747,8 +745,8 @@ namespace eXl
         if (0 && agent.m_PriorityAvoidance)
         {
           Segmentf treadMillSeg;
-          treadMillSeg.m_Ext1 = curPos2D - agent.m_TreadmillDir * agentObs.m_Dims.X() + MathTools::GetPerp(agent.m_TreadmillDir) * agentObs.m_Speed;
-          treadMillSeg.m_Ext2 = curPos2D - agent.m_TreadmillDir * agentObs.m_Dims.X() - MathTools::GetPerp(agent.m_TreadmillDir) * agentObs.m_Speed;
+          treadMillSeg.m_Ext1 = curPos2D - agent.m_TreadmillDir * agentObs.m_Dims.x + MathTools::GetPerp(agent.m_TreadmillDir) * agentObs.m_Speed;
+          treadMillSeg.m_Ext2 = curPos2D - agent.m_TreadmillDir * agentObs.m_Dims.x - MathTools::GetPerp(agent.m_TreadmillDir) * agentObs.m_Speed;
           vo.AddSegment(treadMillSeg, 0.0);
         }
 
@@ -761,12 +759,12 @@ namespace eXl
 
         for (auto const& wall : face.m_Walls)
         {
-          Vector2f segDir = wall.m_Ext2 - wall.m_Ext1;
-          float segLength = segDir.Normalize();
+          Vec2 segDir = wall.m_Ext2 - wall.m_Ext1;
+          float segLength = NormalizeAndGetLength(segDir);
 
-          Vector2f pt1Dir = wall.m_Ext1 - curPos2D;
-          Vector2f ptProjDir;
-          float pt1DirProj = pt1Dir.Dot(segDir);
+          Vec2 pt1Dir = wall.m_Ext1 - curPos2D;
+          Vec2 ptProjDir;
+          float pt1DirProj = dot(pt1Dir, segDir);
           if (pt1DirProj > Mathd::ZeroTolerance())
           {
             ptProjDir = pt1Dir;
@@ -780,7 +778,7 @@ namespace eXl
             ptProjDir = pt1Dir - (pt1DirProj * segDir);
           }
 
-          float dist = ptProjDir.Normalize();
+          float dist = NormalizeAndGetLength(ptProjDir);
 
           if (dist < m_LookaheadDistance)
           {
@@ -793,7 +791,7 @@ namespace eXl
             if (debugContext)
             {
               auto drawer = DebugTool::GetDrawer();
-              drawer->DrawLine(MathTools::To3DVec(correctedSegment.m_Ext1), MathTools::To3DVec(correctedSegment.m_Ext2), Vector4f(1.0, 1.0, 0.0, 1.0));
+              drawer->DrawLine(Vec3(correctedSegment.m_Ext1, 0), Vec3(correctedSegment.m_Ext2, 0), Vec4(1.0, 1.0, 0.0, 1.0));
             }
 #ifndef USE_ORCA
             vo.AddSegment(correctedSegment, 0.0);
@@ -803,19 +801,19 @@ namespace eXl
           }
         }
 
-        GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
-        Vector3f agentLinVel = velocities->GetOrCreate(agentObs.m_Object);
+        GameDataView<Vec3>* velocities = EngineCommon::GetVelocities(GetWorld());
+        Vec3 agentLinVel = velocities->GetOrCreate(agentObs.m_Object);
         if (foundNeighEntry != iNeigh.GetObjects().end())
         {
           auto const& neighbours = iNeigh.GetNeigh()[foundNeighEntry->second];
 
           if (agent.m_UnstuckEnabled
-            || (avoidanceToTransmit > 0.1 /*&& agent.m_PriorityAvoidanceDir != Vector3f::ZERO*/))
+            || (avoidanceToTransmit > 0.1 /*&& agent.m_PriorityAvoidanceDir != Zero<Vec3>()*/))
           {
-            Vector2f dir = MathTools::As2DVec(agent.m_UnstuckEnabled
+            Vec2 dir = MathTools::As2DVec(agent.m_UnstuckEnabled
               ? agentObs.m_Dir
-              : (agent.m_PriorityAvoidanceDir != Vector3f::ZERO ? agent.m_PriorityAvoidanceDir : agentLinVel));
-            dir.Normalize();
+              : (agent.m_PriorityAvoidanceDir != Zero<Vec3>() ? agent.m_PriorityAvoidanceDir : agentLinVel));
+            dir = normalize(dir);
 
             for (uint32_t neighNum = 0; neighNum < neighbours.numNeigh; ++neighNum)
             {
@@ -836,12 +834,11 @@ namespace eXl
                     }
 
                     auto const& otherObjTrans = m_Transforms.GetWorldTransform(otherObj);
-                    Vector3f const& otherPos = *reinterpret_cast<Vector3f const*>(otherObjTrans.m_Data + 12);
-                    Vector2f otherPos2D(otherPos.X(), otherPos.Y());
-                    Vector2f dirOther = (otherPos2D - curPos2D);
-                    dirOther.Normalize();
+                    Vec3 const& otherPos = otherObjTrans[3];
+                    Vec2 otherPos2D(otherPos.x, otherPos.y);
+                    Vec2 dirOther = normalize(otherPos2D - curPos2D);
 
-                    bool isInCone = dirOther.Dot(dir) > 0.7;
+                    bool isInCone = dot(dirOther, dir) > 0.7;
 
                     if (isInCone 
                       && agent.m_UnstuckEnabled 
@@ -867,7 +864,7 @@ namespace eXl
             }
           }
 
-          Vector2f avoidanceVector;
+          Vec2 avoidanceVector;
           for (uint32_t neighNum = 0; neighNum < neighbours.numNeigh; ++neighNum)
           {
             ObjectHandle otherObj = iNeigh.GetHandles()[neighbours.neighbors[neighNum]];
@@ -876,15 +873,14 @@ namespace eXl
             if (Obstacle* otherObs = objEntry != m_ObjectMap.end() ? m_Obstacles.TryGet(objEntry->second) : nullptr)
             {
               auto const& otherObjTrans = m_Transforms.GetWorldTransform(otherObj);
-              Vector3f const& otherPos = *reinterpret_cast<Vector3f const*>(otherObjTrans.m_Data + 12);
-              Vector2f otherPos2D(otherPos.X(), otherPos.Y());
+              Vec2 otherPos2D(otherObjTrans[3]);
 
-              Vector2f obsDir2D(otherObs->m_Dir.X(), otherObs->m_Dir.Y());
+              Vec2 obsDir2D(otherObs->m_Dir.x, otherObs->m_Dir.y);
 
               if (otherObs->m_ObsKind == Obstacle::Sphere)
               {
                 
-                Vector2f otherVel = MathTools::As2DVec(velocities->GetOrCreate(otherObs->m_Object));
+                Vec2 otherVel = MathTools::As2DVec(velocities->GetOrCreate(otherObs->m_Object));
 
 #ifndef USE_ORCA
                 if (otherObs->m_Agent.IsAssigned())
@@ -896,15 +892,15 @@ namespace eXl
                       && !otherAgent->m_HasPriority)
                     {
                       if (otherAgent->m_PriorityAvoidance
-                        //&& otherAgent->m_PriorityAvoidanceDir != Vector3f::ZERO
+                        //&& otherAgent->m_PriorityAvoidanceDir != Zero<Vec3>()
                         )
                       {
-                        //Vector2f testDir = MathTools::As2DVec(otherAgent->m_PriorityAvoidanceDir != Vector3f::ZERO 
+                        //Vec2 testDir = MathTools::As2DVec(otherAgent->m_PriorityAvoidanceDir != Zero<Vec3>() 
                         //  ? otherAgent->m_PriorityAvoidanceDir
                         //  : otherObs->m_LinVel);
-                        //Vector2f dirOther = (otherPos2D - curPos2D);
+                        //Vec2 dirOther = (otherPos2D - curPos2D);
                         //dirOther.Normalize();
-                        //if (dirOther.Dot(testDir) < 0.7)
+                        //if (dot(dirOther, testDir) < 0.7)
                         if (otherAgent->m_Rank >= agent.m_Rank)
                         {
                           continue;
@@ -924,7 +920,7 @@ namespace eXl
                         {
                           otherVel = MathTools::As2DVec(agentLinVel + otherObs->m_Dir * otherObs->m_Speed) * 0.5;
                         }
-                        else if (otherAgent->m_PriorityAvoidanceDir != Vector3f::ZERO)
+                        else if (otherAgent->m_PriorityAvoidanceDir != Zero<Vec3>())
                         {
                           otherVel = (MathTools::As2DVec(agentLinVel) + MathTools::As2DVec(otherAgent->m_PriorityAvoidanceDir)) * 0.5;
                         }
@@ -941,43 +937,43 @@ namespace eXl
                   }
                 }
 
-                vo.AddPoint(otherPos2D, otherObs->m_Dims.X(), otherVel);
+                vo.AddPoint(otherPos2D, otherObs->m_Dims.x, otherVel);
 #else
                 RVO::ORCAAgent::AgentInfo info;
                 info.position = otherPos2D;
                 info.velocity = otherVel;
-                info.radius = otherObs->m_Dims.X();
+                info.radius = otherObs->m_Dims.x();
                 orca.insertAgentNeighbor(info, (curPos2D - otherPos2D).SquaredLength());
 #endif
               }
               else
               {
-                //penumbra.AddBox(MathTools::As2DVec(otherObs->m_Dims), otherPos2D, UnitX<Vector2f>(), otherObs->m_Speed * iTime);
+                //penumbra.AddBox(MathTools::As2DVec(otherObs->m_Dims), otherPos2D, UnitX<Vec2>(), otherObs->m_Speed * iTime);
               }
             }
           }
 #ifndef USE_ORCA
-          Vector3f bestVelocity = MathTools::To3DVec(vo.FindBestVelocity(MathTools::As2DVec(agentLinVel)));
+          Vec3 bestVelocity = Vec3(vo.FindBestVelocity(MathTools::As2DVec(agentLinVel)), 0);
 #else
           orca.computeNewVelocity(iTime);
-          Vector3f bestVelocity = MathTools::To3DVec(orca.newVelocity_);
+          Vec3 bestVelocity = MathTools::To3DVec(orca.newVelocity_);
 #endif
-          Vector3f diff = bestVelocity - agentLinVel;
+          Vec3 diff = bestVelocity - agentLinVel;
           // 0.5 speed per sec
           float maxAccel = agentObs.m_Speed * 0.5 * iTime;
-          float desiredAccel = diff.Normalize();
+          float desiredAccel = NormalizeAndGetLength(diff);
           //agent.m_CorrectedVelocity = agentObs.m_LinVel + diff * Mathf::Min(maxAccel, desiredAccel);
 
           if (attempt == regularAttempt)
           {
             agent.m_CorrectedVelocity = bestVelocity;
-            if (agent.m_PriorityAvoidance && agent.m_CorrectedVelocity.Length() < 0.1 * agentObs.m_Speed)
+            if (agent.m_PriorityAvoidance && length(agent.m_CorrectedVelocity) < 0.1 * agentObs.m_Speed)
             {
 
             }
             else
             {
-              agent.m_PriorityAvoidanceDir = Vector3f::ZERO;
+              agent.m_PriorityAvoidanceDir = Zero<Vec3>();
               break;
             }
           }
@@ -1060,14 +1056,14 @@ namespace eXl
   //  for (uint32_t i = 0; i < m_ActiveBeacons; ++i)
   //  {
   //    Beacon* beacon = m_Beacons[i];
-  //    Vector3f center(beacon->m_Position.X(), beacon->m_Position.Y(), 0.0);
+  //    Vec3 center(beacon->m_Position.x(), beacon->m_Position.y(), 0.0);
   //    uint32_t const numArcs = 32;
   //    float const angleIncrease = (Mathf::Pi() / numArcs) * 2;
   //    for (uint32_t arcSeg = 0; arcSeg < numArcs; ++arcSeg)
   //    {
-  //      Vector4f color(0.0, 0.0, 1.0, 1.0);
-  //      Vector3f pt1(Mathf::Cos(angleIncrease * arcSeg), Mathf::Sin(angleIncrease * arcSeg), 0.0);
-  //      Vector3f pt2(Mathf::Cos(angleIncrease * (arcSeg + 1)), Mathf::Sin(angleIncrease * (arcSeg + 1)), 0.0);
+  //      Vec4 color(0.0, 0.0, 1.0, 1.0);
+  //      Vec3 pt1(Mathf::Cos(angleIncrease * arcSeg), Mathf::Sin(angleIncrease * arcSeg), 0.0);
+  //      Vec3 pt2(Mathf::Cos(angleIncrease * (arcSeg + 1)), Mathf::Sin(angleIncrease * (arcSeg + 1)), 0.0);
   //
   //      iDrawer.DrawLine(pt1 * beacon->m_Radius + center, pt2 * beacon->m_Radius + center, color);
   //    }

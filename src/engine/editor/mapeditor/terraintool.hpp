@@ -54,7 +54,7 @@ namespace eXl
     void EnableTool() override;
     void DisableTool() override;
 
-    static Vector2i SafeGetTilingSize(TilingGroup const*);
+    static Vec2i SafeGetTilingSize(TilingGroup const*);
 
     GameDataView<TerrainIslandItemData> const& GetIslands() const { return m_IslandsView; }
 
@@ -100,7 +100,7 @@ namespace eXl
     BoxIndex m_IslandsIdx;
     ResourceHandle_Editor* m_TilingGroupSelector;
     ResourceHandle<TilingGroup> m_TilingGroup;
-    Vector2i m_TilingSize;
+    Vec2i m_TilingSize;
     uint8_t m_CurSelectedLayer = 0;
 
     Map<uint8_t, Vector<ObjectHandle>> m_LayerViews;

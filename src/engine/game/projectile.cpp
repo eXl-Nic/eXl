@@ -26,7 +26,7 @@ namespace eXl
 {
   IMPLEMENT_RTTI(ProjectileSystem);
 
-  ObjectHandle ProjectileSystem::Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc)
+  ObjectHandle ProjectileSystem::Build(World& iWorld, Vec3 const& iPosition, Desc const& iDesc)
   {
     Transforms* transforms = iWorld.GetSystem<Transforms>();
     PhysicsSystem* phSys = iWorld.GetSystem<PhysicsSystem>();
@@ -34,7 +34,7 @@ namespace eXl
 
     ObjectHandle newObject = iWorld.CreateObject();
 
-    transforms->AddTransform(newObject, Matrix4f::FromPosition(iPosition));
+    transforms->AddTransform(newObject,translate(Identity<Mat4>(), iPosition));
 
     PhysicInitData desc;
     uint32_t flags = PhysicFlags::NeedContactNotify | PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::LockRotation | PhysicFlags::AlignRotToVelocity;
@@ -66,14 +66,14 @@ namespace eXl
   {
     Transforms* transforms = GetWorld().GetSystem<Transforms>();
     NavigatorSystem* navSys = GetWorld().GetSystem<NavigatorSystem>();
-    GameDataView<Vector3f>* velocities = EngineCommon::GetVelocities(GetWorld());
+    GameDataView<Vec3>* velocities = EngineCommon::GetVelocities(GetWorld());
     if (velocities == nullptr)
     {
       return;
     }
     m_Entries->Iterate([this, transforms, navSys, velocities](ObjectHandle iObject, Entry& entry)
     {
-      Vector3f dir;
+      Vec3 dir;
       float speed;
       if (entry.m_Desc.kind == PhysicKind::Kinematic)
       {
@@ -85,8 +85,8 @@ namespace eXl
       if (entry.m_Desc.kind == PhysicKind::KinematicAbsolute
         || entry.m_Desc.kind == PhysicKind::GhostAbsolute)
       {
-        Matrix4f const& trans = transforms->GetWorldTransform(iObject);
-        dir = *reinterpret_cast<Vector3f const*>(trans.m_Data);
+        Mat4 const& trans = transforms->GetWorldTransform(iObject);
+        dir = trans[0];
         speed = 0.0;
       }
       
@@ -94,8 +94,8 @@ namespace eXl
       {
         float dotProd[] =
         {
-          dir.Dot(UnitX<Vector3f>()),
-          dir.Dot(UnitY<Vector3f>()),
+          dot(dir, UnitX<Vec3>()),
+          dot(dir, UnitY<Vec3>()),
         };
 
         uint32_t dirIdx = Mathf::Abs(dotProd[0]) > Mathf::Abs(dotProd[1]) ? 0 : 1;
@@ -131,7 +131,7 @@ namespace eXl
     });
   }
 
-  void ProjectileSystem::AddProjectile(ObjectHandle iObj, Desc const& iDesc, Vector3f const& iInitialSpeed)
+  void ProjectileSystem::AddProjectile(ObjectHandle iObj, Desc const& iDesc, Vec3 const& iInitialSpeed)
   {
     if (GetWorld().IsObjectValid(iObj))
     {
@@ -150,7 +150,7 @@ namespace eXl
         {
           KinematicEntry kEntry;
           kEntry.m_Dir = iInitialSpeed;
-          kEntry.m_Speed = kEntry.m_Dir.Normalize();
+          kEntry.m_Speed = NormalizeAndGetLength(kEntry.m_Dir);
           kEntry.m_CanBounce = true;
           kEntry.m_Kind = entry.m_Desc.kind;
           kEntry.contactCb = iDesc.contactCb;

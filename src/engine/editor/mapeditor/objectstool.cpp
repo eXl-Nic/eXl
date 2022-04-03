@@ -36,7 +36,7 @@ namespace eXl
 {
 	IMPLEMENT_TAG_TYPE_EX(ObjectsTool::PlacedObject, ObjectsTool__PlacedObject);
 
-  Vector2i GetSizeFromArchetype(Archetype const* iArchetype)
+  Vec2i GetSizeFromArchetype(Archetype const* iArchetype)
   {
     auto const& data = iArchetype->GetProperties();
     auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
@@ -44,21 +44,21 @@ namespace eXl
     {
       auto const* gfxDesc = iterGfx->second.m_Data.CastBuffer<GfxSpriteComponent::Desc>();
 
-      Vector2i tileSize = SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
-      tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
-      tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * EngineCommon::s_WorldToPixel));
+      Vec2i tileSize = SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
+      tileSize.x = Mathi::Max(1, Mathf::Round(tileSize.x * gfxDesc->m_Size.x * EngineCommon::s_WorldToPixel));
+      tileSize.y = Mathi::Max(1, Mathf::Round(tileSize.y * gfxDesc->m_Size.y * EngineCommon::s_WorldToPixel));
       return tileSize;
     }
 
-    return Vector2i::ONE;
+    return One<Vec2i>();
   }
 
-  Vector2i SafeGetSizeFromArchetype(ResourceHandle<Archetype> const& iArchetype)
+  Vec2i SafeGetSizeFromArchetype(ResourceHandle<Archetype> const& iArchetype)
   {
     Archetype const* rsc = iArchetype.GetOrLoad();
     if (rsc == nullptr)
     {
-      return Vector2i::ONE;
+      return One<Vec2i>();
     }
 
     return GetSizeFromArchetype(rsc);
@@ -69,7 +69,7 @@ namespace eXl
     PlacedObject& custoData = m_ObjectsEditorData.GetOrCreate(iHandle);
     BoxIndexEntry oldBoxEntry(custoData.m_BoxCache, iHandle);
 
-    Vector2i pixelPos = MathTools::ToIVec(MathTools::As2DVec(iObject.m_Position) * EngineCommon::s_WorldToPixel);
+    Vec2i pixelPos = MathTools::ToIVec(MathTools::As2DVec(iObject.m_Position) * EngineCommon::s_WorldToPixel);
 
     Archetype const* archetype = iObject.m_Archetype.GetOrLoad();
     auto const& data = archetype->GetProperties();
@@ -90,9 +90,9 @@ namespace eXl
         spriteData = customizedData.CastBuffer<GfxSpriteComponent::Desc>();
       }
 
-      Vector2i tileSize = SafeGetTileSize(spriteData->m_Tileset, spriteData->m_TileName);
-      tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * spriteData->m_Size.X() * EngineCommon::s_WorldToPixel));
-      tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * spriteData->m_Size.Y() * EngineCommon::s_WorldToPixel));
+      Vec2i tileSize = SafeGetTileSize(spriteData->m_Tileset, spriteData->m_TileName);
+      tileSize.x = Mathi::Max(1, Mathf::Round(tileSize.x * spriteData->m_Size.x * EngineCommon::s_WorldToPixel));
+      tileSize.y = Mathi::Max(1, Mathf::Round(tileSize.y * spriteData->m_Size.y * EngineCommon::s_WorldToPixel));
       
       custoData.m_BoxCache = AABB2Di(pixelPos - tileSize / 2, tileSize);
 
@@ -105,12 +105,12 @@ namespace eXl
     }
     else
     {
-      custoData.m_BoxCache = AABB2Di(pixelPos, Vector2i::ONE);
+      custoData.m_BoxCache = AABB2Di(pixelPos, One<Vec2i>());
     }
 
     Transforms& trans = *m_World.GetSystem<Transforms>();
-    Matrix4f mat = trans.GetLocalTransform(iHandle);
-    MathTools::GetPosition(mat) = iObject.m_Position;
+    Mat4 mat = trans.GetLocalTransform(iHandle);
+    mat[3] = Vec4(iObject.m_Position, 1);
 
     trans.UpdateTransform(iHandle, mat);
 
@@ -208,7 +208,7 @@ namespace eXl
       {
         if (m_Selection)
         {
-          m_Selection->m_Position.X() = iNewValue;
+          m_Selection->m_Position.x = iNewValue;
           UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
         }
       });
@@ -217,7 +217,7 @@ namespace eXl
       {
         if (m_Selection)
         {
-          m_Selection->m_Position.Y() = iNewValue;
+          m_Selection->m_Position.y = iNewValue;
           UpdateObjectBoxAndTile(m_SelectionHandle, *m_Selection);
         }
       });
@@ -277,7 +277,7 @@ namespace eXl
 		ClearPenToolTile();
     if (m_SelectedArchetype != nullptr)
     {
-      Vector2i tileSize = GetSizeFromArchetype(m_SelectedArchetype);
+      Vec2i tileSize = GetSizeFromArchetype(m_SelectedArchetype);
       auto const& data = m_SelectedArchetype->GetProperties();
       auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());
       if (iterGfx != data.end())
@@ -289,8 +289,8 @@ namespace eXl
 
         m_Tools.m_Pen->SetPenObject(penObj);
         SafeGetTileSize(gfxDesc->m_Tileset, gfxDesc->m_TileName);
-        tileSize.X() = Mathi::Max(1, Mathf::Round(tileSize.X() * gfxDesc->m_Size.X() * EngineCommon::s_WorldToPixel));
-        tileSize.Y() = Mathi::Max(1, Mathf::Round(tileSize.Y() * gfxDesc->m_Size.Y() * EngineCommon::s_WorldToPixel));
+        tileSize.x = Mathi::Max(1, Mathf::Round(tileSize.x * gfxDesc->m_Size.x * EngineCommon::s_WorldToPixel));
+        tileSize.y = Mathi::Max(1, Mathf::Round(tileSize.y * gfxDesc->m_Size.y * EngineCommon::s_WorldToPixel));
         m_Tools.m_Pen->SetSnapSize(tileSize);
       }
     }
@@ -300,7 +300,7 @@ namespace eXl
 	{
 		SetPenToolTile();
 
-		auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
+		auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vec2i iPos, bool iWasDrawing)
 		{
 			ObjectHandle obj = GetAt(iPos);
 			if (obj.IsAssigned())
@@ -318,8 +318,8 @@ namespace eXl
 
   void ObjectsTool::SetupEraserTool()
   {
-    m_Tools.m_Pen->SetSnapSize(Vector2i::ONE);
-    auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vector2i iPos, bool iWasDrawing)
+    m_Tools.m_Pen->SetSnapSize(One<Vec2i>());
+    auto newConnection = QObject::connect(m_Tools.m_Pen, &PenToolFilter::onAddPoint, [this](Vec2i iPos, bool iWasDrawing)
     {
       ObjectHandle obj = GetAt(iPos);
       if (!obj.IsAssigned())
@@ -434,18 +434,18 @@ namespace eXl
 			GfxSystem& gfxSys = *m_World.GetSystem<GfxSystem>();
 
 			AABB2Di queryBox;
-			Vector3f worldPos;
-			Vector3f viewDir;
+			Vec3 worldPos;
+			Vec3 viewDir;
 			gfxSys.ScreenToWorld(iSelBox.m_Data[0], worldPos, viewDir);
 			queryBox.m_Data[0] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 			gfxSys.ScreenToWorld(iSelBox.m_Data[1], worldPos, viewDir);
 			queryBox.m_Data[1] = MathTools::ToIVec(MathTools::As2DVec(worldPos)) * EngineCommon::s_WorldToPixel;
 
 			// World and Screen space have opposite Y directions
-			std::swap(queryBox.m_Data[0].Y(), queryBox.m_Data[1].Y());
+			std::swap(queryBox.m_Data[0].y, queryBox.m_Data[1].y);
 
-			queryBox.m_Data[1].X() = Mathi::Max(queryBox.m_Data[0].X() + 1, queryBox.m_Data[1].X());
-			queryBox.m_Data[1].Y() = Mathi::Max(queryBox.m_Data[0].Y() + 1, queryBox.m_Data[1].Y());
+			queryBox.m_Data[1].x = Mathi::Max(queryBox.m_Data[0].x + 1, queryBox.m_Data[1].x);
+			queryBox.m_Data[1].y = Mathi::Max(queryBox.m_Data[0].y + 1, queryBox.m_Data[1].y);
 
 			QueryResult results(m_ResultsCache);
 
@@ -492,8 +492,8 @@ namespace eXl
 
       auto* model = ArchetypeCustomizationModel::CreateOrUpdateModel(m_CustoView, object->m_Archetype.GetOrLoad(), custoData->m_CustoData);
 
-			m_SelectionX->setValue(object->m_Position.X());
-			m_SelectionY->setValue(object->m_Position.Y());
+			m_SelectionX->setValue(object->m_Position.x);
+			m_SelectionY->setValue(object->m_Position.y);
 
 			m_Selection = object;
 
@@ -511,9 +511,9 @@ namespace eXl
 		}
 	}
 
-	ObjectHandle ObjectsTool::GetAt(Vector2i iWorldPos)
+	ObjectHandle ObjectsTool::GetAt(Vec2i iWorldPos)
 	{
-		AABB2Di queryBox(iWorldPos, Vector2i::ONE);
+		AABB2Di queryBox(iWorldPos, One<Vec2i>());
 
 		QueryResult results(m_ResultsCache);
 		m_TilesIdx.query(boost::geometry::index::intersects(queryBox), results.Inserter());
@@ -526,17 +526,17 @@ namespace eXl
 		return m_ResultsCache[0].second;
 	}
 
-  ObjectHandle ObjectsTool::AddAt(Vector2i iPixelPos)
+  ObjectHandle ObjectsTool::AddAt(Vec2i iPixelPos)
   {
     return AddAt(m_SelectedArchetype, iPixelPos);
   }
 
-  ObjectHandle ObjectsTool::AddAt(Archetype const* iArchetype, Vector2i iPixelPos)
+  ObjectHandle ObjectsTool::AddAt(Archetype const* iArchetype, Vec2i iPixelPos)
 	{
     ObjectHandle newObjectHandle = m_World.CreateObject();
     MapResource::ObjectHeader& newObject = m_ObjectsView.GetOrCreate(newObjectHandle);
     PlacedObject& custoData = m_ObjectsEditorData.GetOrCreate(newObjectHandle);
-		newObject.m_Position = MathTools::To3DVec(MathTools::ToFVec(iPixelPos / EngineCommon::s_WorldToPixel));
+		newObject.m_Position = Vec3(MathTools::ToFVec(iPixelPos / EngineCommon::s_WorldToPixel), 0);
     newObject.m_Archetype.Set(m_SelectedArchetype);
     do
     {
@@ -563,7 +563,7 @@ namespace eXl
 		Transforms& trans = *m_World.GetSystem<Transforms>();
 		GfxSystem& gfx = *m_World.GetSystem<GfxSystem>();
 
-		trans.AddTransform(iHandle, Matrix4f::FromPosition(iObject.m_Position));
+		trans.AddTransform(iHandle, translate(Identity<Mat4>(), iObject.m_Position));
 
     auto const& data = iObject.m_Archetype.GetOrLoad()->GetProperties();
     auto iterGfx = data.find(EngineCommon::GfxSpriteDescName());

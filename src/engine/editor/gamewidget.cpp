@@ -39,7 +39,7 @@ namespace eXl
 		GfxSystem::StaticInit();
 		if (m_GfxSystem)
 		{
-			m_ViewInfo.viewportSize = Vector2i(width(), height());
+			m_ViewInfo.viewportSize = Vec2i(width(), height());
 		}
     m_InitGLDone = true;
   }
@@ -49,7 +49,7 @@ namespace eXl
     QOpenGLWidget::resizeGL(w, h);
     if (m_GfxSystem)
     {
-      m_ViewInfo.viewportSize = Vector2i(w,h);
+      m_ViewInfo.viewportSize = Vec2i(w,h);
     }
   }
 
@@ -231,25 +231,25 @@ namespace eXl
     if (m_PainterItf)
     {
       CameraMatrix const& camera = m_GfxSystem->GetCurrentCamera();
-      QTransform screenToClip(2.0 / m_ViewInfo.viewportSize.X(), 0.0
-        , 0.0, -2.0 / m_ViewInfo.viewportSize.Y()
+      QTransform screenToClip(2.0 / m_ViewInfo.viewportSize.x, 0.0
+        , 0.0, -2.0 / m_ViewInfo.viewportSize.y
         , -1.0, 1.0);
 
-      QTransform clipToScreen(0.5 * m_ViewInfo.viewportSize.X(), 0.0
-        , 0.0,  -0.5 * m_ViewInfo.viewportSize.Y()
-        , 0.5 * m_ViewInfo.viewportSize.X(), 0.5 * m_ViewInfo.viewportSize.Y());
+      QTransform clipToScreen(0.5 * m_ViewInfo.viewportSize.x, 0.0
+        , 0.0,  -0.5 * m_ViewInfo.viewportSize.y
+        , 0.5 * m_ViewInfo.viewportSize.x, 0.5 * m_ViewInfo.viewportSize.y);
 
-      Matrix4f mat = camera.projMatrix * camera.viewMatrix;
+      Mat4 mat = camera.projMatrix * camera.viewMatrix;
 
-      QTransform worldToClip(mat.m_Data[0], mat.m_Data[1]
-        , mat.m_Data[4], mat.m_Data[5]
-        , mat.m_Data[12], mat.m_Data[13]);
+      QTransform worldToClip(mat[0][0], mat[0][1]
+        , mat[1][0], mat[1][1]
+        , mat[3][0], mat[3][1]);
 
-      Matrix4f invMat = mat.Inverse();
+      Mat4 invMat = inverse(mat);
 
-      QTransform clipToWorld(invMat.m_Data[0], invMat.m_Data[1]
-        , invMat.m_Data[4], invMat.m_Data[5]
-        , invMat.m_Data[12], invMat.m_Data[13]);
+      QTransform clipToWorld(invMat[0][0], invMat[0][1]
+        , invMat[1][0], invMat[1][1]
+        , invMat[3][0], invMat[3][1]);
 
       m_PainterItf->SetScreenToWorldTransform(screenToClip * clipToWorld);
       m_PainterItf->SetWorldToScreenTransform(worldToClip * clipToScreen);

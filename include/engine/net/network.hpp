@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/fundesc.hpp>
 #include <engine/enginelib.hpp>
 
-#include <math/vector3.hpp>
+#include <math/math.hpp>
 #include <engine/common/world.hpp>
 
 #define CUR_CLASS std::remove_pointer<decltype(this)>::type
@@ -64,14 +64,14 @@ namespace eXl
       EXL_REFLECT
 
       bool m_Moving = false;
-      Vector3f m_Dir;
+      Vec3 m_Dir;
     };
 
     struct ClientData
     {
       bool m_Moving = false;
-      Vector3f m_Dir;
-      Vector3f m_Pos;
+      Vec3 m_Dir;
+      Vec3 m_Pos;
     };
 
     struct MovedObject

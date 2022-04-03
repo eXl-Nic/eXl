@@ -22,7 +22,7 @@ namespace eXl
     uint32_t m_Size;
     Resource::UUID m_FontId;
 
-    Matrix4f m_Transform;
+    Mat4 m_Transform;
     uint32_t m_NumElems;
     IntrusivePtr<OGLBuffer> m_TextData;
     OGLVAssembly m_Assembly;
@@ -37,7 +37,7 @@ namespace eXl
       IntrusivePtr<OGLTexture> m_Texture;
       OGLShaderData m_TextureData;
       UnorderedMap<uint32_t, AABB2Df> m_AtlasLoc;
-      Vector2i m_CurAtlasLoc;
+      Vec2i m_CurAtlasLoc;
       uint32_t m_CurMaxY = 0;
     };
 
@@ -82,7 +82,7 @@ namespace eXl
         AddGlyph(*iter, glyph);
       }
 
-      for (uint32_t glyph = 'A'; glyph <= 'Z'; glyph++)
+      for (uint32_t glyph = 'A'; glyph <= 'z'; glyph++)
       {
         AddGlyph(*iter, glyph);
       }
@@ -119,39 +119,39 @@ namespace eXl
       auto renderCb = [&glyphBox, &iEntry, iGlyph, this](Font::GlyphDesc iDesc, uint8_t const* iData)
       {
         Entry& fontEntry = iEntry.second;
-        if ((iDesc.glyphSize.Y() + 2) > fontEntry.m_CurMaxY)
+        if ((iDesc.glyphSize.y + 2) > fontEntry.m_CurMaxY)
         {
-          fontEntry.m_CurMaxY = (iDesc.glyphSize.Y() + 2);
+          fontEntry.m_CurMaxY = (iDesc.glyphSize.y + 2);
         }
 
-        float halfPixelOffsetX = iDesc.glyphSize.X() > 1 ? 0.5 : 0.0;
-        float halfPixelOffsetY = iDesc.glyphSize.Y() > 1 ? 0.5 : 0.0;
+        float halfPixelOffsetX = iDesc.glyphSize.x > 1 ? 0.5 : 0.0;
+        float halfPixelOffsetY = iDesc.glyphSize.y > 1 ? 0.5 : 0.0;
 
         Image::Size texSize = fontEntry.m_Texture->GetSize();
-        if (fontEntry.m_CurAtlasLoc.X() + iDesc.glyphSize.X() + 2 >= texSize.X())
+        if (fontEntry.m_CurAtlasLoc.x + iDesc.glyphSize.x + 2 >= texSize.x)
         {
-          fontEntry.m_CurAtlasLoc.X() = 0;
-          fontEntry.m_CurAtlasLoc.Y() += fontEntry.m_CurMaxY;
+          fontEntry.m_CurAtlasLoc.x = 0;
+          fontEntry.m_CurAtlasLoc.y += fontEntry.m_CurMaxY;
           fontEntry.m_CurMaxY = 0;
-          eXl_ASSERT(fontEntry.m_CurAtlasLoc.Y() < texSize.Y());
+          eXl_ASSERT(fontEntry.m_CurAtlasLoc.y < texSize.y);
         }
 
-        glyphBox = AABB2Df(fontEntry.m_CurAtlasLoc.X() + (1.0 - halfPixelOffsetX),
-          fontEntry.m_CurAtlasLoc.Y() + (1.0 - halfPixelOffsetY),
-          fontEntry.m_CurAtlasLoc.X() + (1.0 - halfPixelOffsetX) + iDesc.glyphSize.X(),
-          fontEntry.m_CurAtlasLoc.Y() + (1.0 - halfPixelOffsetY) + iDesc.glyphSize.Y());
+        glyphBox = AABB2Df(fontEntry.m_CurAtlasLoc.x + (1.0 - halfPixelOffsetX),
+          fontEntry.m_CurAtlasLoc.y + (1.0 - halfPixelOffsetY),
+          fontEntry.m_CurAtlasLoc.x + (1.0 - halfPixelOffsetX) + iDesc.glyphSize.x,
+          fontEntry.m_CurAtlasLoc.y + (1.0 - halfPixelOffsetY) + iDesc.glyphSize.y);
 
-        glyphBox.m_Data[0].X() *= 1.0 / texSize.X();
-        glyphBox.m_Data[0].Y() *= 1.0 / texSize.Y();
-        glyphBox.m_Data[1].X() *= 1.0 / texSize.X();
-        glyphBox.m_Data[1].Y() *= 1.0 / texSize.Y();
+        glyphBox.m_Data[0].x *= 1.0 / texSize.x;
+        glyphBox.m_Data[0].y *= 1.0 / texSize.y;
+        glyphBox.m_Data[1].x *= 1.0 / texSize.x;
+        glyphBox.m_Data[1].y *= 1.0 / texSize.y;
         {
-          AABB2Di texLoc(fontEntry.m_CurAtlasLoc.X(),
-            fontEntry.m_CurAtlasLoc.Y(),
-            fontEntry.m_CurAtlasLoc.X() + iDesc.glyphSize.X() + 2,
-            fontEntry.m_CurAtlasLoc.Y() + iDesc.glyphSize.Y() + 2);
+          AABB2Di texLoc(fontEntry.m_CurAtlasLoc.x,
+            fontEntry.m_CurAtlasLoc.y,
+            fontEntry.m_CurAtlasLoc.x + iDesc.glyphSize.x + 2,
+            fontEntry.m_CurAtlasLoc.y + iDesc.glyphSize.y + 2);
 
-          size_t totSize = texLoc.GetSize().X() * texLoc.GetSize().Y();
+          size_t totSize = texLoc.GetSize().x * texLoc.GetSize().y;
           if (m_GlyphCopyBuffer.size() <= totSize)
           {
             m_GlyphCopyBuffer.resize(totSize);
@@ -172,40 +172,40 @@ namespace eXl
           }
           memset(dst, 0, margin * bitmap.width + margin);
 
-          //Image filter(filterCoeff, Vector2i(3,3), Image::R, Image::Float, 1, Image::Reference);
+          //Image filter(filterCoeff, Vec2i(3,3), Image::R, Image::Float, 1, Image::Reference);
           Image filter(filterCoeff5, Image::Size(5, 5), Image::R, Image::Float, 1, Image::Reference);
           Image newBitmap(m_Impl->m_GlyphCopyBuffer, Image::Size(bitmap.width + 2 * margin, bitmap.rows + 2 * margin), Image::R, Image::Char, 1, Image::Reference);
-          //newBitmap.Convolve(filter, Vector2i(-1,-1));
-          //newBitmap.Convolve(filter, Vector2i(-2,-2));
+          //newBitmap.Convolve(filter, Vec2i(-1,-1));
+          //newBitmap.Convolve(filter, Vec2i(-2,-2));
 
           dst = m_Impl->m_GlyphCopyBuffer;
           src = reinterpret_cast<unsigned char const*>(newBitmap.GetImageData());
           src += margin * (bitmap.width + 2 * margin) + margin;
 #endif
-          memset(dst, 0, iDesc.glyphSize.X() + 2 + 1);
-          dst += iDesc.glyphSize.X() + 2 + 1;
+          memset(dst, 0, iDesc.glyphSize.x + 2 + 1);
+          dst += iDesc.glyphSize.x + 2 + 1;
 
-          for (uint32_t i = 0; i < iDesc.glyphSize.Y(); ++i)
+          for (uint32_t i = 0; i < iDesc.glyphSize.y; ++i)
           {
-            memcpy(dst, src, iDesc.glyphSize.X());
-            dst += iDesc.glyphSize.X();
+            memcpy(dst, src, iDesc.glyphSize.x);
+            dst += iDesc.glyphSize.x;
             dst[0] = 0;
             dst[1] = 1;
             dst += 2;
-            src += iDesc.glyphSize.X();
+            src += iDesc.glyphSize.x;
           }
-          memset(dst, 0, iDesc.glyphSize.X() + 1);
+          memset(dst, 0, iDesc.glyphSize.x + 1);
 
           //Assume 256 grey level format
           fontEntry.m_Texture->Update(texLoc, OGLTextureElementType::UNSIGNED_BYTE, OGLTextureFormat::RED, m_GlyphCopyBuffer.data());
           fontEntry.m_AtlasLoc.insert(std::make_pair(iGlyph, glyphBox));
-          fontEntry.m_CurAtlasLoc.X() += iDesc.glyphSize.X() + 2;
-          if (fontEntry.m_CurAtlasLoc.X() >= texSize.X())
+          fontEntry.m_CurAtlasLoc.x += iDesc.glyphSize.x + 2;
+          if (fontEntry.m_CurAtlasLoc.x >= texSize.x)
           {
-            fontEntry.m_CurAtlasLoc.X() = 0;
-            fontEntry.m_CurAtlasLoc.Y() += fontEntry.m_CurMaxY;
+            fontEntry.m_CurAtlasLoc.x = 0;
+            fontEntry.m_CurAtlasLoc.y += fontEntry.m_CurMaxY;
             fontEntry.m_CurMaxY = 0;
-            eXl_ASSERT(fontEntry.m_CurAtlasLoc.Y() < texSize.Y());
+            eXl_ASSERT(fontEntry.m_CurAtlasLoc.y < texSize.y);
           }
         }
       };
@@ -300,7 +300,7 @@ namespace eXl
     std::vector<TextLine> lines;
     int32_t maxLength = 0;
 
-    Vector2i penPos(0, iSize);
+    Vec2i penPos(0, iSize);
 
     Anchor iAnchor = AnchorLeft;
 
@@ -317,14 +317,14 @@ namespace eXl
       {
         if (!oPos.empty() && curLineBegin < curLineEnd)
         {
-          TextLine curLine = { uint32_t(penPos.X()), curLineBegin, curLineEnd, penPos.Y() - curLineMax};
-          if (maxLength < penPos.X())
+          TextLine curLine = { uint32_t(penPos.x), curLineBegin, curLineEnd, penPos.y - curLineMax};
+          if (maxLength < penPos.x)
           {
-            maxLength = penPos.X();
+            maxLength = penPos.x;
           }
           lines.push_back(curLine);
         }
-        penPos = Vector2i(0, penPos.Y() - (curLineMax - curLineMin) - 1);
+        penPos = Vec2i(0, penPos.y - (curLineMax - curLineMin) - 1);
         curLineBegin = curLineEnd = oPos.size();
         beginningOfLine = true;
         curLineMin = curLineMax = 0;
@@ -333,26 +333,26 @@ namespace eXl
       {
         AABB2Df glyphBox;
         Font::GlyphDesc desc = m_Impl->m_Fonts.GetGlyph(entry, symbol, glyphBox);
-        if (desc.glyphSize.X() != 0 && desc.glyphSize.Y() != 0)
+        if (desc.glyphSize.x != 0 && desc.glyphSize.y != 0)
         {
-          oPos.push_back(AABB2Df(penPos.X() + desc.penOffset.X(),
-            desc.penOffset.Y() - desc.glyphSize.Y(),
-            penPos.X() + (desc.penOffset.X() + desc.glyphSize.X()),
-            desc.penOffset.Y()));
+          oPos.push_back(AABB2Df(penPos.x + desc.penOffset.x,
+            desc.penOffset.y - desc.glyphSize.y,
+            penPos.x + (desc.penOffset.x + desc.glyphSize.x),
+            desc.penOffset.y));
           oTexCoords.push_back(glyphBox);
 
           curLineMin = Mathf::Min(oPos.back().MinY(), curLineMin);
           curLineMax = Mathf::Max(oPos.back().MaxY(), curLineMax);
 
           curLineEnd++;
-          penPos = penPos + Vector2i(desc.penAdvance.X(), desc.penAdvance.Y());
+          penPos = penPos + Vec2i(desc.penAdvance.x, desc.penAdvance.y);
           beginningOfLine = false;
         }
         else
         {
           if (!beginningOfLine)
           {
-            penPos = penPos + Vector2i(desc.penAdvance.X(), desc.penAdvance.Y());
+            penPos = penPos + Vec2i(desc.penAdvance.x, desc.penAdvance.y);
           }
         }
       }
@@ -360,10 +360,10 @@ namespace eXl
 
     if (!oPos.empty() && curLineBegin < curLineEnd)
     {
-      TextLine curLine = { uint32_t(penPos.X()), curLineBegin, curLineEnd, penPos.Y() - curLineMax };
-      if (maxLength < penPos.X())
+      TextLine curLine = { uint32_t(penPos.x), curLineBegin, curLineEnd, penPos.y - curLineMax };
+      if (maxLength < penPos.x)
       {
-        maxLength = penPos.X();
+        maxLength = penPos.x;
       }
       lines.push_back(curLine);
     }
@@ -381,11 +381,11 @@ namespace eXl
       }
       for (uint32_t j = lines[i].begin; j < lines[i].end; ++j)
       {
-        Vector2f glyphSize = oPos[j].GetSize();
-        oPos[j].m_Data[0].X() += offsetX;
-        oPos[j].m_Data[1].X() += offsetX;
-        oPos[j].m_Data[0].Y() += lines[i].linePos;
-        oPos[j].m_Data[1].Y() += lines[i].linePos;
+        Vec2 glyphSize = oPos[j].GetSize();
+        oPos[j].m_Data[0].x += offsetX;
+        oPos[j].m_Data[1].x += offsetX;
+        oPos[j].m_Data[0].y += lines[i].linePos;
+        oPos[j].m_Data[1].y += lines[i].linePos;
       }
     }
 
@@ -409,11 +409,11 @@ namespace eXl
       int32_t const permutation[] = { 0, 0, 1, 0, 1, 1, 0, 1 };
       for (uint32_t j = 0; j < 4; ++j)
       {
-        geomData.push_back(geomBox.m_Data[permutation[2 * j + 0]].X());
-        geomData.push_back(geomBox.m_Data[permutation[2 * j + 1]].Y());
+        geomData.push_back(geomBox.m_Data[permutation[2 * j + 0]].x);
+        geomData.push_back(geomBox.m_Data[permutation[2 * j + 1]].y);
         geomData.push_back(0.0);
-        geomData.push_back(texBox.m_Data[permutation[2 * j + 0]].X());
-        geomData.push_back(texBox.m_Data[1 - permutation[2 * j + 1]].Y());
+        geomData.push_back(texBox.m_Data[permutation[2 * j + 0]].x);
+        geomData.push_back(texBox.m_Data[1 - permutation[2 * j + 1]].y);
       }
       uint32_t basePos = i * 4;
       uint32_t const quad[] = { 0, 1, 2, 0, 2, 3};
@@ -441,13 +441,13 @@ namespace eXl
   {
     GfxRenderNode::Init(iSys, iHandle);
     m_Impl = std::make_unique<Impl>(iSys);
-    m_Impl->m_DefaultColor.tint = Vector4f::ONE;
+    m_Impl->m_DefaultColor.tint = One<Vec4>();
     m_Impl->m_DefaultData.AddData(OGLSpriteAlgo::GetSpriteColorUniform(), &m_Impl->m_DefaultColor);
   }
 
   GfxRenderNode::TransformUpdateCallback GfxGUIRenderNode::GetTransformUpdateCallback()
   {
-    return [this](ObjectHandle const* iObjects, Matrix4f const** iTransforms, uint32_t iNum)
+    return [this](ObjectHandle const* iObjects, Mat4 const** iTransforms, uint32_t iNum)
     {
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects, ++iTransforms)
       {

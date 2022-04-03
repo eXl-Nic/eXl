@@ -23,7 +23,7 @@ namespace eXl
   protected:
     AABB2Di m_Selection;
     bool m_Pressed = false;
-    Vector2i m_PressPos;
+    Vec2i m_PressPos;
   };
 
   class SelectionPainter : public GameWidget::PainterInterface

@@ -23,11 +23,11 @@ namespace eXl
     friend WalkAbility;
 
   public:
-    Vector2f m_WalkDirection;
+    Vec2 m_WalkDirection;
     float m_WalkSpeed = 10.0;
   private:
 
-    Vector2f GetActualWalkDir();
+    Vec2 GetActualWalkDir();
 
     bool m_Walking = false;
     bool m_XLocked = false;
@@ -46,7 +46,7 @@ namespace eXl
 
     WalkAbility();
 
-    static void SetWalkDirection(AbilitySystem* iSys, ObjectHandle iObj, Vector2f const& iDir);
+    static void SetWalkDirection(AbilitySystem* iSys, ObjectHandle iObj, Vec2 const& iDir);
 
     AbilityUseState GetUseState(AbilityStateHandle iId) override;
     AbilityUseState Use(AbilityStateHandle iId, ObjectHandle) override;

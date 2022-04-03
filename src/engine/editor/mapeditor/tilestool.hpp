@@ -80,9 +80,9 @@ namespace eXl
 
     void Initialize(MapResource const& iMap);
 
-    ObjectHandle GetAt(Vector2i iWorldPos);
-    ObjectHandle AddAt(Vector2i iWorldPos, bool iAppend);
-    ObjectHandle AddAt(ResourceHandle<Tileset> iTileset, TileName iTile, uint32_t iLayer, TerrainTypeName iTypename, Vector2i iWorldPos, bool iAppend);
+    ObjectHandle GetAt(Vec2i iWorldPos);
+    ObjectHandle AddAt(Vec2i iWorldPos, bool iAppend);
+    ObjectHandle AddAt(ResourceHandle<Tileset> iTileset, TileName iTile, uint32_t iLayer, TerrainTypeName iTypename, Vec2i iWorldPos, bool iAppend);
     void Remove(ObjectHandle);
     void Cleanup(ObjectHandle);
     void SelectTile(ObjectHandle);

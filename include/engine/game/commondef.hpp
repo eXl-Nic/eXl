@@ -52,8 +52,8 @@ namespace eXl
 
     constexpr uint32_t s_WorldToPixel = 8;
 
-    Matrix4f const& GetProjectionMatrix();
-    Matrix4f GetRotationMatrix(Vector2f const& iDir);
+    Mat4 const& GetProjectionMatrix();
+    Mat4 GetRotationMatrix(Vec2 const& iDir);
 
     EXL_ENGINE_API ComponentName GfxSpriteComponentName();
     EXL_ENGINE_API ComponentName PhysicsComponentName();
@@ -84,7 +84,7 @@ namespace eXl
     {
       EXL_REFLECT_PROPERTY;
 
-      Vector3f m_FireDir;
+      Vec3 m_FireDir;
       float m_FireRate;
       bool m_AutoTarget;
       ResourceHandle <Archetype> m_ProjectileType;
@@ -123,8 +123,8 @@ namespace eXl
       float ComputeBoundingCircle2DRadius() const;
 
       PhysicsShapeType m_Type;
-      Vector3f m_Dims = Vector3f::ONE;
-      Vector3f m_Offset = Vector3f::ZERO;
+      Vec3 m_Dims = One<Vec3>();
+      Vec3 m_Offset = Zero<Vec3>();
     };
 
     struct EXL_ENGINE_API ObjectShapeData
@@ -137,13 +137,13 @@ namespace eXl
       bool IsSimpleBox() const
       {
         return m_Shapes.size() == 1 && m_Shapes[0].m_Type == PhysicsShapeType::Box
-          && m_Shapes[0].m_Offset == Vector3f::ZERO;
+          && m_Shapes[0].m_Offset == Zero<Vec3>();
       }
 
       bool IsSimpleSphere() const
       {
         return m_Shapes.size() == 1 && m_Shapes[0].m_Type == PhysicsShapeType::Sphere
-          && m_Shapes[0].m_Offset == Vector3f::ZERO;
+          && m_Shapes[0].m_Offset == Zero<Vec3>();
       }
 
       SmallVector<PhysicsShape, 1> m_Shapes;
@@ -189,7 +189,7 @@ namespace eXl
       EXL_REFLECT_PROPERTY;
     };
 
-    GameDataView<Vector3f>* GetVelocities(World& iWorld);
+    GameDataView<Vec3>* GetVelocities(World& iWorld);
   }
 
   EXL_REFLECT_ENUM(EngineCommon::PhysicsType, eXl__EngineCommon__PhysicsType, EXL_ENGINE_API);

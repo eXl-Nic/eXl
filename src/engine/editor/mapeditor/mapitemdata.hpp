@@ -8,7 +8,7 @@ namespace eXl
   {
     EXL_REFLECT;
 
-    Vector2i m_Position;
+    Vec2i m_Position;
     ResourceHandle<Tileset> m_Tileset;
     TileName m_Tile;
     TerrainTypeName m_Type;

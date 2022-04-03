@@ -29,11 +29,11 @@ namespace eXl
       m_PenObject = iHandle;
     }
 
-    void SetSnapSize(Vector2i const& iSize);
+    void SetSnapSize(Vec2i const& iSize);
 
   Q_SIGNALS:
     void onStartDrawing();
-    void onAddPoint(Vector2i, bool);
+    void onAddPoint(Vec2i, bool);
     void onStopDrawing();
 
   protected:
@@ -43,9 +43,9 @@ namespace eXl
     GfxSystem& m_GfxSys;
     Transforms& m_Transforms;
     ObjectHandle m_PenObject;
-    Vector2i m_CurrentMousePos;
-    Vector3f m_CurrentWorldPos;
-    Vector2i m_CurrentSnapPos;
-    Vector2i m_Snap;
+    Vec2i m_CurrentMousePos;
+    Vec3 m_CurrentWorldPos;
+    Vec2i m_CurrentSnapPos;
+    Vec2i m_Snap;
   };
 }

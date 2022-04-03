@@ -157,11 +157,11 @@ namespace eXl
     {
       if (*iEntry.m_CurrentActionCue == GrabAbility::GrabCue())
       {
-         Vector2f dir = GrabAbility::GetGrabDirection(m_World->GetSystem<AbilitySystem>(), iObj);
+         Vec2 dir = GrabAbility::GetGrabDirection(m_World->GetSystem<AbilitySystem>(), iObj);
          uint32_t grabState;
-         if (dir.X() == 0)
+         if (dir.x == 0)
          {
-           if (dir.Y() > 0)
+           if (dir.y > 0)
            {
              grabState = (uint32_t)CharacterSystem::StateFlags::DirUp;
            }
@@ -172,7 +172,7 @@ namespace eXl
          }
          else
          {
-           if (dir.X() > 0)
+           if (dir.x > 0)
            {
              grabState = (uint32_t)CharacterSystem::StateFlags::DirRight;
            }

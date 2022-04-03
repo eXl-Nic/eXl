@@ -37,11 +37,6 @@ namespace eXl
     return iComp.m_SpriteData;
   }
 
-  static void GetPositionOnly(Matrix4f const& iMat, Matrix4f& oMat)
-  {
-    MathTools::GetPosition(oMat) = MathTools::GetPosition(iMat);
-  }
-
   GfxSpriteComponent::Desc const* GfxSpriteRenderNode::GetDescFromComponent(GfxSpriteComponent const& comp, SparseGameDataView<GfxSpriteComponent::Desc> const* iView)
   {
     GfxSpriteComponent::Desc const* descData = comp.m_Desc;
@@ -79,8 +74,8 @@ namespace eXl
       GfxSpriteData& data = m_SpriteData.Get(comp->m_SpriteData);
       data.m_Component = comp;
       data.m_RemainingTime = -1.0;
-      data.m_CurScale = Vector2f::ONE;
-      data.m_CurOffset = Vector2f::ZERO;
+      data.m_CurScale = One<Vec2>();
+      data.m_CurOffset = Zero<Vec2>();
       data.m_Rotate = descData->m_RotateSprite;
       data.m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), data.m_Billboard ? &data.m_BillboardTransform : &data.m_Transform);
       data.m_Layer = descData->m_Layer;
@@ -100,9 +95,9 @@ namespace eXl
         continue;
       }
 
-      Vector2i imageSize = Vector2i::ONE;
-      Vector2i tileSize = Vector2i::ONE;
-      Vector2i tileOffset = Vector2i::ZERO;
+      Vec2i imageSize = One<Vec2i>();
+      Vec2i tileSize = One<Vec2i>();
+      Vec2i tileOffset = Zero<Vec2i>();
 
       if (Tile const* tile = tileset->Find(descData->m_TileName))
       {
@@ -118,18 +113,18 @@ namespace eXl
         data.m_TextureData.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture(), data.m_Texture);
         data.m_TextureData.AddData(OGLSpriteAlgo::GetSpriteColorUniform(), &data.m_SpriteInfo);
 
-        data.m_CurScale = Vector2f(tile->m_Size.X(), tile->m_Size.Y());
-        data.m_CurScale.X() *= tile->m_Scale.X();
-        data.m_CurScale.Y() *= tile->m_Scale.Y();
+        data.m_CurScale = Vec2(tile->m_Size.x, tile->m_Size.y);
+        data.m_CurScale.x *= tile->m_Scale.x;
+        data.m_CurScale.y *= tile->m_Scale.y;
 
-        VALIDATE_FLOAT(tile->m_Scale.X());
-        VALIDATE_FLOAT(tile->m_Scale.Y());
+        VALIDATE_FLOAT(tile->m_Scale.x);
+        VALIDATE_FLOAT(tile->m_Scale.y);
 
         data.m_CurOffset = tile->m_Offset;
 
         imageSize = tileset->GetImageSize(tile->m_ImageName);
 
-        if (imageSize.X() == 0 || imageSize.Y() == 0)
+        if (imageSize.x == 0 || imageSize.y == 0)
         {
           LOG_ERROR << tile->m_ImageName << "has 0 size!!";
         }
@@ -140,7 +135,7 @@ namespace eXl
         {
           tileOffset = tile->m_Frames[0];
           float frameTime = tile->m_FrameDuration / descData->m_AnimSpeed;
-          if (tile->m_Frames.size() > 1 && frameTime > 0 && frameTime < Mathf::MAX_REAL)
+          if (tile->m_Frames.size() > 1 && frameTime > 0 && frameTime < Mathf::MaxReal())
           {
             data.m_CurrentFrame = 0;
             data.m_Forward = true;
@@ -150,7 +145,7 @@ namespace eXl
         }
         else
         {
-          tileOffset = Vector2i::ZERO;
+          tileOffset = Zero<Vec2i>();
         }
       }
       else
@@ -161,28 +156,20 @@ namespace eXl
         continue;
       }
 
-      data.m_Transform = Matrix4f::IDENTITY;
+      data.m_Transform = Identity<Mat4>();
 
-      Matrix4f const& worldTrans = m_Sys->GetTransforms().GetWorldTransform(comp->m_Object);
+      Mat4 const& worldTrans = m_Sys->GetTransforms().GetWorldTransform(comp->m_Object);
       if (data.m_Rotate)
       {
-        Matrix4f localTrans;
-        localTrans.MakeIdentity();
-        localTrans.m_Data[0] = data.m_CurScale.X();
-        localTrans.m_Data[5] = data.m_CurScale.Y();
-        MathTools::GetPosition2D(localTrans) = descData->m_Offset + data.m_CurOffset;
-
-        data.m_Transform = worldTrans * localTrans;
+        data.m_Transform = translate(worldTrans, Vec3(descData->m_Offset + data.m_CurOffset, 0));
       }
       else
       {
-        data.m_Transform.m_Data[0] = data.m_CurScale.X();
-        data.m_Transform.m_Data[5] = data.m_CurScale.Y();
-        GetPositionOnly(worldTrans, data.m_Transform);
-        MathTools::GetPosition2D(data.m_Transform) += descData->m_Offset + data.m_CurOffset;
+        data.m_Transform = translate(Identity<Mat4>(), Vec3(worldTrans[3]) + Vec3(descData->m_Offset + data.m_CurOffset, 0));
       }
+      data.m_Transform = scale(data.m_Transform, Vec3(data.m_CurScale, 1));
 
-      Vector3f cacheKey = MathTools::To3DVec(descData->m_Size, descData->m_Flat ? 0.0f : 1.0f);
+      Vec3 cacheKey = Vec3(descData->m_Size, descData->m_Flat ? 0.0f : 1.0f);
 
       auto cacheIter = m_SpriteGeomCache.find(cacheKey);
       if (cacheIter == m_SpriteGeomCache.end())
@@ -196,14 +183,14 @@ namespace eXl
 
       IntrusivePtr<GeometryInfo> geom = cacheIter->second;
 
-      Vector2f texStep(1.0f / imageSize.X(), 1.0f / imageSize.Y());
+      Vec2 texStep(1.0f / imageSize.x, 1.0f / imageSize.y);
 
       data.m_Geometry = geom;
       data.m_SpriteInfo.alphaMult = 1.0;
-      VALIDATE_FLOAT(texStep.X());
-      VALIDATE_FLOAT(texStep.Y());
-      data.m_SpriteInfo.tcOffset = Vector2f(tileOffset.X() * texStep.X(), tileOffset.Y() * texStep.Y());
-      data.m_SpriteInfo.tcScaling = Vector2f(tileSize.X() * texStep.X(), tileSize.Y() * texStep.Y());
+      VALIDATE_FLOAT(texStep.x);
+      VALIDATE_FLOAT(texStep.y);
+      data.m_SpriteInfo.tcOffset = Vec2(tileOffset.x * texStep.x, tileOffset.y * texStep.y);
+      data.m_SpriteInfo.tcScaling = Vec2(tileSize.x * texStep.x, tileSize.y * texStep.y);
       data.m_SpriteInfo.imageSize = MathTools::ToFVec(imageSize);
     }
     m_DirtyComponents.clear();
@@ -241,9 +228,9 @@ namespace eXl
                 tile->m_Frames.size() - 1 == data.m_CurrentFrame :
                 0 == data.m_CurrentFrame;
 
-              Vector2i size = tileset->GetImageSize(tile->m_ImageName);
+              Vec2i size = tileset->GetImageSize(tile->m_ImageName);
 
-              Vector2f texStep(1.0f / size.X(), 1.0f / size.Y());
+              Vec2 texStep(1.0f / size.x, 1.0f / size.y);
 
               bool updateAnim = !lastFrame;
               if (lastFrame)
@@ -270,9 +257,9 @@ namespace eXl
 
               if (updateAnim)
               {
-                Vector2i offsetPix = tile->m_Frames[data.m_CurrentFrame];
+                Vec2i offsetPix = tile->m_Frames[data.m_CurrentFrame];
                 data.m_RemainingTime = tile->m_FrameDuration / descData->m_AnimSpeed;
-                data.m_SpriteInfo.tcOffset = Vector2f(offsetPix.X() * texStep.X(), offsetPix.Y() * texStep.Y());
+                data.m_SpriteInfo.tcOffset = Vec2(offsetPix.x * texStep.x, offsetPix.y * texStep.y);
               }
             }
           }
@@ -284,7 +271,7 @@ namespace eXl
 
   GfxRenderNode::TransformUpdateCallback GfxSpriteRenderNode::GetTransformUpdateCallback()
   {
-    return [this](ObjectHandle const* iObjects, Matrix4f const** iTransforms, uint32_t iNum)
+    return [this](ObjectHandle const* iObjects, Mat4 const** iTransforms, uint32_t iNum)
     {
       SparseGameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(GetWorld())->GetSparseView();
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects, ++iTransforms)
@@ -300,21 +287,16 @@ namespace eXl
             {
               continue;
             }
+
             if (data.m_Rotate)
             {
-              Matrix4f localTrans;
-              localTrans.MakeIdentity();
-              localTrans.m_Data[0] = data.m_CurScale.X();
-              localTrans.m_Data[5] = data.m_CurScale.Y();
-              MathTools::GetPosition2D(localTrans) = descData->m_Offset + data.m_CurOffset;
-
-              data.m_Transform = (**iTransforms) * localTrans;
+              data.m_Transform = translate((**iTransforms), Vec3(descData->m_Offset + data.m_CurOffset, 0));
             }
             else
             {
-              GetPositionOnly(**iTransforms, data.m_Transform);
-              MathTools::GetPosition2D(data.m_Transform) += descData->m_Offset + data.m_CurOffset;
+              data.m_Transform = translate(Identity<Mat4>(), Vec3((**iTransforms)[3]) + Vec3(descData->m_Offset + data.m_CurOffset, 0));
             }
+            data.m_Transform = scale(data.m_Transform, Vec3(data.m_CurScale, 1));
           }
         }
       }

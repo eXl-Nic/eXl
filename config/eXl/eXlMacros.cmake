@@ -12,6 +12,25 @@ function(ADD_EXL_LIB_PROPERTIES TARGET_NAME LIB_SUFFIX)
 	endif()
 endfunction()
 
+function(RECURSIVE_GET_INCLUDE_DEPENDENCIES TARGET_NAME TARGET_REQUIRED_INCLUDES)
+
+get_property(CURRENT_REQ_INCLUDES TARGET ${TARGET_NAME} PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(DEPENDENCIES TARGET ${TARGET_NAME} PROPERTY LINK_LIBRARIES)
+
+foreach(DEP ${DEPENDENCIES})
+if(TARGET ${DEP})
+    RECURSIVE_GET_INCLUDE_DEPENDENCIES(${DEP} DEP_INCLUDES)
+    list(APPEND CURRENT_REQ_INCLUDES ${DEP_INCLUDES})
+endif()
+endforeach()
+
+list(REMOVE_DUPLICATES CURRENT_REQ_INCLUDES)
+list(FILTER CURRENT_REQ_INCLUDES EXCLUDE REGEX ".*<.*>")
+set(${TARGET_REQUIRED_INCLUDES} ${CURRENT_REQ_INCLUDES} PARENT_SCOPE)
+
+endfunction()
+
+
 function(SETUP_EXL_TARGET TARGET_NAME)
 
   set(options)
@@ -31,10 +50,13 @@ function(SETUP_EXL_TARGET TARGET_NAME)
     if(NOT ARGS_LIB_SUFFIX)
       message(ERROR "Lib suffix missing for code gen")
     endif()
-
-		foreach(DIRECTORY_ITEM ${EXL_DEPS_INCLUDE})
-			set(REFLANG_INCLUDES ${REFLANG_INCLUDES} --include-directory=\"${DIRECTORY_ITEM}\")
-		endforeach()
+    
+    RECURSIVE_GET_INCLUDE_DEPENDENCIES(${TARGET_NAME} TARGET_REQUIRED_INCLUDES)
+    
+    message(${TARGET_REQUIRED_INCLUDES})
+	foreach(DIRECTORY_ITEM ${TARGET_REQUIRED_INCLUDES})
+		set(REFLANG_INCLUDES ${REFLANG_INCLUDES} --include-directory=\"${DIRECTORY_ITEM}\")
+	endforeach()
 
 		set(REFLECTION_TARGET ${TARGET_NAME}_Reflection)
     
@@ -60,8 +82,8 @@ function(SETUP_EXL_TARGET TARGET_NAME)
     if(${EXL_CAN_BUILD_REFLANG})
       add_dependencies(${TARGET_NAME} eXl_reflang)
     endif()
-    #add_custom_target(${TARGET_NAME}_outputdebugcmd COMMAND ${CMAKE_COMMAND} -E echo ${REFLANG_COMMAND})
-    #add_dependencies(${TARGET_NAME} ${TARGET_NAME}_outputdebugcmd)
+    add_custom_target(${TARGET_NAME}_outputdebugcmd COMMAND ${CMAKE_COMMAND} -E echo ${REFLANG_COMMAND})
+    add_dependencies(${TARGET_NAME} ${TARGET_NAME}_outputdebugcmd)
     
     target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

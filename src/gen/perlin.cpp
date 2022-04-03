@@ -181,8 +181,7 @@ namespace eXl
     Vec3 wheight(Mathf::SCurve3(iCoord.x - extPoints[0].x), 
       Mathf::SCurve3(iCoord.y - extPoints[0].y), 
       Mathf::SCurve3(iCoord.z - extPoints[0].z));
-    Vec3 res;
-    Vec3i curPt;
+
     for(unsigned int z = 0; z<zSteps; ++z)
     {
       for(unsigned int y = 0; y<ySteps; ++y)

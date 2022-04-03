@@ -5,7 +5,7 @@
 #include <engine/common/world.hpp>
 
 #include <editor/editorstate.hpp>
-#include <math/vector2.hpp>
+#include <math/math.hpp>
 
 namespace eXl
 {
@@ -25,7 +25,7 @@ namespace eXl
 
     void CommitDocument() override;
 
-    ObjectHandle Place(Resource::UUID const& iUUID, Name iSubobject, Vector2i const& iPos);
+    ObjectHandle Place(Resource::UUID const& iUUID, Name iSubobject, Vec2i const& iPos);
 
   protected:
 

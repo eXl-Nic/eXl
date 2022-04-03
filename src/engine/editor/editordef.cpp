@@ -173,11 +173,11 @@ namespace eXl
       case Image::Char:
         imageFormat = QImage::Format_RGBA8888;
         converted.emplace(Image(nullptr, iImage.GetSize(), Image::RGBA, Image::Char, 1));
-        for (uint32_t row = 0; row < iImage.GetSize().Y(); ++row)
+        for (uint32_t row = 0; row < iImage.GetSize().y; ++row)
         {
           char const* rowPtr = (char const*)iImage.GetRow(row);
           char* destRowPtr = (char*)converted->GetRow(row);
-          for (uint32_t pixel = 0; pixel < iImage.GetSize().X(); ++pixel)
+          for (uint32_t pixel = 0; pixel < iImage.GetSize().x; ++pixel)
           {
             destRowPtr[0] = rowPtr[2];
             destRowPtr[1] = rowPtr[1];
@@ -203,7 +203,7 @@ namespace eXl
 
     Image const& imageSource = converted ? *converted : iImage;
 
-    oImage = QImage((uchar*)imageSource.GetImageData(), imageSource.GetSize().X(), imageSource.GetSize().Y(), imageSource.GetRowStride(), imageFormat).copy();
+    oImage = QImage((uchar*)imageSource.GetImageData(), imageSource.GetSize().x, imageSource.GetSize().y, imageSource.GetRowStride(), imageFormat).copy();
 
     return Err::Success;
   }

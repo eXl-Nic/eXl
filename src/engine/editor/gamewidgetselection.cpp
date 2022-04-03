@@ -19,10 +19,10 @@ namespace eXl
       QMouseEvent* mouseEvent = (QMouseEvent*)event;
       if (mouseEvent->button() == Qt::LeftButton)
       {
-        m_PressPos = Vector2i(mouseEvent->pos().x(), mouseEvent->pos().y());
+        m_PressPos = Vec2i(mouseEvent->pos().x(), mouseEvent->pos().y());
         m_Pressed = true;
 
-        emit onSelectionStarted(AABB2Di(m_PressPos, Vector2i::ONE));
+        emit onSelectionStarted(AABB2Di(m_PressPos, One<Vec2i>()));
 
         return true;
       }
@@ -37,14 +37,14 @@ namespace eXl
       bool wasPressed = m_Pressed;
       if (m_Pressed)
       {
-        Vector2i endPos(mouseEvent->pos().x(), mouseEvent->pos().y());
+        Vec2i endPos(mouseEvent->pos().x(), mouseEvent->pos().y());
 
-        m_Selection.m_Data[0].X() = Mathi::Min(m_PressPos.X(), endPos.X());
-        m_Selection.m_Data[0].Y() = Mathi::Min(m_PressPos.Y(), endPos.Y());
-        m_Selection.m_Data[1].X() = Mathi::Max(m_PressPos.X(), endPos.X());
-        m_Selection.m_Data[1].Y() = Mathi::Max(m_PressPos.Y(), endPos.Y());
-        m_Selection.m_Data[1].X() = Mathi::Max(m_Selection.m_Data[0].X() + 1, m_Selection.m_Data[1].X());
-        m_Selection.m_Data[1].Y() = Mathi::Max(m_Selection.m_Data[0].Y() + 1, m_Selection.m_Data[1].Y());
+        m_Selection.m_Data[0].x = Mathi::Min(m_PressPos.x, endPos.x);
+        m_Selection.m_Data[0].y = Mathi::Min(m_PressPos.y, endPos.y);
+        m_Selection.m_Data[1].x = Mathi::Max(m_PressPos.x, endPos.x);
+        m_Selection.m_Data[1].y = Mathi::Max(m_PressPos.y, endPos.y);
+        m_Selection.m_Data[1].x = Mathi::Max(m_Selection.m_Data[0].x + 1, m_Selection.m_Data[1].x);
+        m_Selection.m_Data[1].y = Mathi::Max(m_Selection.m_Data[0].y + 1, m_Selection.m_Data[1].y);
 
         m_Pressed = !leftReleased;
       }
@@ -88,8 +88,8 @@ namespace eXl
 
     for (auto const& box : m_Boxes)
     {
-      Vector2i size = box.GetSize();
-      iPainter.drawRect(box.m_Data[0].X(), box.m_Data[0].Y(), size.X(), size.Y());
+      Vec2i size = box.GetSize();
+      iPainter.drawRect(box.m_Data[0].x, box.m_Data[0].y, size.x, size.y);
     }
     //iPainter.setCompositionMode(oldCompositionMode);
   }

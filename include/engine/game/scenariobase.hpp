@@ -64,8 +64,8 @@ namespace eXl
 
     ObjectHandle m_MainChar;
 
-    ObjectHandle SpawnCharacter(World& iWorld, Vector3f const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo = ObjectCreationInfo());
-    Vector2f m_SpawnPos;
+    ObjectHandle SpawnCharacter(World& iWorld, Vec3 const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo = ObjectCreationInfo());
+    Vec2 m_SpawnPos;
 
     UniquePtr<CharacterAnimation> m_DefaultAnim;
 

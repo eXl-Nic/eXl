@@ -54,18 +54,15 @@ namespace eXl
     void AddTrigger(ObjectHandle iObj, TriggerDef const& iDef, TriggerCallbackHandle iCallback, ContactFilterCallback iFilter = ContactFilterCallback());
     void DeleteComponent(ObjectHandle iObj);
 
-    inline void UpdateTransform(ObjectHandle iObj, Matrix4f const& iTrans)
+    inline void UpdateTransform(ObjectHandle iObj, Mat4 const& iTrans)
     {
       auto iter = m_ObjectToGhost.find(iObj);
       if (iter != m_ObjectToGhost.end())
       {
-        Vector3f const& pos = MathTools::GetPosition(iTrans);
+        Vec3 const& pos = iTrans[3];
         btTransform newTransform;
-        newTransform.getBasis().setValue(
-          iTrans.m_Data[0], iTrans.m_Data[1], iTrans.m_Data[2],
-          iTrans.m_Data[4], iTrans.m_Data[5], iTrans.m_Data[6],
-          iTrans.m_Data[8], iTrans.m_Data[9], iTrans.m_Data[10]);
-        newTransform.setOrigin(btVector3(pos.X(), pos.Y(), pos.Z()));
+        newTransform.getBasis().setFromOpenGLSubMatrix(value_ptr(iTrans));
+        newTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
         iter->second->setWorldTransform(newTransform);
       }
     }

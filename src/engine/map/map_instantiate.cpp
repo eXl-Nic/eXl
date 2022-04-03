@@ -22,7 +22,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  MapResource::InstanceData MapResource::Instantiate(World& iWorld, Matrix4f const& iPos) const
+  MapResource::InstanceData MapResource::Instantiate(World& iWorld, Mat4 const& iPos) const
   {
     InstanceData allObjects;
 
@@ -40,7 +40,7 @@ namespace eXl
 
     for (auto const& terrainItem : m_Terrains)
     {
-      Vector2i tilingSize = Vector2i::ONE * EngineCommon::s_WorldToPixel;
+      Vec2i tilingSize = One<Vec2i>() * EngineCommon::s_WorldToPixel;
       TilingGroup const* group = terrainItem.m_TilingGroup.GetOrLoad();
       if (group != nullptr)
       {
@@ -84,13 +84,13 @@ namespace eXl
         LOG_ERROR << "Could not load tilegorup " << terrainItem.m_TilingGroup.GetUUID().ToString();
       }
 
-      Vector2f worldScaling(tilingSize.X() / EngineCommon::s_WorldToPixel, tilingSize.Y() / EngineCommon::s_WorldToPixel);
+      Vec2 worldScaling(tilingSize.x / EngineCommon::s_WorldToPixel, tilingSize.y / EngineCommon::s_WorldToPixel);
       auto insertRes = components.insert(std::make_pair(terrainItem.m_Type, Vector<AABB2DPolygoni>()));
       auto& blocks = insertRes.first->second;
       for (auto const& terrainBlock : terrainItem.m_Blocks)
       {
         blocks.push_back(terrainBlock.m_Shape);
-        blocks.back().ScaleComponents(tilingSize.X(), tilingSize.Y(), 1, 1);
+        blocks.back().ScaleComponents(tilingSize.x, tilingSize.y, 1, 1);
       }
         //auto insertRes = physicLayer.insert(std::make_pair(terrainItem.m_Type, PhysicInitData()));
         //PhysicInitData& phData = insertRes.first->second;
@@ -106,12 +106,12 @@ namespace eXl
         //
         //  for (unsigned int j = 0; j < blockBoxes.size(); ++j)
         //  {
-        //    Vector2i origi(blockBoxes[j].m_Data[0] + blockBoxes[j].m_Data[1]);
-        //    Vector2i sizei(blockBoxes[j].m_Data[1] - blockBoxes[j].m_Data[0]);
-        //    Vector3f orig((float)origi.X() * 0.5f * worldScaling.X()
-        //      , (float)origi.Y() * 0.5f * worldScaling.Y()
+        //    Vec2i origi(blockBoxes[j].m_Data[0] + blockBoxes[j].m_Data[1]);
+        //    Vec2i sizei(blockBoxes[j].m_Data[1] - blockBoxes[j].m_Data[0]);
+        //    Vec3 orig((float)origi.x() * 0.5f * worldScaling.x()
+        //      , (float)origi.y() * 0.5f * worldScaling.y()
         //      , terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
-        //    Vector3f size(sizei.X() * worldScaling.X(), sizei.Y() * worldScaling.Y(), terrainDesc.m_Height);
+        //    Vec3 size(sizei.x() * worldScaling.x(), sizei.y() * worldScaling.y(), terrainDesc.m_Height);
         //    phData.AddBox(size, orig + MathTools::GetPosition(iPos));
         //  }
         //}
@@ -120,8 +120,8 @@ namespace eXl
 
     if (!fullSize.Empty())
     {
-      fullSize.m_Data[0] -= Vector2i::ONE;
-      fullSize.m_Data[1] += Vector2i::ONE;
+      fullSize.m_Data[0] -= One<Vec2i>();
+      fullSize.m_Data[1] += One<Vec2i>();
       if (gfx != nullptr)
       {
         for (uint32_t layerIdx = 0; layerIdx < blocksByLayer.size(); ++layerIdx)
@@ -150,8 +150,8 @@ namespace eXl
           Tile const* tileDesc = tileset->Find(tile.m_Name);
           if (tileDesc != nullptr)
           {
-            Vector2f tilePos = MathTools::ToFVec(tile.m_Position) / EngineCommon::s_WorldToPixel;
-            Vector2f phSize = MathTools::ToFVec(tileDesc->m_Size) / EngineCommon::s_WorldToPixel;
+            Vec2 tilePos = MathTools::ToFVec(tile.m_Position) / EngineCommon::s_WorldToPixel;
+            Vec2 phSize = MathTools::ToFVec(tileDesc->m_Size) / EngineCommon::s_WorldToPixel;
 
             auto insertRes = components.insert(std::make_pair(tiles.m_Type, Vector<AABB2DPolygoni>()));
             auto& blocks = insertRes.first->second;
@@ -168,10 +168,10 @@ namespace eXl
                 texGroup.m_Name = tileDesc->m_ImageName;
                 texGroup.m_Tileset = tileset;
 
-                Vector2i imgSize = tileset->GetImageSize(tileDesc->m_ImageName);
-                Vector2i tileOffset = tileDesc->m_Frames.size() > 0 ? tileDesc->m_Frames[0] : Vector2i::ZERO;
-                Vector2f scale(float(tileDesc->m_Size.X()) / imgSize.X(), float(tileDesc->m_Size.Y()) / imgSize.Y());
-                Vector2f offset(float(tileOffset.X()) / imgSize.X(), float(tileOffset.Y()) / imgSize.Y());
+                Vec2i imgSize = tileset->GetImageSize(tileDesc->m_ImageName);
+                Vec2i tileOffset = tileDesc->m_Frames.size() > 0 ? tileDesc->m_Frames[0] : Zero<Vec2i>();
+                Vec2 scale(float(tileDesc->m_Size.x) / imgSize.x, float(tileDesc->m_Size.y) / imgSize.y);
+                Vec2 offset(float(tileOffset.x) / imgSize.x, float(tileOffset.y) / imgSize.y);
 
                 texGroup.m_VtxOffset = offset;
                 texGroup.m_VtxScaling = scale;
@@ -195,8 +195,8 @@ namespace eXl
                 };
                 for (auto const& vtx : vtxData)
                 {
-                  curGroup.push_back(phSize.X() * vtx[0] + tilePos.X());
-                  curGroup.push_back(phSize.Y() * vtx[1] + tilePos.Y());
+                  curGroup.push_back(phSize.x * vtx[0] + tilePos.x);
+                  curGroup.push_back(phSize.y * vtx[1] + tilePos.y);
                   curGroup.push_back(vtx[2] + terrainDesc.m_Altitude);
                   curGroup.push_back(vtx[3]);
                   curGroup.push_back(vtx[4]);
@@ -206,7 +206,7 @@ namespace eXl
               {
                 ObjectHandle animatedSprite = iWorld.CreateObject();
                 allObjects.tiles.push_back(animatedSprite);
-                trans->AddTransform(animatedSprite, iPos* Matrix4f::FromPosition(MathTools::To3DVec(tilePos)));
+                trans->AddTransform(animatedSprite, translate(iPos, Vec3(tilePos, 0)));
                 GfxSpriteComponent& spriteComp = gfx->CreateSpriteComponent(animatedSprite);
                 spriteComp.SetFlat(true);
                 spriteComp.SetTileset(tileset);
@@ -238,7 +238,7 @@ namespace eXl
       allObjects.objects.push_back(newObject);
       if (trans != nullptr)
       {
-        trans->AddTransform(newObject, iPos * Matrix4f::FromPosition(object.m_Header.m_Position));
+        trans->AddTransform(newObject, translate(iPos, object.m_Header.m_Position));
       }
     }
 
@@ -262,16 +262,16 @@ namespace eXl
       {
         for (auto const& shape : shapeDesc->m_Shapes)
         {
-          Vector2i offset(shape.m_Offset.X() * EngineCommon::s_WorldToPixel, shape.m_Offset.Y() * EngineCommon::s_WorldToPixel);
+          Vec2i offset(shape.m_Offset.x * EngineCommon::s_WorldToPixel, shape.m_Offset.y * EngineCommon::s_WorldToPixel);
           offset += MathTools::ToIVec(MathTools::As2DVec(objectDesc.m_Header.m_Position) * EngineCommon::s_WorldToPixel);
-          Vector2i size;
+          Vec2i size;
           switch (shape.m_Type)
           {
           case EngineCommon::PhysicsShapeType::Box:
-            size = Vector2i(shape.m_Dims.X(), shape.m_Dims.Y()) * EngineCommon::s_WorldToPixel;
+            size = Vec2i(shape.m_Dims.x, shape.m_Dims.y) * EngineCommon::s_WorldToPixel;
             break;
           case EngineCommon::PhysicsShapeType::Sphere:
-            size = Vector2i(shape.m_Dims.X(), shape.m_Dims.X()) * EngineCommon::s_WorldToPixel;
+            size = Vec2i(shape.m_Dims.x, shape.m_Dims.x) * EngineCommon::s_WorldToPixel;
             break;
           }
           AABB2Di pixelBox(offset - size / 2, size);
@@ -356,13 +356,12 @@ namespace eXl
               PhysicInitData phData;
               phData.SetCategory(terrainDesc.m_PhysicCategory, terrainDesc.m_PhysicFilter);
               phData.SetFlags(EngineCommon::s_BasePhFlags | PhysicFlags::Static);
-              Vector2f phSize = MathTools::ToFVec(box.GetSize()) / EngineCommon::s_WorldToPixel;
-              phData.AddBox(MathTools::To3DVec(phSize, terrainDesc.m_Height));
+              Vec2 phSize = MathTools::ToFVec(box.GetSize()) / EngineCommon::s_WorldToPixel;
+              phData.AddBox(Vec3(phSize, terrainDesc.m_Height));
               
-              Vector2f tilePos = MathTools::ToFVec(box.GetCenter()) / EngineCommon::s_WorldToPixel;
-              Vector3f orig = MathTools::To3DVec(tilePos, terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
-              Matrix4f boxPos = iPos;
-              MathTools::GetPosition(boxPos) += orig;
+              Vec2 tilePos = MathTools::ToFVec(box.GetCenter()) / EngineCommon::s_WorldToPixel;
+              Vec3 orig = Vec3(tilePos, terrainDesc.m_Altitude + terrainDesc.m_Height * 0.5f);
+              Mat4 boxPos = translate(iPos, orig);
               trans->AddTransform(terrainPhysics, boxPos);
               physics->CreateComponent(terrainPhysics, phData);
             }
@@ -395,19 +394,19 @@ namespace eXl
           EngineCommon::ObjectShapeData const* shapes = shapeView->Get(obj);
           if (phData->m_Type == EngineCommon::PhysicsType::Static && shapes)
           {
-            Matrix4f const& pos = trans->GetWorldTransform(obj);
+            Mat4 const& pos = trans->GetWorldTransform(obj);
 
             for (auto const& geom : shapes->m_Shapes)
             {
-              Vector2i pixelMin = MathTools::ToIVec(MathTools::As2DVec((MathTools::GetPosition(pos) + geom.m_Offset) * EngineCommon::s_WorldToPixel));
-              Vector2i shapeSize;
+              Vec2i pixelMin = Vec2i((Vec3(pos[3]) + geom.m_Offset) * EngineCommon::s_WorldToPixel);
+              Vec2i shapeSize;
               switch (geom.m_Type)
               {
               case EngineCommon::PhysicsShapeType::Sphere:
-                shapeSize = Vector2i(geom.m_Dims.X(), geom.m_Dims.X()) * EngineCommon::s_WorldToPixel;
+                shapeSize = Vec2i(geom.m_Dims.x, geom.m_Dims.x) * EngineCommon::s_WorldToPixel;
                 break;
               case EngineCommon::PhysicsShapeType::Box:
-                shapeSize = Vector2i(geom.m_Dims.X(), geom.m_Dims.Y()) * EngineCommon::s_WorldToPixel;
+                shapeSize = Vec2i(geom.m_Dims.x, geom.m_Dims.y) * EngineCommon::s_WorldToPixel;
                 break;
               }
 

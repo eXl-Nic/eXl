@@ -68,7 +68,7 @@ namespace eXl
           .AddField("FrameDuration", &Tile::m_FrameDuration)
           .AddField("Size", &Tile::m_Size)
           .AddField("AnimationType", &Tile::m_AnimType)
-          .AddCustomField("Frames", &Tile::m_Frames, TypeManager::GetArrayType<Vector2i>())
+          .AddCustomField("Frames", &Tile::m_Frames, TypeManager::GetArrayType<Vec2i>())
           .AddField("Offset", &Tile::m_Offset)
           .AddField("Scale", &Tile::m_Scale)
           .EndRegistration();
@@ -289,14 +289,14 @@ namespace eXl
     return iter->second.get();
   }
 
-  Vector2i Tileset::GetImageSize(ImageName iImage) const
+  Vec2i Tileset::GetImageSize(ImageName iImage) const
   {
     if(Image const* image = GetImage(iImage))
     {
-      return Vector2i(image->GetSize().X(), image->GetSize().Y());
+      return image->GetSize();
     }
 
-    return Vector2i::ZERO;
+    return Zero<Vec2i>();
   }
 
 
@@ -317,7 +317,7 @@ namespace eXl
       //img = &dummy;
 			if (OGLTexture* newTex = OGLTextureLoader::CreateFromImage(img, true))
 			{
-        LOG_INFO << "Created texture for image " << img << " of size (" << img->GetSize().X() << ", " << img->GetSize().Y() << ")\n";
+        LOG_INFO << "Created texture for image " << img << " of size (" << img->GetSize().x << ", " << img->GetSize().y << ")\n";
 				iter = const_cast<Tileset*>(this)->m_Textures.insert(std::make_pair(iImage, newTex)).first;
 			}
 			else
@@ -425,7 +425,7 @@ namespace eXl
         iStreamer.BeginStruct();
 
         iStreamer.PushKey("Size");
-        Vector2i size;
+        Vec2i size;
         iStreamer.Read(&size);
         iStreamer.PopKey();
 
@@ -471,7 +471,7 @@ namespace eXl
 
         } while (dataIter != endIter);
 
-        Image::Size imageSize(size.X(), size.Y());
+        Image::Size imageSize(size.x(), size.y());
         std::unique_ptr<Image> imagePtr;
         {
           imagePtr = std::make_unique<Image>(imageData.data(), imageSize, (Image::Components)components, (Image::Format)format, 4);
@@ -480,7 +480,7 @@ namespace eXl
         //std::unique_ptr<Image> imagePtr(ImageStreamer::Load((uint8_t*)imageData.data(), imageData.size()));
         //Image::Size imageSize = imagePtr ? imagePtr->GetSize() : Image::Size(0, 0);
 
-        //if (imageSize.X() == 0 || imageSize.Y() == 0)
+        //if (imageSize.x() == 0 || imageSize.y() == 0)
         //{
         //  LOG_ERROR << "Image " << tempStr << " zero size!!";
         //}
@@ -497,7 +497,7 @@ namespace eXl
         std::unique_ptr<Image> imagePtr(ImageStreamer::Load((uint8_t*)imageData.data(), imageData.size()));
         Image::Size imageSize = imagePtr ? imagePtr->GetSize() : Image::Size(0, 0);
 
-        if (imageSize.X() == 0 || imageSize.Y() == 0)
+        if (imageSize.x == 0 || imageSize.y == 0)
         {
           LOG_ERROR << "Image " << tempStr << " zero size!!";
         }
@@ -527,7 +527,7 @@ namespace eXl
         Image const* image = GetImage(iEntry.first);
 
         iStreamer.PushKey("Size");
-        Vector2i size(image->GetSize().X(), image->GetSize().Y());
+        Vec2i size(image->GetSize().x(), image->GetSize().y());
         iStreamer.Write(&size);
         iStreamer.PopKey();
 
@@ -556,11 +556,11 @@ namespace eXl
         size_t const encodeBufferSize = 256;
         char encodeBuffer[encodeBufferSize];
 
-        for (int i = 0; i < size.Y(); ++i)
+        for (int i = 0; i < size.y(); ++i)
         {
           char const* pixelRow = pixelsData + i * image->GetRowStride();
 
-          size_t rowSizeInBytes = size.X() * image->GetPixelSize();
+          size_t rowSizeInBytes = size.x() * image->GetPixelSize();
           uint32_t numWrites = rowSizeInBytes / inputBufferSize;
           numWrites += rowSizeInBytes % inputBufferSize == 0 ? 0 : 1;
           for(uint32_t block = 0; block < numWrites; ++block)

@@ -76,9 +76,9 @@ namespace eXl
 
     ImGuiLogState()
     {
-      m_Color[0] = Vector3f::ONE;
-      m_Color[1] = Vector3f(0.7, 0.7, 0.0);
-      m_Color[2] = Vector3f(0.7, 0.0, 0.0);
+      m_Color[0] = One<Vec3>();
+      m_Color[1] = Vec3(0.7, 0.7, 0.0);
+      m_Color[2] = Vec3(0.7, 0.0, 0.0);
     }
 
     void write(const char* tolog, unsigned int num)
@@ -104,14 +104,14 @@ namespace eXl
       for(uint32_t i = 0; i< m_End; ++i)
       {
         uint32_t curEntry = (m_Begin + i) % m_End;
-        Vector3f const& color = m_Color[m_LogLevel[curEntry]];
-        ImGui::TextColored(ImVec4(color.X(), color.Y(), color.Z(), 1.0), "%s", m_Entries[curEntry].c_str());
+        Vec3 const& color = m_Color[m_LogLevel[curEntry]];
+        ImGui::TextColored(ImVec4(color.x, color.y, color.z, 1.0), "%s", m_Entries[curEntry].c_str());
       }
     }
 
     String m_Entries[s_numEntries];
     uint32_t m_LogLevel[s_numEntries];
-    Vector3f m_Color[3];
+    Vec3 m_Color[3];
     uint32_t m_Begin = 0;
     uint32_t m_End = 0;
 

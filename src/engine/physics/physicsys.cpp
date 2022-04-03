@@ -69,30 +69,30 @@ namespace eXl
 
     virtual void	drawLine(const btVector3& from,const btVector3& to,const btVector3& color)
     {
-      Vector4f compColor(color.x(), color.y(), color.z(), 1.0);
+      Vec4 compColor(color.x(), color.y(), color.z(), 1.0);
       m_Drawer->DrawLine(FROM_BTVECT(from), FROM_BTVECT(to), compColor);
     }
 
     virtual void	drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
     {
-      Vector4f compColor(color.x(), color.y(), color.z(), 1.0);
-      m_Drawer->DrawLine(FROM_BTVECT(PointOnB) + Vector3f(-1.0, -1.0 , 0.0), FROM_BTVECT(PointOnB) + Vector3f(1.0,  1.0 , 0.0), compColor, true);
-      m_Drawer->DrawLine(FROM_BTVECT(PointOnB) + Vector3f(-1.0,  1.0 , 0.0), FROM_BTVECT(PointOnB) + Vector3f(1.0, -1.0 , 0.0), compColor, true);
+      Vec4 compColor(color.x(), color.y(), color.z(), 1.0);
+      m_Drawer->DrawLine(FROM_BTVECT(PointOnB) + Vec3(-1.0, -1.0 , 0.0), FROM_BTVECT(PointOnB) + Vec3(1.0,  1.0 , 0.0), compColor, true);
+      m_Drawer->DrawLine(FROM_BTVECT(PointOnB) + Vec3(-1.0,  1.0 , 0.0), FROM_BTVECT(PointOnB) + Vec3(1.0, -1.0 , 0.0), compColor, true);
     }
 
     virtual void	drawBox (const btVector3& boxMin, const btVector3& boxMax, const btVector3& color, btScalar alpha)
     {
-      Vector4f compColor(color.x(), color.y(), color.z(), alpha);
+      Vec4 compColor(color.x(), color.y(), color.z(), alpha);
 
-      Vector3f boxPts[8] = {
-        Vector3f(boxMin.x(), boxMin.y(), boxMin.z()),
-        Vector3f(boxMin.x(), boxMin.y(), boxMax.z()),
-        Vector3f(boxMin.x(), boxMax.y(), boxMin.z()),
-        Vector3f(boxMin.x(), boxMax.y(), boxMax.z()),
-        Vector3f(boxMax.x(), boxMin.y(), boxMin.z()),
-        Vector3f(boxMax.x(), boxMin.y(), boxMax.z()),
-        Vector3f(boxMax.x(), boxMax.y(), boxMin.z()),
-        Vector3f(boxMax.x(), boxMax.y(), boxMax.z()),
+      Vec3 boxPts[8] = {
+        Vec3(boxMin.x(), boxMin.y(), boxMin.z()),
+        Vec3(boxMin.x(), boxMin.y(), boxMax.z()),
+        Vec3(boxMin.x(), boxMax.y(), boxMin.z()),
+        Vec3(boxMin.x(), boxMax.y(), boxMax.z()),
+        Vec3(boxMax.x(), boxMin.y(), boxMin.z()),
+        Vec3(boxMax.x(), boxMin.y(), boxMax.z()),
+        Vec3(boxMax.x(), boxMax.y(), boxMin.z()),
+        Vec3(boxMax.x(), boxMax.y(), boxMax.z()),
       };
 
       unsigned int lines[12][2] =
@@ -244,9 +244,10 @@ namespace eXl
       }
       else if(iEnabled && !compImpl->IsEnabled())
       {
-        Matrix4f const& trans = m_Transforms.GetWorldTransform(iObj);
+        Mat4 const& trans = m_Transforms.GetWorldTransform(iObj);
         btTransform btTrans;
-        btTrans.setFromOpenGLMatrix(trans.m_Data);
+        btTrans.setOrigin(TO_BTVECT(trans[3]));
+        btTrans.getBasis().setFromOpenGLSubMatrix(value_ptr(transpose(trans)));
         compImpl->m_Object->setWorldTransform(btTrans);
         compImpl->m_Object->setInterpolationWorldTransform(btTrans);
 
@@ -297,7 +298,7 @@ namespace eXl
     return Err::Failure;
   }
 
-  void PhysicsSystem::RayQuery(List<CollisionData>& oRes, const Vector3f& iOrig,const Vector3f& iEnd,unsigned int maxEnt,unsigned short category,unsigned short mask)
+  void PhysicsSystem::RayQuery(List<CollisionData>& oRes, const Vec3& iOrig,const Vec3& iEnd,unsigned int maxEnt,unsigned short category,unsigned short mask)
   {
     GeomDef temp;
     temp.position=iOrig;
@@ -307,28 +308,28 @@ namespace eXl
     m_Impl->HandleColQuery(temp, maxEnt, completeCat, oRes);
   }
 
-  void PhysicsSystem::SphereQuery(List<CollisionData>& oRes, float iRadius,const Vector3f& iOrig,unsigned int maxEnt,unsigned short category,unsigned short mask)
+  void PhysicsSystem::SphereQuery(List<CollisionData>& oRes, float iRadius,const Vec3& iOrig,unsigned int maxEnt,unsigned short category,unsigned short mask)
   {
     GeomDef temp;
     temp.position=iOrig;
     temp.shape = GeomDef::Sphere;
-    temp.geomData = Vector3f(iRadius,0,0);
+    temp.geomData = Vec3(iRadius,0,0);
     unsigned int completeCat = (unsigned int)category | (((unsigned int)mask)<<16);
     m_Impl->HandleColQuery(temp, maxEnt, completeCat, oRes);
   }
 
-  void PhysicsSystem::CylinderQuery(List<CollisionData>& oRes, float iRay,float iH,const Vector3f& iPos,const Quaternionf& iOrient,unsigned int maxEnt,unsigned short category,unsigned short mask)
+  void PhysicsSystem::CylinderQuery(List<CollisionData>& oRes, float iRay,float iH,const Vec3& iPos,const Quaternion& iOrient,unsigned int maxEnt,unsigned short category,unsigned short mask)
   {
     GeomDef temp;
     temp.position=iPos;
     temp.orient=iOrient;
     temp.shape = GeomDef::Cylinder;
-    temp.geomData = Vector3f(iRay,iH,0);
+    temp.geomData = Vec3(iRay,iH,0);
     unsigned int completeCat = (unsigned int)category | (((unsigned int)mask)<<16);
     m_Impl->HandleColQuery(temp, maxEnt, completeCat, oRes);
   }
 
-  void PhysicsSystem::BoxQuery(List<CollisionData>& oRes, const Vector3f& iDim,const Vector3f& iPos,const Quaternionf& iOrient,unsigned int maxEnt,unsigned short category,unsigned short mask)
+  void PhysicsSystem::BoxQuery(List<CollisionData>& oRes, const Vec3& iDim,const Vec3& iPos,const Quaternion& iOrient,unsigned int maxEnt,unsigned short category,unsigned short mask)
   {
     GeomDef temp;
     temp.position=iPos;
@@ -341,7 +342,7 @@ namespace eXl
 
   void PhysicsSystem::SyncTriggersTransforms()
   {
-    m_Transforms.IterateOverDirtyTransforms([this](Matrix4f const& iTrans, ObjectHandle iObj)
+    m_Transforms.IterateOverDirtyTransforms([this](Mat4 const& iTrans, ObjectHandle iObj)
     {
       m_Impl->m_Triggers.UpdateTransform(iObj, iTrans);
     });
@@ -353,14 +354,14 @@ namespace eXl
     m_MovedObject.clear();
 
     // Should be handled as kinematic objects.
-    //m_Transforms.IterateOverDirtyTransforms([this](Matrix4f const& iTrans, ObjectHandle iObj)
+    //m_Transforms.IterateOverDirtyTransforms([this](Mat4 const& iTrans, ObjectHandle iObj)
     //{
     //  if (m_Components.size() > iObj.GetId() && m_Components[iObj.GetId()] != nullptr)
     //  {
     //    PhysicComponent_Impl* obj = m_Components[iObj.GetId()].get();
     //    if (obj->GetFlags() & PhysicFlags::IsGhost)
     //    {
-    //      Vector3f const& pos = MathTools::GetPosition(iTrans);
+    //      Vec3 const& pos = MathTools::GetPosition(iTrans);
     //      obj->m_Object->getWorldTransform().getBasis().setValue(
     //        iTrans.m_Data[0], iTrans.m_Data[1], iTrans.m_Data[2],
     //        iTrans.m_Data[4], iTrans.m_Data[5], iTrans.m_Data[6],
@@ -390,10 +391,10 @@ namespace eXl
       auto iter = neighExt.GetObjects().find(m_MovedObject[i]);
       if(iter != neighExt.GetObjects().end())
       {
-        Matrix4f const& trans = m_MovedTransform[i];
+        Mat4 const& trans = m_MovedTransform[i];
         //auto& pos = neighExt.m_Pos[iter->second];
-        btVector3 pos(trans.m_Data[12], trans.m_Data[13], trans.m_Data[14]);
-        neighExt.m_Trans[iter->second].setFromOpenGLMatrix(trans.m_Data);
+        btVector3 pos = TO_BTVECT(trans[3]);
+        neighExt.m_Trans[iter->second].getBasis().setFromOpenGLSubMatrix(value_ptr(transpose(trans)));
 
         neighExt.m_Volumes[iter->second] = btDbvtVolume::FromCE(pos, neighExt.m_Volumes[iter->second].Extents());
       }
@@ -439,9 +440,9 @@ namespace eXl
           if (pt.getDistance()<0.f)
           {
             const btVector3& ptA = pt.getPositionWorldOnA();
-            colData.contactPosOn1+=Vector3f(ptA.x(),ptA.y(),ptA.z());
+            colData.contactPosOn1+=Vec3(ptA.x(),ptA.y(),ptA.z());
             const btVector3& normalOnB = pt.m_normalWorldOnB;
-            colData.normal1To2+=Vector3f(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
+            colData.normal1To2+=Vec3(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
             colData.depth-=pt.getDistance();
 
             //Là problème, besoin de dispatcher spécifiques.
@@ -467,8 +468,8 @@ namespace eXl
             if(recordCollision1 && bcA->GetFlags() & PhysicFlags::FullContactNotify)
             {
               CollisionData nColData(colData);
-              nColData.contactPosOn1=Vector3f(ptA.x(),ptA.y(),ptA.z());
-              nColData.normal1To2=Vector3f(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
+              nColData.contactPosOn1=Vec3(ptA.x(),ptA.y(),ptA.z());
+              nColData.normal1To2=Vec3(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
               nColData.depth=-pt.getDistance();
 
               m_LastCollisions.push_back(nColData);
@@ -478,10 +479,10 @@ namespace eXl
               CollisionData nColData(colData);
               nColData.obj1=bcB->m_ObjectId;
               nColData.obj2=bcA->m_ObjectId;
-              nColData.contactPosOn1=Vector3f(ptA.x()-normalOnB.x()*colData.depth,
+              nColData.contactPosOn1=Vec3(ptA.x()-normalOnB.x()*colData.depth,
                 ptA.y()-normalOnB.y()*colData.depth,
                 ptA.z()-normalOnB.z()*colData.depth);
-              nColData.normal1To2=Vector3f(normalOnB.x(),normalOnB.y(),normalOnB.z());
+              nColData.normal1To2=Vec3(normalOnB.x(),normalOnB.y(),normalOnB.z());
               nColData.depth=-pt.getDistance();
 
               m_LastCollisions.push_back(nColData);

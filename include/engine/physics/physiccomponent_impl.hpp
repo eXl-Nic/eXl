@@ -77,7 +77,7 @@ namespace eXl
 
     void setWorldTransform(const btTransform &worldTrans) override;
 
-    bool SweepTest(Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask);
+    bool SweepTest(Vec3 const& iFrom, Vec3 const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask);
 
     void OnNullRefC() const;
 

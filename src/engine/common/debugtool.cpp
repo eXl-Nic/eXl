@@ -19,11 +19,11 @@ namespace eXl
       class DummyDrawer : public Drawer
       {
       public:
-        void DrawLine(const Vector3f& iFrom, const Vector3f& iTo, const Vector4f& iColor, bool iScreenSpace = false)override
+        void DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace = false)override
         {}
-        void DrawBox(AABB2Df const& iBox, const Vector4f& iColor, bool iScreenSpace = false) override
+        void DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace = false) override
         {}
-        void DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace = false) override
+        void DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace = false) override
         {}
       };
 

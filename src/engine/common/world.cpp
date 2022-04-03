@@ -352,7 +352,7 @@ namespace eXl
     
     if (m_PhSystem)
     {
-      m_PhSystem->GetNeighborhoodExtraction().Run(Vector3f(0.0, 0.0, 0.0), 10.0);
+      m_PhSystem->GetNeighborhoodExtraction().Run(Vec3(0.0, 0.0, 0.0), 10.0);
     }
 
     ioProfiling.m_NeighETime = profiler.GetTime();

@@ -23,7 +23,7 @@ namespace eXl
     friend SwordAbility;
 
   public:
-    Vector2f m_SwingDirection;
+    Vec2 m_SwingDirection;
     
   private:
     ObjectHandle m_SwordActor;
@@ -40,7 +40,7 @@ namespace eXl
 
     SwordAbility();
 
-    static void SetSwingDirection(AbilitySystem* iSys, ObjectHandle iObj, Vector2f const& iDir);
+    static void SetSwingDirection(AbilitySystem* iSys, ObjectHandle iObj, Vec2 const& iDir);
 
     AbilityUseState GetUseState(AbilityStateHandle iId) override;
     AbilityUseState Use(AbilityStateHandle iId, ObjectHandle) override;

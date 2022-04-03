@@ -38,7 +38,7 @@ namespace eXl
       Vector<Graph::vertex_descriptor> m_Edges;
       Vector<Segmentf> m_Walls;
 
-      Vector2f GetTreadmillDir(Vector2f const& iPos) const;
+      Vec2 GetTreadmillDir(Vec2 const& iPos) const;
 
       // Left, Bottom, Right, Top
       bool m_HasSide[4];
@@ -89,17 +89,17 @@ namespace eXl
       uint32_t m_Face;
     };
 
-    Optional<FoundFace> FindFace(Vector2f const& iPos) const;
+    Optional<FoundFace> FindFace(Vec2 const& iPos) const;
 
     struct Path
     {
       uint32_t m_Component;
       // Stack, first destination is at the back.
       Vector<Graph::vertex_descriptor> m_Edges;
-      Vector<Vector2f> m_EdgeDirs;
+      Vector<Vec2> m_EdgeDirs;
     };
 
-    Optional<Path> FindPath(Vector2f const& iStart, Vector2f const& iEnd) const;
+    Optional<Path> FindPath(Vec2 const& iStart, Vec2 const& iEnd) const;
 
   protected:
 

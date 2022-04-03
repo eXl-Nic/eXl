@@ -321,22 +321,22 @@ namespace eXl
 
     float const viewAngle = 0.0 * Mathf::Pi();
 
-    view.basis[0] = UnitX<Vector3f>();
-    view.basis[1] = UnitY<Vector3f>() * Mathf::Cos(viewAngle) + UnitZ<Vector3f>() * Mathf::Sin(viewAngle);
-    view.basis[2] = UnitY<Vector3f>() * -Mathf::Sin(viewAngle) + UnitZ<Vector3f>() * Mathf::Cos(viewAngle);
+    view.basis[0] = UnitX<Vec3>();
+    view.basis[1] = UnitY<Vec3>() * Mathf::Cos(viewAngle) + UnitZ<Vec3>() * Mathf::Sin(viewAngle);
+    view.basis[2] = UnitY<Vec3>() * -Mathf::Sin(viewAngle) + UnitZ<Vec3>() * Mathf::Cos(viewAngle);
 
     view.pos = view.basis[2] * 100;
 
     cameraObj = iWorld.CreateObject();
 
-    transforms.AddTransform(cameraObj, Matrix4f::FromPosition(view.pos));
+    transforms.AddTransform(cameraObj, translate(Identity<Mat4>(), view.pos));
 
     {
       PhysicInitData desc;
       desc.SetFlags(PhysicFlags::NoGravity | PhysicFlags::LockZ | PhysicFlags::Kinematic | PhysicFlags::IsGhost);
       desc.AddSphere(4.0 * 0.25);
-      //Matrix4f mainTrans = transforms.GetLocalTransform(cameraObj);
-      //MathTools::GetPosition2D(mainTrans) = /*roomCenter - UnitY<Vector2f>() * 0.25*/ Vector2f::ZERO;
+      //Mat4 mainTrans = transforms.GetLocalTransform(cameraObj);
+      //MathTools::GetPosition2D(mainTrans) = /*roomCenter - UnitY<Vec2>() * 0.25*/ Zero<Vec2>();
       //transforms.UpdateTransform(cameraObj, mainTrans);
       //
       phSys.CreateComponent(cameraObj, desc);
@@ -434,19 +434,19 @@ namespace eXl
 
       if (iControlScheme & RightClickPan)
       {
-        Vector2i curMousePos(evt.absX, evt.absY);
+        Vec2i curMousePos(evt.absX, evt.absY);
         if (rightClickMoving)
         {
           Transforms& trans = *iWorld.GetSystem<Transforms>();
           GfxSystem& gfx = *iWorld.GetSystem<GfxSystem>();
-          Vector3f prevWorldPos;
-          Vector3f curWorldPos;
-          Vector3f view;
+          Vec3 prevWorldPos;
+          Vec3 curWorldPos;
+          Vec3 view;
           gfx.ScreenToWorld(lastMousePos, prevWorldPos, view);
           gfx.ScreenToWorld(curMousePos, curWorldPos, view);
-          Vector3f moveVector = curWorldPos - prevWorldPos;
-          Matrix4f cameraTrans = trans.GetLocalTransform(cameraObj);
-          MathTools::GetPosition(cameraTrans) -= moveVector;
+          Vec3 moveVector = curWorldPos - prevWorldPos;
+          Mat4 cameraTrans = trans.GetLocalTransform(cameraObj);
+          cameraTrans[3] -= Vec4(moveVector, 0);
           trans.UpdateTransform(cameraObj, cameraTrans);
         }
         lastMousePos = curMousePos;
@@ -466,14 +466,14 @@ namespace eXl
 
     if (keyChanged)
     {
-      static const Vector3f dirs[] =
+      static const Vec3 dirs[] =
       {
-        UnitX<Vector3f>() *  1.0,
-        UnitX<Vector3f>() * -1.0,
-        UnitY<Vector3f>() *  1.0,
-        UnitY<Vector3f>() * -1.0,
+        UnitX<Vec3>() *  1.0,
+        UnitX<Vec3>() * -1.0,
+        UnitY<Vec3>() *  1.0,
+        UnitY<Vec3>() * -1.0,
       };
-      Vector3f dir;
+      Vec3 dir;
       for (unsigned int i = 0; i < 4; ++i)
       {
         if (dirMask & (1 << i))
@@ -490,11 +490,9 @@ namespace eXl
   {
     Transforms& transforms = *iWorld.GetSystem<Transforms>();
 
-    Matrix4f camPos = transforms.GetWorldTransform(cameraObj);
+    Mat4 camPos = transforms.GetWorldTransform(cameraObj);
     
-    view.pos.X() = camPos.m_Data[12];
-    view.pos.Y() = camPos.m_Data[13];
-    view.pos.Z() = camPos.m_Data[14];
+    view.pos = camPos[3];
   }
 
   void WorldState::Impl::Tick()
@@ -519,7 +517,7 @@ namespace eXl
     double curWorldTime = world.GetGameTimeInSec();
     gfxSys->RenderFrame(curWorldTime - lastRenderTime);
     lastRenderTime = curWorldTime;
-    //view.pos.Z() -= 1;
+    //view.pos.z() -= 1;
 
     m_ProfilingState.m_RendererTime = profiler.GetTime() * 1000.0;
 #endif

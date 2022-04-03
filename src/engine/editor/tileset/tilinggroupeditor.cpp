@@ -263,7 +263,7 @@ namespace eXl
 
       QObject::connect(m_Impl->m_Toolbox->m_Ui.patternSizeX, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_CurrentEditedPattern.patternSize.X() = i;
+        m_Impl->m_CurrentEditedPattern.patternSize.x = i;
         if (m_Impl->m_CurrentObjectModel)
         {
           emit m_Impl->m_CurrentObjectModel->dataChanged(m_Impl->patternSizeIdx, m_Impl->patternSizeIdx);
@@ -271,7 +271,7 @@ namespace eXl
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.patternSizeY, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_CurrentEditedPattern.patternSize.Y() = i;
+        m_Impl->m_CurrentEditedPattern.patternSize.y = i;
         if (m_Impl->m_CurrentObjectModel)
         {
           emit m_Impl->m_CurrentObjectModel->dataChanged(m_Impl->patternSizeIdx, m_Impl->patternSizeIdx);
@@ -279,7 +279,7 @@ namespace eXl
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.anchorX, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_CurrentEditedPattern.anchor.X() = i;
+        m_Impl->m_CurrentEditedPattern.anchor.x = i;
         if (m_Impl->m_CurrentObjectModel)
         {
           emit m_Impl->m_CurrentObjectModel->dataChanged(m_Impl->anchorIdx, m_Impl->anchorIdx);
@@ -287,7 +287,7 @@ namespace eXl
       });
       QObject::connect(m_Impl->m_Toolbox->m_Ui.anchorY, QOverload<int>::of(&QSpinBox::valueChanged), [this](int i)
       {
-        m_Impl->m_CurrentEditedPattern.anchor.Y() = i;
+        m_Impl->m_CurrentEditedPattern.anchor.y = i;
         if (m_Impl->m_CurrentObjectModel)
         {
           emit m_Impl->m_CurrentObjectModel->dataChanged(m_Impl->anchorIdx, m_Impl->anchorIdx);
@@ -351,7 +351,7 @@ namespace eXl
 
   void TilingGroupEditor::Impl::PatternSizeChanged()
   {
-    uint32_t totSize = m_CurrentEditedPattern.patternSize.X() * m_CurrentEditedPattern.patternSize.Y();
+    uint32_t totSize = m_CurrentEditedPattern.patternSize.x * m_CurrentEditedPattern.patternSize.y;
     if (m_CurrentEditedPattern.pattern.size() != totSize)
     {
       m_CurrentEditedPattern.pattern.resize(totSize);
@@ -405,10 +405,10 @@ namespace eXl
 
       m_CurrentObjectModel = ObjectModel::CreateOrUpdateModel(m_GroupDataView, false, DynObject(TilingPattern::GetType(), &m_CurrentEditedPattern));
 
-      m_Toolbox->m_Ui.anchorX->setValue(m_CurrentEditedPattern.anchor.X());
-      m_Toolbox->m_Ui.anchorY->setValue(m_CurrentEditedPattern.anchor.Y());
-      m_Toolbox->m_Ui.patternSizeX->setValue(m_CurrentEditedPattern.patternSize.X());
-      m_Toolbox->m_Ui.patternSizeY->setValue(m_CurrentEditedPattern.patternSize.Y());
+      m_Toolbox->m_Ui.anchorX->setValue(m_CurrentEditedPattern.anchor.x);
+      m_Toolbox->m_Ui.anchorY->setValue(m_CurrentEditedPattern.anchor.y);
+      m_Toolbox->m_Ui.patternSizeX->setValue(m_CurrentEditedPattern.patternSize.x);
+      m_Toolbox->m_Ui.patternSizeY->setValue(m_CurrentEditedPattern.patternSize.y);
 
       uint32_t rows = m_CurrentObjectModel->rowCount(QModelIndex());
       for (uint32_t i = 0; i < rows; ++i)
@@ -478,15 +478,15 @@ namespace eXl
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSizeConstraint(QLayout::SetFixedSize);
 
-    Vector2i size = m_CurrentEditedPattern.patternSize;
-    for (int32_t y = 0; y < size.Y(); ++y)
+    Vec2i size = m_CurrentEditedPattern.patternSize;
+    for (int32_t y = 0; y < size.y; ++y)
     {
-      for (int32_t x = 0; x < size.X(); ++x)
+      for (int32_t x = 0; x < size.x; ++x)
       {
-        uint32_t offset = x + y * size.X();
+        uint32_t offset = x + y * size.x;
         TilingGroupLocConstraint constraint = m_CurrentEditedPattern.pattern[offset];
 
-        int32_t revY = (size.Y() - 1) - y;
+        int32_t revY = (size.y - 1) - y;
         QPushButton* gridElement = new QPushButton(m_GridPatternWidget);
         layout->addWidget(gridElement, revY, x, 1, 1, Qt::AlignLeft | Qt::AlignTop);
         gridElement->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

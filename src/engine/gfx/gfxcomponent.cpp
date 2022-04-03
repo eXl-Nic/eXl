@@ -55,11 +55,11 @@ namespace eXl
   GfxComponent::GfxComponent()
   {
     //m_Program = OGLSpriteAlgo::GetSpriteProgram(false);
-    m_Transform.MakeIdentity();
+    m_Transform = Identity<Mat4>();
     m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), &m_Transform);
   }
 
-  void GfxComponent::SetTransform(Matrix4f const& iTransform)
+  void GfxComponent::SetTransform(Mat4 const& iTransform)
   {
     //m_PositionData.AddData(OGLBaseAlgo::GetWorldMatUniform(), &iTransform);
     m_Transform = iTransform;
@@ -106,30 +106,30 @@ namespace eXl
     }
   }
 
-	IntrusivePtr<OGLBuffer> GfxSpriteData::MakeSpriteGeometry(Vector2f iSize, bool iFlat)
+	IntrusivePtr<OGLBuffer> GfxSpriteData::MakeSpriteGeometry(Vec2 iSize, bool iFlat)
 	{
 		float vtxLocData[20];
 		memset(vtxLocData, 0, sizeof(vtxLocData));
-		vtxLocData[0] = -0.5 * iSize.X();
-		vtxLocData[1] = -0.5 * iSize.Y();
+		vtxLocData[0] = -0.5 * iSize.x;
+		vtxLocData[1] = -0.5 * iSize.y;
 		vtxLocData[2] = 0.0;
 
-		vtxLocData[5] = 0.5 * iSize.X();
-		vtxLocData[6] = -0.5 * iSize.Y();
+		vtxLocData[5] = 0.5 * iSize.x;
+		vtxLocData[6] = -0.5 * iSize.y;
 		vtxLocData[7] = 0.0;
 
-		vtxLocData[10] = -0.5 * iSize.X();
-		vtxLocData[11] = 0.5 * iSize.Y();
+		vtxLocData[10] = -0.5 * iSize.x;
+		vtxLocData[11] = 0.5 * iSize.y;
 		vtxLocData[12] = iFlat ? 0.0 : 1.0;
 
-		vtxLocData[15] = 0.5 * iSize.X();
-		vtxLocData[16] = 0.5 * iSize.Y();
+		vtxLocData[15] = 0.5 * iSize.x;
+		vtxLocData[16] = 0.5 * iSize.y;
 		vtxLocData[17] = iFlat ? 0.0 : 1.0;
 
-		//vtxLocData[3] = vtxLocData[13] = iTileOffset.X() * texStep.X() + texStep.X() * 0.25 * 0.0;
-		//vtxLocData[8] = vtxLocData[18] = (iTileOffset.X() + iTileSize.X()) * texStep.X() - texStep.X() * 0.25 * 0.0;
-		//vtxLocData[4] = vtxLocData[9] = (iTileOffset.Y() + iTileSize.Y()) * texStep.Y() - texStep.Y() * 0.25 * 0.0;
-		//vtxLocData[14] = vtxLocData[19] = (iTileOffset.Y()) * texStep.Y() + texStep.Y() * 0.25 * 0.0;
+		//vtxLocData[3] = vtxLocData[13] = iTileOffset.x() * texStep.x() + texStep.x() * 0.25 * 0.0;
+		//vtxLocData[8] = vtxLocData[18] = (iTileOffset.x() + iTileSize.x()) * texStep.x() - texStep.x() * 0.25 * 0.0;
+		//vtxLocData[4] = vtxLocData[9] = (iTileOffset.y() + iTileSize.y()) * texStep.y() - texStep.y() * 0.25 * 0.0;
+		//vtxLocData[14] = vtxLocData[19] = (iTileOffset.y()) * texStep.y() + texStep.y() * 0.25 * 0.0;
 
 		vtxLocData[3] = vtxLocData[13] = 0.0;
 		vtxLocData[8] = vtxLocData[18] = 1.0;
@@ -138,7 +138,7 @@ namespace eXl
 
 		return IntrusivePtr<OGLBuffer>(OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, sizeof(vtxLocData), vtxLocData));
 		
-		//m_SpriteInfo.color = Vector4f::ONE;
+		//m_SpriteInfo.color = One<Vec4>();
 		//m_SpriteInfo.alphaMult = 1.0;
 	};
 
@@ -185,7 +185,7 @@ namespace eXl
   {
   }
 
-	void GfxSpriteComponent::SetSize(Vector2f const& iSize)
+	void GfxSpriteComponent::SetSize(Vec2 const& iSize)
 	{
     if (!Mutate())
     {
@@ -198,7 +198,7 @@ namespace eXl
 		}
 	}
 
-  void GfxSpriteComponent::SetOffset(Vector2f const& iOffset)
+  void GfxSpriteComponent::SetOffset(Vec2 const& iOffset)
   {
     if (!Mutate())
     {
@@ -277,7 +277,7 @@ namespace eXl
   }
 
 
-  void GfxSpriteComponent::SetTint(Vector4f const& iTint)
+  void GfxSpriteComponent::SetTint(Vec4 const& iTint)
   {
     if (!Mutate())
     {

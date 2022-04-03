@@ -24,7 +24,7 @@ namespace eXl
   {
     Image BitmapToImage(uint8_t const* iBitmap, Image::Size iImageSize)
     {
-      uint32_t numPixels = iImageSize.X() * iImageSize.Y();
+      uint32_t numPixels = iImageSize.x * iImageSize.y;
       uint8_t* imageData = (uint8_t*)eXl_ALLOC(numPixels * 4 * sizeof(uint8_t));
 
       uint8_t* curPixel = imageData;
@@ -69,7 +69,7 @@ namespace eXl
 
     Image whiteImage = BitmapToImage(dummyWhite, Image::Size(8, 8));
     m_DebugTexture = OGLTextureLoader::CreateFromImage(&whiteImage, true);
-    m_IdentMatrix.MakeIdentity();
+    m_IdentMatrix = Identity<Mat4>();
   }
 
   void GfxDebugDrawer::Push(OGLDisplayList& iList, float iDelta)
@@ -140,7 +140,7 @@ namespace eXl
     if (!m_Lines.empty())
     {
       iList.SetProgram(m_LineProgram.get());
-      size_t const bufferSize = totNumLines * sizeof(Vector3f);
+      size_t const bufferSize = totNumLines * sizeof(Vec3);
 
       if (!m_GeomLines || m_GeomLines->GetBufferSize() < bufferSize)
       {
@@ -151,12 +151,12 @@ namespace eXl
       {
         auto const& linesDL = m_Lines[i];
 
-        size_t dataSize = linesDL.size() * sizeof(Vector3f);
-        m_GeomLines->SetData(lineNums[i] * sizeof(Vector3f), dataSize, (void*)linesDL.data());
+        size_t dataSize = linesDL.size() * sizeof(Vec3);
+        m_GeomLines->SetData(lineNums[i] * sizeof(Vec3), dataSize, (void*)linesDL.data());
       }
 
       m_GeomAssemblyL.m_Attribs.clear();
-      m_GeomAssemblyL.AddAttrib(m_GeomLines, OGLBaseAlgo::GetPosAttrib(), 3, sizeof(Vector3f), 0);
+      m_GeomAssemblyL.AddAttrib(m_GeomLines, OGLBaseAlgo::GetPosAttrib(), 3, sizeof(Vec3), 0);
       m_GeomAssemblyL.m_IBuffer = nullptr;
 
       iList.SetVAssembly(&m_GeomAssemblyL);
@@ -182,39 +182,39 @@ namespace eXl
     {
       iList.SetProgram(m_TriangleProgram.get());
 
-      Vector<Vector3f> triangles;
+      Vector<Vec3> triangles;
       triangles.resize(totNumBoxes * 6 + totNumConvexPt);
 
       for (uint32_t i = 0; i < m_Boxes.size(); ++i)
       {
         auto const& boxDL = m_Boxes[i];
 
-        Vector3f* ptData = triangles.data() + 6 * boxNums[i];
+        Vec3* ptData = triangles.data() + 6 * boxNums[i];
 
         for (uint32_t j = 0; j < boxDL.size(); ++j)
         {
           auto const& box = boxDL[j];
 
-          *(ptData++) = (Vector3f(box.m_Data[0].X(), box.m_Data[0].Y(), 0.0));
-          *(ptData++) = (Vector3f(box.m_Data[1].X(), box.m_Data[0].Y(), 0.0));
-          *(ptData++) = (Vector3f(box.m_Data[0].X(), box.m_Data[1].Y(), 0.0));
-          *(ptData++) = (Vector3f(box.m_Data[1].X(), box.m_Data[0].Y(), 0.0));
-          *(ptData++) = (Vector3f(box.m_Data[1].X(), box.m_Data[1].Y(), 0.0));
-          *(ptData++) = (Vector3f(box.m_Data[0].X(), box.m_Data[1].Y(), 0.0));
+          *(ptData++) = (Vec3(box.m_Data[0].x, box.m_Data[0].y, 0.0));
+          *(ptData++) = (Vec3(box.m_Data[1].x, box.m_Data[0].y, 0.0));
+          *(ptData++) = (Vec3(box.m_Data[0].x, box.m_Data[1].y, 0.0));
+          *(ptData++) = (Vec3(box.m_Data[1].x, box.m_Data[0].y, 0.0));
+          *(ptData++) = (Vec3(box.m_Data[1].x, box.m_Data[1].y, 0.0));
+          *(ptData++) = (Vec3(box.m_Data[0].x, box.m_Data[1].y, 0.0));
         }
       }
 
       for (uint32_t i = 0; i < m_Convex.size(); ++i)
       {
         auto const& cvxDL = m_Convex[i];
-        Vector3f* ptData = triangles.data() + convexOffset[i];
+        Vec3* ptData = triangles.data() + convexOffset[i];
         for (auto const& cvx : cvxDL)
         {
           if (cvx.empty())
           {
             continue;
           }
-          Vector2f midPt;
+          Vec2 midPt;
           for (auto const& pt : cvx)
           {
             midPt += pt;
@@ -223,23 +223,23 @@ namespace eXl
           for (uint32_t j = 0; j < cvx.size(); ++j)
           {
             uint32_t nextPt = (j + 1) % cvx.size();
-            *(ptData++) = Vector3f(midPt.X(), midPt.Y(), 0.0);
-            *(ptData++) = Vector3f(cvx[j].X(), cvx[j].Y(), 0.0);
-            *(ptData++) = Vector3f(cvx[nextPt].X(), cvx[nextPt].Y(), 0.0);
+            *(ptData++) = Vec3(midPt.x, midPt.y, 0.0);
+            *(ptData++) = Vec3(cvx[j].x, cvx[j].y, 0.0);
+            *(ptData++) = Vec3(cvx[nextPt].x, cvx[nextPt].y, 0.0);
           }
         }
       }
 
       {
-        size_t const totBufferSize = (totNumBoxes * 6 + totNumConvexPt) * sizeof(Vector3f);
+        size_t const totBufferSize = (totNumBoxes * 6 + totNumConvexPt) * sizeof(Vec3);
         if (m_GeomBoxes == nullptr || m_GeomBoxes->GetBufferSize() < totBufferSize)
         {
           m_GeomBoxes = OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, totBufferSize, (void*)triangles.data());
         }
       }
-      //debugGeomBoxes->SetData(0, triangles.size() * sizeof(Vector3f), (void*)triangles.data());
+      //debugGeomBoxes->SetData(0, triangles.size() * sizeof(Vec3), (void*)triangles.data());
       m_GeomAssemblyB.m_Attribs.clear();
-      m_GeomAssemblyB.AddAttrib(m_GeomBoxes, OGLBaseAlgo::GetPosAttrib(), 3, sizeof(Vector3f), 0);
+      m_GeomAssemblyB.AddAttrib(m_GeomBoxes, OGLBaseAlgo::GetPosAttrib(), 3, sizeof(Vec3), 0);
       m_GeomAssemblyB.m_IBuffer = nullptr;
 
       iList.SetVAssembly(&m_GeomAssemblyB);
@@ -271,12 +271,12 @@ namespace eXl
     m_Convex.clear();
   }
 
-  void GfxDebugDrawer::DrawLine(const Vector3f& iFrom, const Vector3f& iTo, const Vector4f& iColor, bool iScreenSpace)
+  void GfxDebugDrawer::DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace)
   {
     auto matEntry = m_Colors.insert(std::make_pair(iColor, (uint32_t)m_Colors.size())).first;
     while (m_Lines.size() <= matEntry->second)
     {
-      m_Lines.push_back(Vector<Vector3f>());
+      m_Lines.push_back(Vector<Vec3>());
     }
 
     auto& lines = m_Lines[matEntry->second];
@@ -293,7 +293,7 @@ namespace eXl
     }
   }
 
-  void GfxDebugDrawer::DrawBox(AABB2Df const& iBox, const Vector4f& iColor, bool iScreenSpace)
+  void GfxDebugDrawer::DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace)
   {
     auto matEntry = m_Colors.insert(std::make_pair(iColor, (uint32_t)m_Colors.size())).first;
     while (m_Boxes.size() <= matEntry->second)
@@ -305,12 +305,12 @@ namespace eXl
     boxes.push_back(iBox);
   }
 
-  void GfxDebugDrawer::DrawConvex(Vector<Vector2f> const& iConvex, const Vector4f& iColor, bool iScreenSpace)
+  void GfxDebugDrawer::DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace)
   {
     auto matEntry = m_Colors.insert(std::make_pair(iColor, (uint32_t)m_Colors.size())).first;
     while (m_Convex.size() <= matEntry->second)
     {
-      m_Convex.push_back(Vector<Vector<Vector2f>>());
+      m_Convex.push_back(Vector<Vector<Vec2>>());
     }
 
     auto& boxes = m_Convex[matEntry->second];

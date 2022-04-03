@@ -10,7 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <math/vector2.hpp>
 #include <math/segment.hpp>
 #include <engine/pathfinding/navigator.hpp>
 
@@ -18,11 +17,11 @@ namespace RVO {
 
   struct Line
   {
-    eXl::Vector2f point;
-    eXl::Vector2f direction;
+    eXl::Vec2 point;
+    eXl::Vec2 direction;
   };
 
-  inline float det(eXl::Vector2f const& iVec1, eXl::Vector2f const& iVec2)
+  inline float det(eXl::Vec2 const& iVec1, eXl::Vec2 const& iVec2)
   {
     return eXl::Segmentf::Cross(iVec1, iVec2);
   }
@@ -32,20 +31,20 @@ namespace RVO {
     return iVal * iVal;
   }
 
-  inline float absSq(eXl::Vector2f const& iVec)
+  inline float absSq(eXl::Vec2 const& iVec)
   {
-    return iVec.SquaredLength();
+    return length2(iVec);
   }
 
-  inline float abs(eXl::Vector2f const& iVec)
+  inline float abs(eXl::Vec2 const& iVec)
   {
-    return iVec.Length();
+    return length(iVec);
   }
 
-  inline float distSqPointLineSegment(const eXl::Vector2f &a, const eXl::Vector2f &b,
-    const eXl::Vector2f &c)
+  inline float distSqPointLineSegment(const eXl::Vec2 &a, const eXl::Vec2 &b,
+    const eXl::Vec2 &c)
   {
-    const float r = ((c - a).Dot(b - a)) / absSq(b - a);
+    const float r = dot((c - a), (b - a)) / absSq(b - a);
 
     if (r < 0.0f) {
       return absSq(c - a);
@@ -58,12 +57,9 @@ namespace RVO {
     }
   }
 
-  inline eXl::Vector2f normalize(eXl::Vector2f const& iVec)
+  inline eXl::Vec2 normalize(eXl::Vec2 const& iVec)
   {
-    eXl::Vector2f normVec = iVec;
-    normVec.Normalize();
-
-    return normVec;
+    return normalize(iVec);
   }
 
 	/**
@@ -84,8 +80,8 @@ namespace RVO {
 
     struct AgentInfo
     {
-      eXl::Vector2f position;
-      eXl::Vector2f velocity;
+      eXl::Vec2 position;
+      eXl::Vec2 velocity;
       float radius;
     };
 
@@ -112,16 +108,16 @@ namespace RVO {
 		size_t maxNeighbors_;
 		float maxSpeed_;
 		float neighborDist_;
-    eXl::Vector2f newVelocity_;
+    eXl::Vec2 newVelocity_;
 		//eXl::Vector<std::pair<float, const eXl::NavigatorSystem::Obstacle *> > obstacleNeighbors_;
     eXl::Vector<std::pair<float, eXl::Segmentf> > obstacleNeighbors_;
 		eXl::Vector<Line> orcaLines_;
-		eXl::Vector2f position_;
-		eXl::Vector2f prefVelocity_;
+		eXl::Vec2 position_;
+		eXl::Vec2 prefVelocity_;
 		float radius_;
 		float timeHorizon_;
 		float timeHorizonObst_;
-    eXl::Vector2f velocity_;
+    eXl::Vec2 velocity_;
 
 		size_t id_;
 	};
@@ -140,8 +136,8 @@ namespace RVO {
 	 * \return     True if successful.
 	 */
 	bool linearProgram1(const eXl::Vector<Line> &lines, size_t lineNo,
-						float radius, const eXl::Vector2f &optVelocity,
-						bool directionOpt, eXl::Vector2f &result);
+						float radius, const eXl::Vec2 &optVelocity,
+						bool directionOpt, eXl::Vec2 &result);
 
 	/**
 	 * \relates    Agent
@@ -155,8 +151,8 @@ namespace RVO {
 	 * \return     The number of the line it fails on, and the number of lines if successful.
 	 */
 	size_t linearProgram2(const eXl::Vector<Line> &lines, float radius,
-						  const eXl::Vector2f &optVelocity, bool directionOpt,
-    eXl::Vector2f &result);
+						  const eXl::Vec2 &optVelocity, bool directionOpt,
+    eXl::Vec2 &result);
 
 	/**
 	 * \relates    Agent
@@ -169,6 +165,6 @@ namespace RVO {
 	 * \param      result        A reference to the result of the linear program.
 	 */
 	void linearProgram3(const eXl::Vector<Line> &lines, size_t numObstLines, size_t beginLine,
-						float radius, eXl::Vector2f &result);
+						float radius, eXl::Vec2 &result);
 }
 

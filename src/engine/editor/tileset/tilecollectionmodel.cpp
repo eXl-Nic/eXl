@@ -22,10 +22,10 @@ namespace eXl
     {
       if (index.column() == 0)
       {
-        Vector2i size = tile->m_Size;
-        Vector2i orig = tile->m_Frames.size() > 0 ? tile->m_Frames[0] : Vector2i::ZERO;
+        Vec2i size = tile->m_Size;
+        Vec2i orig = tile->m_Frames.size() > 0 ? tile->m_Frames[0] : Zero<Vec2i>();
 
-        QRect tileDim(QPoint(orig.X(), orig.Y()), QSize(size.X(), size.Y()));
+        QRect tileDim(QPoint(orig.x, orig.y), QSize(size.x, size.y));
 
         auto iter = m_CacheTileset.find(tile->m_ImageName);
         if (iter == m_CacheTileset.end())

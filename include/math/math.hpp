@@ -539,6 +539,7 @@ namespace eXl
     }
   };
 
+
 }
 
 namespace glm
@@ -552,5 +553,27 @@ namespace glm
       boost::hash_combine(hash, iVal[i]);
     }
     return hash;
+  }
+
+  inline size_t hash_value(glm::quat const& iVal)
+  {
+    size_t hash = 0;
+    for (uint32_t i = 0; i < 4; ++i)
+    {
+      boost::hash_combine(hash, iVal[i]);
+    }
+    return hash;
+  }
+
+  template<glm::length_t L, typename T, glm::qualifier Q>
+  inline std::ostream& operator <<(std::ostream& oStream, glm::vec<L, T, Q> const& iVal)
+  {
+    oStream << "(" << iVal[0];
+    for (uint32_t i = 1; i < L; ++i)
+    {
+      oStream << ", " << iVal[i];
+    }
+    oStream << ")";
+    return oStream;
   }
 }

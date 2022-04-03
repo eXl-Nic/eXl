@@ -55,20 +55,20 @@ namespace eXl
     }
     case QEvent::MouseMove:
     {
-      if (m_Snap.X() == 0 || m_Snap.Y() == 0)
+      if (m_Snap.x == 0 || m_Snap.y == 0)
       {
         break;
       }
 
       QMouseEvent* mouseEvent = (QMouseEvent*)event;
-      m_CurrentMousePos = Vector2i(mouseEvent->pos().x(), mouseEvent->pos().y());
+      m_CurrentMousePos = Vec2i(mouseEvent->pos().x(), mouseEvent->pos().y());
 
-      Vector3f viewDir;
+      Vec3 viewDir;
       m_GfxSys.ScreenToWorld(m_CurrentMousePos, m_CurrentWorldPos, viewDir);
 
-      Vector2i snapPos(m_CurrentWorldPos.X() * EngineCommon::s_WorldToPixel, m_CurrentWorldPos.Y() * EngineCommon::s_WorldToPixel);
-      snapPos.X() -= Mathi::Mod(snapPos.X(), m_Snap.X());
-      snapPos.Y() -= Mathi::Mod(snapPos.Y(), m_Snap.Y());
+      Vec2i snapPos(m_CurrentWorldPos.x * EngineCommon::s_WorldToPixel, m_CurrentWorldPos.y * EngineCommon::s_WorldToPixel);
+      snapPos.x -= Mathi::Mod(snapPos.x, m_Snap.x);
+      snapPos.y -= Mathi::Mod(snapPos.y, m_Snap.y);
       snapPos += m_Snap / 2;
 
       if (snapPos != m_CurrentSnapPos)
@@ -76,9 +76,8 @@ namespace eXl
         m_CurrentSnapPos = snapPos;
         if (m_PenObject.IsAssigned())
         {
-          Matrix4f newPos;
-          newPos.MakeIdentity();
-          MathTools::GetPosition2D(newPos) = Vector2f(m_CurrentSnapPos.X(), m_CurrentSnapPos.Y()) / EngineCommon::s_WorldToPixel;
+          Mat4 newPos = Identity<Mat4>();
+          reinterpret_cast<Vec2&>(newPos[3]) = Vec2(m_CurrentSnapPos.x, m_CurrentSnapPos.y) / EngineCommon::s_WorldToPixel;
 
           m_Transforms.UpdateTransform(m_PenObject, newPos);
           m_GfxSys.SynchronizeTransforms();
@@ -104,14 +103,14 @@ namespace eXl
     }
   }
 
-  void PenToolFilter::SetSnapSize(Vector2i const& iSize)
+  void PenToolFilter::SetSnapSize(Vec2i const& iSize)
   {
     m_Snap = iSize;
   }
 
   void PenToolFilter::AddCurrentPosition(bool iWasDrawing)
   {
-    AABB2Di box(m_CurrentSnapPos, Vector2i::ONE);
+    AABB2Di box(m_CurrentSnapPos, One<Vec2i>());
     //if (!m_DrawnRegion.empty())
     //{
     //  Vector<AABB2DPolygoni> inter;

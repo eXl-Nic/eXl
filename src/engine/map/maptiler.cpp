@@ -34,12 +34,12 @@ namespace eXl
     {
       size_t value = ptrdiff_t(iGroup.m_Tileset);
       boost::hash_combine(value, iGroup.m_Name);
-      boost::hash_combine(value, iGroup.m_VtxScaling.X());
-      boost::hash_combine(value, iGroup.m_VtxScaling.Y());
-      boost::hash_combine(value, iGroup.m_VtxOffset.X());
-      boost::hash_combine(value, iGroup.m_VtxOffset.Y());
-      boost::hash_combine(value, iGroup.m_Tiling.X());
-      boost::hash_combine(value, iGroup.m_Tiling.Y());
+      boost::hash_combine(value, iGroup.m_VtxScaling.x);
+      boost::hash_combine(value, iGroup.m_VtxScaling.y);
+      boost::hash_combine(value, iGroup.m_VtxOffset.x);
+      boost::hash_combine(value, iGroup.m_VtxOffset.y);
+      boost::hash_combine(value, iGroup.m_Tiling.x);
+      boost::hash_combine(value, iGroup.m_Tiling.y);
       return value;
     }
 
@@ -87,8 +87,7 @@ namespace eXl
       assembly.AddAttrib(buffer, OGLBaseAlgo::GetPosAttrib(), 3, 5 * sizeof(float), 0);
       assembly.AddAttrib(buffer, OGLBaseAlgo::GetTexCoordAttrib(), 2, 5 * sizeof(float), 3 * sizeof(float));
 
-      Matrix4f identMatrix;
-      identMatrix.MakeIdentity();
+      Mat4 identMatrix = Identity<Mat4>();
 
       auto geom = eXl_NEW GeometryInfo;
       geom->m_Assembly = assembly;
@@ -109,7 +108,7 @@ namespace eXl
         {
           auto mat = eXl_NEW SpriteMaterialInfo;
           mat->m_SpriteInfo.alphaMult = 1.0;
-          mat->m_SpriteInfo.tint = Vector4f::ONE;
+          mat->m_SpriteInfo.tint = One<Vec4>();
           mat->m_SpriteInfo.tcOffset = group.m_VtxOffset;
           mat->m_SpriteInfo.tcScaling = group.m_VtxScaling;
           mat->m_SpriteInfo.texSize = group.m_Tiling;
@@ -125,8 +124,8 @@ namespace eXl
 
     struct MapPattern
     {
-      Vector2i m_Size;
-      Vector2i m_Position;
+      Vec2i m_Size;
+      Vec2i m_Position;
       Vector<bool> m_Pattern;
 
       bool operator == (MapPattern const& iOther) const
@@ -138,10 +137,10 @@ namespace eXl
 
     size_t hash_value(MapPattern const& iPattern)
     {
-      size_t hash = iPattern.m_Size.X();
-      boost::hash_combine(hash, iPattern.m_Size.Y());
-      boost::hash_combine(hash, iPattern.m_Position.X());
-      boost::hash_combine(hash, iPattern.m_Position.Y());
+      size_t hash = iPattern.m_Size.x;
+      boost::hash_combine(hash, iPattern.m_Size.y);
+      boost::hash_combine(hash, iPattern.m_Position.x);
+      boost::hash_combine(hash, iPattern.m_Position.y);
 //#ifndef __ANDROID__
 //      for (auto word : iPattern.m_Pattern._Myvec)
 //      {
@@ -170,11 +169,11 @@ namespace eXl
       return hash;
     }
 
-    using PatternsDatabase = UnorderedMap<MapPattern, Vector<Vector2i>>;
+    using PatternsDatabase = UnorderedMap<MapPattern, Vector<Vec2i>>;
 
     PatternsDatabase CreatePatternDatabase(TilingGroup const& iGroup, AABB2Di const& iMapSize, Vector<AABB2DPolygoni> const& iShapes, Vector<bool> const& iMap)
     {
-      Vector2i spaceDims = iMapSize.GetSize();
+      Vec2i spaceDims = iMapSize.GetSize();
 
       PatternsDatabase database;
       UnorderedSet<MapPattern> pointSizes;
@@ -185,16 +184,16 @@ namespace eXl
         MapPattern newPattern;
         newPattern.m_Size = pattern.second.patternSize;
         newPattern.m_Position = pattern.second.anchor;
-        if (newPattern.m_Position.X() < 0)
+        if (newPattern.m_Position.x < 0)
         {
-          if (newPattern.m_Position.Y() >= 0)
+          if (newPattern.m_Position.y >= 0)
           {
             xLineSizes.insert(newPattern);
           }
         }
         else
         {
-          if (newPattern.m_Position.Y() < 0)
+          if (newPattern.m_Position.y < 0)
           {
             yLineSizes.insert(newPattern);
           }
@@ -215,79 +214,79 @@ namespace eXl
           {
             uint32_t nextIdx = (curIdx + 1) % points.size();
 
-            Vector2i curPt = points[curIdx];
-            Vector2i curDir = points[nextIdx] - points[curIdx];
-            if (curDir == Vector2i::ZERO)
+            Vec2i curPt = points[curIdx];
+            Vec2i curDir = points[nextIdx] - points[curIdx];
+            if (curDir == Zero<Vec2i>())
             {
               continue;
             }
 
-            int32_t dirIdx = curDir.X() != 0 ? 0 : 1;
-            int32_t dirSign = curDir.m_Data[dirIdx] > 0 ? 1 : -1;
-            uint32_t lineLen = Mathi::Abs(curDir.m_Data[dirIdx]);
+            int32_t dirIdx = curDir.x != 0 ? 0 : 1;
+            int32_t dirSign = curDir[dirIdx] > 0 ? 1 : -1;
+            uint32_t lineLen = Mathi::Abs(curDir[dirIdx]);
 
-            auto const& linePattern = curDir.X() != 0 ? xLineSizes : yLineSizes;
+            auto const& linePattern = curDir.x != 0 ? xLineSizes : yLineSizes;
             UnorderedSet<MapPattern> const* sizesToConsider[] = { &pointSizes, &linePattern };
             for (uint32_t dbIdx = 0; dbIdx < 2; dbIdx++)
             {
               auto curSize = sizesToConsider[dbIdx];
 
-              Vector2i startPt = curPt;
+              Vec2i startPt = curPt;
               if (dirSign == -1 && dbIdx == 1)
               {
-                startPt.m_Data[dirIdx] -= 1;
+                startPt[dirIdx] -= 1;
               }
 
               for (auto const& pattern : *curSize)
               {
-                Vector2i iterPt = startPt;
+                Vec2i iterPt = startPt;
                 uint32_t numIter = (dbIdx == 0 ? 1 : lineLen);
-                if (pattern.m_Position.X() < 0)
+                if (pattern.m_Position.x < 0)
                 {
-                  numIter += 2 * (pattern.m_Size.X() - 1);
-                  iterPt.X() -= (pattern.m_Size.X() - 1) * dirSign;
+                  numIter += 2 * (pattern.m_Size.x - 1);
+                  iterPt.x -= (pattern.m_Size.x - 1) * dirSign;
                 }
                 else
                 {
-                  iterPt.X() -= pattern.m_Position.X();
+                  iterPt.x -= pattern.m_Position.x;
                 }
-                if (pattern.m_Position.Y() < 0)
+                if (pattern.m_Position.y < 0)
                 {
-                  numIter += 2 * (pattern.m_Size.Y() - 1);
-                  iterPt.Y() -= (pattern.m_Size.Y() - 1) * dirSign;
+                  numIter += 2 * (pattern.m_Size.y - 1);
+                  iterPt.y -= (pattern.m_Size.y - 1) * dirSign;
                 }
                 else
                 {
-                  iterPt.Y() -= pattern.m_Position.Y();
+                  iterPt.y -= pattern.m_Position.y;
                 }
 
-                for (uint32_t iter = 0; iter < numIter; ++iter, iterPt.m_Data[dirIdx] += dirSign)
+                for (uint32_t iter = 0; iter < numIter; ++iter, iterPt[dirIdx] += dirSign)
                 {
-                  //Vector2i sampleOrigin = iterPt;
+                  //Vec2i sampleOrigin = iterPt;
 
                   AABB2Di samplingBox(iterPt, pattern.m_Size);
 
-                  if (samplingBox.m_Data[0].X() < iMapSize.m_Data[0].X() || samplingBox.m_Data[0].Y() < iMapSize.m_Data[0].Y()
-                    || samplingBox.m_Data[1].X() > iMapSize.m_Data[1].X() || samplingBox.m_Data[1].Y() > iMapSize.m_Data[1].Y())
+                  if (samplingBox.m_Data[0].x < iMapSize.m_Data[0].x || samplingBox.m_Data[0].y < iMapSize.m_Data[0].y
+                    || samplingBox.m_Data[1].x > iMapSize.m_Data[1].x || samplingBox.m_Data[1].y > iMapSize.m_Data[1].y)
                   {
                     continue;
                   }
 
                   MapPattern curPattern = pattern;
-                  curPattern.m_Pattern.resize(curPattern.m_Size.X() * curPattern.m_Size.Y());
-                  for (int32_t y = 0; y < curPattern.m_Size.Y(); ++y)
+                  curPattern.m_Pattern.resize(curPattern.m_Size.x * curPattern.m_Size.y);
+                  for (int32_t y = 0; y < curPattern.m_Size.y; ++y)
                   {
-                    for (int32_t x = 0; x < curPattern.m_Size.X(); ++x)
+                    for (int32_t x = 0; x < curPattern.m_Size.x; ++x)
                     {
-                      Vector2i pos = (Vector2i(x, y) + samplingBox.m_Data[0]) - iMapSize.m_Data[0];
-                      uint32_t offsetPattern = x + y * curPattern.m_Size.X();
-                      uint32_t offsetMap = pos.X() + pos.Y() * spaceDims.X();
+                      Vec2i pos = Vec2i(x, y) + samplingBox.m_Data[0] - iMapSize.m_Data[0];
+                      uint32_t offsetPattern = x + y * curPattern.m_Size.x;
+                      uint32_t offsetMap = pos.x + pos.y * spaceDims.x;
 
                       curPattern.m_Pattern[offsetPattern] = iMap[offsetMap];
                     }
                   }
 
-                  database.insert(std::make_pair(curPattern, Vector<Vector2i>())).first->second.push_back(iterPt);
+                  database.insert(std::make_pair(curPattern, Vector<Vec2i>())).first->second.push_back(iterPt);
                 }
               }
             }
@@ -300,7 +299,7 @@ namespace eXl
 
     struct PatternAssign
     {
-      Vector2f m_Pos;
+      Vec2 m_Pos;
       uint32_t m_Pattern;
       uint32_t m_AnchorDist;
       uint32_t m_MatchSize;
@@ -313,8 +312,8 @@ namespace eXl
       group->GetTileset().Load();
       Tileset const* mapSet = group->GetTileset().Get();
 
-      Vector2i spaceDims = iFullSize.GetSize();
-      uint32_t const items = spaceDims.X() * spaceDims.Y();
+      Vec2i spaceDims = iFullSize.GetSize();
+      uint32_t const items = spaceDims.x * spaceDims.y;
       uint32_t const subItems = items * 4;
 
       Vector<bool> blockBitmap(items, false);
@@ -344,7 +343,7 @@ namespace eXl
       defaultAssign.m_Pattern = -1;
       defaultAssign.m_MatchSize = 0;
       defaultAssign.m_AnchorDist = 0;
-      defaultAssign.m_Pos = Vector2f::ZERO;
+      defaultAssign.m_Pos = Zero<Vec2>();
       defaultAssign.m_DrawElement = 0;
 
       Vector<PatternAssign> patternAssign(subItems, defaultAssign);
@@ -355,11 +354,11 @@ namespace eXl
         island.GetBoxes(boxes);
         for (auto const& box : boxes)
         {
-          for (int y = box.m_Data[0].Y(); y < box.m_Data[1].Y(); ++y)
+          for (int y = box.m_Data[0].y; y < box.m_Data[1].y; ++y)
           {
-            for (int x = box.m_Data[0].X(); x < box.m_Data[1].X(); ++x)
+            for (int x = box.m_Data[0].x; x < box.m_Data[1].x; ++x)
             {
-              uint32_t offset = (y - iFullSize.m_Data[0].Y()) * spaceDims.X() + (x - iFullSize.m_Data[0].X());
+              uint32_t offset = (y - iFullSize.m_Data[0].y) * spaceDims.x + x - iFullSize.m_Data[0].x;
               eXl_ASSERT(offset < items);
               blockBitmap[offset] = true;
             }
@@ -374,28 +373,28 @@ namespace eXl
         island.GetBoxes(boxes);
         for (auto const& box : boxes)
         {
-          for (int y = box.m_Data[0].Y() * 2; y < box.m_Data[1].Y() * 2; ++y)
+          for (int y = box.m_Data[0].y * 2; y < box.m_Data[1].y * 2; ++y)
           {
             PatternAssign* row = patternAssign.data() 
-              + (y - iFullSize.m_Data[0].Y() * 2) * (spaceDims.X() * 2) 
-              + (box.m_Data[0].X() - iFullSize.m_Data[0].X()) * 2;
-            int32_t yParity = (y - iFullSize.m_Data[0].Y() * 2) % 2;
-            for (int x = box.m_Data[0].X() * 2; x < box.m_Data[1].X() * 2; ++x, ++row)
+              + (y - iFullSize.m_Data[0].y * 2) * (spaceDims.x * 2) 
+              + (box.m_Data[0].x - iFullSize.m_Data[0].x) * 2;
+            int32_t yParity = (y - iFullSize.m_Data[0].y * 2) % 2;
+            for (int x = box.m_Data[0].x * 2;x < box.m_Data[1].x * 2; ++x, ++row)
             {
-              int32_t xParity = (x - iFullSize.m_Data[0].X() * 2) % 2;
+              int32_t xParity = (x - iFullSize.m_Data[0].x * 2) % 2;
               row->m_Pattern = 0;
               row->m_MatchSize = 1;
               row->m_AnchorDist = xParity + yParity;
-              row->m_Pos = Vector2f(xParity, yParity) * 0.5;
+              row->m_Pos = Vec2(xParity, yParity) * 0.5;
             }
           }
         }
       }
 
-      //UnorderedMap<TilingGroup::PatternName, Vector<Vector2i>> matchingPos;
+      //UnorderedMap<TilingGroup::PatternName, Vector<Vec2i>> matchingPos;
 
       Tile const* defaultTile = mapSet->Find(group->m_DefaultTile);
-      Vector2i defaultTileSize = defaultTile->m_Size;
+      Vec2i defaultTileSize = defaultTile->m_Size;
 
       for (auto const& pattern : group->m_Patterns)
       {
@@ -418,53 +417,53 @@ namespace eXl
 
             if (patternMatches)
             {
-              //auto& posArray = matchingPos.insert(std::make_pair(pattern.first, Vector<Vector2i>())).first->second;
+              //auto& posArray = matchingPos.insert(std::make_pair(pattern.first, Vector<Vec2i>())).first->second;
               //posArray.insert(posArray.end(), mapPattern.second.begin(), mapPattern.second.end());
               uint32_t patternIdx = namesIdx[pattern.first];
               uint32_t matchSize = patternMatchSize[patternIdx];
-              Vector2i anchorSubPos = pattern.second.anchor * 2;
-              for (Vector2i position : mapPattern.second)
+              Vec2i anchorSubPos = pattern.second.anchor * 2;
+              for (Vec2i position : mapPattern.second)
               {
-                Vector2i subpixelPos = position * 2;
+                Vec2i subpixelPos = position * 2;
                 for (uint32_t elemIdx = 0; elemIdx < tilingP.drawElement.size(); ++elemIdx)
                 {
                   auto const& element = tilingP.drawElement[elemIdx];
-                  Vector2i finalPos = subpixelPos + element.m_Position * 2;
+                  Vec2i finalPos = subpixelPos + element.m_Position * 2;
 
                   Tile const* elemTile = mapSet->Find(element.m_Name);
-                  Vector2i scaledSize(elemTile->m_Size.X() / defaultTileSize.X(),
-                    elemTile->m_Size.Y() / defaultTileSize.Y());
+                  Vec2i scaledSize(elemTile->m_Size.x / defaultTileSize.x,
+                    elemTile->m_Size.y / defaultTileSize.y);
 
-                  scaledSize.X() = Mathi::Max(scaledSize.X(), 1);
-                  scaledSize.Y() = Mathi::Max(scaledSize.Y(), 1);
+                  scaledSize.x = Mathi::Max(scaledSize.x, 1);
+                  scaledSize.y = Mathi::Max(scaledSize.y, 1);
 
-                  for (int32_t y = 0; y < scaledSize.Y() * 2; ++y)
+                  for (int32_t y = 0; y < scaledSize.y * 2; ++y)
                   {
-                    for (int32_t x = 0; x < scaledSize.X() * 2; ++x)
+                    for (int32_t x = 0; x < scaledSize.x * 2; ++x)
                     {
-                      Vector2i subTile = element.m_Position * 2 + Vector2i(x, y);
-                      Vector2i anchorDiff = subTile - anchorSubPos;
-                      if (anchorSubPos.X() > subTile.X())
+                      Vec2i subTile = element.m_Position * 2 + Vec2i(x, y);
+                      Vec2i anchorDiff = subTile - anchorSubPos;
+                      if (anchorSubPos.x > subTile.x)
                       {
-                        anchorDiff.X() += 1;
+                        anchorDiff.x += 1;
                       }
-                      if (anchorSubPos.Y() > subTile.Y())
+                      if (anchorSubPos.y > subTile.y)
                       {
-                        anchorDiff.Y() += 1;
+                        anchorDiff.y += 1;
                       }
-                      if (pattern.second.anchor.X() < 0)
+                      if (pattern.second.anchor.x < 0)
                       {
-                        anchorDiff.X() = 0;
+                        anchorDiff.x = 0;
                       }
-                      if (pattern.second.anchor.Y() < 0)
+                      if (pattern.second.anchor.y < 0)
                       {
-                        anchorDiff.Y() = 0;
+                        anchorDiff.y = 0;
                       }
 
-                      uint32_t anchorDist = Mathi::Abs(anchorDiff.X()) + Mathi::Abs(anchorDiff.Y());
-                      uint32_t offset = (x + finalPos.X() - iFullSize.m_Data[0].X() * 2) 
-                        + (y + finalPos.Y() - iFullSize.m_Data[0].Y() * 2) * spaceDims.X() * 2;
-                      Vector2f subPos = Vector2f(x, y) * 0.5;
+                      uint32_t anchorDist = Mathi::Abs(anchorDiff.x) + Mathi::Abs(anchorDiff.y);
+                      uint32_t offset = (x + finalPos.x - iFullSize.m_Data[0].x * 2) 
+                        + (y + finalPos.y - iFullSize.m_Data[0].y * 2) * spaceDims.x * 2;
+                      Vec2 subPos = Vec2(x, y) * 0.5;
                       PatternAssign& curAssign = patternAssign[offset];
                       if (curAssign.m_MatchSize > matchSize)
                       {
@@ -498,15 +497,15 @@ namespace eXl
         { 0.5,  0.5, 0.0, 1.0, 0.0},
       };
 
-      const float worldScaling = defaultTileSize.X() / EngineCommon::s_WorldToPixel;
+      const float worldScaling = defaultTileSize.x / EngineCommon::s_WorldToPixel;
 
-      Vector<std::pair<uint32_t, uint32_t>> completeTiles(spaceDims.X() * spaceDims.Y(), std::make_pair(-1, 0));
-      Map<Vector2i, Vector<std::pair<uint32_t, uint32_t>>> bigCompleteTiles;
-      for (int32_t y = 0; y < spaceDims.Y(); ++y)
+      Vector<std::pair<uint32_t, uint32_t>> completeTiles(spaceDims.x * spaceDims.y, std::make_pair(-1, 0));
+      Map<Vec2i, Vector<std::pair<uint32_t, uint32_t>>> bigCompleteTiles;
+      for (int32_t y = 0; y < spaceDims.y; ++y)
       {
-        PatternAssign* row = patternAssign.data() + y * 2 * (spaceDims.X() * 2);
-        PatternAssign* upperRow = patternAssign.data() + (y * 2 + 1) * (spaceDims.X() * 2);
-        for (int32_t x = 0; x < spaceDims.X(); ++x, row += 2, upperRow += 2)
+        PatternAssign* row = patternAssign.data() + y * 2 * (spaceDims.x * 2);
+        PatternAssign* upperRow = patternAssign.data() + (y * 2 + 1) * (spaceDims.x * 2);
+        for (int32_t x = 0;x < spaceDims.x; ++x, row += 2, upperRow += 2)
         {
           if (row[0].m_Pattern == -1)
           {
@@ -514,7 +513,7 @@ namespace eXl
           }
 
           TilingPattern const* pattern;
-          Vector2i tileSize = Vector2i::ONE;
+          Vec2i tileSize = One<Vec2i>();
           TilingDrawElement const* element;
           Tile const* elemTile = nullptr;
           if (row[0].m_Pattern != 0)
@@ -522,28 +521,28 @@ namespace eXl
             pattern = patterns[row[0].m_Pattern - 1];
             element = &pattern->drawElement[row[0].m_DrawElement];
             elemTile = mapSet->Find(element->m_Name);
-            tileSize = Vector2i(elemTile->m_Size.X() / defaultTileSize.X(),
-              elemTile->m_Size.Y() / defaultTileSize.Y());
+            tileSize = Vec2i(elemTile->m_Size.x / defaultTileSize.x,
+              elemTile->m_Size.y / defaultTileSize.y);
 
-            tileSize.X() = Mathi::Max(tileSize.X(), 1);
-            tileSize.Y() = Mathi::Max(tileSize.Y(), 1);
+            tileSize.x = Mathi::Max(tileSize.x, 1);
+            tileSize.y = Mathi::Max(tileSize.y, 1);
           }
 
-          if (tileSize == Vector2i::ONE
+          if (tileSize == One<Vec2i>()
             && row[0].m_Pattern == row[1].m_Pattern
             && row[0].m_Pattern == upperRow[0].m_Pattern
             && row[0].m_Pattern == upperRow[1].m_Pattern
-            && row[0].m_Pos == Vector2f::ZERO && row[1].m_Pos == UnitX<Vector2f>() * 0.5
-            && upperRow[0].m_Pos == UnitY<Vector2f>() * 0.5 && upperRow[1].m_Pos == Vector2f::ONE * 0.5
+            && row[0].m_Pos == Zero<Vec2>() && row[1].m_Pos == UnitX<Vec2>() * 0.5
+            && upperRow[0].m_Pos == UnitY<Vec2>() * 0.5 && upperRow[1].m_Pos == One<Vec2>() * 0.5
             )
           {
-            completeTiles[y * spaceDims.X() + x] = std::make_pair(row[0].m_Pattern, row[0].m_DrawElement);
+            completeTiles[y * spaceDims.x + x] = std::make_pair(row[0].m_Pattern, row[0].m_DrawElement);
             row[0].m_Pattern = row[1].m_Pattern = -1;
             upperRow[0].m_Pattern = upperRow[1].m_Pattern = -1;
             continue;
           }
 
-          if (tileSize != Vector2i::ONE)
+          if (tileSize != One<Vec2i>())
           {
             // TODO :
             //eXl_ASSERT(false);
@@ -552,10 +551,10 @@ namespace eXl
         }
       }
 
-      for (int32_t y = 0; y < spaceDims.Y() * 2; ++y)
+      for (int32_t y = 0; y < spaceDims.y * 2; ++y)
       {
-        PatternAssign* row = patternAssign.data() + y * (spaceDims.X() * 2);
-        for (int32_t x = 0; x < spaceDims.X() * 2; ++x, ++row)
+        PatternAssign* row = patternAssign.data() + y * (spaceDims.x * 2);
+        for (int32_t x = 0;x < spaceDims.x * 2; ++x, ++row)
         {
           if (row->m_Pattern == -1)
           {
@@ -579,28 +578,28 @@ namespace eXl
           group.m_Name = elemTile->m_ImageName;
 
           Vector<float>& curGroup = oBatcher.GetGroup(group);
-          Vector2i imgSize = mapSet->GetImageSize(elemTile->m_ImageName);
-          Vector2i tileOffset = elemTile->m_Frames.size() > 0 ? elemTile->m_Frames[0] : Vector2i::ZERO;
-          Vector2f tileTCSize(float(elemTile->m_Size.X()) / imgSize.X(), float(elemTile->m_Size.Y()) / imgSize.Y());
-          Vector2f scale(float(defaultTileSize.X()) / imgSize.X(), float(defaultTileSize.Y()) / imgSize.Y());
-          Vector2f offset(float(tileOffset.X()) / imgSize.X(), tileTCSize.Y() + float(tileOffset.Y()) / imgSize.Y());
+          Vec2i imgSize = mapSet->GetImageSize(elemTile->m_ImageName);
+          Vec2i tileOffset = elemTile->m_Frames.size() > 0 ? elemTile->m_Frames[0] : Zero<Vec2i>();
+          Vec2 tileTCSize(float(elemTile->m_Size.x) / imgSize.x, float(elemTile->m_Size.y) / imgSize.y);
+          Vec2 scale(float(defaultTileSize.x) / imgSize.x, float(defaultTileSize.y) / imgSize.y);
+          Vec2 offset(float(tileOffset.x) / imgSize.x, tileTCSize.y + float(tileOffset.y) / imgSize.y);
 
-          //Vector2f scaleTC = Vector2f(float(defaultTileSize.X()) / elemTile->m_Size.X(),
-          //  float(defaultTileSize.Y()) / elemTile->m_Size.Y());
-          //Vector2f scaleTC = Vector2f::ONE;
+          //Vec2 scaleTC = Vec2(float(defaultTileSize.x) / elemTile->m_Size.x,
+          //  float(defaultTileSize.y) / elemTile->m_Size.y);
+          //Vec2 scaleTC = One<Vec2>();
           
-          Vector2f finalPos(x / 2 + iFullSize.m_Data[0].X(), y / 2 + iFullSize.m_Data[0].Y()) ;
-          finalPos += Vector2f(row->m_Pos.X() - Mathf::Floor(row->m_Pos.X()), row->m_Pos.Y() - Mathf::Floor(row->m_Pos.Y()));
+          Vec2 finalPos(x / 2 + iFullSize.m_Data[0].x, y / 2 + iFullSize.m_Data[0].y) ;
+          finalPos += Vec2(row->m_Pos.x - Mathf::Floor(row->m_Pos.x), row->m_Pos.y - Mathf::Floor(row->m_Pos.y));
 
           for (auto const& vtx : vtxData)
           {
-            curGroup.push_back(worldScaling * (0.5 * (0.5 + vtx[0]) + finalPos.X()));
-            curGroup.push_back(worldScaling * (0.5 * (0.5 + vtx[1]) + finalPos.Y()));
+            curGroup.push_back(worldScaling * (0.5 * (0.5 + vtx[0]) + finalPos.x));
+            curGroup.push_back(worldScaling * (0.5 * (0.5 + vtx[1]) + finalPos.y));
             curGroup.push_back(vtx[2]);
-            curGroup.push_back(offset.X() + scale.X() * (row->m_Pos.X() + 0.5 * vtx[3]));
-            //float yPos = 1.0 - (0.5 * scale.Y() * (1.0 - vtx[4]) + scale.Y() * row->m_Pos.Y());
-            //float yPos = (0.5 - row->m_Pos.Y()) + 0.5 * vtx[4];
-            curGroup.push_back(offset.Y() - scale.Y() * (row->m_Pos.Y() + 0.5 * (1.0 - vtx[4])));
+            curGroup.push_back(offset.x + scale.x * (row->m_Pos.x + 0.5 * vtx[3]));
+            //float yPos = 1.0 - (0.5 * scale.y * (1.0 - vtx[4]) + scale.y * row->m_Pos.y);
+            //float yPos = (0.5 - row->m_Pos.y) + 0.5 * vtx[4];
+            curGroup.push_back(offset.y - scale.y * (row->m_Pos.y + 0.5 * (1.0 - vtx[4])));
           }
         }
       }
@@ -612,10 +611,10 @@ namespace eXl
 
         Tile const* curTile = mapSet->Find(tileName);
 
-        Vector2i imgSize = mapSet->GetImageSize(curTile->m_ImageName);
-        Vector2i tileOffset = curTile->m_Frames.size() > 0 ? curTile->m_Frames[0] : Vector2i::ZERO;
-        Vector2f scale(float(curTile->m_Size.X()) / imgSize.X(), float(curTile->m_Size.Y()) / imgSize.Y());
-        Vector2f offset(float(tileOffset.X()) / imgSize.X(), float(tileOffset.Y()) / imgSize.Y());
+        Vec2i imgSize = mapSet->GetImageSize(curTile->m_ImageName);
+        Vec2i tileOffset = curTile->m_Frames.size() > 0 ? curTile->m_Frames[0] : Zero<Vec2i>();
+        Vec2 scale(float(curTile->m_Size.x) / imgSize.x, float(curTile->m_Size.y) / imgSize.y);
+        Vec2 offset(float(tileOffset.x) / imgSize.x, float(tileOffset.y) / imgSize.y);
 
         TexGroup group;
         group.m_Tileset = mapSet;
@@ -628,22 +627,22 @@ namespace eXl
 
         Vector<AABB2Di> horizontalBoxes;
           
-        for (int32_t y = 0; y < spaceDims.Y(); ++y)
+        for (int32_t y = 0; y < spaceDims.y; ++y)
         {
-          std::pair<uint32_t, uint32_t>* row = completeTiles.data() + y * spaceDims.X();
-          for (int32_t x = 0; x < spaceDims.X(); ++x, ++row)
+          std::pair<uint32_t, uint32_t>* row = completeTiles.data() + y * spaceDims.x;
+          for (int32_t x = 0;x < spaceDims.x; ++x, ++row)
           {
             if (row->first == patternIdx)
             {
               if (horizontalBoxes.empty()
-                || horizontalBoxes.back().m_Data[0].Y() != y
-                || horizontalBoxes.back().m_Data[1].X() != x)
+                || horizontalBoxes.back().m_Data[0].y != y
+                || horizontalBoxes.back().m_Data[1].x != x)
               {
-                horizontalBoxes.push_back(AABB2Di(Vector2i(x, y), Vector2i::ONE));
+                horizontalBoxes.push_back(AABB2Di(Vec2i(x, y), One<Vec2i>()));
               }
               else
               {
-                horizontalBoxes.back().m_Data[1].X()++;
+                horizontalBoxes.back().m_Data[1].x++;
               }
             }
           }
@@ -651,11 +650,11 @@ namespace eXl
 
         std::sort(horizontalBoxes.begin(), horizontalBoxes.end(), [](AABB2Di const& iBox1, AABB2Di const& iBox2)
         {
-          if (iBox1.m_Data[0].X() == iBox2.m_Data[0].X())
+          if (iBox1.m_Data[0].x == iBox2.m_Data[0].x)
           {
-            return iBox1.m_Data[0].Y() < iBox2.m_Data[0].Y();
+            return iBox1.m_Data[0].y < iBox2.m_Data[0].y;
           }
-          return iBox1.m_Data[0].X() < iBox2.m_Data[0].X();
+          return iBox1.m_Data[0].x < iBox2.m_Data[0].x;
         });
 
         Vector<AABB2Di> boxes;
@@ -669,11 +668,11 @@ namespace eXl
           {
             AABB2Di& prevBox = boxes.back();
             AABB2Di const& curBox = horizontalBoxes[i];
-            if (prevBox.m_Data[0].X() == curBox.m_Data[0].X()
-              && prevBox.m_Data[1].X() == curBox.m_Data[1].X()
-              && prevBox.m_Data[1].Y() == curBox.m_Data[0].Y())
+            if (prevBox.m_Data[0].x == curBox.m_Data[0].x
+              && prevBox.m_Data[1].x == curBox.m_Data[1].x
+              && prevBox.m_Data[1].y == curBox.m_Data[0].y)
             {
-              prevBox.m_Data[1].Y()++;
+              prevBox.m_Data[1].y++;
             }
             else
             {
@@ -684,16 +683,16 @@ namespace eXl
 
         for (auto const& box : boxes)
         {
-          Vector2i finalPos = box.m_Data[0] + iFullSize.m_Data[0];
-          Vector2i size = box.GetSize();
+          Vec2i finalPos = box.m_Data[0] + iFullSize.m_Data[0];
+          Vec2i size = box.GetSize();
         
           for (auto const& vtx : vtxData)
           {
-            curGroup.push_back(worldScaling * ((0.5 + vtx[0]) * size.X() + finalPos.X()));
-            curGroup.push_back(worldScaling * ((0.5 + vtx[1]) * size.Y() + finalPos.Y()));
+            curGroup.push_back(worldScaling * ((0.5 + vtx[0]) * size.x + finalPos.x));
+            curGroup.push_back(worldScaling * ((0.5 + vtx[1]) * size.y + finalPos.y));
             curGroup.push_back(vtx[2]);
-            curGroup.push_back(vtx[3] * size.X());
-            curGroup.push_back(vtx[4] * size.Y());
+            curGroup.push_back(vtx[3] * size.x);
+            curGroup.push_back(vtx[4] * size.y);
           }
         }
       }

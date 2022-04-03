@@ -54,7 +54,7 @@ namespace eXl
       float angleIncrement = Mathf::Pi() * 0.5 / numPos;
       for (uint32_t i = 0; i < 16; ++i)
       {
-        newAnim.Add(Vector3f(Mathf::Cos(i * angleIncrement), 0.0, Mathf::Sin(i * angleIncrement)) * 2.0, durationIncrement * i);
+        newAnim.Add(Vec3(Mathf::Cos(i * angleIncrement), 0.0, Mathf::Sin(i * angleIncrement)) * 2.0, durationIncrement * i);
       }
       return newAnim;
     }();
@@ -78,7 +78,7 @@ namespace eXl
     
     World& world = m_System->GetWorld();
 
-    Vector2f grabDirection = GrabAbility::GetGrabDirection(m_System, state.m_User);
+    Vec2 grabDirection = GrabAbility::GetGrabDirection(m_System, state.m_User);
 
     m_System->StopUsingAbility(state.m_User, GrabAbility::Name());
 
@@ -88,10 +88,7 @@ namespace eXl
     state.m_PickedObject = state.m_Target;
     phSys.SetComponentEnabled(state.m_Target, false);
 
-    Matrix4f offset;
-    MathTools::GetPosition(offset) = Vector3f::ZERO;
-
-    transforms.UpdateTransform(state.m_Target, offset);
+    transforms.UpdateTransform(state.m_Target, Identity<Mat4>());
     transforms.Attach(state.m_Target, state.m_User, Transforms::AttachType::Position);
 
     auto& animMgr = *world.GetSystem<TransformAnimManager>();
@@ -115,8 +112,7 @@ namespace eXl
     World& world = m_System->GetWorld();
     Transforms& transforms = *world.GetSystem<Transforms>();
 
-    Matrix4f offset;
-    MathTools::GetPosition(offset) = Vector3f(0.0, 2.0, 2.0 / Mathf::Sqrt(2.0));
+    Mat4 offset = translate(Identity<Mat4>(), Vec3(0.0, 2.0, 2.0 / Mathf::Sqrt(2.0)));
 
     transforms.Attach(state.m_Target, state.m_User, Transforms::AttachType::Position);
     transforms.UpdateTransform(state.m_Target, offset);
@@ -153,11 +149,6 @@ namespace eXl
       {
         Transforms& transforms = *world.GetSystem<Transforms>();
         PhysicsSystem& phSys = *world.GetSystem<PhysicsSystem>();
-
-        //phSys.SetComponentEnabled(state.m_Target, true);
-
-        Matrix4f worldPos = transforms.GetWorldTransform(state.m_PickedObject);
-        MathTools::GetPosition2D(worldPos) -= Vector2f(0.0, 1.0);
 
         transforms.Detach(state.m_Target);
       }

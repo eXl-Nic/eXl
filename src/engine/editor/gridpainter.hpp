@@ -14,7 +14,7 @@ namespace eXl
     GridPainter(QObject* iParent) : PainterInterface(iParent)
     {}
 
-    Vector2f m_CellSize = Vector2f::ONE;
+    Vec2 m_CellSize = One<Vec2>();
 
   protected:
     void paint(QPainter& iPainter) const override;

@@ -23,7 +23,7 @@ namespace eXl
   IMPLEMENT_RTTI(GrabbedEffect);
   IMPLEMENT_RTTI(GrabAbility);
 
-  void GrabAbility::SetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj, Vector2f const& iDir)
+  void GrabAbility::SetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj, Vec2 const& iDir)
   {
     GrabAbility* self = iSys->GetAbilityDesc<GrabAbility>(Name());
     AbilityStateHandle stateHandle = iSys->GetAbilityState(iObj, Name());
@@ -37,7 +37,7 @@ namespace eXl
     }
   }
 
-  Vector2f const& GrabAbility::GetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj)
+  Vec2 const& GrabAbility::GetGrabDirection(AbilitySystem* iSys, ObjectHandle iObj)
   {
     GrabAbility* self = iSys->GetAbilityDesc<GrabAbility>(Name());
     AbilityStateHandle stateHandle = iSys->GetAbilityState(iObj, Name());
@@ -49,8 +49,8 @@ namespace eXl
         return state.m_GrabDirection;
       }
     }
-
-    return Vector2f::ZERO;
+    static Vec2 const dummy = Zero<Vec2>();
+    return dummy;
   }
 
   ObjectHandle GrabAbility::GetGrabbedObject(AbilitySystem* iSys, ObjectHandle iObj)
@@ -100,8 +100,8 @@ namespace eXl
         Transforms& trans = *iWorld.GetSystem<Transforms>();
         PhysicsSystem& phSys = *iWorld.GetSystem<PhysicsSystem>();
         List<CollisionData> res;
-        Vector3f charPos = MathTools::GetPosition(trans.GetWorldTransform(iUser));
-        Vector3f posEnd = charPos + MathTools::To3DVec(state.m_GrabDirection) * 1.05;
+        Vec3 charPos = trans.GetWorldTransform(iUser)[3];
+        Vec3 posEnd = charPos + Vec3(state.m_GrabDirection, 0) * 1.05;
         phSys.RayQuery(res, charPos, posEnd, 2);
 
         for (auto obj : res)

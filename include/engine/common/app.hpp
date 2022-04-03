@@ -66,7 +66,7 @@ namespace eXl
     uint32_t dirMask = 0;
     bool keyChanged = false;
 
-    Vector2i lastMousePos;
+    Vec2i lastMousePos;
     bool rightClickMoving = false;
   };
 

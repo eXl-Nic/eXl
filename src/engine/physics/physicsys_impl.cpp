@@ -20,12 +20,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  const Quaternionf RXD(Mathf::Cos(Mathf::Pi() / 4.0f), 1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0, 0.0);
-  const Quaternionf RXA(Mathf::Cos(Mathf::Pi() / 4.0f), -1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0, 0.0);
-  const Quaternionf RYD(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0);
-  const Quaternionf RYA(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, -1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0);
-  const Quaternionf RZD(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 0.0, 1.0*Mathf::Sin(Mathf::Pi() / 4.0f));
-  const Quaternionf RZA(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 0.0, -1.0*Mathf::Sin(Mathf::Pi() / 4.0f));
+  const Quaternion RXD(Mathf::Cos(Mathf::Pi() / 4.0f), 1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0, 0.0);
+  const Quaternion RXA(Mathf::Cos(Mathf::Pi() / 4.0f), -1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0, 0.0);
+  const Quaternion RYD(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0);
+  const Quaternion RYA(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, -1.0*Mathf::Sin(Mathf::Pi() / 4.0f), 0.0);
+  const Quaternion RZD(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 0.0, 1.0*Mathf::Sin(Mathf::Pi() / 4.0f));
+  const Quaternion RZA(Mathf::Cos(Mathf::Pi() / 4.0f), 0.0, 0.0, -1.0*Mathf::Sin(Mathf::Pi() / 4.0f));
 
   btCollisionShape* ShapesCache::MakeGeom(const GeomDef& iDef, btCompoundShape* iCont)
   {
@@ -41,33 +41,33 @@ namespace eXl
     switch (iDef.shape)
     {
     case GeomDef::Sphere:
-      newGeom = eXl_Bullet_NEW(btSphereShape)(iDef.geomData.X());
+      newGeom = eXl_Bullet_NEW(btSphereShape)(iDef.geomData.x);
       if (iCont)
       {
-        iCont->addChildShape(btTransform(TO_BTQUAT(Quaternionf::IDENTITY), TO_BTVECT(iDef.position)), newGeom);
+        iCont->addChildShape(btTransform(TO_BTQUAT(Identity<Quaternion>()), TO_BTVECT(iDef.position)), newGeom);
       }
-      else if (iDef.position != Vector3f::ZERO)
+      else if (iDef.position != Zero<Vec3>())
       {
         iCont = eXl_Bullet_NEW(btCompoundShape);
-        iCont->addChildShape(btTransform(TO_BTQUAT(Quaternionf::IDENTITY), TO_BTVECT(iDef.position)), newGeom);
+        iCont->addChildShape(btTransform(TO_BTQUAT(Identity<Quaternion>()), TO_BTVECT(iDef.position)), newGeom);
       }
       break;
     case GeomDef::Cylinder:
       if (iCont)
       {
-        newGeom = eXl_Bullet_NEW(btCylinderShape)(btVector3(iDef.geomData.X(), iDef.geomData.Y() / 2.0, iDef.geomData.Z()));
+        newGeom = eXl_Bullet_NEW(btCylinderShape)(btVector3(iDef.geomData.x, iDef.geomData.y / 2.0, iDef.geomData.z));
         iCont->addChildShape(btTransform(TO_BTQUAT(iDef.orient), TO_BTVECT(iDef.position)), newGeom);
       }
-      else if (iDef.position != Vector3f::ZERO || iDef.orient != Quaternionf::IDENTITY)
+      else if (iDef.position != Zero<Vec3>() || iDef.orient != Identity<Quaternion>())
       {
-        //Should optim with Y,Z rotation but version in bullet look buggy (halfExtent? whattt?)
+        //Should optim with.y.z rotation but version in bullet look buggy (halfExtent? whattt?)
         iCont = eXl_Bullet_NEW(btCompoundShape);
-        newGeom = eXl_Bullet_NEW(btCylinderShape)(btVector3(iDef.geomData.X(), iDef.geomData.Y() / 2.0, iDef.geomData.Z()));
+        newGeom = eXl_Bullet_NEW(btCylinderShape)(btVector3(iDef.geomData.x, iDef.geomData.y / 2.0, iDef.geomData.z));
         iCont->addChildShape(btTransform(TO_BTQUAT(iDef.orient), TO_BTVECT(iDef.position)), newGeom);
       }
       else
       {
-        newGeom = eXl_Bullet_NEW(btCylinderShape)(btVector3(iDef.geomData.X(), iDef.geomData.Y() / 2.0, iDef.geomData.Z()));
+        newGeom = eXl_Bullet_NEW(btCylinderShape)(btVector3(iDef.geomData.x, iDef.geomData.y / 2.0, iDef.geomData.z));
       }
       break;
     case GeomDef::Box:
@@ -76,30 +76,30 @@ namespace eXl
         newGeom = eXl_Bullet_NEW(btBoxShape)(TO_BTVECT((iDef.geomData / 2.0)));
         iCont->addChildShape(btTransform(TO_BTQUAT(iDef.orient), TO_BTVECT(iDef.position)), newGeom);
       }
-      else if (iDef.position != Vector3f::ZERO)
+      else if (iDef.position != Zero<Vec3>())
       {
         iCont = eXl_Bullet_NEW(btCompoundShape);
         newGeom = eXl_Bullet_NEW(btBoxShape)(TO_BTVECT((iDef.geomData / 2.0)));
         iCont->addChildShape(btTransform(TO_BTQUAT(iDef.orient), TO_BTVECT(iDef.position)), newGeom);
       }
-      else if (iDef.orient == Quaternionf::IDENTITY || iDef.orient == Quaternionf(-1.0, 0.0, 0.0, 0.0) ||
-        iDef.orient == Quaternionf(0.0, 1.0, 0.0, 0.0) || iDef.orient == Quaternionf(0.0, -1.0, 0.0, 0.0) ||
-        iDef.orient == Quaternionf(0.0, 0.0, 1.0, 0.0) || iDef.orient == Quaternionf(0.0, 0.0, -1.0, 0.0) ||
-        iDef.orient == Quaternionf(0.0, 0.0, 0.0, 1.0) || iDef.orient == Quaternionf(0.0, 0.0, 0.0, -1.0))
+      else if (iDef.orient == Identity<Quaternion>() || iDef.orient == Quaternion(-1.0, 0.0, 0.0, 0.0) ||
+        iDef.orient == Quaternion(0.0, 1.0, 0.0, 0.0) || iDef.orient == Quaternion(0.0, -1.0, 0.0, 0.0) ||
+        iDef.orient == Quaternion(0.0, 0.0, 1.0, 0.0) || iDef.orient == Quaternion(0.0, 0.0, -1.0, 0.0) ||
+        iDef.orient == Quaternion(0.0, 0.0, 0.0, 1.0) || iDef.orient == Quaternion(0.0, 0.0, 0.0, -1.0))
       {
         newGeom = eXl_Bullet_NEW(btBoxShape)(TO_BTVECT((iDef.geomData / 2.0)));
       }
       else if (iDef.orient == RXD || iDef.orient == RXA)
       {
-        newGeom = eXl_Bullet_NEW(btBoxShape)(btVector3(iDef.geomData.X() / 2.0, iDef.geomData.Z() / 2.0, iDef.geomData.Y() / 2.0));
+        newGeom = eXl_Bullet_NEW(btBoxShape)(btVector3(iDef.geomData.x / 2.0, iDef.geomData.z / 2.0, iDef.geomData.y / 2.0));
       }
       else if (iDef.orient == RYD || iDef.orient == RYA)
       {
-        newGeom = eXl_Bullet_NEW(btBoxShape)(btVector3(iDef.geomData.Z() / 2.0, iDef.geomData.Y() / 2.0, iDef.geomData.X() / 2.0));
+        newGeom = eXl_Bullet_NEW(btBoxShape)(btVector3(iDef.geomData.z / 2.0, iDef.geomData.y / 2.0, iDef.geomData.x / 2.0));
       }
       else if (iDef.orient == RZD || iDef.orient == RZA)
       {
-        newGeom = eXl_Bullet_NEW(btBoxShape)(btVector3(iDef.geomData.Y() / 2.0, iDef.geomData.X() / 2.0, iDef.geomData.Z() / 2.0));
+        newGeom = eXl_Bullet_NEW(btBoxShape)(btVector3(iDef.geomData.y / 2.0, iDef.geomData.x / 2.0, iDef.geomData.z / 2.0));
       }
       else
       {
@@ -111,19 +111,19 @@ namespace eXl
     case GeomDef::Capsule:
       if (iCont)
       {
-        newGeom = eXl_Bullet_NEW(btCapsuleShape)(iDef.geomData.X(), iDef.geomData.Y() - 2.0*iDef.geomData.X());
+        newGeom = eXl_Bullet_NEW(btCapsuleShape)(iDef.geomData.x, iDef.geomData.y - 2.0*iDef.geomData.x);
         iCont->addChildShape(btTransform(TO_BTQUAT(iDef.orient), TO_BTVECT(iDef.position)), newGeom);
       }
-      else if (iDef.position != Vector3f::ZERO || iDef.orient != Quaternionf::IDENTITY)
+      else if (iDef.position != Zero<Vec3>() || iDef.orient != Identity<Quaternion>())
       {
-        //Should optim with Y,Z rotation but version in bullet look buggy (halfExtent? whattt?)
+        //Should optim with.y.z rotation but version in bullet look buggy (halfExtent? whattt?)
         iCont = eXl_Bullet_NEW(btCompoundShape);
-        newGeom = eXl_Bullet_NEW(btCapsuleShape)(iDef.geomData.X(), iDef.geomData.Y() - 2.0*iDef.geomData.X());
+        newGeom = eXl_Bullet_NEW(btCapsuleShape)(iDef.geomData.x, iDef.geomData.y - 2.0*iDef.geomData.x);
         iCont->addChildShape(btTransform(TO_BTQUAT(iDef.orient), TO_BTVECT(iDef.position)), newGeom);
       }
       else
       {
-        newGeom = eXl_Bullet_NEW(btCapsuleShape)(iDef.geomData.X(), iDef.geomData.Y() - 2.0*iDef.geomData.X());
+        newGeom = eXl_Bullet_NEW(btCapsuleShape)(iDef.geomData.x, iDef.geomData.y - 2.0*iDef.geomData.x);
       }
       break;
     default:
@@ -226,9 +226,9 @@ namespace eXl
           colData.obj1 = bcA->m_ObjectId ;
 
           const btVector3& ptA = pt.getPositionWorldOnA();
-          colData.contactPosOn1=Vector3f(ptA.x(),ptA.y(),ptA.z());
+          colData.contactPosOn1=Vec3(ptA.x(),ptA.y(),ptA.z());
           const btVector3& normalOnB = pt.m_normalWorldOnB;
-          colData.normal1To2=Vector3f(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
+          colData.normal1To2=Vec3(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
           colData.depth= -pt.getDistance();
         }
         else
@@ -238,9 +238,9 @@ namespace eXl
           colData.obj1 = bcA->m_ObjectId;
 
           const btVector3& ptB = pt.getPositionWorldOnB();
-          colData.contactPosOn1=Vector3f(ptB.x(),ptB.y(),ptB.z());
+          colData.contactPosOn1=Vec3(ptB.x(),ptB.y(),ptB.z());
           const btVector3& normalOnB = pt.m_normalWorldOnB;
-          colData.normal1To2=Vector3f(normalOnB.x(),normalOnB.y(),normalOnB.z());
+          colData.normal1To2=Vec3(normalOnB.x(),normalOnB.y(),normalOnB.z());
           colData.depth= -pt.getDistance();
         }
 
@@ -288,7 +288,7 @@ namespace eXl
       colData.obj1 = bcA->m_ObjectId;
       btVector3 ptA;
       ptA.setInterpolate3(m_rayFromWorld,m_rayToWorld,rayResult.m_hitFraction);
-      colData.contactPosOn1=Vector3f(ptA.x(),ptA.y(),ptA.z());
+      colData.contactPosOn1=Vec3(ptA.x(),ptA.y(),ptA.z());
       btVector3 normalOnB;
       if (normalInWorldSpace)
       {
@@ -299,7 +299,7 @@ namespace eXl
         ///need to transform normal into worldspace
         normalOnB = rayResult.m_collisionObject->getWorldTransform().getBasis()*rayResult.m_hitNormalLocal;
       }
-      colData.normal1To2=Vector3f(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
+      colData.normal1To2=Vec3(-normalOnB.x(),-normalOnB.y(),-normalOnB.z());
       colData.depth = rayResult.m_hitFraction;
 
 
@@ -497,7 +497,7 @@ namespace eXl
     m_dynamicsWorld->stepSimulation(iTime, 100);
   }
 
-  bool PhysicsSystem_Impl::SweepTest(PhysicComponent_Impl* iShape, Vector3f const& iFrom, Vector3f const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)
+  bool PhysicsSystem_Impl::SweepTest(PhysicComponent_Impl* iShape, Vec3 const& iFrom, Vec3 const& iTo, CollisionData& oRes, std::function<bool(PhysicComponent_Impl*)> const& iIgnore, uint16_t iMask)
   {
     Cleanup();
     oRes.obj1 = ObjectHandle();
@@ -507,8 +507,8 @@ namespace eXl
     btCollisionShape* shape = iShape->GetObject()->getCollisionShape();
     eXl_ASSERT_MSG(shape && shape->isConvex(), "Bad shape for convex sweep");
     
-    btTransform transFrom(TO_BTQUAT(Quaternionf::IDENTITY), TO_BTVECT(iFrom));
-    btTransform transTo(TO_BTQUAT(Quaternionf::IDENTITY), TO_BTVECT(iTo));
+    btTransform transFrom(TO_BTQUAT(Identity<Quaternion>()), TO_BTVECT(iFrom));
+    btTransform transTo(TO_BTQUAT(Identity<Quaternion>()), TO_BTVECT(iTo));
 
     ClosestSweepTestResultCallback callback(iShape->GetObject(), iIgnore, iMask);
 
@@ -550,7 +550,7 @@ namespace eXl
       
       m_dynamicsWorld->rayTest(contactCB.m_rayFromWorld,contactCB.m_rayToWorld,contactCB);
 
-      float length = (iDef.position-iDef.geomData).Length();
+      float length = distance(iDef.position, iDef.geomData);
       Multiset<OrderedColDat>::iterator iter = rec.begin();
       Multiset<OrderedColDat>::iterator iterEnd = rec.end();
       for(;iter!=iterEnd;iter++)
@@ -564,8 +564,8 @@ namespace eXl
       trans.setOrigin(TO_BTVECT(iDef.position));
       trans.setRotation(TO_BTQUAT(iDef.orient));
       GeomDef localDef = iDef;
-      localDef.position=Vector3f::ZERO;
-      localDef.orient=Quaternionf::IDENTITY;
+      localDef.position=Zero<Vec3>();
+      localDef.orient=Identity<Quaternion>();
       btCollisionShape* shape = m_ShapesCache.MakeGeom(localDef, nullptr);
       {
         btCollisionObject obj;
@@ -602,16 +602,16 @@ namespace eXl
 
       auto& trans = m_Sys.GetTransforms().GetWorldTransform(iObj);
 
-      btVector3 pos(trans.m_Data[12], trans.m_Data[13], trans.m_Data[14]);
+      btVector3 pos(trans[3][0], trans[3][1], trans[3][2]);
 
       m_Trans.push_back(btTransform());
-      m_Trans[m_Trans.size() - 1].setFromOpenGLMatrix(trans.m_Data);
+      m_Trans[m_Trans.size() - 1].setFromOpenGLMatrix(value_ptr(trans));
       
       m_Volumes.expand(btDbvtVolume::FromCR(pos, iRadius));
     } 
   }
 
-  void NeighborhoodExtractionImpl::AddObject(ObjectHandle iObj, Vector3f const& iDims, bool iPopulate)
+  void NeighborhoodExtractionImpl::AddObject(ObjectHandle iObj, Vec3 const& iDims, bool iPopulate)
   {
     if(auto physObj = m_Sys.GetCompImpl(iObj))
     {
@@ -625,10 +625,10 @@ namespace eXl
 
       auto& trans = m_Sys.GetTransforms().GetWorldTransform(iObj);
 
-      btVector3 pos(trans.m_Data[12], trans.m_Data[13], trans.m_Data[14]);
+      btVector3 pos(trans[3][0], trans[3][1], trans[3][2]);
 
       m_Trans.push_back(btTransform());
-      m_Trans[m_Trans.size() - 1].setFromOpenGLMatrix(trans.m_Data);
+      m_Trans[m_Trans.size() - 1].setFromOpenGLMatrix(value_ptr(trans));
 
       m_Volumes.expand(btDbvtVolume::FromCE(pos, TO_BTVECT(iDims) * 0.5));
     }
@@ -698,13 +698,13 @@ namespace eXl
     int32_t curChild = -1;
   };
 
-  void NeighborhoodExtractionImpl::Run(Vector3f const& iForwardOffset, float iRadiusSearch)
+  void NeighborhoodExtractionImpl::Run(Vec3 const& iForwardOffset, float iRadiusSearch)
   {
     m_Sys.GetImpl().Cleanup();
     Run(((btDbvtBroadphase*)(m_Sys.GetImpl().m_broadphase))->m_sets[btDbvtBroadphase::DYNAMIC_SET], iForwardOffset, iRadiusSearch);
   }
 
-  void NeighborhoodExtractionImpl::Run(btDbvt& iTree, Vector3f const& iForwardOffset, float iRadiusSearch)
+  void NeighborhoodExtractionImpl::Run(btDbvt& iTree, Vec3 const& iForwardOffset, float iRadiusSearch)
   {
     if (iTree.m_root == nullptr)
     {
@@ -801,9 +801,9 @@ namespace eXl
                       box2D.m_Data[0] = MathTools::As2DVec(FROM_BTVECT(child->volume.Mins()));
                       box2D.m_Data[1] = MathTools::As2DVec(FROM_BTVECT(child->volume.Maxs()));
 
-                      Vector2f ptDists = box2D.Classify(MathTools::As2DVec(FROM_BTVECT(curObjPos)));
+                      Vec2 ptDists = box2D.Classify(MathTools::As2DVec(FROM_BTVECT(curObjPos)));
 
-                      sqLen = ptDists.SquaredLength();
+                      sqLen = dot(ptDists, ptDists);
                     }
                   }
                   else

@@ -35,9 +35,9 @@ namespace eXl
 
     void Register(World& iWorld) override;
 
-    static ObjectHandle Build(World& iWorld, Vector3f const& iPosition, Desc const& iDesc);
+    static ObjectHandle Build(World& iWorld, Vec3 const& iPosition, Desc const& iDesc);
 
-		void AddProjectile(ObjectHandle iObj, Desc const& iDesc, Vector3f const& iInitialSpeed);
+		void AddProjectile(ObjectHandle iObj, Desc const& iDesc, Vec3 const& iInitialSpeed);
     void DeleteComponent(ObjectHandle iObj) override;
 
     void Tick(float iDelta);
