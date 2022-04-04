@@ -175,7 +175,7 @@ namespace eXl
         UnitY<Vec3>() *  1.0,
         UnitY<Vec3>() * -1.0,
       };
-      Vec3 dir;
+      Vec3 dir = Zero<Vec3>();
       for (unsigned int i = 0; i < 4; ++i)
       {
         if (dirMask & (1 << i))

@@ -64,8 +64,8 @@ namespace eXl
 
       ContactFilterCallback contactCb;
 
-      Vec3 m_Dir;
-      float m_Speed;
+      Vec3 m_Dir = Zero<Vec3>();
+      float m_Speed = 0;
       bool m_NeedDepenetration = false;
       bool m_CanBounce = false;
       bool m_Asleep = false;

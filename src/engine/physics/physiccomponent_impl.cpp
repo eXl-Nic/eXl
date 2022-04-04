@@ -74,7 +74,7 @@ namespace eXl
         Vec3 sideDir = cross(frontDir, upDir);
         rot = Quaternion(frontDir, sideDir);
       }
-      m_System.m_MovedTransform.push_back(translate(Mat4(rot), FROM_BTVECT(worldTrans.getOrigin())));
+      m_System.m_MovedTransform.push_back(translate(Identity<Mat4>(), FROM_BTVECT(worldTrans.getOrigin())) * Mat4(rot));
       m_System.m_MovedObject.push_back(m_ObjectId);
     }
   }
@@ -206,22 +206,4 @@ namespace eXl
       m_Sensor->setWorldTransform(trans);
     }
   }
-
-  //BulletCompoundComponent* BulletComponent::GetCompound()
-  //{
-  //  if(m_Flags & BTC_MasterCompound)
-  //  {
-  //    if(!(m_Flags & (BTC_Static|BTC_Kinematic)))
-  //    {
-  //      return ((MasterRigidMotionState*)m_MState)->GetCompound();
-  //    }
-  //    else
-  //    {
-  //      return m_Compound;
-  //    }
-  //  }
-  //  return NULL;
-  //}
-
-  
 }

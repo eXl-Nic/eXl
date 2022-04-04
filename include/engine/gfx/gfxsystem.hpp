@@ -83,7 +83,7 @@ namespace eXl
     {
       Vec2i viewportSize;
       Vec3 basis[3] = { UnitX<Vec3>(), UnitY<Vec3>(), UnitZ<Vec3>()};
-      Vec3 pos;
+      Vec3 pos = Zero<Vec3>();
       Vec4 backgroundColor = Zero<Vec4>();
       Projection projection = Perspective;
       float fov = Mathf::Pi() / 2.0; // Vertical FOV

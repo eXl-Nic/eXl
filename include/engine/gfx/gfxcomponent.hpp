@@ -165,8 +165,8 @@ namespace eXl
 		
 		Mat4 m_Transform;
     Mat4 m_BillboardTransform;
-    Vec2 m_CurScale;
-    Vec2 m_CurOffset;
+    Vec2 m_CurScale = One<Vec2>();
+    Vec2 m_CurOffset = Zero<Vec2>();
 
 
     IntrusivePtr<OGLTexture const> m_Texture;
