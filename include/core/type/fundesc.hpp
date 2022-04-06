@@ -61,6 +61,21 @@ namespace eXl
   };
 
   template<typename... Args>
+  struct ComputeArgListStorage;
+
+  template<typename Arg1, typename... Args>
+  struct ComputeArgListStorage<Arg1, Args...>
+  {
+    static constexpr size_t size = sizeof(Arg1) + ComputeArgListStorage<Args...>::size;
+  };
+
+  template<>
+  struct ComputeArgListStorage<>
+  {
+    static constexpr size_t size = 0;
+  };
+
+  template<typename... Args>
   struct ValidateArgList;
 
   template<typename Arg1, typename... Args>
@@ -261,6 +276,28 @@ namespace eXl
     static RetType Call(Function const& iFun, ConstDynObject const& iBuffer)
     {
       return PositionalInvoker<typename MakePositionalList<Args...>::type>::template Call<RetType>(iFun, iBuffer);
+    }
+  };
+
+  template<typename RetType, typename... Args>
+  struct Invoker_RetWrapper
+  {
+    template <typename Function>
+    static void Execute(Function const& iFun, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
+    {
+      Type const* retType = TypeManager::GetType<RetType>();
+      oOutput.SetType(retType, retType->Build(), true);
+      *oOutput.CastBuffer<RetType>() = Invoker<Args...>:: template Call<RetType>(iFun, iArgsBuffer);
+    }
+  };
+
+  template<typename... Args>
+  struct Invoker_RetWrapper<void, Args...>
+  {
+    template <typename Function>
+    static void Execute(Function const& iFun, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
+    {
+      Invoker<Args...>::template Call<void>(iFun, iArgsBuffer);
     }
   };
 }

@@ -45,14 +45,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  
+
   void CharacterAnimation_StaticInit();
   void CharacterAnimation_StaticDestroy();
-
-#ifdef EXL_LUA
-  void Script_StaticInit();
-  void Script_StaticDestroy();
-#endif
 
   namespace
   {
@@ -181,8 +176,8 @@ namespace eXl
   ComponentName EngineCommon::GfxSpriteComponentName() { return s_NameRegistry->m_GfxSpriteComponentName; }
   ComponentName EngineCommon::PhysicsComponentName() { return s_NameRegistry->m_PhysicsComponentName; }
   ComponentName EngineCommon::TriggerComponentName() { return s_NameRegistry->m_TriggerComponentName; }
-  ComponentName EngineCommon::CharacterComponentName() 
-  { 
+  ComponentName EngineCommon::CharacterComponentName()
+  {
     static ComponentName s_Name("Character");
     return s_Name;
   }
@@ -194,8 +189,8 @@ namespace eXl
   PropertySheetName EngineCommon::TerrainCarver::PropertyName() { return s_NameRegistry->m_TerrainCarverName; }
   PropertySheetName EngineCommon::GfxSpriteDescName() { return s_NameRegistry->m_SpriteDescDataName; }
 
-  PropertySheetName EngineCommon::ObjectShapeData::PropertyName() 
-  { 
+  PropertySheetName EngineCommon::ObjectShapeData::PropertyName()
+  {
     static PropertySheetName s_Name("ObjectShape");
     return s_Name;
   }
@@ -248,6 +243,23 @@ namespace eXl
     return baseManifest;
   }
 
+  EventsManifest& EngineCommon::GetBaseEvents()
+  {
+    static EventsManifest s_BaseEvents = []
+    {
+      EventsManifest baseEvents;
+      EventsManifest::FunctionsMap triggerFunctions;
+
+      triggerFunctions.insert(std::make_pair("Enter", FunDesc::Create<void(ObjectHandle, ObjectHandle)>()));
+      triggerFunctions.insert(std::make_pair("Leave", FunDesc::Create<void(ObjectHandle, ObjectHandle)>()));
+      baseEvents.m_Interfaces.insert(std::make_pair("Trigger", std::move(triggerFunctions)));
+
+      return baseEvents;
+    }();
+
+    return s_BaseEvents;
+  }
+
   class EnginePlugin : public Plugin
   {
   public:
@@ -275,9 +287,6 @@ namespace eXl
       FontResource::Init();
       //CharacterAnimation::Init();
       LuaScriptBehaviour::Init();
-#ifdef EXL_LUA
-      Script_StaticInit();
-#endif
 
       Register_ENGINE_Types();
 #ifdef EXL_LUA
@@ -515,14 +524,6 @@ namespace eXl
 #endif
       s_EngineCommonManifest->RegisterComponent(CharacterComponentName(), createCharacterFactory, { ObjectShapeData::PropertyName(), CharacterDesc::PropertyName() });
       
-#ifdef EXL_LUA
-      BehaviourDesc desc;
-      desc.behaviourName = "Trigger";
-      desc.functions.insert(std::make_pair("Enter", FunDesc::Create<void(ObjectHandle, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("Leave", FunDesc::Create<void(ObjectHandle, ObjectHandle)>()));
-
-      LuaScriptSystem::AddBehaviourDesc(desc);
-#endif
 
       InitializeYojimbo();
     }
@@ -530,9 +531,6 @@ namespace eXl
     void _Unload()
     {
       ShutdownYojimbo();
-#ifdef EXL_LUA
-      Script_StaticDestroy();
-#endif
       CharacterAnimation_StaticDestroy();
       s_NameRegistry.reset();
       s_EngineCommonManifest.reset();

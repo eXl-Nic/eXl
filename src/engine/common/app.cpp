@@ -28,6 +28,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/gamedatabase.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/game/scripttrigger.hpp>
+#include <engine/game/commondef.hpp>
 
 #include <cxxopts.hpp>
 
@@ -293,6 +294,7 @@ namespace eXl
     projectiles = world.AddSystem(std::make_unique<ProjectileSystem>());
     world.AddSystem(std::make_unique<TransformAnimManager>());
     world.AddSystem(std::make_unique<GameDatabase>(m_Manifest));
+    world.AddSystem(std::make_unique<EventSystem>(EngineCommon::GetBaseEvents()));
 #ifdef EXL_LUA
     world.AddSystem(std::make_unique<LuaScriptSystem>());
 #endif

@@ -6,7 +6,7 @@
 
 #include <core/type/typemanager.hpp>
 
-#include <engine/script/luascriptsystem.hpp>
+#include <engine/game/commondef.hpp>
 #include <engine/script/luascriptbehaviour.hpp>
 
 #include <QBoxLayout>
@@ -255,7 +255,7 @@ namespace eXl
 
     QComboBox* m_BehaviourSelector;
     QTextEdit* m_ScriptSrc;
-    Vector<Name> m_Behaviours;
+    Vector<String> m_Behaviours;
   };
 
   void LuaScriptEditor::Cleanup()
@@ -274,18 +274,18 @@ namespace eXl
     QVBoxLayout* layout = new QVBoxLayout(this);
 
     m_Impl->m_BehaviourSelector = new QComboBox(this);
-
-    m_Impl->m_Behaviours = LuaScriptSystem::GetBehaviourNames();
-
+    EventsManifest const& manifest = EngineCommon::GetBaseEvents();
     m_Impl->m_BehaviourSelector->addItem("<empty>");
-    for (auto const& name : m_Impl->m_Behaviours)
+    for (auto const& entry : manifest.m_Interfaces)
     {
-      m_Impl->m_BehaviourSelector->addItem(QString::fromUtf8(name.c_str()));
+      m_Impl->m_Behaviours.push_back(entry.first);      
+      m_Impl->m_BehaviourSelector->addItem(QString::fromUtf8(entry.first.c_str()));
     }
 
-    if (LuaScriptSystem::GetBehaviourDesc(m_Impl->m_Script->m_BehaviourName))
+    auto iter = manifest.m_Interfaces.find(m_Impl->m_Script->m_InterfaceName);
+    if (iter != manifest.m_Interfaces.end())
     {
-      auto iter = std::find(m_Impl->m_Behaviours.begin(), m_Impl->m_Behaviours.end(), m_Impl->m_Script->m_BehaviourName);
+      auto iter = std::find(m_Impl->m_Behaviours.begin(), m_Impl->m_Behaviours.end(), m_Impl->m_Script->m_InterfaceName);
       uint32_t index = iter - m_Impl->m_Behaviours.begin();
       m_Impl->m_BehaviourSelector->setCurrentIndex(index + 1);
     }
@@ -295,21 +295,23 @@ namespace eXl
     { 
       if (iIndex == 0)
       {
-        if (LuaScriptSystem::GetBehaviourDesc(m_Impl->m_Script->m_BehaviourName) == nullptr)
+        EventsManifest const& manifest = EngineCommon::GetBaseEvents();
+        auto iter = manifest.m_Interfaces.find(m_Impl->m_Script->m_InterfaceName);
+        if (iter == manifest.m_Interfaces.end())
         {
           return;
         }
-        m_Impl->m_Script->m_BehaviourName = "";
+        m_Impl->m_Script->m_InterfaceName = "";
         m_Impl->m_Editor->ModifyResource();
       }
       else
       {
-        Name behaviourName = m_Impl->m_Behaviours[iIndex - 1];
-        if (behaviourName == m_Impl->m_Script->m_BehaviourName)
+        String itfName = m_Impl->m_Behaviours[iIndex - 1];
+        if (itfName == m_Impl->m_Script->m_InterfaceName)
         {
           return;
         }
-        m_Impl->m_Script->m_BehaviourName = behaviourName;
+        m_Impl->m_Script->m_InterfaceName = itfName;
         m_Impl->m_Editor->ModifyResource();
 
         if (m_Impl->m_Script->m_Script.empty())
@@ -339,14 +341,15 @@ namespace eXl
 
   void LuaScriptEditor::Impl::GenerateDefaultBehaviourSource()
   {
-    BehaviourDesc const* desc = LuaScriptSystem::GetBehaviourDesc(m_Script->m_BehaviourName);
-    if (desc == nullptr)
+    EventsManifest const& manifest = EngineCommon::GetBaseEvents();
+    auto iter = manifest.m_Interfaces.find(m_Script->m_InterfaceName);
+    if (iter != manifest.m_Interfaces.end())
     {
       return;
     }
     String scriptObjName = m_Script->GetName();
     scriptObjName.append("_");
-    scriptObjName.append(desc->behaviourName.get());
+    scriptObjName.append(iter->first);
     scriptObjName.append("_script");
     
     String defaultScript;
@@ -358,12 +361,12 @@ namespace eXl
     defaultScript.append(scriptObjName);
     defaultScript.append(".Init(object)\n\nend\n\n");
 
-    for (auto const funDesc : desc->functions)
+    for (auto const funDesc : iter->second)
     {
       defaultScript.append("function ");
       defaultScript.append(scriptObjName);
       defaultScript.append(".");
-      defaultScript.append(funDesc.first.get());
+      defaultScript.append(funDesc.first);
       defaultScript.append("(scriptObj");
 
       for (uint32_t i = 0; i<funDesc.second.arguments.size(); ++i)

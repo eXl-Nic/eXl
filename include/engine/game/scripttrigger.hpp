@@ -26,9 +26,8 @@ namespace eXl
     void OnLeave(const Vector<ObjectPair>& iNewPairs);
 
     World& m_World;
-    LuaScriptSystem& m_Scripts;
   private:
-    Name m_BehaviourName;
+    String m_BehaviourName;
     Name m_EnterName;
     Name m_LeaveName;
   };

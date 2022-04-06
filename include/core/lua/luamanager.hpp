@@ -73,6 +73,11 @@ namespace eXl
         m_NumArgs += PushArgsImpl<Args...>::Push(m_State, std::forward<Args>(iArgs)...);
       }
 
+      void ArgPushed()
+      {
+        ++m_NumArgs;
+      }
+
       boost::optional<uint32_t> Call(uint32_t iExpectedRes);
 
     protected:

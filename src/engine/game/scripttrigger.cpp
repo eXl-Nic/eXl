@@ -21,26 +21,27 @@ namespace eXl
 
   ScriptTrigger::ScriptTrigger(World& iWorld)
     : m_World(iWorld)
-    , m_Scripts(*m_World.GetSystem<LuaScriptSystem>())
   {
     m_BehaviourName = "Trigger";
-    m_EnterName = "Enter";
-    m_LeaveName = "Leave";
+    m_EnterName = m_BehaviourName + "::Enter";
+    m_LeaveName = m_BehaviourName + "::Leave";
   }
 
   void ScriptTrigger::OnEnter(const Vector<ObjectPair>& iNewPairs)
   {
+    EventSystem& events = *m_World.GetSystem<EventSystem>();
     for (auto const& pair : iNewPairs)
     {
-      m_Scripts.CallBehaviour<void>(pair.first, m_BehaviourName, m_EnterName, pair.first, pair.second);
+      events.Dispatch<void>(pair.first, m_EnterName, pair.first, pair.second);
     }
   }
 
   void ScriptTrigger::OnLeave(const Vector<ObjectPair>& iNewPairs)
   {
+    EventSystem& events = *m_World.GetSystem<EventSystem>();
     for (auto const& pair : iNewPairs)
     {
-      m_Scripts.CallBehaviour<void>(pair.first, m_BehaviourName, m_LeaveName, pair.first, pair.second);
+      events.Dispatch<void>(pair.first, m_LeaveName, pair.first, pair.second);
     }
   }
 

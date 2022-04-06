@@ -28,7 +28,7 @@ namespace eXl
     static LuaScriptBehaviour* Create(Path const& iPath, String const& iName);
 #endif
 
-    Name m_BehaviourName;
+    String m_InterfaceName;
 
     LuaScriptBehaviour(ResourceMetaData&);
   protected:

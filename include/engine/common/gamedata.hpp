@@ -104,6 +104,8 @@ namespace eXl
     DenseGameDataView<T> const* GetDenseView() const;
     SparseGameDataView<T> const* GetSparseView() const;
 
+    World& GetWorld() const { return m_World; }
+
     template <typename Functor>
     void Iterate(Functor const& iFn);
     template <typename Functor>
@@ -224,7 +226,7 @@ namespace eXl
     }
     void GarbageCollect()
     {
-      return m_Alloc.GarbageCollect();
+      return m_Alloc.GarbageCollect(m_Alloc.m_View.GetWorld());
     }
 
     template <typename Functor>

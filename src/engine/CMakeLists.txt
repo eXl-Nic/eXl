@@ -90,6 +90,7 @@ common/world.cpp
 common/debugtool.cpp
 common/gamedata.cpp
 common/gamedatabase.cpp
+script/eventsystem.cpp
 
 gfx/tileset.cpp
 

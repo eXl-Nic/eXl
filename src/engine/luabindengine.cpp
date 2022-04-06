@@ -135,7 +135,7 @@ namespace eXl
 
         luabind::class_<GameDatabase>("GameDatabase"),
 
-        luabind::def("GetWorld", &LuaScriptSystem::GetWorld)
+        luabind::def("GetWorld", &LuaScriptSystem::GetWorld_Static)
     ];
 
     luabind::object _G = luabind::globals(iState);

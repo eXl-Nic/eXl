@@ -115,6 +115,15 @@ namespace eXl
     m_Tick.resize(NumStages);
   }
 
+  World::~World()
+  {
+    m_Objects.Reset();
+    if (m_Events)
+    {
+      m_Events->GarbageCollect();
+    }
+  }
+
   ObjectHandle World::CreateObject()
   {
     ObjectHandle handle = m_Objects.Alloc();
@@ -277,6 +286,10 @@ namespace eXl
     {
       m_Database = database;
     }
+    if (EventSystem* events = EventSystem::DynamicCast(system))
+    {
+      m_Events = events;
+    }
 
     return system;
   }
@@ -324,6 +337,11 @@ namespace eXl
     if (m_Database)
     {
       m_Database->GarbageCollect();
+    }
+
+    if (m_Events)
+    {
+      m_Events->GarbageCollect();
     }
     
     if (m_AbilitySystem)

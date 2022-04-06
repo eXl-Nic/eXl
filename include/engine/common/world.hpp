@@ -172,6 +172,7 @@ namespace eXl
   class AbilitySystem;
   class Transforms;
   class GameDatabase;
+  class EventSystem;
 
   MAKE_NAME(PropertySheetName);
   MAKE_NAME(ComponentName);
@@ -204,6 +205,7 @@ namespace eXl
 
     World(ComponentManifest const& iManifest);
     World(World const&) = delete;
+    ~World();
     World& operator=(World const&) = delete;
 
     ComponentManifest const& GetComponents() const { return m_Components; }
@@ -318,6 +320,7 @@ namespace eXl
     ComponentManifest const& m_Components;
 
     GameDatabase* m_Database = nullptr;
+    EventSystem* m_Events = nullptr;
     PhysicsSystem* m_PhSystem = nullptr;
     AbilitySystem* m_AbilitySystem = nullptr;
     Transforms* m_Transforms = nullptr;

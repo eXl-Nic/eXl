@@ -57,33 +57,11 @@ inline CommandDesc::CommandDesc(CommandDesc&& iDesc)
 }
 
 template<typename RetType, typename... Args>
-struct CallRetTypeDispatcher
-{
-  template <typename Function>
-  static void Execute(Function const& iFun, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
-  {
-    Type const* retType = TypeManager::GetType<RetType>();
-    oOutput.SetType(retType, retType->Build(), true);
-    *oOutput.CastBuffer<RetType>() = Invoker<Args...>:: template Call<RetType>(iFun, iArgsBuffer);
-  }
-};
-
-template<typename... Args>
-struct CallRetTypeDispatcher<void, Args...>
-{
-  template <typename Function>
-  static void Execute(Function const& iFun, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
-  {
-    Invoker<Args...>::template Call<void>(iFun, iArgsBuffer);
-  }
-};
-
-template<typename RetType, typename... Args>
 void NetDriver::DeclareClientCommand(CommandName iName, std::function<RetType(uint32_t, Args...)>& iFun, bool iReliable)
 {
   auto cb = [this, &iFun](uint64_t iClient, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
   {
-    CallRetTypeDispatcher<RetType, Args...>::Execute([this, &iFun, iClient](Args... iArgs)
+    Invoker_RetWrapper<RetType, Args...>::Execute([this, &iFun, iClient](Args... iArgs)
       {
         eXl_ASSERT_REPAIR_RET(!(!iFun), RetType());
         return iFun(iClient, std::forward<Args>(iArgs)...);
@@ -97,7 +75,7 @@ void NetDriver::DeclareServerCommand(CommandName iName, std::function<RetType(Cl
 {
   auto cb = [this, &iFun](uint64_t iClient, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
   {
-    CallRetTypeDispatcher<RetType, Args...>::Execute([this, &iFun, iClient](Args... iArgs)
+    Invoker_RetWrapper<RetType, Args...>::Execute([this, &iFun, iClient](Args... iArgs)
       {
         eXl_ASSERT_REPAIR_RET(!(!iFun), RetType());
         ClientId id{ iClient };
