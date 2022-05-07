@@ -118,10 +118,6 @@ namespace eXl
   World::~World()
   {
     m_Objects.Reset();
-    if (m_Events)
-    {
-      m_Events->GarbageCollect();
-    }
   }
 
   ObjectHandle World::CreateObject()
@@ -197,12 +193,12 @@ namespace eXl
     return info ? (info->m_PendingDeletion ? nullptr : info) : nullptr;
   }
 
-  bool World::IsObjectValid(ObjectHandle iHandle)
+  bool World::IsObjectValid(ObjectHandle iHandle) const
   {
-    return TryGetObjectInfo(iHandle) != nullptr;
+    return m_Objects.TryGet(iHandle) != nullptr;
   }
 
-  bool World::IsObjectBeingDestroyed(ObjectHandle iHandle)
+  bool World::IsObjectBeingDestroyed(ObjectHandle iHandle) const
   {
     ObjectInfo* info = m_Objects.TryGet(iHandle);
     return info ? info->m_PendingDeletion : false;

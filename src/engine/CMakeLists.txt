@@ -64,6 +64,7 @@ gfx/gfxdebugdrawer.cpp
 gfx/gfxcomponentrendernode.cpp
 gfx/gfxspriterendernode.cpp
 gfx/gfxguirendernode.cpp
+gfx/spriterenderer.cpp
 )
 
 set (LUA_SRC
@@ -79,6 +80,7 @@ ${EXL_ENGINE_HEADER_FILES}
 ${GAME_SRC}
 ${LUA_SRC}
 ${GFX_SRC}
+${EXL_DOC_SRC}
 
 common/app.cpp
 common/transformanim.cpp
@@ -128,6 +130,8 @@ net/yojimbo/protocol_yojimbo.cpp
 net/dispatcher.cpp
 
 gui/fontresource.cpp
+gui/guisystem.cpp
+gui/guilib.cpp
 
 engineplugin.cpp
 
@@ -156,7 +160,6 @@ ${INCLUDE_DIR}/common/transforms.hpp
 ${INCLUDE_DIR}/physics/physicsdef.hpp)
 
 SET (EXL_DEPENDENCIES eXl_Gen eXl_OGL)
-
 
 SETUP_EXL_LIB(eXl_Engine "ENGINE" DEPENDENCIES ${EXL_DEPENDENCIES} HEADERS_TO_PARSE "${HEADERS_TO_PARSE}")
 

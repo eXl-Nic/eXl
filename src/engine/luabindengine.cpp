@@ -18,6 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/world.hpp>
 #include <engine/common/transforms.hpp>
 #include <engine/common/gamedatabase.hpp>
+#include <engine/script/eventsystem.hpp>
 #include <engine/game/commondef.hpp>
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
@@ -40,7 +41,7 @@ namespace eXl
     return iWorld.GetSystem<GfxSystem>();
   }
 
-  int GetPropertyData(lua_State* iState)
+  static int GetPropertyData(lua_State* iState)
   {
     luabind::default_converter<GameDatabase*> converterSys;
     if (converterSys.match(iState, luabind::by_pointer<GameDatabase>(), -3) < 0)
@@ -75,6 +76,7 @@ namespace eXl
     DynObject propSheet = sys->ModifyData(obj, prop);
     if (propSheet.IsValid())
     {
+      eXl_FAIL_MSG("A reparer!! pas de diff entre read/write!!!");
       LuaManager::PushRefToLua(LuaManager::GetCurrentState().GetState(), propSheet.GetType(), propSheet.GetBuffer());
       return 1;
     }
@@ -89,6 +91,104 @@ namespace eXl
     }
 
     return 0;
+  }
+
+  int LuaTriggerEvent(lua_State* iState)
+  {
+    int numArgs = lua_gettop(iState);
+
+    if (numArgs < 2)
+    {
+      lua_pushliteral(iState, "Incorrect number of arguments for TriggerEvent");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    luabind::default_converter<ObjectHandle> converterObject;
+    if (converterObject.match(iState, luabind::by_value<ObjectHandle>(), 1) < 0)
+    {
+      lua_pushliteral(iState, "Incorrect argument for object handle");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    luabind::default_converter<Name> converterName;
+    if (converterName.match(iState, luabind::by_value<Name>(), 2) < 0)
+    {
+      lua_pushliteral(iState, "Incorrect argument for property sheet name");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    World* world = LuaScriptSystem::GetWorld_Static();
+
+    EventSystem* sys = world->GetSystem<EventSystem>();
+    ObjectHandle obj = converterObject.to_cpp(iState, luabind::by_value<ObjectHandle>(), 1);
+    Name eventName = converterName.to_cpp(iState, luabind::by_value<Name>(), 2);
+
+    FunDesc const* desc = sys->GetFunDesc(eventName);
+
+    if (desc == nullptr)
+    {
+      lua_pushliteral(iState, "Incorrect event name");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Event " << eventName << " does not exist \n" << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    if (desc->GetArgs().size() != numArgs - 2)
+    {
+      lua_pushliteral(iState, "Incorrect number of arguments for event");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Event " << eventName << " needs " << desc->GetArgs().size() << " arguments\n" 
+        << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    EventSystem::HandlerEntry const* entry = sys->GetEventHandlerInternal(obj, eventName);
+    if (entry == nullptr)
+    {
+      lua_pop(iState, numArgs);
+      if (desc->GetRetType() == nullptr)
+      {
+        return 0;
+      }
+      else
+      {
+        lua_pushnil(iState);
+        return 1;
+      }
+    }
+
+    ArgsBuffer const& buffType(desc->GetType());
+    DynObject argsObj;
+    argsObj.SetType(&buffType, buffType.Alloc(), true);
+
+    for (uint32_t i = 0; i < buffType.GetNumField(); ++i)
+    {
+      Type const* argType = nullptr;
+      void* arg = buffType.GetField(argsObj.GetBuffer(), i, argType);
+      uint32_t idx = i;
+      argType->ConvertFromLua_Uninit(iState, idx, arg);
+    }
+
+    lua_pop(iState, numArgs);
+
+    DynObject output;
+    if(desc->GetRetType() != nullptr)
+    {
+      output.SetType(desc->GetRetType(), desc->GetRetType()->Build(), true);
+    }
+
+    entry->m_Handler(*world, obj, eventName, argsObj, output, entry->m_Payload);
+
+    if (desc->GetRetType() == nullptr)
+    {
+      return 0;
+    }
+    else
+    {
+      LuaManager::PushCopyToLua(iState, desc->GetRetType(), output.GetBuffer());
+      return 1;
+    }
   }
 
   LUA_REG_FUN(BindEngine)
@@ -107,21 +207,22 @@ namespace eXl
         .def("Attach", &Transforms::Attach)
         .def("Detach", &Transforms::Detach),
 
-        luabind::class_<GfxSpriteComponent>("GfxSpriteComponent")
-        .def("SetDesc", &GfxSpriteComponent::SetDesc)
-        .def("SetOffset", &GfxSpriteComponent::SetOffset)
-        .def("SetSize", &GfxSpriteComponent::SetSize)
-        //.def("SetTileset", &GfxSpriteComponent::SetTileset)
-        .def("SetTileName", &GfxSpriteComponent::SetTileName)
-        .def("SetAnimationSpeed", &GfxSpriteComponent::SetAnimationSpeed)
-        .def("SetRotateSprite", &GfxSpriteComponent::SetRotateSprite)
-        .def("SetLayer", &GfxSpriteComponent::SetLayer)
-        .def("SetTint", &GfxSpriteComponent::SetTint)
-        .def("SetFlat", &GfxSpriteComponent::SetFlat),
+        luabind::namespace_("GfxSpriteComponent")[
+          luabind::def("SetDesc", &GfxSpriteComponent::SetDesc),
+          luabind::def("SetOffset", &GfxSpriteComponent::SetOffset),
+          luabind::def("SetSize", &GfxSpriteComponent::SetSize),
+          luabind::def("SetTileset", &GfxSpriteComponent::SetTileset),
+          luabind::def("SetTileName", &GfxSpriteComponent::SetTileName),
+          luabind::def("SetAnimationSpeed", &GfxSpriteComponent::SetAnimationSpeed),
+          luabind::def("SetRotateSprite", &GfxSpriteComponent::SetRotateSprite),
+          luabind::def("SetLayer", &GfxSpriteComponent::SetLayer),
+          luabind::def("SetTint", &GfxSpriteComponent::SetTint),
+          luabind::def("SetFlat", &GfxSpriteComponent::SetFlat)
+        ],
 
         luabind::class_<GfxSystem>("GfxSystem")
-        .def("CreateSpriteComponent", &GfxSystem::CreateSpriteComponent)
-        .def("GetSpriteComponent", &GfxSystem::GetSpriteComponent),
+        .def("CreateSpriteComponent", &GfxSystem::CreateSpriteComponent),
+        //.def("GetSpriteComponent", &GfxSystem::GetSpriteComponent),
 
         luabind::class_<World>("World")
         .def("CreateObject", (ObjectHandle (World::*)())&World::CreateObject)

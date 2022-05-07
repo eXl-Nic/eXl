@@ -12,16 +12,21 @@ namespace eXl
     return size;
   }
 
-  ArgsBuffer::ArgsBuffer(Vector<Type const*> const& iArgs)
+  ArgsBuffer::ArgsBuffer(Vector<Type const*>&& iArgs)
     : TupleType("", 0, ComputeSize(iArgs), Type_Is_POD)
-    , m_Args(iArgs)
+    , m_Args(std::move(iArgs))
+    , m_Offsets([this] 
+      {
+        Vector<size_t> offsets;
+        size_t offset = 0;
+        for (auto type : m_Args)
+        {
+          offsets.push_back(offset);
+          offset += type->GetSize();
+        }
+        return offsets;
+      }())
   {
-    size_t offset = 0;
-    for (auto type : iArgs)
-    {
-      m_Offsets.push_back(offset);
-      offset += type->GetSize();
-    }
   }
 
   size_t ArgsBuffer::GetNumField()const

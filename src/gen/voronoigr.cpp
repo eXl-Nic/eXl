@@ -107,7 +107,7 @@ namespace eXl
       Vec2 trajInRect = Vec2(traj.x * trigAngle.x + traj.y * trigAngle.y,
         traj.y * trigAngle.x - traj.x * trigAngle.y);
 
-      AABB2Df box(Zero<Vec2>(), m_HalfDim * 2);
+      AABB2Df box = AABB2Df::FromMinAndSize(Zero<Vec2>(), m_HalfDim * 2);
       if (box.Contains(trajInRect))
         return false;
 

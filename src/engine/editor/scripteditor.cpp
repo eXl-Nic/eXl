@@ -367,21 +367,21 @@ namespace eXl
       defaultScript.append(scriptObjName);
       defaultScript.append(".");
       defaultScript.append(funDesc.first);
-      defaultScript.append("(scriptObj");
+      defaultScript.append("(self, object");
 
-      for (uint32_t i = 0; i<funDesc.second.arguments.size(); ++i)
+      for (uint32_t i = 0; i<funDesc.second.GetArgs().size(); ++i)
       {
-        Type const* type = funDesc.second.arguments[i];
+        Type const* type = funDesc.second.GetArgs()[i];
         defaultScript.append(", ");
         defaultScript.append(type->GetName());
         defaultScript.append("_arg");
         defaultScript.append(StringUtil::FromInt(i));
       }
       defaultScript.append(")\n");
-      if (funDesc.second.returnType != nullptr)
+      if (funDesc.second.GetRetType() != nullptr)
       {
         defaultScript.append("--return ");
-        defaultScript.append(funDesc.second.returnType->GetName());
+        defaultScript.append(funDesc.second.GetRetType()->GetName());
         defaultScript.append("()\n");
       }
       defaultScript.append("end\n\n");

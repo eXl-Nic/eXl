@@ -153,7 +153,6 @@ namespace eXl
     OGLCompiledProgram const* m_Program = nullptr;
   };
 
-  class GfxSpriteComponent;
 	struct EXL_ENGINE_API GfxSpriteData
 	{
 		IntrusivePtr<GeometryInfo> m_Geometry;
@@ -173,8 +172,6 @@ namespace eXl
     OGLShaderData m_TextureData;
 		OGLShaderData m_PositionData;
 
-		GfxSpriteComponent* m_Component;
-
 		float m_RemainingTime;
 		uint32_t m_CurrentFrame;
     uint8_t m_Layer = 0;
@@ -186,19 +183,12 @@ namespace eXl
 		static IntrusivePtr<OGLBuffer> MakeSpriteGeometry(Vec2 iSize, bool iFlat);
     static IntrusivePtr<OGLBuffer> MakeSpriteIdxBuffer();
 
-		void Push(OGLDisplayList& iList);
+		void Push(OGLDisplayList& iList, uint16_t iKey);
 	};
 
-	class GfxSpriteComponent;
-
-	typedef ObjectTable<GfxSpriteData> SpriteDataTable;
-
   class GfxSpriteRenderNode;
-	class EXL_ENGINE_API GfxSpriteComponent
+	namespace GfxSpriteComponent
 	{
-		friend GfxSpriteRenderNode;
-	public:
-
     struct EXL_ENGINE_API Desc
     {
       EXL_REFLECT;
@@ -213,32 +203,17 @@ namespace eXl
       bool m_RotateSprite = false;
       bool m_Flat = false;
     };
-		
-    GfxSpriteComponent();
-
-    void SetDesc(Desc const& iDesc);
-
-    void SetOffset(Vec2 const& iOffset);
-		void SetSize(Vec2 const& iSize);
-		void SetTileset(Tileset const* iTileset);
-		void SetTileName(TileName iName);
-		void SetAnimationSpeed(float iSpeed);
-    void SetRotateSprite(bool iRotate);
-    void SetLayer(uint8_t iLayer);
-    void SetTint(Vec4 const& iTint);
-    void SetFlat(bool iValue);
-		
-	protected:
-
-    bool Mutate();
-
-    Desc* m_Desc = nullptr;
-
-    GfxSpriteRenderNode* m_RenderNode = nullptr;
-		ObjectHandle m_Object;
-		SpriteDataTable::Handle m_SpriteData;
-	};
-  DEFINE_ENGINE_TYPE(GfxSpriteComponent);
+    EXL_ENGINE_API void SetDesc(World& iWorld, ObjectHandle iObj, Desc const& iDesc);
+    EXL_ENGINE_API void SetOffset(World& iWorld, ObjectHandle iObj, Vec2 const& iOffset);
+    EXL_ENGINE_API void SetSize(World& iWorld, ObjectHandle iObj, Vec2 const& iSize);
+    EXL_ENGINE_API void SetTileset(World& iWorld, ObjectHandle iObj, Tileset const* iTileset);
+    EXL_ENGINE_API void SetTileName(World& iWorld, ObjectHandle iObj, TileName iName);
+    EXL_ENGINE_API void SetAnimationSpeed(World& iWorld, ObjectHandle iObj, float iSpeed);
+    EXL_ENGINE_API void SetRotateSprite(World& iWorld, ObjectHandle iObj, bool iRotate);
+    EXL_ENGINE_API void SetLayer(World& iWorld, ObjectHandle iObj, uint8_t iLayer);
+    EXL_ENGINE_API void SetTint(World& iWorld, ObjectHandle iObj, Vec4 const& iTint);
+    EXL_ENGINE_API void SetFlat(World& iWorld, ObjectHandle iObj, bool iValue);
+	}
 
   EXL_ENGINE_API GameDataView<GfxSpriteComponent::Desc>* GetSpriteComponentView(World& iWorld);
 

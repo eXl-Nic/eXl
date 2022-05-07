@@ -114,7 +114,7 @@ namespace eXl
     
     Vec2 gridStep(iSize.x / iGridSize.x, iSize.y / iGridSize.y);
 
-    m_QueryBox = AABB2Df(-gridStep * 0.51, gridStep * 1.02);
+    m_QueryBox = AABB2Df::FromMinAndSize(-gridStep * 0.51, gridStep * 1.02);
 
     m_Cells.clear();
     m_Graph.m_CellGraph.clear();
@@ -157,7 +157,7 @@ namespace eXl
         cell.neighStart = m_Neigh.size();
 
         Vec2 const& cellPos = cell.position;
-        locs.push_back(std::make_pair(AABB2Df(cellPos - gridStep * 0.5, gridStep), cellOffset));
+        locs.push_back(std::make_pair(AABB2Df::FromMinAndSize(cellPos - gridStep * 0.5, gridStep), cellOffset));
 
         if (x > 0)
         {
@@ -224,7 +224,7 @@ namespace eXl
     m_Neigh.clear();
     m_Index.clear();
 
-    Polygoni poly(AABB2Di(Zero<Vec2i>(), Vec2i(Mathf::Ceil(m_Size.x), Mathf::Ceil(m_Size.y))));
+    Polygoni poly(AABB2Di::FromMinAndSize(Zero<Vec2i>(), Vec2i(Mathf::Ceil(m_Size.x), Mathf::Ceil(m_Size.y))));
     PoissonDiskSampling sampler(poly, iRand);
 
     sampler.Sample(iCellSize, iCellSize);
@@ -257,7 +257,7 @@ namespace eXl
       for(unsigned int i = 0; i<cellCenter.size(); ++i)
       {
         Vec2 const& cellPos = cellCenter[i];
-        locs.push_back(std::make_pair(AABB2Df(cellPos - One<Vec2>() * iCellSize, One<Vec2>() * 2 * iCellSize), i));
+        locs.push_back(std::make_pair(AABB2Df::FromMinAndSize(cellPos - One<Vec2>() * iCellSize, One<Vec2>() * 2 * iCellSize), i));
       }
       m_Index = CellIndex(locs);
     }
@@ -380,7 +380,7 @@ namespace eXl
   {
     oCells.clear();
 
-    AABB2Df queryBox(iCenter - iRadius * One<Vec2>(), One<Vec2>() * 2 * iRadius);
+    AABB2Df queryBox = AABB2Df::FromMinAndSize(iCenter - iRadius * One<Vec2>(), One<Vec2>() * 2 * iRadius);
 
     Vector<CellLoc> results;
     m_Index.query(boost::geometry::index::intersects(queryBox), std::back_inserter(results));

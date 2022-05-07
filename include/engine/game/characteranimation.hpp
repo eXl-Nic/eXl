@@ -18,7 +18,6 @@ namespace eXl
 {
   struct CharacterAnimEntry
   {
-    GfxSpriteComponent* m_GfxComp = nullptr;
     CharacterSystem::StateFlags m_CurDir;
     Optional<GameCueName> m_CurrentActionCue;
     bool m_Walking;

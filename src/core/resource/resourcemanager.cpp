@@ -128,6 +128,22 @@ namespace eXl
     return metaData;
   }
 
+  ResourceMetaData* ResourceLoader::CreateSystemMetaData(String const& iName, Resource::UUID const& iUUID) const
+  {
+    auto metaData = eXl_NEW ResourceMetaData;
+    metaData->m_Rsc = nullptr;
+    metaData->m_Header.m_ResourceName = iName;
+    metaData->m_Header.m_ResourceId = iUUID;
+    metaData->m_Header.m_LoaderName = m_Name;
+    metaData->m_Header.m_LoaderVersion = m_Version;
+    metaData->m_Header.m_Flags |= Resource::SystemResource;
+    metaData->m_Path = ResourceManager::GetSystemResourcePath();
+
+    ResourceManager::GetImpl().m_UUIDToEntry.insert(std::make_pair(metaData->m_Header.m_ResourceId.uuid, metaData));
+
+    return metaData;
+  }
+
   ResourceMetaData* ResourceLoader::CreateBakedMetaData(ResourceMetaData const& iMetaData) const
   {
     auto metaData = eXl_NEW ResourceMetaData;
@@ -181,6 +197,12 @@ namespace eXl
     {
       static const String s_Extension(".eXlAsset");
       return s_Extension;
+    }
+
+    String const& GetSystemResourcePath()
+    {
+      static const String s_Path("<system>");
+      return s_Path;
     }
 
     void SetTextFileReadFactory(TextFileReadFactory iFactory)
@@ -711,6 +733,10 @@ namespace eXl
         {
           LOG_ERROR << "Cannot save resource " << iRsc->GetHeader().m_ResourceName << " without providing a path" << "\n";
         }
+        else if (metaData->m_Path == GetSystemResourcePath())
+        {
+          eXl_FAIL_MSG_RET(eXl_FORMAT("Cannot save system resource %s", iRsc->GetName()), Err::Failure);
+        }
         else
         {
           Path path(metaData->m_Path.c_str());
@@ -840,6 +866,10 @@ namespace eXl
 
         return Err::Success;
       }
+      else if (metaData->m_Path == GetSystemResourcePath())
+      {
+        eXl_FAIL_MSG_RET(eXl_FORMAT("Cannot set path of system resource %s", iRsc->GetName()), Err::Failure);
+      }
       else
       {
         if (bPathExists)
@@ -894,6 +924,11 @@ namespace eXl
       if (metaData->m_Path.empty())
       {
         return false;
+      }
+
+      if (metaData->m_Path == GetSystemResourcePath())
+      {
+        return true;
       }
 
       auto alreadySavedResource = GetImpl().m_PathToEntry.find(metaData->m_Path);

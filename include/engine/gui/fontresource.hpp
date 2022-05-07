@@ -15,9 +15,9 @@ namespace eXl
   {
     struct GlyphDesc
     {
-      Vec2i penOffset;
-      Vec2i penAdvance;
-      Vec2i glyphSize;
+      Vec2u penOffset;
+      Vec2u penAdvance;
+      Vec2u glyphSize;
     };
   }
 

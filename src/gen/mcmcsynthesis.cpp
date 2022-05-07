@@ -385,7 +385,7 @@ namespace eXl
     }
     else
     {
-      iCache.m_Poly1 = Polygoni(AABB2Di(iCurElem.m_Pos, One<Vec2i>() * 2));
+      iCache.m_Poly1 = Polygoni(AABB2Di::FromMinAndSize(iCurElem.m_Pos, One<Vec2i>() * 2));
       dirM1 = eCentroidal;
     }
     for(auto value : iCache.m_RetVal)
@@ -858,7 +858,7 @@ namespace eXl
     RunHandler queryHandler(*iModel, builder, iDebug);
     //queryHandler.m_MaxDist = ;
 
-    Polygoni outerBorder(AABB2Di(iParams.m_Shape.GetAABB().m_Data[0] - One<Vec2i>() * 50, iParams.m_Shape.GetAABB().GetSize() + One<Vec2i>() * 100));
+    Polygoni outerBorder(AABB2Di::FromMinAndSize(iParams.m_Shape.GetAABB().m_Data[0] - One<Vec2i>() * 50, iParams.m_Shape.GetAABB().GetSize() + One<Vec2i>() * 100));
     Vector<Polygoni> negShape;
     outerBorder.Difference(iParams.m_Shape, negShape);
 
@@ -1720,7 +1720,7 @@ namespace eXl
 
       if(!m_Params.m_Toroidal)
       {
-        Polygoni outerBorder(AABB2Di(ex.m_Shape.GetAABB().m_Data[0] - One<Vec2i>() * 50, ex.m_Shape.GetAABB().GetSize() + One<Vec2i>() * 100));
+        Polygoni outerBorder(AABB2Di::FromMinAndSize(ex.m_Shape.GetAABB().m_Data[0] - One<Vec2i>() * 50, ex.m_Shape.GetAABB().GetSize() + One<Vec2i>() * 100));
         Vector<Polygoni> negShape;
         outerBorder.Difference(ex.m_Shape, negShape);
 

@@ -44,17 +44,9 @@ inline Err ObjectId::Unstream(Unstreamer& iStreamer)
   return iStreamer.ReadUInt64(&id);
 }
 
-
-inline CommandDesc::CommandDesc(CommandDesc&& iDesc)
-{
-  m_Name = iDesc.m_Name;
-  m_Callback = std::move(iDesc.m_Callback);
-  m_Executor = iDesc.m_Executor;
-  iDesc.m_Args.reset();
-  m_FunDesc = std::move(iDesc.m_FunDesc);
-  m_Args.emplace(m_FunDesc.arguments);
-  m_Reliable = iDesc.m_Reliable;
-}
+inline CommandDesc::CommandDesc(FunDesc&& iDesc)
+  : m_FunDesc(std::move(iDesc))
+{}
 
 template<typename RetType, typename... Args>
 void NetDriver::DeclareClientCommand(CommandName iName, std::function<RetType(uint32_t, Args...)>& iFun, bool iReliable)

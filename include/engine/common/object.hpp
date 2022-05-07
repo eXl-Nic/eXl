@@ -261,7 +261,7 @@ namespace eXl
         uint32_t handle = page.m_Generation[obj];
         if ((handle & ObjectConstants::s_IdMask) != ObjectConstants::s_InvalidId)
         {
-          iFun(reinterpret_cast<T*>(page.m_Objects)[obj], Handle(handle));
+          iFun(Handle(handle), reinterpret_cast<T*>(page.m_Objects)[obj]);
         }
       }
     }

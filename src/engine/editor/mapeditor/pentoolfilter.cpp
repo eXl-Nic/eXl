@@ -110,7 +110,7 @@ namespace eXl
 
   void PenToolFilter::AddCurrentPosition(bool iWasDrawing)
   {
-    AABB2Di box(m_CurrentSnapPos, One<Vec2i>());
+    AABB2Di box = AABB2Di::FromMinAndSize(m_CurrentSnapPos, One<Vec2i>());
     //if (!m_DrawnRegion.empty())
     //{
     //  Vector<AABB2DPolygoni> inter;

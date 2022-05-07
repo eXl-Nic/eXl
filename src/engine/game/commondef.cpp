@@ -59,7 +59,7 @@ namespace eXl
     {
       if (m_Type == PhysicsShapeType::Box)
       {
-        return AABB2Df(MathTools::As2DVec(m_Offset - m_Dims * 0.5)
+        return AABB2Df::FromCenterAndSize(MathTools::As2DVec(m_Offset)
           , MathTools::As2DVec(m_Dims));
       }
       return AABB2Df(m_Offset.x - m_Dims.x, m_Offset.y - m_Dims.x

@@ -264,7 +264,7 @@ namespace eXl
                 {
                   //Vec2i sampleOrigin = iterPt;
 
-                  AABB2Di samplingBox(iterPt, pattern.m_Size);
+                  AABB2Di samplingBox = AABB2Di::FromMinAndSize(iterPt, pattern.m_Size);
 
                   if (samplingBox.m_Data[0].x < iMapSize.m_Data[0].x || samplingBox.m_Data[0].y < iMapSize.m_Data[0].y
                     || samplingBox.m_Data[1].x > iMapSize.m_Data[1].x || samplingBox.m_Data[1].y > iMapSize.m_Data[1].y)
@@ -638,7 +638,7 @@ namespace eXl
                 || horizontalBoxes.back().m_Data[0].y != y
                 || horizontalBoxes.back().m_Data[1].x != x)
               {
-                horizontalBoxes.push_back(AABB2Di(Vec2i(x, y), One<Vec2i>()));
+                horizontalBoxes.push_back(AABB2Di::FromMinAndSize(Vec2i(x, y), One<Vec2i>()));
               }
               else
               {

@@ -34,22 +34,39 @@ namespace eXl
 
     void GarbageCollect();
 
+    using GenericHandler = void(*)(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload);
+    struct HandlerEntry
+    {
+      GenericHandler m_Handler;
+      void* m_Payload;
+    };
+
     template<typename Ret, typename... Args>
-    void AddEventHandler(ObjectHandle iObject, Name iFunction, std::function<Ret(Args...)> iFun)
+    struct PureFunctioHandler
+    {
+      static void Execute(Name, World& iWorld, ObjectHandle iObject, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
+      {
+        Invoker_RetWrapper<Ret, Args...>::Execute([this, iPayload](World& iWorld, ObjectHandle iObject, Args... iArgs)
+          {
+            union
+            {
+              Ret(*funPtr)(Args...);
+              void* ptr;
+            } horribleCast;
+            horribleCast.ptr = iPayload;
+            return horribleCast.funPtr(iWorld, iObject, std::forward<Args>(iArgs)...);
+          }, iArgsBuffer, oOutput);
+      }
+    };
+
+    template<typename Ret, typename... Args>
+    void AddEventHandler(ObjectHandle iObject, Name iFunction, Ret(*iFun)(ObjectHandle, Args...))
     {
       if (FunDesc const* desc = GetFunDesc(iInterface, iFunction))
       {
         if (desc->ValidateSignature<Ret, Args...>())
         {
-          auto cb = [this, fun = std::move(iFun)](Name, ObjectHandle, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
-          {
-            Invoker_RetWrapper<Ret, Args...>::Execute([this, &fun](Args... iArgs)
-              {
-                eXl_ASSERT_REPAIR_RET(!(!fun), RetType());
-                return iFun(std::forward<Args>(iArgs)...);
-              }, iArgsBuffer, oOutput);
-          };
-          AddEventHandlerInternal(iObject, iInterface, iFunction, std::move(cb));
+          AddEventHandlerInternal(iObject, iInterface, iFunction, &PureFunctioHandler<Ret, ObjectHandle, Args...>::Execute, iFun);
         }
       }
     }
@@ -57,21 +74,21 @@ namespace eXl
     template <typename Ret, typename... Args, typename std::enable_if<std::is_same<Ret, void>::value, bool>::type = true>
     Err Dispatch(ObjectHandle iHandle, Name iFunction, Args&&... iArgs)
     {
-      GenericHandler const* handler = GetEventHandlerInternal(iHandle, iFunction);
+      HandlerEntry const* handler = GetEventHandlerInternal(iHandle, iFunction);
       if (handler == nullptr)
       {
         return Err::Failure;
       }
       FunDesc const* desc = GetFunDesc(iFunction);
-      bool validSignature = desc->ValidateSignature<void, Args...>();
+      bool validSignature = desc->ValidateSignature<void, World&, ObjectHandle, Args...>();
       eXl_ASSERT_REPAIR_RET(validSignature, Err::Error);
-      
-      ArgsBuffer buffType(desc->arguments);
+
+      ArgsBuffer const& buffType(desc->GetType());
       uint8_t argsStore[ComputeArgListStorage<Args...>::size];
       DynObject argsObj(&buffType, argsStore);
       BufferPopulator<0, Args...>::Populate(buffType, argsObj, std::forward<Args>(iArgs)...);
       DynObject output;
-      (*handler)(iHandle, iFunction, argsObj, output);
+      handler->m_Handler(*m_World, iHandle, iFunction, argsObj, output, handler->m_Payload);
 
       return Err::Success;
     }
@@ -79,22 +96,22 @@ namespace eXl
     template <typename Ret, typename... Args, typename std::enable_if<!std::is_same<Ret, void>::value, bool>::type = true>
     Optional<Ret> Dispatch(ObjectHandle iHandle, Name iFunction, Args&&... iArgs)
     {
-      GenericHandler const* handler = GetEventHandlerInternal(iHandle, iFunction);
+      HandlerEntry const* handler = GetEventHandlerInternal(iHandle, iFunction);
       if (handler == nullptr)
       {
         return {};
       }
       FunDesc const* desc = GetFunDesc(iFunction);
-      bool validSignature = desc->ValidateSignature<Ret, Args...>();
-      eXl_ASSERT_REPAIR_RET(validSignature, Err::Error);
+      bool validSignature = desc->ValidateSignature<void, World&, ObjectHandle, Args...>();
+      eXl_ASSERT_REPAIR_RET(validSignature, {});
 
-      ArgsBuffer buffType(desc->arguments);
+      ArgsBuffer const& buffType(desc->GetType());
       uint8_t argsStore[ComputeArgListStorage<Args...>::size];
       DynObject argsObj(&buffType, argsStore);
       BufferPopulator<0, Args...>::Populate(buffType, argsObj, std::forward<Args>(iArgs)...);
       Ret outputStore;
       DynObject output(TypeManager::GetType<Ret>(), &outputStore);
-      (*handler)(iHandle, iFunction, argsObj, output);
+      handler->m_Handler(*m_World, iHandle, iFunction, argsObj, output, handler->m_Payload);
 
       return outputStore;
     }
@@ -102,11 +119,9 @@ namespace eXl
     FunDesc const* GetFunDesc(Name iFunction);
     EventsManifest const& GetManifest() { return m_Manifest; }
 
-    using GenericHandler = std::function<void(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput)>;
+    void AddEventHandlerInternal(ObjectHandle iObject, Name iFunction, GenericHandler iFun, void* iPayload);
 
-    void AddEventHandlerInternal(ObjectHandle iObject, Name iFunction, GenericHandler iFun);
-
-    GenericHandler const* GetEventHandlerInternal(ObjectHandle iObject, Name iFunction);
+    HandlerEntry const* GetEventHandlerInternal(ObjectHandle iObject, Name iFunction);
 
   private:
     EventsManifest const& m_Manifest;

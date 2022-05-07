@@ -112,7 +112,7 @@ namespace eXl
     vecDir[0] = Vec2(dot(iWorldVecDir[0], m_CasterDesiredDir), dot(iWorldVecDir[0], m_PerpDir));
     vecDir[1] = Vec2(dot(iWorldVecDir[1], m_CasterDesiredDir), dot(iWorldVecDir[1], m_PerpDir));
 
-    AABB2Df velocityBox(-One<Vec2>() * m_MaxVelocity, One<Vec2>() * 2 * m_MaxVelocity);
+    AABB2Df velocityBox = AABB2Df::FromMinAndSize(-One<Vec2>() * m_MaxVelocity, One<Vec2>() * 2 * m_MaxVelocity);
 
     for (int32_t i = 0; i < 2; ++i)
     {
@@ -336,7 +336,7 @@ namespace eXl
 
     if (m_Obstacles.empty())
     {
-      m_ObstaclesBox = AABB2Df(iOrig, Zero<Vec2>());
+      m_ObstaclesBox = AABB2Df::FromMinAndSize(iOrig, Zero<Vec2>());
     }
     else
     {
@@ -647,11 +647,11 @@ namespace eXl
 
     const float boxRange = m_MaxVelocity;
     const int32_t c_GridSize = 1000;
-    AABB2Di intBox(One<Vec2i>() * -c_GridSize, 2 * One<Vec2i>() * (c_GridSize + 1));
+    AABB2Di intBox = AABB2Di::FromMinAndSize(One<Vec2i>() * -c_GridSize, 2 * One<Vec2i>() * (c_GridSize + 1));
 
     float const obsBoxDiag = length(m_ObstaclesBox.GetSize());
 
-    AABB2Df boxVel(One<Vec2>() * -m_MaxVelocity, One<Vec2>() * 2 *m_MaxVelocity);
+    AABB2Df boxVel = AABB2Df::FromMinAndSize(One<Vec2>() * -m_MaxVelocity, One<Vec2>() * 2 *m_MaxVelocity);
 
     for(int32_t obsIdx = 0; obsIdx < m_Obstacles.size(); ++obsIdx)
     {

@@ -29,10 +29,9 @@ namespace eXl
         }
       }
     }
-
     struct ObjectEntry
     {
-      UnorderedMap<Name, GenericHandler> m_Handlers;
+      UnorderedMap<Name, HandlerEntry> m_Handlers;
     };
 
     DenseGameDataStorage<ObjectEntry> m_Objects;
@@ -69,7 +68,7 @@ namespace eXl
     return funIter->second;
   }
 
-  void EventSystem::AddEventHandlerInternal(ObjectHandle iObject, Name iFunction, GenericHandler iFun)
+  void EventSystem::AddEventHandlerInternal(ObjectHandle iObject, Name iFunction, GenericHandler iFun, void* iPayload)
   {
     if (!GetWorld().IsObjectValid(iObject))
     {
@@ -79,10 +78,10 @@ namespace eXl
     eXl_ASSERT_REPAIR_RET(GetFunDesc(iFunction) != nullptr, void());
 
     Impl::ObjectEntry& entry = m_Impl->m_Objects.GetOrCreate(iObject);
-    entry.m_Handlers.insert_or_assign(iFunction, std::move(iFun));
+    entry.m_Handlers.insert_or_assign(iFunction, HandlerEntry{iFun, iPayload});
   }
 
-  EventSystem::GenericHandler const* EventSystem::GetEventHandlerInternal(ObjectHandle iObject, Name iFunction)
+  EventSystem::HandlerEntry const* EventSystem::GetEventHandlerInternal(ObjectHandle iObject, Name iFunction)
   {
     if (!GetWorld().IsObjectValid(iObject))
     {

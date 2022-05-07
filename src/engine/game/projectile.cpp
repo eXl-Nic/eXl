@@ -105,7 +105,7 @@ namespace eXl
 
         if (entry.m_CurState != curState)
         {
-          if (entry.m_GfxComp)
+          if (GetWorld().GetSystem<GfxSystem>() != nullptr)
           {
             TileName animState("INVALID");
             switch (curState)
@@ -123,7 +123,7 @@ namespace eXl
               animState = TileName("Up");
               break;
             }
-            entry.m_GfxComp->SetTileName(animState);
+            GfxSpriteComponent::SetTileName(GetWorld(), iObject, animState);
           }
           entry.m_CurState = curState;
         }

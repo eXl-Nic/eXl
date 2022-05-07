@@ -3,6 +3,8 @@
 #include <engine/gui/fontresource.hpp>
 
 #include <engine/common/transforms.hpp>
+#include <engine/gfx/spriterenderer.hpp>
+#include <engine/common/data_tables/multi.hpp>
 
 #include <ogl/renderer/oglshaderdata.hpp>
 #include <ogl/renderer/oglrendercommand.hpp>
@@ -20,6 +22,7 @@ namespace eXl
   {
     String m_Text;
     uint32_t m_Size;
+    uint8_t m_Depth;
     Resource::UUID m_FontId;
 
     Mat4 m_Transform;
@@ -37,7 +40,7 @@ namespace eXl
       IntrusivePtr<OGLTexture> m_Texture;
       OGLShaderData m_TextureData;
       UnorderedMap<uint32_t, AABB2Df> m_AtlasLoc;
-      Vec2i m_CurAtlasLoc;
+      Vec2u m_CurAtlasLoc = Zero<Vec2u>();
       uint32_t m_CurMaxY = 0;
     };
 
@@ -73,8 +76,7 @@ namespace eXl
       newEntry.m_Texture = MakeRefCounted<OGLTexture>(texSize, textureType, format);
       newEntry.m_Texture->AllocateTexture();
       newEntry.m_TextureData.AddTexture(OGLSpriteAlgo::GetUnfilteredTexture(), newEntry.m_Texture);
-
-      iter = m_Fonts.insert(std::make_pair(iKey, newEntry)).first;
+      iter = m_Fonts.emplace(Key(iKey), std::move(newEntry)).first;
 
       // Bootstrap texture
       for (uint32_t glyph = 'a'; glyph <= 'z'; glyph++)
@@ -222,19 +224,50 @@ namespace eXl
     return hash;
   }
 
+  struct WorldGUIItem
+  {
+    ObjectHandle m_WorldAttachment;
+  };
+
+  using WorldGUISprite = MultiDataStorage<WorldGUIItem, GfxSpriteComponent::Desc, GfxSpriteData>;
+  using WorldGUIText = MultiDataStorage<WorldGUIItem, Text>;
+
   struct GfxGUIRenderNode::Impl
   {
     Impl(GfxSystem& iSys)
-      : m_TextElements(iSys.GetWorld())
+      : m_TextElementsScreen(iSys.GetWorld())
+      , m_TextElementsWorld(iSys.GetWorld())
+      , m_GUISprite(iSys.GetWorld())
+      , m_GUISpriteData(iSys.GetWorld())
+      , m_WorldGUISprite(iSys.GetWorld())
+      , m_SpriteRendererScreen(iSys, m_GUISprite.GetView(), *m_GUISpriteData.GetView().GetDenseView())
+      , m_SpriteRendererWorld(iSys, m_WorldGUISprite.GetView<1>(), m_WorldGUISprite.GetView<2>())
     {
       m_FontProgram.reset(OGLSpriteAlgo::CreateFontProgram(iSys.GetSemanticManager()));
+      m_ScreenCamBuffer = OGLBuffer::CreateBuffer(OGLBufferUsage::UNIFORM_BUFFER, sizeof(CameraMatrix));
+      m_ScreenCamData.SetDataBuffer(OGLBaseAlgo::GetCameraUniform(), m_ScreenCamBuffer);
+      m_WorldCamBuffer = OGLBuffer::CreateBuffer(OGLBufferUsage::UNIFORM_BUFFER, sizeof(CameraMatrix));
+      m_WorldCamData.SetDataBuffer(OGLBaseAlgo::GetCameraUniform(), m_WorldCamBuffer);
     }
 
     UniquePtr<OGLCompiledProgram const> m_FontProgram;
     SpriteColor m_DefaultColor;
     OGLShaderData m_DefaultData;
+    OGLShaderData m_WorldCamData;
+    OGLShaderData m_ScreenCamData;
+    IntrusivePtr<OGLBuffer> m_WorldCamBuffer;
+    IntrusivePtr<OGLBuffer> m_ScreenCamBuffer;
     FontCache m_Fonts;
-    DenseGameDataStorage<Text> m_TextElements;
+
+    DenseGameDataStorage<GfxSpriteComponent::Desc> m_GUISprite;
+    DenseGameDataStorage<GfxSpriteData> m_GUISpriteData;
+    DenseGameDataStorage<Text> m_TextElementsScreen;
+
+    WorldGUISprite m_WorldGUISprite;
+    WorldGUIText m_TextElementsWorld;
+
+    SpriteRenderer m_SpriteRendererScreen;
+    SpriteRenderer m_SpriteRendererWorld;
   };
 
   GfxGUIRenderNode::GfxGUIRenderNode() = default;
@@ -280,8 +313,29 @@ namespace eXl
     return cp;
   }
   
+  void GfxGUIRenderNode::AddSprite(ObjectHandle iObject, GfxSpriteComponent::Desc const& iDesc, Optional<ObjectHandle> iWorldAttach)
+  {
+    if (!GetWorld().IsObjectValid(iObject))
+    {
+      return;
+    }
+    if (iWorldAttach)
+    {
+      auto [GUIItem, SpriteDesc, data] = m_Impl->m_WorldGUISprite.GetOrCreate(iObject);
+      GUIItem.m_WorldAttachment = *iWorldAttach;
+      SpriteDesc = iDesc;
+      
+      m_Impl->m_SpriteRendererWorld.m_DirtyComponents.insert(iObject);
+    }
+    else
+    {
+      m_Impl->m_GUISprite.GetOrCreate(iObject) = iDesc;
+      m_Impl->m_SpriteRendererScreen.m_DirtyComponents.insert(iObject);
+    }
+    AddObject(iObject);
+  }
 
-  void GfxGUIRenderNode::AddText(ObjectHandle iObject, String const& iText, uint32_t iSize, FontResource const* iFont)
+  void GfxGUIRenderNode::AddText(ObjectHandle iObject, String const& iText, uint32_t iSize, FontResource const* iFont, uint8_t iDepth, Optional<ObjectHandle> iWorldAttach)
   {
     if (iFont == nullptr)
     {
@@ -389,10 +443,16 @@ namespace eXl
       }
     }
 
-    Text& textElem = m_Impl->m_TextElements.GetOrCreate(iObject);
+    Text& textElem = (!iWorldAttach ? m_Impl->m_TextElementsScreen.GetOrCreate(iObject) :
+      [&]() -> Text& {
+        auto [worldItem, text] = m_Impl->m_TextElementsWorld.GetOrCreate(iObject);
+        worldItem.m_WorldAttachment = *iWorldAttach;
+        return text;
+      }());
     textElem.m_Text = iText;
     textElem.m_Size = iSize;
     textElem.m_FontId = iFont->GetHeader().m_ResourceId;
+    textElem.m_Depth = iDepth;
 
     size_t totBufferSize = oPos.size() * 4 * 5 * sizeof(float);
     size_t totIdxBufferSize = oPos.size() * 6 * sizeof(uint32_t);
@@ -449,12 +509,18 @@ namespace eXl
   {
     return [this](ObjectHandle const* iObjects, Mat4 const** iTransforms, uint32_t iNum)
     {
+      m_Impl->m_SpriteRendererScreen.UpdateTransforms(iObjects, iTransforms, iNum);
+      //m_Impl->m_SpriteRendererWorld.UpdateTransforms(iObjects, iTransforms, iNum);
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects, ++iTransforms)
       {
-        if (Text* txt = m_Impl->m_TextElements.Get(*iObjects))
+        if (Text* txt = m_Impl->m_TextElementsScreen.Get(*iObjects))
         {
           txt->m_Transform = (**iTransforms);
         }
+        //else if (Text* txt = m_Impl->m_TextElementsWorld.GetView<1>().Get(*iObjects))
+        //{
+        //  txt->m_Transform = (**iTransforms);
+        //}
       }
     };
   }
@@ -465,7 +531,12 @@ namespace eXl
     {
       for (uint32_t i = 0; i < iNum; ++i, ++iObjects)
       {
-        m_Impl->m_TextElements.Erase(*iObjects);
+        m_Impl->m_TextElementsScreen.Erase(*iObjects);
+        m_Impl->m_TextElementsWorld.Erase(*iObjects);
+        m_Impl->m_SpriteRendererScreen.m_SpriteData.Erase(*iObjects);
+        m_Impl->m_SpriteRendererWorld.m_SpriteData.Erase(*iObjects);
+        m_Impl->m_GUISprite.Erase(*iObjects);
+        m_Impl->m_WorldGUISprite.Erase(*iObjects);
       }
     };
   }
@@ -473,20 +544,100 @@ namespace eXl
   void GfxGUIRenderNode::Push(OGLDisplayList& iList, float iDelta)
   {
     iList.SetDepth(false, false);
-    iList.SetProgram(m_Impl->m_FontProgram.get());
+
+    Vec2i viewport = m_Sys->GetViewportSize();
+
+    const float screenRatio = float(viewport.y) / viewport.x;
+
+    float nearP = 0.0001;
+    float farP = 10;
+
     
+    CameraMatrix const& curWorldCam = m_Sys->GetCurrentCamera();
+    CameraMatrix guiScreenMat;
+
+    guiScreenMat.viewInverseMatrix = translate(Identity<Mat4>(), Vec3(viewport.x / 2, viewport.y / 2, 1));
+    guiScreenMat.viewMatrix = translate(Identity<Mat4>(), Vec3(-viewport.x / 2, -viewport.y / 2, -1));
+
+    guiScreenMat.projMatrix = Zero<Mat4>();
+
+    guiScreenMat.projMatrix[0][0] = 2.0 / viewport.x;
+    guiScreenMat.projMatrix[1][1] = 2.0 / viewport.y;
+    guiScreenMat.projMatrix[2][2] = -2.0 / (farP - nearP);
+    guiScreenMat.projMatrix[3][2] = -(farP + nearP) / (farP - nearP);
+    guiScreenMat.projMatrix[3][3] = 1.0;
+
+    Mat4 worldToScreen = scale(translate(Identity<Mat4>(), Vec3(viewport.x / 2, viewport.y / 2, 0)), Vec3(viewport.x / 2, viewport.y / 2, 0));
+    worldToScreen = worldToScreen * curWorldCam.projMatrix * curWorldCam.viewMatrix;
+
+    m_Impl->m_ScreenCamBuffer->SetData(0, sizeof(guiScreenMat), &guiScreenMat);
+
+    iList.PushData(&m_Impl->m_ScreenCamData);
+
+    iList.SetProgram(m_Impl->m_SpriteRendererWorld.m_SpriteProgram.get());
+    m_Impl->m_SpriteRendererWorld.PrepareSprites();
+    m_Impl->m_WorldGUISprite.Iterate([&](ObjectHandle iObject, WorldGUIItem const& iItem, GfxSpriteComponent::Desc const& iDesc, GfxSpriteData& iData)
+      {
+        m_Impl->m_SpriteRendererWorld.TickAnimation(iObject, iData, iDelta);
+        Mat4 const& attachTrans = m_Sys->GetTransforms().GetWorldTransform(iItem.m_WorldAttachment);
+        Mat4 const& objTrans = m_Sys->GetTransforms().GetWorldTransform(iObject);
+        if (iData.m_Rotate)
+        {
+          iData.m_Transform = translate(objTrans, Vec3(iDesc.m_Offset + iData.m_CurOffset, 0));
+        }
+        else
+        {
+          iData.m_Transform = translate(Identity<Mat4>(), Vec3(objTrans[3]) + Vec3(iDesc.m_Offset + iData.m_CurOffset, 0));
+        }
+        iData.m_Transform = scale(iData.m_Transform, Vec3(iData.m_CurScale, 1));
+        iData.m_Transform = translate(Identity<Mat4>(), Vec3(worldToScreen * attachTrans[3])) * iData.m_Transform;
+        iData.Push(iList, 0x1000);
+      }
+    );
+
+    iList.SetProgram(m_Impl->m_FontProgram.get());
+
     iList.PushData(&m_Impl->m_DefaultData);
 
-    m_Impl->m_TextElements.Iterate([&iList](ObjectHandle iObject, Text const& iText)
+    m_Impl->m_TextElementsWorld.Iterate([&](ObjectHandle iObject, WorldGUIItem const& iItem, Text& iText)
       {
+        Mat4 const& attachTrans = m_Sys->GetTransforms().GetWorldTransform(iItem.m_WorldAttachment);
+        Mat4 const& objTrans = m_Sys->GetTransforms().GetWorldTransform(iObject);
+        iText.m_Transform = translate(objTrans, Vec3(worldToScreen * attachTrans[3]));
         iList.PushData(iText.m_TextureData);
         iList.PushData(&iText.m_ShaderData);
         iList.SetVAssembly(&iText.m_Assembly);
-        iList.PushDraw(0x1000, OGLDraw::TriangleList, iText.m_NumElems, 0, 0);
+        iList.PushDraw(0x1000 + iText.m_Depth, OGLDraw::TriangleList, iText.m_NumElems, 0, 0);
         iList.PopData();
         iList.PopData();
       });
     
+    iList.PopData();
+
+    iList.SetProgram(m_Impl->m_SpriteRendererScreen.m_SpriteProgram.get());
+    m_Impl->m_SpriteRendererScreen.PrepareSprites();
+    m_Impl->m_GUISpriteData.Iterate([&](ObjectHandle iObject, GfxSpriteData& iData)
+      {
+        m_Impl->m_SpriteRendererScreen.TickAnimation(iObject, iData, iDelta);
+        iData.Push(iList, 0x2000);
+      }
+    );
+
+    iList.SetProgram(m_Impl->m_FontProgram.get());
+
+    iList.PushData(&m_Impl->m_DefaultData);
+
+    m_Impl->m_TextElementsScreen.Iterate([&iList](ObjectHandle iObject, Text const& iText)
+      {
+        iList.PushData(iText.m_TextureData);
+        iList.PushData(&iText.m_ShaderData);
+        iList.SetVAssembly(&iText.m_Assembly);
+        iList.PushDraw(0x2000 + iText.m_Depth, OGLDraw::TriangleList, iText.m_NumElems, 0, 0);
+        iList.PopData();
+        iList.PopData();
+      });
+
+    iList.PopData();
     iList.PopData();
   }
   

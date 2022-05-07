@@ -36,7 +36,7 @@ namespace eXl
   void TimelineManager<TimelineBehaviour, Impl>::Tick()
   {
     double curTimestamp = GetWorld().GetGameTimeInSec();
-    m_Timelines.Iterate([&](TimelineEntry& entry, TimelineHandle handle)
+    m_Timelines.Iterate([&](TimelineHandle handle, TimelineEntry& entry)
     {
       float elapsed = curTimestamp - entry.startTime;;
 

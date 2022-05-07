@@ -43,7 +43,7 @@ namespace eXl
     ImageName m_ImageName = EmptyName();
 
     Vec2i m_Size;
-    Vector<Vec2i> m_Frames;
+    SmallVector<Vec2i, 1> m_Frames;
     float m_FrameDuration = 0.15;
     AnimationType m_AnimType = AnimationType::None;
 
@@ -61,6 +61,8 @@ namespace eXl
     using TileMap = UnorderedMap<TileName, Tile>;
 
     static void Init();
+
+    static Tileset const* GetWhiteTexture();
 
 #ifndef EXL_IS_BAKED_PLATFORM
     static Tileset* Create(Path const& iDir, String const& iName);

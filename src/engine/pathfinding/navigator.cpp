@@ -156,7 +156,7 @@ namespace eXl
     {
       GameDataView<Vec3>* velocities = EngineCommon::GetVelocities(m_Nav.GetWorld());
       m_Nav.Tick(iTime, iSys->GetNeighborhoodExtraction());
-      m_Nav.GetAgents().Iterate([&](Agent& agent, Agents::Handle)
+      m_Nav.GetAgents().Iterate([&](Agents::Handle, Agent& agent)
       {
         Obstacle& agentObs = m_Nav.m_Obstacles.Get(agent.m_Obstacle);
         if(auto physComp = iSys->GetCompImpl(agentObs.m_Object))
@@ -423,7 +423,7 @@ namespace eXl
     VelocityObstacle vo(*m_Rand);
     RVO::ORCAAgent orca;
 
-    m_Agents.Iterate([&](Agent& agent, Agents::Handle)
+    m_Agents.Iterate([&](Agents::Handle, Agent& agent)
     {
       if (!(agent.m_HasDest || agent.m_EnableAvoidance))
       {
@@ -456,12 +456,12 @@ namespace eXl
       }
     });
 
-    m_Agents.Iterate([this, iTime](Agent& agent, Agents::Handle)
+    m_Agents.Iterate([this, iTime](Agents::Handle, Agent& agent)
     {
       HandleAgentPathfinding(agent, iTime);
     });
 
-    m_Agents.Iterate([this, &iNeigh, iTime, &vo, &orca](Agent& agent, Agents::Handle)
+    m_Agents.Iterate([this, &iNeigh, iTime, &vo, &orca](Agents::Handle, Agent& agent)
     {
       HandleAgentAvoidance(iNeigh, vo, orca, agent, iTime);
     });
@@ -469,14 +469,14 @@ namespace eXl
     m_Timestamp++;
     if (m_Timestamp == 0)
     {
-      m_Agents.Iterate([](Agent& agent, Agents::Handle)
+      m_Agents.Iterate([](Agents::Handle, Agent& agent)
       {
         agent.m_RankTimestamp = 0;
       });
       ++m_Timestamp;
     }
 
-    m_Agents.Iterate([this, iTime](Agent& agent, Agents::Handle)
+    m_Agents.Iterate([this, iTime](Agents::Handle, Agent& agent)
     {
       HandleAgentDiffusion(agent, iTime);
     });

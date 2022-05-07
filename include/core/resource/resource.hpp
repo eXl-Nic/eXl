@@ -89,6 +89,7 @@ namespace eXl
     {
       LockPathDirectory = 1 << 0,
       BakedResource = 1 << 1,
+      SystemResource = 1 << 2,
     };
 
     struct Header
@@ -187,11 +188,11 @@ namespace eXl
       }
     }
 
-    T const* Get() const { return m_Resource.get(); }
+    T const* Get() const { return reinterpret_cast<T const*>(m_Resource.get()); }
     T const* GetOrLoad() const 
     {
       Load();
-      return m_Resource.get(); 
+      return reinterpret_cast<T const*>(m_Resource.get());
     }
 
     Resource::UUID const& GetUUID() const { return m_ResourceUUID; }
@@ -245,7 +246,7 @@ namespace eXl
 
   protected:
     Resource::UUID m_ResourceUUID;
-    mutable IntrusivePtr<T const> m_Resource;
+    mutable IntrusivePtr<Resource const> m_Resource;
   };
 
   inline std::size_t hash_value(Resource::UUID const& Id) 

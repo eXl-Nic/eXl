@@ -98,14 +98,13 @@ namespace eXl
     using CommandCallback = std::function<void(uint64_t, ConstDynObject const&, DynObject&) >;
     struct CommandDesc
     {
-      CommandDesc() = default;
+      CommandDesc(FunDesc&& iDesc);
       CommandDesc(CommandDesc const&) = delete;
-      CommandDesc(CommandDesc&&);
+      CommandDesc(CommandDesc&&) = default;
       CommandName m_Name;
       FunDesc m_FunDesc;
       NetRole m_Executor;
       bool m_Reliable;
-      Optional<ArgsBuffer> m_Args;
       CommandCallback m_Callback;
     };
 

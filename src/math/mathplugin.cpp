@@ -198,8 +198,9 @@ namespace eXl
         ,
 
         luabind::class_<AABB2Df>("AABB2Df")
+        .def("FromMinAndSize", AABB2Df::FromMinAndSize)
+        .def("FromCenterAndSize", AABB2Df::FromCenterAndSize)
         .def(luabind::constructor<float, float, float, float>())
-        .def(luabind::constructor<Vec2, Vec2>())
         .def("AbsorbPoint", (void (AABB2Df::*)(AABB2Df const&))(&AABB2Df::Absorb))
         .def("AbsorbBox", (void (AABB2Df::*)(Vec2 const&))(&AABB2Df::Absorb))
         .def("Contains", &AABB2Df::Contains)
@@ -215,8 +216,9 @@ namespace eXl
         ,
 
         luabind::class_<AABB2Di>("AABB2Di")
+        .def("FromMinAndSize", AABB2Di::FromMinAndSize)
+        .def("FromCenterAndSize", AABB2Di::FromCenterAndSize)
         .def(luabind::constructor<int, int, int, int>())
-        .def(luabind::constructor<Vec2i, Vec2i>())
         .def("AbsorbPoint", (void (AABB2Di::*)(AABB2Di const&))(&AABB2Di::Absorb))
         .def("AbsorbBox", (void (AABB2Di::*)(Vec2i const&))(&AABB2Di::Absorb))
         .def("Contains", &AABB2Di::Contains)

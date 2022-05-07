@@ -20,6 +20,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
 
+#include <engine/gui/guisystem.hpp>
+#include <engine/gui/guilib.hpp>
+
 #include <core/input.hpp>
 
 #include <math/mathtools.hpp>
@@ -86,6 +89,38 @@ namespace eXl
     trans.AddTransform(newChar, translate(Identity<Mat4>(), iPos));
     toSpawn->Instantiate(newChar, iWorld, &customData);
 
+#if 0
+    GUISystem* gui = iWorld.GetSystem<GUISystem>();
+    if (gui)
+    {
+      Resource::UUID id = { 120981379, 340138741, 394802740, 782939172 };
+
+      auto charName = MakeRefCounted<GUI::Text>(GUI::Size(GUI::Dim(1, 0), GUI::Dim(1, 0)));
+      charName->m_Font.SetUUID(id);
+      charName->m_Text = "Blah";
+
+      auto frame = MakeRefCounted<GUI::Image>(GUI::Size(GUI::Dim(1, 0), GUI::Dim(1, 0)));
+      frame->m_ImgDesc.m_Tileset.Set(Tileset::GetWhiteTexture());
+      frame->m_ImgDesc.m_TileName = Tileset::GetWhiteTexture()->begin()->first;
+      frame->m_ImgDesc.m_RotateSprite = true;
+      frame->m_StretchToSize = true;
+      frame->m_ImgDesc.m_Tint = Vec4(0,0,0,0.25);
+      frame->m_Pick = []
+      {
+        LOG_INFO << "Picked button";
+      };
+
+      auto stack = MakeRefCounted<GUI::Dialog>(GUI::Size(GUI::Dim(1, 0), GUI::Dim(0.2, 0)));
+      stack->m_Children.push_back(frame);
+      stack->m_Children.push_back(charName);
+
+      auto window = MakeRefCounted<GUI::Container>(GUI::Size(GUI::Dim(0,100), GUI::Dim(0,100)));
+      window->AddDialog(stack, GUI::Position(GUI::Dim(0, 0), GUI::Dim(0, 0), GUI::Position::UpperLeft));
+
+      gui->AddDialog(window, newChar);
+    }
+#endif
+
     return newChar;
   }
 
@@ -94,7 +129,7 @@ namespace eXl
     m_MainChar = SpawnCharacter(iWorld, Vec3(m_SpawnPos, 0), EngineCommon::CharacterControlKind::PlayerControl);
 
     auto& transforms = *iWorld.GetSystem<Transforms>();
-    transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
+    //transforms.Attach(GetCamera().cameraObj, m_MainChar, Transforms::Position);
   }
 
   void Scenario_Base::ProcessInputs(World& iWorld)
@@ -107,6 +142,25 @@ namespace eXl
 
     AbilitySystem& abilities = *iWorld.GetSystem<AbilitySystem>();
     
+    for (MouseMoveEvent const& evt : iInputs.m_MouseMoveEvts)
+    {
+      curMousePos.x = evt.absX;
+      curMousePos.y = evt.absY;
+    }
+    GUISystem* gui = iWorld.GetSystem<GUISystem>();
+    if (gui)
+    {
+      for (int i = 0; i < (int)iInputs.m_MouseEvts.size(); ++i)
+      {
+        MouseEvent const& evt = iInputs.m_MouseEvts[i];
+        if (evt.button == MouseButton::Left
+          && !evt.pressed)
+        {
+          gui->Pick(curMousePos);
+        }
+      }
+    }
+
     if (m_MainChar.IsAssigned())
     {
       for (int i = 0; i < (int)iInputs.m_KeyEvts.size(); ++i)

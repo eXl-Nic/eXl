@@ -222,9 +222,9 @@ namespace eXl
 
     ObjectInfo* TryGetObjectInfo(ObjectHandle iHandle);
 
-    bool IsObjectValid(ObjectHandle iHandle);
+    bool IsObjectValid(ObjectHandle iHandle) const;
 
-    bool IsObjectBeingDestroyed(ObjectHandle iHandle);
+    bool IsObjectBeingDestroyed(ObjectHandle iHandle) const;
 
     template <typename T>
     T* AddSystem(std::unique_ptr<T>&& iSystem)

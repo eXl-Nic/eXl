@@ -15,6 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/lua/luamanager.hpp>
 #include <core/lua/luascript.hpp>
 #include <engine/script/eventsystem.hpp>
+#include <engine/common/gamedata.hpp>
 #include <boost/optional.hpp>
 #include <core/path.hpp>
 
@@ -29,6 +30,8 @@ namespace eXl
 
     LuaScriptSystem();
     ~LuaScriptSystem();
+
+    void Register(World& iWorld) override;
 
     void LoadScript(const LuaScriptBehaviour& iBehaviour);
 
@@ -50,7 +53,17 @@ namespace eXl
     using ScriptHandle = ObjectTableHandle<ScriptEntry>;
     UnorderedMap<Resource::UUID, ScriptHandle> m_LoadedScripts;
 
+    struct ObjectScript
+    {
+      ScriptHandle m_LoadedScript;
+      luabind::object m_Self;
+    };
+
+    Optional<DenseGameDataStorage<UnorderedMap<Name, ObjectScript>>> m_ObjectsScripts;
+
     ScriptHandle LoadScript_Internal(const LuaScriptBehaviour& iBehaviour);
+    static void CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload);
+    void DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput);
 
     LuaWorld m_LuaWorld;
   };

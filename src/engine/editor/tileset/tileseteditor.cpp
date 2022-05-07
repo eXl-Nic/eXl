@@ -223,7 +223,8 @@ namespace eXl
           if(Tile const* selTile = m_Impl->m_TileCollectionModel->GetTileFromIndex(index))
           {
             m_Impl->m_GridSize = selTile->m_Size;
-            m_Impl->m_CurBoxes = selTile->m_Frames;
+            m_Impl->m_CurBoxes.clear();
+            m_Impl->m_CurBoxes.insert(m_Impl->m_CurBoxes.end(), selTile->m_Frames.begin(), selTile->m_Frames.end());
             m_Impl->m_Toolbox->m_Ui.gridSizeX->setValue(m_Impl->m_GridSize.x);
             m_Impl->m_Toolbox->m_Ui.gridSizeY->setValue(m_Impl->m_GridSize.y);
             if (!m_Impl->m_CurBoxes.empty())
@@ -290,7 +291,8 @@ namespace eXl
           newTile.m_ImageName = *m_Impl->m_CurrentDisplayedImage;
         }
         newTile.m_Size = m_Impl->m_GridSize;
-        newTile.m_Frames = m_Impl->m_CurBoxes;
+        m_Impl->m_CurBoxes.clear();
+        m_Impl->m_CurBoxes.insert(m_Impl->m_CurBoxes.end(), newTile.m_Frames.begin(), newTile.m_Frames.end());
         m_Impl->m_Tileset->AddTile(*newName, newTile);
       }
     });
@@ -448,9 +450,9 @@ namespace eXl
     animPosition[2] = Vec4(-UnitZ<Vec3>(), 0);
 
     m_Transforms->AddTransform(m_AnimHandle, translate(Identity<Mat4>(), UnitZ<Vec3>()));
-    GfxSpriteComponent& gfxComp = m_Gfx->CreateSpriteComponent(m_AnimHandle);
-    gfxComp.SetTileset(m_Tileset);
-    gfxComp.SetRotateSprite(true);
+    m_Gfx->CreateSpriteComponent(m_AnimHandle);
+    GfxSpriteComponent::SetTileset(m_World, m_AnimHandle, m_Tileset);
+    GfxSpriteComponent::SetRotateSprite(m_World, m_AnimHandle, true);
   }
 
   void TilesetEditor::Impl::UpdateTile(QModelIndex iIndex)
@@ -498,13 +500,11 @@ namespace eXl
 
   void TilesetEditor::Impl::UpdateTilePreview(QModelIndex iIndex)
   {
-    GfxSpriteComponent* comp = m_Gfx->GetSpriteComponent(m_AnimHandle);
-    
     TileName const* name = m_TileCollectionModel->GetTileNameFromIndex(iIndex);
     if (name)
     {
       Tile const* tile = m_Tileset->Find(*name);
-      comp->SetTileName(*name);
+      GfxSpriteComponent::SetTileName(m_World, m_AnimHandle, *name);
 
       float aspectRatio = float(tile->m_Size.y) / tile->m_Size.x;
       float maxDim = Mathf::Max(tile->m_Size.x * tile->m_Scale.x / EngineCommon::s_WorldToPixel + 2 * Mathf::Abs(tile->m_Offset.x)
@@ -519,7 +519,7 @@ namespace eXl
     }
     else
     {
-      comp->SetTileName(TileName(""));
+      GfxSpriteComponent::SetTileName(m_World, m_AnimHandle, TileName(""));
     }
   }
 
@@ -533,7 +533,7 @@ namespace eXl
     }
     for (auto const& boxOrig : m_CurBoxes)
     {
-      AABB2Di box(boxOrig, m_GridSize);
+      AABB2Di box = AABB2Di::FromMinAndSize(boxOrig, m_GridSize);
       m_SelPainter->m_Boxes.push_back(box);
     }
    
@@ -548,7 +548,7 @@ namespace eXl
     {
       AABB2Di croppedBox;
       Vec2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
-      croppedBox.SetCommonBox(m_CurrentSelection, AABB2Di(Zero<Vec2i>(), imageSize * 2));
+      croppedBox.SetCommonBox(m_CurrentSelection, AABB2Di::FromMinAndSize(Zero<Vec2i>(), imageSize * 2));
 
       AABB2Di snapBox;
       snapBox.m_Data[0].x = (croppedBox.m_Data[0].x - m_SelOffset.x + m_GridSize.x / 2) / m_GridSize.x;
@@ -556,7 +556,7 @@ namespace eXl
       snapBox.m_Data[1].x = (croppedBox.m_Data[1].x - m_SelOffset.x + m_GridSize.x / 2) / m_GridSize.x;
       snapBox.m_Data[1].y = (croppedBox.m_Data[1].y - m_SelOffset.y + m_GridSize.y / 2) / m_GridSize.y;
 
-      snapBox.SetCommonBox(snapBox, AABB2Di(Zero<Vec2i>(), imageSize * 2));
+      snapBox.SetCommonBox(snapBox, AABB2Di::FromMinAndSize(Zero<Vec2i>(), imageSize * 2));
 
       Vec2i snapSize = snapBox.GetSize();
       snapSize.x = Mathi::Max(snapSize.x, 1);

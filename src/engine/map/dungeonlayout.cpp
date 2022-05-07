@@ -352,7 +352,7 @@ namespace eXl
       results.clear();
       if(seg.m_Ext1 == seg.m_Ext2)
       {
-        AABB2Di boxToTest(seg.m_Ext1, iRoomSize);
+        AABB2Di boxToTest = AABB2Di::FromMinAndSize(seg.m_Ext1, iRoomSize);
         iRoomIndex.query(boost::geometry::index::overlaps(boxToTest), std::back_inserter(results));
         for(auto& result : results)
         {
@@ -1015,7 +1015,7 @@ namespace eXl
           {
             Room newRoom;
             newRoom.m_Node = chainVtx;
-            newRoom.m_Box = AABB2Di(Zero<Vec2i>(), roomSize);
+            newRoom.m_Box = AABB2Di::FromMinAndSize(Zero<Vec2i>(), roomSize);
             vtxToRoom[chainVtx] = curLayout.size();
             roomIndex.insert(RoomIndexEntry(newRoom.m_Box, curLayout.size()));
             curLayout.push_back(newRoom);

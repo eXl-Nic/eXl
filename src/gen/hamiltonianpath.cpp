@@ -676,7 +676,7 @@ namespace eXl
                 }
                 else
                 {
-                  newPath.m_GridBox = AABB2Di(newPt.pos, Zero<Vec2i>());
+                  newPath.m_GridBox = AABB2Di::FromMinAndSize(newPt.pos, Zero<Vec2i>());
                 }
                 ++newPath.m_NumPoints;
                 newPath.m_Points.push_back(newPt);

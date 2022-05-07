@@ -111,7 +111,7 @@ namespace eXl
 
   void DrawNavigator(NavigatorSystem& iNav, Transforms& iTrans, DebugTool::Drawer& iDrawer)
   {
-    iNav.GetAgents().Iterate([&](NavigatorSystem::Agent& agent, NavigatorSystem::Agents::Handle)
+    iNav.GetAgents().Iterate([&](NavigatorSystem::Agents::Handle, NavigatorSystem::Agent& agent)
     {
       NavigatorSystem::Obstacle agentObs = iNav.GetObstacles().Get(agent.m_Obstacle);
       Mat4 const& curTrans = iTrans.GetWorldTransform(agentObs.m_Object);

@@ -22,7 +22,7 @@ namespace eXl
         m_PressPos = Vec2i(mouseEvent->pos().x(), mouseEvent->pos().y());
         m_Pressed = true;
 
-        emit onSelectionStarted(AABB2Di(m_PressPos, One<Vec2i>()));
+        emit onSelectionStarted(AABB2Di::FromMinAndSize(m_PressPos, One<Vec2i>()));
 
         return true;
       }

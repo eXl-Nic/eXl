@@ -42,15 +42,17 @@ namespace eXl
     static AABB2D FromCenterAndSize(glm::vec<2,Real> iCenter,glm::vec<2,Real> iSize)
     {
       AABB2D ret;
-      ret.m_Data[0] = iCenter - iSize / 2.0;
-      ret.m_Data[1] = iCenter + iSize / 2.0;
+      ret.m_Data[0] = iCenter - iSize / static_cast<Real>(2);
+      ret.m_Data[1] = iCenter + iSize / static_cast<Real>(2);
       return ret;
     }
 
-    AABB2D(glm::vec<2,Real> iMin, glm::vec<2,Real> iSize)
+    static AABB2D FromMinAndSize(glm::vec<2,Real> iMin, glm::vec<2,Real> iSize)
     {
-      m_Data[0] = iMin;
-      m_Data[1] = iMin + iSize;
+      AABB2D ret;
+      ret.m_Data[0] = iMin;
+      ret.m_Data[1] = iMin + iSize;
+      return ret;
     }
 
     template <class OtherReal>
@@ -112,6 +114,12 @@ namespace eXl
         }
       }
       return false;
+    }
+
+    void Translate(glm::vec<2, Real> iVec)
+    {
+      m_Min += iVec;
+      m_Max += iVec;
     }
 
     void Rotate(Real iAngle)

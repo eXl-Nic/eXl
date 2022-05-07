@@ -7,6 +7,11 @@ namespace eXl
 {
   class FontResource;
 
+  namespace GfxSpriteComponent
+  {
+    struct Desc;
+  }
+
   class EXL_ENGINE_API GfxGUIRenderNode : public GfxRenderNode
   {
     DECLARE_RTTI(GfxGUIRenderNode, GfxRenderNode);
@@ -15,7 +20,8 @@ namespace eXl
     ~GfxGUIRenderNode();
     GfxGUIRenderNode(GfxGUIRenderNode const&) = delete;
 
-    void AddText(ObjectHandle iObject, String const& iText, uint32_t iSize, FontResource const* iFont);
+    void AddText(ObjectHandle iObject, String const& iText, uint32_t iSize, FontResource const* iFont, uint8_t iDepth, Optional<ObjectHandle> iWorldAttach = {});
+    void AddSprite(ObjectHandle iObject, GfxSpriteComponent::Desc const& iDesc, Optional<ObjectHandle> iWorldAttach = {});
 
   protected:
     void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle) override;

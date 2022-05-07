@@ -50,10 +50,10 @@ namespace eXl
     }
     Tileset const* swordSet = tilesetHandle.Get();
 
-    GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(state.m_SwordActor);
-    gfxComp.SetTileset(swordSet);
-    gfxComp.SetTileName(TileName(""));
-    gfxComp.SetRotateSprite(false);
+    //GfxSpriteComponent& gfxComp = gfxSys.CreateSpriteComponent(state.m_SwordActor);
+    //gfxComp.SetTileset(swordSet);
+    //gfxComp.SetTileName(TileName(""));
+    //gfxComp.SetRotateSprite(false);
 #endif
 
     Mat4 transform = Identity<Mat4>();
@@ -106,24 +106,24 @@ namespace eXl
     Transforms& trans = *world.GetSystem<Transforms>();
 #ifdef EXL_WITH_OGL
     GfxSystem& gfxSys = *world.GetSystem<GfxSystem>();
-    GfxSpriteComponent* gfxComp = gfxSys.GetSpriteComponent(state.m_SwordActor);
-
-    if (dot(state.m_SwingDirection, UnitX<Vec2>()) > 0.5)
-    {
-      gfxComp->SetTileName(TileName("use_right"));
-    }
-    if (dot(state.m_SwingDirection, -UnitX<Vec2>()) > 0.5)
-    {
-      gfxComp->SetTileName(TileName("use_left"));
-    }
-    if (dot(state.m_SwingDirection, UnitY<Vec2>()) > 0.5)
-    {
-      gfxComp->SetTileName(TileName("use_up"));
-    }
-    if (dot(state.m_SwingDirection, -UnitY<Vec2>()) > 0.5)
-    {
-      gfxComp->SetTileName(TileName("use_down"));
-    }
+    //GfxSpriteComponent* gfxComp = gfxSys.GetSpriteComponent(state.m_SwordActor);
+    //
+    //if (dot(state.m_SwingDirection, UnitX<Vec2>()) > 0.5)
+    //{
+    //  gfxComp->SetTileName(TileName("use_right"));
+    //}
+    //if (dot(state.m_SwingDirection, -UnitX<Vec2>()) > 0.5)
+    //{
+    //  gfxComp->SetTileName(TileName("use_left"));
+    //}
+    //if (dot(state.m_SwingDirection, UnitY<Vec2>()) > 0.5)
+    //{
+    //  gfxComp->SetTileName(TileName("use_up"));
+    //}
+    //if (dot(state.m_SwingDirection, -UnitY<Vec2>()) > 0.5)
+    //{
+    //  gfxComp->SetTileName(TileName("use_down"));
+    //}
 #endif
 
     world.AddTimer(0.30, false, [this, user = state.m_User](World& iWorld)
@@ -149,8 +149,8 @@ namespace eXl
 
 #ifdef EXL_WITH_OGL
     GfxSystem& gfxSys = *world.GetSystem<GfxSystem>();
-    GfxSpriteComponent* gfxComp = gfxSys.GetSpriteComponent(state.m_SwordActor);
-    gfxComp->SetTileName(TileName(""));
+    //GfxSpriteComponent* gfxComp = gfxSys.GetSpriteComponent(state.m_SwordActor);
+    //gfxComp->SetTileName(TileName(""));
 #endif
     m_System->EndCue(state.m_User, UseSwordCue());
 

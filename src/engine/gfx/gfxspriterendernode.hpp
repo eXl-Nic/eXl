@@ -8,14 +8,13 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <engine/gfx/gfxsystem.hpp>
-
-#include <engine/gfx/gfxcomponent.hpp>
+#include <engine/gfx/spriterenderer.hpp>
 
 namespace eXl
 {
   class GfxSpriteRenderNode : public GfxRenderNode
   {
+    DECLARE_RTTI(GfxSpriteRenderNode, GfxRenderNode);
   public:
 
     void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle) override;
@@ -24,26 +23,15 @@ namespace eXl
     UpdateCallback GetDeleteCallback() override;
 
     void AddObject(ObjectHandle);
-    GfxSpriteComponent* GetComponent(ObjectHandle);
-    void SetSpriteDirty(GfxSpriteComponent& iComp);
+    void SetSpriteDirty(ObjectHandle iObj);
 
-    OGLCompiledProgram const* GetSpriteProgram() { return m_SpriteProgram.get(); }
+    OGLCompiledProgram const* GetSpriteProgram() { return m_Renderer->m_SpriteProgram.get(); }
 
   protected:
 
-    static SpriteDataTable::Handle GetSpriteData(GfxSpriteComponent& iComp);
-    static GfxSpriteComponent::Desc const* GetDescFromComponent(GfxSpriteComponent const& comp, SparseGameDataView<GfxSpriteComponent::Desc> const* iView);
     void RemoveObject(ObjectHandle);
-    void PrepareSprites();
 
-    SpriteDataTable m_SpriteData;
-    //SpriteComponents m_SpriteComp;
-    //Vector<SpriteComponents::Handle> m_ObjectToSpriteComp;
-    Optional<DenseGameDataStorage<GfxSpriteComponent>> m_SpriteComp;
-    UnorderedSet<GfxSpriteComponent*> m_DirtyComponents;
-    UnorderedMap<Vec3, IntrusivePtr<GeometryInfo>> m_SpriteGeomCache;
-
-    UniquePtr<OGLCompiledProgram const> m_SpriteProgram;
-    IntrusivePtr<OGLBuffer> m_DefaultSpriteIdxBuffer;
+    Optional<DenseGameDataStorage<GfxSpriteData>> m_SpriteData;
+    Optional<SpriteRenderer> m_Renderer;
   };
 }

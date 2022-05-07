@@ -222,12 +222,12 @@ namespace eXl
         if (iLowLight == EnableAll || (iLowLight == Layer
           && iTile.m_Layer == m_LayerWidget->GetCurLayer()))
         {
-          sys.GetSpriteComponent(iObject)->SetTint(One<Vec4>());
+          GfxSpriteComponent::SetTint(m_World, iObject, One<Vec4>());
         }
         if (iLowLight == DisableAll || (iLowLight == Layer
           && iTile.m_Layer != m_LayerWidget->GetCurLayer()))
         {
-          sys.GetSpriteComponent(iObject)->SetTint(Vec4(0.8, 0.8, 0.8, 0.5));
+          GfxSpriteComponent::SetTint(m_World, iObject, Vec4(0.8, 0.8, 0.8, 0.5));
         }
       });
   }
@@ -444,7 +444,7 @@ namespace eXl
 
   ObjectHandle TilesTool::GetAt(Vec2i iWorldPos)
   {
-    AABB2Di queryBox(iWorldPos, One<Vec2i>());
+    AABB2Di queryBox = AABB2Di::FromMinAndSize(iWorldPos, One<Vec2i>());
 
     QueryResult results(m_ResultsCache);
     m_TilesIdx.query(boost::geometry::index::intersects(queryBox), results.Inserter());
@@ -515,10 +515,12 @@ namespace eXl
     tilePos /= EngineCommon::s_WorldToPixel;
     trans.AddTransform(iHandle, translate(Identity<Mat4>(), Vec3(tilePos, 0)));
 
-    GfxSpriteComponent& gfxComp = gfx.CreateSpriteComponent(iHandle);
-    gfxComp.SetTileset(iTile.m_Tileset.GetOrLoad());
-    gfxComp.SetTileName(iTile.m_Tile);
-    gfxComp.SetLayer(iTile.m_Layer);
+    gfx.CreateSpriteComponent(iHandle);
+    GfxSpriteComponent::Desc desc;
+    desc.m_Tileset = iTile.m_Tileset;
+    desc.m_TileName = iTile.m_Tile;
+    desc.m_Layer = iTile.m_Layer;
+    GfxSpriteComponent::SetDesc(m_World, iHandle, desc);
   }
   
   void TilesTool::Remove(ObjectHandle iHandle)
@@ -561,7 +563,7 @@ namespace eXl
     BoxIndexEntry oldBoxEntry(tileBox, iHandle);
    
     Vec2i size = SafeGetTileSize(iTile.m_Tileset, iTile.m_Tile);
-    tileBox = AABB2Di(iTile.m_Position - size / 2, size);
+    tileBox = AABB2Di::FromMinAndSize(iTile.m_Position - size / 2, size);
 
     m_World.AddTimer(0.0, false, [&iTile, iHandle](World& iWorld)
     {

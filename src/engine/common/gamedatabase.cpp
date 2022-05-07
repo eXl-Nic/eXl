@@ -17,7 +17,7 @@ namespace eXl
   IMPLEMENT_RTTI(GameDatabase);
 
   GnrPropertySheetAllocator::GnrPropertySheetAllocator(World& iWorld, Type const* iType)
-    : SparseDataAllocator(iType, m_ObjectsSpec)
+    : SparseGameDataAllocator(m_Index, iType, m_ObjectsSpec)
     , m_ObjectsSpec(iType->GetSize(), 8)
     , m_Type(iType)
   {
@@ -25,7 +25,7 @@ namespace eXl
 
   void GnrPropertySheetAllocator::Clear()
   {
-    SparseDataAllocator::Clear();
+    SparseGameDataAllocator::Clear();
     m_ObjectsSpec.Reset(&NullDeleter);
   }
 
@@ -99,7 +99,7 @@ namespace eXl
     m_Properties.insert(std::make_pair(iName, newEntry));
   }
 
-  void PropertiesManifest::RegisterPropertySheet(PropertySheetName iName, Type const* iType, std::function<SparseDataAllocator* (World&)> iFactory)
+  void PropertiesManifest::RegisterPropertySheet(PropertySheetName iName, Type const* iType, std::function<SparseGameDataAllocator* (World&)> iFactory)
   {
     eXl_ASSERT(iType != nullptr);
     eXl_ASSERT(m_Properties.count(iName) == 0);
@@ -111,7 +111,7 @@ namespace eXl
     m_Properties.insert(std::make_pair(iName, newEntry));
   }
 
-  void PropertiesManifest::RegisterPropertySheet(PropertySheetName iName, Type const* iType, std::function<DenseDataAllocator* (World&)> iFactory)
+  void PropertiesManifest::RegisterPropertySheet(PropertySheetName iName, Type const* iType, std::function<DenseGameDataAllocator* (World&)> iFactory)
   {
     eXl_ASSERT(iType != nullptr);
     eXl_ASSERT(m_Properties.count(iName) == 0);
@@ -144,11 +144,11 @@ namespace eXl
       AllocatorInfo newInfo;
       if (entry.second.isSparse)
       {
-        newInfo.m_SparseAllocator = static_cast<SparseDataAllocator*>(entry.second.factory(iWorld));
+        newInfo.m_SparseAllocator = static_cast<SparseGameDataAllocator*>(entry.second.factory(iWorld));
       }
       else
       {
-        newInfo.m_DenseAllocator = static_cast<DenseDataAllocator*>(entry.second.factory(iWorld));
+        newInfo.m_DenseAllocator = static_cast<DenseGameDataAllocator*>(entry.second.factory(iWorld));
       }
       m_Allocators.push_back(newInfo);
     }
@@ -168,7 +168,7 @@ namespace eXl
       auto iter = m_AllocatorSlot.find(propertySheet);
       eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
 
-      if(SparseDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+      if(SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
       {
         uint32_t slot = sparseAlloc->GetSlot(iObject);
 
@@ -208,11 +208,16 @@ namespace eXl
       }
       else
       {
-        DenseDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator;
+        eXl_FAIL_MSG("Unreachable? Should not have archetypes on dense data");
+        DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator;
         ObjectTableHandle_Base handle = denseAlloc->GetDataFromSlot_Inl(denseAlloc->AllocateSlot_Inl(iObject));
-        void* sheetData = denseAlloc->m_ObjectData.Get(handle);
-
-        void const* archetypeData = denseAlloc->m_ObjectData.Get(entry.second.handle);
+        ObjectTable_Data* dataTable = denseAlloc->GetObjectTable();
+        if (dataTable == nullptr)
+        {
+          continue;
+        }
+        void* sheetData = dataTable->Get(handle);
+        void const* archetypeData = dataTable->Get(entry.second.handle);
         denseAlloc->m_Type->Copy(archetypeData, sheetData);
         if (iCusto && iCusto->m_PropertyCustomization.count(propertySheet) > 0)
         {
@@ -231,15 +236,30 @@ namespace eXl
     {
       return DynObject();
     }
-    DataAllocatorBase* alloc = m_Allocators[iter->second].GetAlloc();
+    GameDataAllocatorBase* alloc = m_Allocators[iter->second].GetAlloc();
     uint32_t slot = alloc->GetSlot(iObject);
     ObjectTableHandle_Base dataHandle;
     if (slot == -1 || !(dataHandle = alloc->GetDataFromSlot(slot)).IsAssigned())
     {
       return DynObject();
     }
+
+    ObjectTable_Data* dataTable;
+    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator)
+    {
+      dataTable = denseAlloc->GetObjectTable();
+      if (dataTable == nullptr)
+      {
+        return DynObject();
+      }
+
+    }
+    else
+    {
+      dataTable = &m_Allocators[iter->second].m_SparseAllocator->m_ObjectData;
+    }
     
-    void* sheetData = alloc->m_ObjectData.Get(dataHandle);
+    void* sheetData = dataTable->Get(dataHandle);
     return DynObject(alloc->m_Type, sheetData);
   }
 
@@ -252,7 +272,7 @@ namespace eXl
       return ConstDynObject();
     }
 
-    DataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
+    GameDataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
     uint32_t slot = alloc->GetSlot(iObject);
     ObjectTableHandle_Base dataHandle;
     if (slot == -1 || !(dataHandle = alloc->GetDataFromSlot(slot)).IsAssigned())
@@ -260,7 +280,22 @@ namespace eXl
       return ConstDynObject();
     }
 
-    void* sheetData = alloc->m_ObjectData.Get(dataHandle);
+    ObjectTable_Data* dataTable;
+    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator)
+    {
+      dataTable = denseAlloc->GetObjectTable();
+      if (dataTable == nullptr)
+      {
+        return DynObject();
+      }
+
+    }
+    else
+    {
+      dataTable = &m_Allocators[iter->second].m_SparseAllocator->m_ObjectData;
+    }
+
+    void* sheetData = dataTable->Get(dataHandle);
     return ConstDynObject(alloc->m_Type, sheetData);
   }
 
@@ -278,7 +313,7 @@ namespace eXl
         auto iter = m_AllocatorSlot.find(propertySheet);
         eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
 
-        if (SparseDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+        if (SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
         {
           ObjectTableHandle_Base newHandle;
           sparseAlloc->m_ObjectData.Alloc(newHandle);
@@ -312,7 +347,7 @@ namespace eXl
         auto iter = m_AllocatorSlot.find(propertySheet);
         eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
 
-        if (SparseDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+        if (SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
         {
           for (uint32_t i = 0; i < sparseAlloc->m_ArchetypeHandle.size(); ++i)
           {
@@ -338,7 +373,7 @@ namespace eXl
     {
       return;
     }
-    DataAllocatorBase* alloc = m_Allocators[m_GarbageCollectionCycle].GetAlloc();
+    GameDataAllocatorBase* alloc = m_Allocators[m_GarbageCollectionCycle].GetAlloc();
     alloc->GarbageCollect(GetWorld());
     m_GarbageCollectionCycle = (m_GarbageCollectionCycle + 1) % m_Allocators.size();
   }

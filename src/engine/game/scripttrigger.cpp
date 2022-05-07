@@ -32,7 +32,7 @@ namespace eXl
     EventSystem& events = *m_World.GetSystem<EventSystem>();
     for (auto const& pair : iNewPairs)
     {
-      events.Dispatch<void>(pair.first, m_EnterName, pair.first, pair.second);
+      events.Dispatch<void>(pair.first, m_EnterName, pair.second);
     }
   }
 
@@ -41,7 +41,7 @@ namespace eXl
     EventSystem& events = *m_World.GetSystem<EventSystem>();
     for (auto const& pair : iNewPairs)
     {
-      events.Dispatch<void>(pair.first, m_LeaveName, pair.first, pair.second);
+      events.Dispatch<void>(pair.first, m_LeaveName, pair.second);
     }
   }
 

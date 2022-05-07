@@ -94,18 +94,14 @@ namespace eXl
       tileSize.x = Mathi::Max(1, Mathf::Round(tileSize.x * spriteData->m_Size.x * EngineCommon::s_WorldToPixel));
       tileSize.y = Mathi::Max(1, Mathf::Round(tileSize.y * spriteData->m_Size.y * EngineCommon::s_WorldToPixel));
       
-      custoData.m_BoxCache = AABB2Di(pixelPos - tileSize / 2, tileSize);
+      custoData.m_BoxCache = AABB2Di::FromMinAndSize(pixelPos - tileSize / 2, tileSize);
 
+      GfxSpriteComponent::SetDesc(m_World, iHandle, *spriteData);
       
-      GfxSpriteComponent* spriteComp = m_World.GetSystem<GfxSystem>()->GetSpriteComponent(iHandle);
-      if (spriteComp)
-      {
-        spriteComp->SetDesc(*spriteData);
-      }
     }
     else
     {
-      custoData.m_BoxCache = AABB2Di(pixelPos, One<Vec2i>());
+      custoData.m_BoxCache = AABB2Di::FromMinAndSize(pixelPos, One<Vec2i>());
     }
 
     Transforms& trans = *m_World.GetSystem<Transforms>();
@@ -513,7 +509,7 @@ namespace eXl
 
 	ObjectHandle ObjectsTool::GetAt(Vec2i iWorldPos)
 	{
-		AABB2Di queryBox(iWorldPos, One<Vec2i>());
+		AABB2Di queryBox = AABB2Di::FromMinAndSize(iWorldPos, One<Vec2i>());
 
 		QueryResult results(m_ResultsCache);
 		m_TilesIdx.query(boost::geometry::index::intersects(queryBox), results.Inserter());
@@ -575,7 +571,7 @@ namespace eXl
 
   void ObjectsTool::AddTileToWorld(ObjectHandle iObj, GfxSpriteComponent::Desc const* iDesc)
   {
-    GfxSpriteComponent& sprite = m_World.GetSystem<GfxSystem>()->CreateSpriteComponent(iObj);
-    sprite.SetDesc(*iDesc);
+    m_World.GetSystem<GfxSystem>()->CreateSpriteComponent(iObj);
+    GfxSpriteComponent::SetDesc(m_World, iObj, *iDesc);
   }
 }

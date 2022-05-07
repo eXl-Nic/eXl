@@ -59,7 +59,7 @@ namespace eXl
 
     Vec4 tint;
 		Vec2 tcOffset = Zero<Vec2>();
-		Vec2 tcScaling = Zero<Vec2>();
+		Vec2 tcScaling = One<Vec2>();
     Vec2 texSize = One<Vec2>();
     Vec2 imageSize;
     float alphaMult = 1.0;

@@ -19,7 +19,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   class GfxComponent;
-	class GfxSpriteComponent;
   class GfxSystem;
   class Transforms;
   class OGLDisplayList;
@@ -120,8 +119,7 @@ namespace eXl
     GfxComponent& CreateComponent(ObjectHandle iObject);
     GfxComponent* GetComponent(ObjectHandle iObject);
 
-		GfxSpriteComponent& CreateSpriteComponent(ObjectHandle iObject);
-		GfxSpriteComponent* GetSpriteComponent(ObjectHandle iObject);
+		void CreateSpriteComponent(ObjectHandle iObject);
 
     void DeleteComponent(ObjectHandle iObject) override;
 

@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/typemanager.hpp>
 #include <core/type/tupletype.hpp>
 #include <core/type/dynobject.hpp>
+#include <core/utils/positional.hpp>
 
 namespace eXl
 {
@@ -134,7 +135,7 @@ namespace eXl
   class EXL_CORE_API ArgsBuffer : public TupleType
   {
   public:
-    ArgsBuffer(Vector<Type const*> const& iArgs);
+    ArgsBuffer(Vector<Type const*>&& iArgs);
 
     size_t GetNumField()const override;
     const Type* GetFieldDetails(unsigned int iNum)const override;
@@ -153,9 +154,10 @@ namespace eXl
     void RegisterLua(lua_State* iState) const override;
 #endif
     size_t GetOffset(uint32_t iField) const { return m_Offsets[iField]; }
+
+    Vector<Type const*> const m_Args;
   protected:
-    Vector<Type const*> const& m_Args;
-    Vector<size_t> m_Offsets;
+    Vector<size_t> const m_Offsets;
   };
 
   template<uint32_t Step, typename... Args>
@@ -163,25 +165,29 @@ namespace eXl
 
   struct FunDesc
   {
-    Type const* returnType;
-    Vector<Type const*> arguments;
+    FunDesc(Type const* iRetType, Vector<Type const*> iArguments)
+      : m_RetType(iRetType)
+      , m_Type(std::move(iArguments))
+    {}
 
     template <typename RetType, typename... Args>
     bool ValidateSignature() const
     {
-      return TypeManager::GetType<RetType>() == returnType
-        && ValidateArgList<Args...>::Validate(0, arguments);
+      return TypeManager::GetType<RetType>() == GetRetType()
+        && ValidateArgList<Args...>::Validate(0, m_Type.m_Args);
     }
 
     template <typename... Args>
-    Err PopulateArgBuffer(ArgsBuffer const& iType, DynObject& oBuffer, Args&&... iArgs) const
+    Err PopulateArgBuffer(DynObject& oBuffer, Args&&... iArgs) const
     {
-      if (!ValidateArgList<Args...>::Validate(0, arguments))
+      if (!ValidateArgList<Args...>::Validate(0, m_Type.m_Args))
       {
         return Err::Failure;
       }
 
-      oBuffer.SetType(&iType, iType.Alloc(), true);
+      ArgsBuffer const& type = GetType();
+
+      oBuffer.SetType(&type, type.Alloc(), true);
       BufferPopulator<0, Args...>::Populate(iType, oBuffer, std::forward<Args>(iArgs)...);
       return Err::Success;
     }
@@ -191,6 +197,18 @@ namespace eXl
     {
       return GetFunDesc_Impl<FunType>::Create();
     }
+
+    Type const* GetRetType() const { return m_RetType; }
+    Vector<Type const*> const& GetArgs() const { return m_Type.m_Args; }
+
+    ArgsBuffer const& GetType() const
+    {
+      return m_Type;
+    }
+
+  private:
+    Type const* m_RetType;
+    ArgsBuffer m_Type;
   };
 
   template<uint32_t Step, typename Arg, typename... Args>
@@ -217,44 +235,13 @@ namespace eXl
   {
     static FunDesc Create()
     {
-      FunDesc newDesc;
-      newDesc.returnType = TypeManager::GetType<RetType>();
-      GetArgList<Args...>::GetArgs(newDesc.arguments);
+      Type const* returnType = TypeManager::GetType<RetType>();
+      Vector<Type const*> arguments;
+      GetArgList<Args...>::GetArgs(arguments);
 
-      return newDesc;
+      return FunDesc(returnType, std::move(arguments));
     }
   };
-
-  template <typename Type, uint32_t Position >
-  struct PositionalArg
-  {
-    using ArgType = typename std::remove_reference<typename std::remove_const<Type>::type>::type;
-    static constexpr uint32_t ArgPos = Position;
-  };
-
-  template <uint32_t Step>
-  struct ParsingSeparator {};
-
-  template <typename... Args>
-  struct PositionalList{};
-
-  template <typename Dummy, uint32_t Step, uint32_t Max, typename... Args >
-  struct MakePositionalList_Impl;
-
-  template <typename Dummy, uint32_t Max, typename... Args >
-  struct MakePositionalList_Impl<Dummy, Max, Max, Args...>
-  {
-    using type = PositionalList<Args...>;
-  };
-
-  template <uint32_t Step, uint32_t Max, typename NextArg, typename... Args >
-  struct MakePositionalList_Impl <typename std::enable_if<Step != Max, bool>::type, Step, Max, NextArg, Args...>
-     : MakePositionalList_Impl<bool, Step + 1, Max, Args..., PositionalArg<NextArg, Step>>
-  {};
-
-  template <typename... Args>
-  struct MakePositionalList : MakePositionalList_Impl<bool, 0, sizeof...(Args), Args...>
-  {};
 
   template <typename ArgsList>
   struct PositionalInvoker;

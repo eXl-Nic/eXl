@@ -29,6 +29,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/game/scripttrigger.hpp>
 #include <engine/game/commondef.hpp>
+#include <engine/gui/guisystem.hpp>
 
 #include <cxxopts.hpp>
 
@@ -250,6 +251,7 @@ namespace eXl
   {
 #ifdef EXL_WITH_OGL
     m_Impl->gfxSys = m_Impl->world.AddSystem(std::make_unique<GfxSystem>(*m_Impl->transforms));
+    m_Impl->world.AddSystem(std::make_unique<GUISystem>());
 #endif
     return *this;
   }

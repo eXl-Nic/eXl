@@ -59,7 +59,7 @@ namespace RVO {
 
   inline eXl::Vec2 normalize(eXl::Vec2 const& iVec)
   {
-    return normalize(iVec);
+    return glm::normalize(iVec);
   }
 
 	/**

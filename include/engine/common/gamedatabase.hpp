@@ -41,8 +41,8 @@ namespace eXl
     }
 
     void RegisterPropertySheet(PropertySheetName, Type const*);
-    void RegisterPropertySheet(PropertySheetName, Type const*, std::function<SparseDataAllocator* (World&)> iFactory);
-    void RegisterPropertySheet(PropertySheetName, Type const*, std::function<DenseDataAllocator* (World&)> iFactory);
+    void RegisterPropertySheet(PropertySheetName, Type const*, std::function<SparseGameDataAllocator* (World&)> iFactory);
+    void RegisterPropertySheet(PropertySheetName, Type const*, std::function<DenseGameDataAllocator* (World&)> iFactory);
 
     Type const* GetTypeFromName(PropertySheetName iName) const;
 
@@ -52,20 +52,21 @@ namespace eXl
     struct PropertyEntry
     {
       Type const* type;
-      std::function<DataAllocatorBase* (World&)> factory;
+      std::function<GameDataAllocatorBase* (World&)> factory;
       bool isSparse;
     };
     friend GameDatabase;
     UnorderedMap<PropertySheetName, PropertyEntry> m_Properties;
   };
 
-  struct GnrPropertySheetAllocator : SparseDataAllocator
+  struct GnrPropertySheetAllocator : SparseGameDataAllocator
   {
     GnrPropertySheetAllocator(World& iWorld, Type const* iType);
     ObjectTableHandle_Base Alloc() override;
     void Release(ObjectTableHandle_Base iHandle) override;
     static void NullDeleter(void*) {}
     void Clear() override;
+    ObjectDataIndex m_Index;
     ObjectTable_Data m_ObjectsSpec;
     Type const* m_Type;
   };
@@ -129,7 +130,7 @@ namespace eXl
       {
         return nullptr;
       }
-      DataAllocatorBase* alloc = m_Allocators[m_AllocatorSlot[iName]].GetAlloc();
+      GameDataAllocatorBase* alloc = m_Allocators[m_AllocatorSlot[iName]].GetAlloc();
       return reinterpret_cast<GameDataView<T>*>(alloc->m_ViewPtr);
     }
 
@@ -140,12 +141,12 @@ namespace eXl
 
     struct AllocatorInfo
     {
-      SparseDataAllocator* m_SparseAllocator = nullptr;
-      DenseDataAllocator* m_DenseAllocator = nullptr;
-      DataAllocatorBase* GetAlloc()
+      SparseGameDataAllocator* m_SparseAllocator = nullptr;
+      DenseGameDataAllocator* m_DenseAllocator = nullptr;
+      GameDataAllocatorBase* GetAlloc()
       {
         return m_SparseAllocator 
-          ? static_cast<DataAllocatorBase*>(m_SparseAllocator)
+          ? static_cast<GameDataAllocatorBase*>(m_SparseAllocator)
           : m_DenseAllocator;
       }
     };

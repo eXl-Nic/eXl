@@ -308,7 +308,7 @@ namespace eXl
         if (element.second.placeable)
         {
           newElement.m_RelDensity = 1.0;
-          AABB2Di shapeBox(element.second.size / -2, element.second.size);
+          AABB2Di shapeBox = AABB2Di::FromMinAndSize(element.second.size / -2, element.second.size);
           newElement.m_Shapes.push_back(Polygoni(shapeBox));
           newElement.m_GridX = element.second.size.x;
           newElement.m_GridY = element.second.size.y;

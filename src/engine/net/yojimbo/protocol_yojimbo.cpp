@@ -97,14 +97,14 @@ namespace yojimbo
       return false;
     }
     CommandDesc const& cmd = *iter->second;
-    m_Args.SetType(&(*cmd.m_Args), cmd.m_Args->Alloc(), true);
+    m_Args.SetType(&cmd.m_FunDesc.GetType(), cmd.m_FunDesc.GetType().Alloc(), true);
 
     Yo_Unstreamer unstreamer(stream);
     if (!unstreamer.Begin())
     {
       return false;
     }
-    cmd.m_Args->Unstream_Uninit(m_Args.GetBuffer(), &unstreamer);
+    cmd.m_FunDesc.GetType().Unstream_Uninit(m_Args.GetBuffer(), &unstreamer);
     if (!unstreamer.m_Good)
     {
       return false;
@@ -141,7 +141,7 @@ namespace yojimbo
     {
       return false;
     }
-    cmd.m_Args->Stream(m_Args.GetBuffer(), &streamer);
+    cmd.m_FunDesc.GetType().Stream(m_Args.GetBuffer(), &streamer);
     if (!streamer.m_Good)
     {
       return false;
@@ -169,7 +169,7 @@ namespace yojimbo
     {
       return false;
     }
-    cmd.m_Args->Stream(m_Args.GetBuffer(), &streamer);
+    cmd.m_FunDesc.GetType().Stream(m_Args.GetBuffer(), &streamer);
     if (!streamer.m_Good)
     {
       return false;

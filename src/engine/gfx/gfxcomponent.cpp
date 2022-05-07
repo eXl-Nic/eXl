@@ -17,7 +17,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   IMPLEMENT_RefC(GfxResource)
-  IMPLEMENT_TAG_TYPE(GfxSpriteComponent);
 
   void GeometryInfo::SetupAssembly(bool hasTexCoord)
   {
@@ -148,159 +147,156 @@ namespace eXl
     return IntrusivePtr<OGLBuffer>(OGLBuffer::CreateBuffer(OGLBufferUsage::ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData));
   }
 
-	void GfxSpriteData::Push(OGLDisplayList& iList)
+	void GfxSpriteData::Push(OGLDisplayList& iList, uint16_t iKey)
 	{
     iList.SetVAssembly(&m_Geometry->m_Assembly);
     iList.PushData(&m_TextureData);
 		iList.PushData(&m_PositionData);
-		iList.PushDraw(0x0100 + m_Layer, OGLDraw::TriangleList, 6, 0, 0);
+		iList.PushDraw(iKey + m_Layer, OGLDraw::TriangleList, 6, 0, 0);
 		iList.PopData();
 		iList.PopData();
 	}
 
-  bool GfxSpriteComponent::Mutate()
+  GfxSpriteComponent::Desc* GetDataToMutate(World& iWorld, ObjectHandle iObj)
   {
-    if (m_Desc != nullptr)
+    GameDataView<GfxSpriteComponent::Desc>* view = GetSpriteComponentView(iWorld);
+    if (!view->HasEntry(iObj))
     {
-      return true;
+      return nullptr;
     }
-    m_Desc = &GetSpriteComponentView(m_RenderNode->GetWorld())->GetOrCreate(m_Object);
-    return m_Desc != nullptr;
+    return view->Get(iObj);
   }
 
-  void GfxSpriteComponent::SetDesc(Desc const& iDesc)
+  void MakeSpriteDirty(World& iWorld, ObjectHandle iObj)
   {
-    if(!Mutate())
+    GfxSystem* gfx = iWorld.GetSystem<GfxSystem>();
+    if (gfx == nullptr)
     {
       return;
     }
-    *m_Desc = iDesc;
-    if (m_SpriteData.IsAssigned())
-    {
-      m_RenderNode->SetSpriteDirty(*this);
-    }
+    GfxRenderNodeHandle handle = gfx->GetSpriteHandle();
+    GfxSpriteRenderNode::DynamicCast(gfx->GetRenderNode(handle))->SetSpriteDirty(iObj);
   }
 
-  GfxSpriteComponent::GfxSpriteComponent()
+  void GfxSpriteComponent::SetDesc(World& iWorld, ObjectHandle iObj, Desc const& iDesc)
   {
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
+    {
+      return;
+    }
+    *descData = iDesc;
+    descData->m_Tileset.GetOrLoad()->Find("AA");
+    MakeSpriteDirty(iWorld, iObj);
   }
 
-	void GfxSpriteComponent::SetSize(Vec2 const& iSize)
+	void GfxSpriteComponent::SetSize(World& iWorld, ObjectHandle iObj, Vec2 const& iSize)
 	{
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-		m_Desc->m_Size = iSize;
-		if (m_SpriteData.IsAssigned())
-		{
-      m_RenderNode->SetSpriteDirty(*this);
-		}
+    descData->m_Size = iSize;
+
+    MakeSpriteDirty(iWorld, iObj);
 	}
 
-  void GfxSpriteComponent::SetOffset(Vec2 const& iOffset)
+  void GfxSpriteComponent::SetOffset(World& iWorld, ObjectHandle iObj, Vec2 const& iOffset)
   {
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_Offset = iOffset;
-    if (m_SpriteData.IsAssigned())
-    {
-      m_RenderNode->SetSpriteDirty(*this);
-    }
+    descData->m_Offset = iOffset;
+
+    MakeSpriteDirty(iWorld, iObj);
   }
 
-	void GfxSpriteComponent::SetTileset(Tileset const* iTileset)
+	void GfxSpriteComponent::SetTileset(World& iWorld, ObjectHandle iObj, Tileset const* iTileset)
 	{
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_Tileset.Set(iTileset);
-		if (m_SpriteData.IsAssigned())
-		{
-      m_RenderNode->SetSpriteDirty(*this);
-		}
+    descData->m_Tileset.Set(iTileset);
+
+    MakeSpriteDirty(iWorld, iObj);
 	}
 
-	void GfxSpriteComponent::SetTileName(TileName iName)
+	void GfxSpriteComponent::SetTileName(World& iWorld, ObjectHandle iObj, TileName iName)
 	{
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_TileName = iName;
-		if (m_SpriteData.IsAssigned())
-		{
-      m_RenderNode->SetSpriteDirty(*this);
-		}
+    descData->m_TileName = iName;
+
+    MakeSpriteDirty(iWorld, iObj);
 	}
 
-	void GfxSpriteComponent::SetAnimationSpeed(float iSpeed)
+	void GfxSpriteComponent::SetAnimationSpeed(World& iWorld, ObjectHandle iObj, float iSpeed)
 	{
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_AnimSpeed = iSpeed;
-		if (m_SpriteData.IsAssigned())
-		{
-      m_RenderNode->SetSpriteDirty(*this);
-		}
+    descData->m_AnimSpeed = iSpeed;
+
+    MakeSpriteDirty(iWorld, iObj);
 	}
 
-  void GfxSpriteComponent::SetRotateSprite(bool iRotate)
+  void GfxSpriteComponent::SetRotateSprite(World& iWorld, ObjectHandle iObj, bool iRotate)
   {
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_RotateSprite = iRotate;
-    if (m_SpriteData.IsAssigned())
-    {
-      m_RenderNode->SetSpriteDirty(*this);
-    }
+    descData->m_RotateSprite = iRotate;
+
+    MakeSpriteDirty(iWorld, iObj);
   }
 
-  void GfxSpriteComponent::SetLayer(uint8_t iLayer)
+  void GfxSpriteComponent::SetLayer(World& iWorld, ObjectHandle iObj, uint8_t iLayer)
   {
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_Layer = iLayer;
-    if (m_SpriteData.IsAssigned())
-    {
-      m_RenderNode->SetSpriteDirty(*this);
-    }
+    descData->m_Layer = iLayer;
+
+    MakeSpriteDirty(iWorld, iObj);
   }
 
 
-  void GfxSpriteComponent::SetTint(Vec4 const& iTint)
+  void GfxSpriteComponent::SetTint(World& iWorld, ObjectHandle iObj, Vec4 const& iTint)
   {
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_Tint = iTint;
-    if (m_SpriteData.IsAssigned())
-    {
-      m_RenderNode->SetSpriteDirty(*this);
-    }
+    descData->m_Tint = iTint;
+
+    MakeSpriteDirty(iWorld, iObj);
   }
 
-  void GfxSpriteComponent::SetFlat(bool iValue)
+  void GfxSpriteComponent::SetFlat(World& iWorld, ObjectHandle iObj, bool iValue)
   {
-    if (!Mutate())
+    GfxSpriteComponent::Desc* descData = GetDataToMutate(iWorld, iObj);
+    if (descData == nullptr)
     {
       return;
     }
-    m_Desc->m_Flat = iValue;
-    if (m_SpriteData.IsAssigned())
-    {
-      m_RenderNode->SetSpriteDirty(*this);
-    }
+    descData->m_Flat = iValue;
+
+    MakeSpriteDirty(iWorld, iObj);
   }
 
   GameDataView<GfxSpriteComponent::Desc>* GetSpriteComponentView(World& iWorld)

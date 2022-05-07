@@ -10,192 +10,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/common/world.hpp>
+#include <engine/common/data_tables/dense.hpp>
+#include <engine/common/data_tables/sparse.hpp>
 
 namespace eXl
 {
-  struct EXL_ENGINE_API DataAllocatorBase
-  {
-    DataAllocatorBase(Type const* iType, ObjectTable_Data& iObjects);
-    virtual ~DataAllocatorBase() = default;
-
-    virtual ObjectTableHandle_Base Alloc() = 0;
-    virtual void Release(ObjectTableHandle_Base) = 0;
-
-    virtual void GarbageCollect(World& iWorld) = 0;
-    virtual void Clear();
-
-    virtual uint32_t AllocateSlot(ObjectHandle iHandle) = 0;
-    inline uint32_t GetSlot(ObjectHandle) const;
-    virtual void EraseSlot(uint32_t) = 0;
-    virtual ObjectTableHandle_Base GetDataFromSlot(uint32_t) = 0;
-    virtual ObjectTableHandle_Base GetDataFromSlot(uint32_t) const = 0;
-
-    UnorderedMap<ObjectHandle, uint32_t> m_ObjectToSlot;
-    Vector<ObjectHandle> m_WorldObjects;
-    Type const* m_Type;
-    ObjectTable_Data& m_ObjectData;
-    void* m_ViewPtr = nullptr;
-  };
-
-  // Dense -> ObjectTable data is never released.
-  // Each object table entry is associated to a unique world object.
-  struct EXL_ENGINE_API DenseDataAllocator : public DataAllocatorBase
-  {
-    DenseDataAllocator(Type const* iType, ObjectTable_Data& iObjects);
-
-    void GarbageCollect(World& iWorld) override;
-    void Clear() override;
-
-    uint32_t AllocateSlot(ObjectHandle iHandle) override;
-
-    inline uint32_t AllocateSlot_Inl(ObjectHandle iHandle);
-    void EraseSlot(uint32_t) override;
-    ObjectTableHandle_Base GetDataFromSlot(uint32_t) override;
-    ObjectTableHandle_Base GetDataFromSlot(uint32_t) const override;
-
-    ObjectTableHandle_Base GetDataFromSlot_Inl(uint32_t);
-    ObjectTableHandle_Base GetDataFromSlot_Inl(uint32_t) const;
-  };
-
-  // Sparse -> ObjectTable data is released, and can even be shared.
-  // A copy-on modified pattern is implemented in order to share data from archetypes.
-  struct EXL_ENGINE_API SparseDataAllocator : public DataAllocatorBase
-  {
-    SparseDataAllocator(Type const* iType, ObjectTable_Data& iObjects);
-    void GarbageCollect(World& iWorld) override;
-    void Clear() override;
-
-    uint32_t AllocateSlot(ObjectHandle iHandle) override;
-
-    inline uint32_t AllocateSlot_Inl(ObjectHandle iHandle);
-    void EraseSlot(uint32_t) override;
-    ObjectTableHandle_Base GetDataFromSlot(uint32_t) override;
-    ObjectTableHandle_Base GetDataFromSlot(uint32_t) const override;
-
-    ObjectTableHandle_Base GetDataFromSlot_Inl(uint32_t) const;
-
-    Vector<ObjectTableHandle_Base> m_ObjectHandles;
-    Vector<ObjectTableHandle_Base> m_ArchetypeHandle;
-  };
-
-  template <typename T>
-  class DenseGameDataView;
-
-  template <typename T>
-  class SparseGameDataView;
-
-  template <typename T>
-  class GameDataView
-  {
-  public:
-    GameDataView(World& iWorld, ObjectTable<T>& iObjectsSpec)
-      : m_World(iWorld)
-      , m_ObjectSpec(iObjectsSpec)
-    {}
-
-    virtual T const* Get(ObjectHandle iObject) const = 0;
-    virtual T* Get(ObjectHandle iObject) = 0;
-    virtual T const* GetDataForDeletion(ObjectHandle iObject) = 0;
-    virtual T& GetOrCreate(ObjectHandle iObject) = 0;
-    virtual void Erase(ObjectHandle iObject) = 0;
-    virtual const DataAllocatorBase& GetAlloc() const = 0;
-    virtual DenseGameDataView<T>* GetDenseView() { return nullptr; }
-    virtual SparseGameDataView<T>* GetSparseView() { return nullptr; }
-    DenseGameDataView<T> const* GetDenseView() const;
-    SparseGameDataView<T> const* GetSparseView() const;
-
-    World& GetWorld() const { return m_World; }
-
-    template <typename Functor>
-    void Iterate(Functor const& iFn);
-    template <typename Functor>
-    void Iterate(Functor const& iFn) const;
-
-  protected:
-    World& m_World;
-    ObjectTable<T>& m_ObjectSpec;
-  };
-
-  template <typename T>
-  class DenseGameDataView : public GameDataView<T>
-  {
-  public:
-    DenseGameDataView(World& iWorld, DenseDataAllocator& iAlloc, ObjectTable<T>& iObjectsSpec);
-
-    T const* Get(ObjectHandle iObject) const override;
-    T* Get(ObjectHandle iObject) override;
-    T const* GetDataForDeletion(ObjectHandle iObject) override;
-    T& GetOrCreate(ObjectHandle iObject) override;
-    void Erase(ObjectHandle iObject) override;
-    const DataAllocatorBase& GetAlloc() const override;
-    DenseGameDataView<T>* GetDenseView() override { return this; }
-
-    template <typename Functor>
-    inline void Iterate(Functor const& iFn);
-    template <typename Functor>
-    inline void Iterate(Functor const& iFn) const;
-
-  protected:
-    DenseDataAllocator& m_Alloc;
-  };
-
-  template <typename T>
-  class SparseGameDataView : public GameDataView<T>
-  {
-  public:
-    SparseGameDataView(World& iWorld, SparseDataAllocator& iAlloc, ObjectTable<T>& iObjectsSpec);
-
-    T const* Get(ObjectHandle iObject) const override;
-    T* Get(ObjectHandle iObject) override;
-    T const* GetDataForDeletion(ObjectHandle iObject) override;
-    T& GetOrCreate(ObjectHandle iObject) override;
-    void Erase(ObjectHandle iObject) override;
-    const DataAllocatorBase& GetAlloc() const override;
-    SparseGameDataView<T>* GetSparseView() override { return this; }
-
-    template <typename Functor>
-    inline void Iterate(Functor const& iFn);
-    template <typename Functor>
-    inline void Iterate(Functor const& iFn) const;
-
-  protected:
-    SparseDataAllocator& m_Alloc;
-  };
-
-  template<typename Alloc>
-  struct IsSparseAlloc 
-  {
-    static constexpr bool value = false;
-  };
-
-  template <typename T>
-  struct DensePropertySheetAllocator : DenseDataAllocator
-  {
-    DensePropertySheetAllocator(World& iWorld, Type const* iType);
-    ObjectTableHandle_Base Alloc() override;
-    void Release(ObjectTableHandle_Base iHandle) override;
-    void Clear() override;
-    ObjectTable<T> m_ObjectsSpec;
-    DenseGameDataView<T> m_View;
-  };
-
-  template <typename T>
-  struct SparsePropertySheetAllocator : SparseDataAllocator
-  {
-    SparsePropertySheetAllocator(World& iWorld, Type const* iType);
-    ObjectTableHandle_Base Alloc() override;
-    void Release(ObjectTableHandle_Base iHandle) override;
-    void Clear() override;
-    ObjectTable<T> m_ObjectsSpec;
-    SparseGameDataView<T> m_View;
-  };
-
-  template<typename T>
-  struct IsSparseAlloc<SparsePropertySheetAllocator<T>>
-  {
-    static constexpr bool value = true;
-  };
-  
   template <typename T, typename Allocator>
   class GameDataStorage
   {
@@ -260,6 +79,11 @@ namespace eXl
       m_Alloc.Clear();
     }
 
+    GameDataView<T>& GetView()
+    {
+      return m_Alloc.m_View;
+    }
+
   protected:
     Allocator m_Alloc;
   };
@@ -270,5 +94,4 @@ namespace eXl
   template <typename T>
   using SparseGameDataStorage = GameDataStorage<T, SparsePropertySheetAllocator<T>>;
 
-#include "gamedata.inl"
 }

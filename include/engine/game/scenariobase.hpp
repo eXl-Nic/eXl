@@ -72,5 +72,6 @@ namespace eXl
     void ProcessInputs(World& iWorld);
     uint32_t dirMask = 0;
     bool keyChanged = false;
+    Vec2i curMousePos;
   };
 }

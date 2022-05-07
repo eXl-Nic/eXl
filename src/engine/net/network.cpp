@@ -121,9 +121,7 @@ namespace eXl
 
     void NetDriver::DeclareCommand(NetRole iExecutor, CommandName iName, CommandCallback iCb, FunDesc iArgs, void* iCommandPtr, bool iReliable)
     {
-      CommandDesc desc;
-      desc.m_FunDesc = std::move(iArgs);
-      desc.m_Args.emplace(desc.m_FunDesc.arguments);
+      CommandDesc desc(std::move(iArgs));
       desc.m_Executor = iExecutor;
       desc.m_Reliable = iReliable;
       desc.m_Callback = std::move(iCb);
@@ -165,7 +163,7 @@ namespace eXl
       }
       for (auto const& cmd : iDriver.m_Commands)
       {
-        GatherFieldNames(&(*cmd.m_Args), names);
+        GatherFieldNames(&cmd.m_FunDesc.GetType(), names);
       }
 
       m_CommandsHash.Build(names.begin(), names.end());

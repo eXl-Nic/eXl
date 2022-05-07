@@ -61,6 +61,7 @@ namespace eXl
 
     ResourceMetaData* CreateNewMetaData(String const& iName) const;
     ResourceMetaData* CreateBakedMetaData(ResourceMetaData const& iMetaData) const;
+    ResourceMetaData* CreateSystemMetaData(String const& iName, Resource::UUID const& iUUID) const;
   private:
     ResourceLoaderName const m_Name;
     uint32_t const m_Version;

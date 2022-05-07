@@ -17,7 +17,6 @@ namespace eXl
 {
   class World;
   class Tileset;
-  class GfxSpriteComponent;
 
   class CharacterAnimation;
 

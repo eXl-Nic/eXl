@@ -22,6 +22,9 @@ namespace eXl
   {
   }
 
+  OGLShaderData::OGLShaderData() = default;
+  OGLShaderData::OGLShaderData(OGLShaderData&&) = default;
+
   OGLShaderData::~OGLShaderData()
   {
     //for(uint32_t i = 0; i<m_Data.size(); ++i)

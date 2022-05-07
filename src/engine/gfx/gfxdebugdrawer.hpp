@@ -26,6 +26,9 @@ namespace eXl
 
   public:
 
+    GfxDebugDrawer() = default;
+    GfxDebugDrawer(GfxDebugDrawer const&) = delete;
+
     void Init(GfxSystem& iSys, GfxRenderNodeHandle iHandle) override;
     void Push(OGLDisplayList& iList, float iDelta) override;
     void DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace = false) override;

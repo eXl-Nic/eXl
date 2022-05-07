@@ -139,19 +139,14 @@ namespace eXl
   {
 #ifdef EXL_WITH_OGL
     uint32_t stateBits = (uint32_t)iEntry.m_CurDir;
-    if (iEntry.m_GfxComp == nullptr)
+    if (m_World->GetSystem<GfxSystem>() == nullptr)
     {
-      GfxSystem* gfxSys = m_World->GetSystem<GfxSystem>();
-      iEntry.m_GfxComp = gfxSys->GetSpriteComponent(iObj);
-      if (iEntry.m_GfxComp == nullptr)
-      {
-        return;
-      }
+      return;
     }
 
     if (!iEntry.m_CurrentActionCue)
     {
-      iEntry.m_GfxComp->SetTileName(s_DataTable->m_StateAnimTable[(uint32_t)iEntry.m_CurDir]);
+      GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_StateAnimTable[(uint32_t)iEntry.m_CurDir]);
     }
     else
     {
@@ -184,28 +179,28 @@ namespace eXl
 
          if (grabState == ((uint32_t)iEntry.m_CurDir & (uint32_t)CharacterSystem::StateFlags::DirMask))
          {
-           iEntry.m_GfxComp->SetTileName(s_DataTable->m_GrabStateAnimTable[(uint32_t)iEntry.m_CurDir]);
+           GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_GrabStateAnimTable[(uint32_t)iEntry.m_CurDir]);
          }
          else
          {
-           iEntry.m_GfxComp->SetTileName(s_DataTable->m_Grab_Opposed_StateAnimTable[(uint32_t)iEntry.m_CurDir]);
+           GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_Grab_Opposed_StateAnimTable[(uint32_t)iEntry.m_CurDir]);
          }
       }
       else if (*iEntry.m_CurrentActionCue == PickAbility::CarryingCue())
       {
-        iEntry.m_GfxComp->SetTileName(s_DataTable->m_CarryAnimTable[(uint32_t)iEntry.m_CurDir]);
+        GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_CarryAnimTable[(uint32_t)iEntry.m_CurDir]);
       }
       else if (*iEntry.m_CurrentActionCue == PickAbility::LiftingCue())
       {
-        iEntry.m_GfxComp->SetTileName(s_DataTable->m_LiftingAnimTable[(uint32_t)iEntry.m_CurDir]);
+        GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_LiftingAnimTable[(uint32_t)iEntry.m_CurDir]);
       }
       else if (*iEntry.m_CurrentActionCue == ThrowAbility::ThrowingCue())
       {
-        iEntry.m_GfxComp->SetTileName(s_DataTable->m_DropAnimTable[(uint32_t)iEntry.m_CurDir]);
+        GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_DropAnimTable[(uint32_t)iEntry.m_CurDir]);
       }
       else if (*iEntry.m_CurrentActionCue == SwordAbility::UseSwordCue())
       {
-        iEntry.m_GfxComp->SetTileName(s_DataTable->m_SwordAnimTable[(uint32_t)iEntry.m_CurDir]);
+        GfxSpriteComponent::SetTileName(*m_World, iObj, s_DataTable->m_SwordAnimTable[(uint32_t)iEntry.m_CurDir]);
       }
     }
 #endif
@@ -279,7 +274,6 @@ namespace eXl
       auto& newEntry = m_Entries.Get(newHandle);
       m_Objects.insert(std::make_pair(iObject, newHandle));
 
-      newEntry.m_GfxComp = nullptr;
     }
 #endif
   }

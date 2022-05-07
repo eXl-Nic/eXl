@@ -155,7 +155,7 @@ namespace eXl
 
             auto insertRes = components.insert(std::make_pair(tiles.m_Type, Vector<AABB2DPolygoni>()));
             auto& blocks = insertRes.first->second;
-            AABB2Di tileBox(tile.m_Position - tileDesc->m_Size / 2, tileDesc->m_Size);
+            AABB2Di tileBox = AABB2Di::FromMinAndSize(tile.m_Position - tileDesc->m_Size / 2, tileDesc->m_Size);
             blocks.push_back(AABB2DPolygoni(tileBox));
 
             TerrainType terrainDesc = TerrainType::GetTerrainTypeFromName(tiles.m_Type);
@@ -207,11 +207,11 @@ namespace eXl
                 ObjectHandle animatedSprite = iWorld.CreateObject();
                 allObjects.tiles.push_back(animatedSprite);
                 trans->AddTransform(animatedSprite, translate(iPos, Vec3(tilePos, 0)));
-                GfxSpriteComponent& spriteComp = gfx->CreateSpriteComponent(animatedSprite);
-                spriteComp.SetFlat(true);
-                spriteComp.SetTileset(tileset);
-                spriteComp.SetTileName(tile.m_Name);
-                spriteComp.SetLayer(tile.m_Layer);
+                gfx->CreateSpriteComponent(animatedSprite);
+                GfxSpriteComponent::SetFlat(iWorld, animatedSprite, true);
+                GfxSpriteComponent::SetTileset(iWorld, animatedSprite, tileset);
+                GfxSpriteComponent::SetTileName(iWorld, animatedSprite, tile.m_Name);
+                GfxSpriteComponent::SetLayer(iWorld, animatedSprite, tile.m_Layer);
               }
             }
           }
@@ -274,7 +274,7 @@ namespace eXl
             size = Vec2i(shape.m_Dims.x, shape.m_Dims.x) * EngineCommon::s_WorldToPixel;
             break;
           }
-          AABB2Di pixelBox(offset - size / 2, size);
+          AABB2Di pixelBox = AABB2Di::FromMinAndSize(offset - size / 2, size);
 
           Vector<AABB2DPolygoni> diffResult;
           for (auto& entry : components)
@@ -411,7 +411,7 @@ namespace eXl
               }
 
               pixelMin -= shapeSize / 2;
-              AABB2Di pixelBox(pixelMin, shapeSize);
+              AABB2Di pixelBox = AABB2Di::FromMinAndSize(pixelMin, shapeSize);
               tileObstacles.push_back(pixelBox);
             }
           }

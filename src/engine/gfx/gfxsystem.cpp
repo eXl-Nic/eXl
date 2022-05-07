@@ -185,21 +185,20 @@ namespace eXl
     return nullptr;
   }
 
-	GfxSpriteComponent& GfxSystem::CreateSpriteComponent(ObjectHandle iObject)
+	void GfxSystem::CreateSpriteComponent(ObjectHandle iObject)
 	{
 		eXl_ASSERT(GetWorld().IsObjectValid(iObject));
     m_Impl->m_SpriteNode->AddObject(iObject);
-		return *m_Impl->m_SpriteNode->GetComponent(iObject);
 	}
 
-	GfxSpriteComponent* GfxSystem::GetSpriteComponent(ObjectHandle iObject)
-	{
-    if (GetWorld().IsObjectValid(iObject))
-    {
-      return m_Impl->m_SpriteNode->GetComponent(iObject);
-    }
-    return nullptr;
-	}
+	//GfxSpriteComponent* GfxSystem::GetSpriteComponent(ObjectHandle iObject)
+	//{
+  //  if (GetWorld().IsObjectValid(iObject))
+  //  {
+  //    return m_Impl->m_SpriteNode->GetComponent(iObject);
+  //  }
+  //  return nullptr;
+	//}
 
   void GfxSystem::DeleteComponent(ObjectHandle iObject)
   {
@@ -238,7 +237,7 @@ namespace eXl
       }
     });
 
-    m_Impl->m_Nodes.Iterate([](Impl::RenderNodeEntry& iNode, Impl::RenderNodeHandle)
+    m_Impl->m_Nodes.Iterate([](Impl::RenderNodeHandle, Impl::RenderNodeEntry& iNode)
       {
         if (!iNode.m_UpdateArray.empty())
         {
@@ -311,7 +310,7 @@ namespace eXl
       m_Impl->m_CameraBuffer = OGLBuffer::CreateBuffer(OGLBufferUsage::UNIFORM_BUFFER, CameraMatrix::GetType()->GetSize(), nullptr);
     }
 
-    m_Impl->m_Nodes.Iterate([&](Impl::RenderNodeEntry& iNode, Impl::RenderNodeHandle iNodeHandle)
+    m_Impl->m_Nodes.Iterate([&](Impl::RenderNodeHandle iNodeHandle, Impl::RenderNodeEntry& iNode)
       {
         if (iNode.m_Node->m_Sys == nullptr)
         {
@@ -339,7 +338,7 @@ namespace eXl
 
     List<GfxComponent*> toDelete;
 
-    m_Impl->m_Nodes.Iterate([&](Impl::RenderNodeEntry& iNode, Impl::RenderNodeHandle)
+    m_Impl->m_Nodes.Iterate([&](Impl::RenderNodeHandle, Impl::RenderNodeEntry& iNode)
     {
       iNode.m_Node->Push(list, iDelta);
     });

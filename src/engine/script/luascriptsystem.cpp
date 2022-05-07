@@ -75,8 +75,15 @@ namespace eXl
 
   LuaScriptSystem::~LuaScriptSystem()
   {
+    m_ObjectsScripts.reset();
     m_LoadedScripts.clear();
     m_Scripts.Reset();
+  }
+
+  void LuaScriptSystem::Register(World& iWorld)
+  {
+    ComponentManager::Register(iWorld);
+    m_ObjectsScripts.emplace(iWorld);
   }
 
   World* LuaScriptSystem::GetWorld_Static()
@@ -172,6 +179,76 @@ namespace eXl
     return entryHandle;
   }
 
+  void LuaScriptSystem::CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
+  {
+    ((LuaScriptSystem*)(iPayload))->DispatchCallback(iObject, iFunction, iArgsBuffer, oOutput);
+  }
+
+  void LuaScriptSystem::DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
+  {
+    EventSystem& events = *m_World->GetSystem<EventSystem>();
+
+    FunDesc const* desc = events.GetFunDesc(iFunction);
+    eXl_ASSERT_REPAIR_RET(desc != nullptr, void());
+
+    ObjectScript* objScript = nullptr;
+    if (auto scriptMap = m_ObjectsScripts->Get(iObject))
+    {
+      auto iter = scriptMap->find(iFunction);
+      if (iter != scriptMap->end())
+      {
+        objScript = &iter->second;
+      }
+    }
+
+    eXl_ASSERT_REPAIR_RET(m_Scripts.IsValid(objScript->m_LoadedScript), void());
+
+    ScriptEntry const& script = m_Scripts.Get(objScript->m_LoadedScript);
+    auto funIter = script.m_ScriptFunctions.find(iFunction);
+    eXl_ASSERT_REPAIR_RET(funIter != script.m_ScriptFunctions.end(), void());
+
+    luabind::object function = funIter->second;
+
+    LuaStateHandle stateHandle = m_LuaWorld.GetState();
+    lua_State* state = stateHandle.GetState();
+    int32_t curTop = lua_gettop(state);
+
+    if (!function.is_valid())
+    {
+      return;
+    }
+
+    uint32_t numRet = desc->GetRetType() == nullptr ? 0 : 1;
+    {
+      auto call = stateHandle.PrepareCall(function);
+      call.Push(objScript->m_Self);
+      call.PushArgs(iObject);
+      TupleType const* args = TupleType::DynamicCast(iArgsBuffer.GetType());
+      for (uint32_t i = 0; i < args->GetNumField(); ++i)
+      {
+        Type const* fieldType;
+        void const* fieldPtr = args->GetField(iArgsBuffer.GetBuffer(), i, fieldType);
+        LuaManager::PushRefToLua(state, fieldType, fieldPtr);
+        call.ArgPushed();
+      }
+      auto res = call.Call(numRet);
+
+      if (!res || *res != numRet)
+      {
+        return;
+      }
+
+      if (numRet == 1)
+      {
+        oOutput.SetType(desc->GetRetType(), desc->GetRetType()->Alloc(), true);
+        uint32_t index = lua_gettop(state);
+        Err conversion = desc->GetRetType()->ConvertFromLua_Uninit(state, index, oOutput.GetBuffer());
+        eXl_ASSERT_REPAIR_RET(conversion, void());
+      }
+    }
+
+  };
+
   void LuaScriptSystem::AddBehaviour(ObjectHandle iObject, const LuaScriptBehaviour& iBehaviour)
   {
     EventSystem& events = *m_World->GetSystem<EventSystem>();
@@ -189,6 +266,7 @@ namespace eXl
     }
 
     ScriptEntry const& scriptDesc = m_Scripts.Get(loadedScript);
+
     luabind::object scriptData;
     {
       LuaStateHandle luaHandle = m_LuaWorld.GetState();
@@ -218,67 +296,20 @@ namespace eXl
       }
     }
 
-    EventSystem::GenericHandler callback = [this, loadedScript, scriptData](ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
-    {
-      EventSystem& events = *m_World->GetSystem<EventSystem>();
-      FunDesc const* desc = events.GetFunDesc(iFunction);
-      eXl_ASSERT_REPAIR_RET(desc != nullptr, void());
-
-      ScriptEntry const& script = m_Scripts.Get(loadedScript);
-      auto funIter = script.m_ScriptFunctions.find(iFunction);
-      eXl_ASSERT_REPAIR_RET(funIter != script.m_ScriptFunctions.end(), void());
-
-      luabind::object function = funIter->second;
-
-      LuaStateHandle stateHandle = m_LuaWorld.GetState();
-      lua_State* state = stateHandle.GetState();
-      int32_t curTop = lua_gettop(state);
-
-      if (!function.is_valid())
-      {
-        return ;
-      }
-
-      uint32_t numRet = desc->returnType == nullptr ? 0 : 1;
-      {
-        auto call = stateHandle.PrepareCall(function);
-        call.Push(scriptData);
-        TupleType const* args = TupleType::DynamicCast(iArgsBuffer.GetType());
-        for (uint32_t i = 0; i < args->GetNumField(); ++i)
-        {
-          Type const* fieldType;
-          void const* fieldPtr = args->GetField(iArgsBuffer.GetBuffer(), i, fieldType);
-          LuaManager::PushRefToLua(state, fieldType, fieldPtr);
-          call.ArgPushed();
-        }
-        auto res = call.Call(numRet);
-
-        if (!res || *res != numRet)
-        {
-          return;
-        }
-
-        if (numRet == 1)
-        {
-          oOutput.SetType(desc->returnType, desc->returnType->Alloc(), true);
-          uint32_t index = lua_gettop(state);
-          Err conversion = desc->returnType->ConvertFromLua_Uninit(state, index, oOutput.GetBuffer());
-          eXl_ASSERT_REPAIR_RET(conversion, void());
-        }
-      }
-
-    };
+    UnorderedMap<Name, ObjectScript>& funMap = m_ObjectsScripts->GetOrCreate(iObject);
 
     for (auto const& fun : scriptDesc.m_ScriptFunctions)
     {
-      events.AddEventHandlerInternal(iObject, fun.first, callback);
+      funMap.insert(std::make_pair(fun.first, ObjectScript{ loadedScript, scriptData}));
+      events.AddEventHandlerInternal(iObject, fun.first, &LuaScriptSystem::CallbackDispatcher, this);
     }
-
+    ComponentManager::CreateComponent(iObject);
   }
 
   void LuaScriptSystem::DeleteComponent(ObjectHandle iHandle)
   {
-   
+    m_ObjectsScripts->Erase(iHandle);
+    ComponentManager::DeleteComponent(iHandle);
   }
 #endif
 }

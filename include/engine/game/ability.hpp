@@ -18,7 +18,6 @@ namespace eXl
 {
   class World;
   class Tileset;
-  class GfxSpriteComponent;
 
   MAKE_NAME(AbilityName);
   MAKE_NAME(EffectName);

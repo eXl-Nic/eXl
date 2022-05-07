@@ -70,6 +70,7 @@ extern "C"
 
 #include <engine/common/transforms.hpp>
 #include <engine/gfx/gfxsystem.hpp>
+#include <engine/gui/guisystem.hpp>
 #include <engine/physics/physicsys.hpp>
 #include <engine/pathfinding/navigator.hpp>
 #include <engine/common/project.hpp>
@@ -244,6 +245,7 @@ namespace eXl
 
     WorldState* m_World;
     PropertiesManifest* m_Manifest;
+    bool m_DisplayDebugUI = false;
 
     void InitOGL()
     {
@@ -339,6 +341,7 @@ namespace eXl
 #endif
 
       m_World->GetCamera().view.viewportSize = viewportSize;
+      m_World->GetWorld().GetSystem<GUISystem>()->SetViewport(viewportSize);
     }
 
     void PumpMessages(float iDelta)
@@ -347,7 +350,10 @@ namespace eXl
       while (SDL_PollEvent(&curEvent))
       {
 #ifndef __ANDROID__
-        ImGui_ImplSDL2_ProcessEvent(&curEvent);
+        if (m_DisplayDebugUI)
+        {
+          ImGui_ImplSDL2_ProcessEvent(&curEvent);
+        }
 #endif
 
         if (curEvent.type == SDL_MOUSEMOTION)
@@ -362,6 +368,12 @@ namespace eXl
 
         if (curEvent.type == SDL_MOUSEWHEEL)
         {
+#ifndef __ANDROID__
+          if (ImGui::GetIO().WantCaptureMouse)
+          {
+            continue;
+          }
+#endif
           SDL_MouseWheelEvent& wheelEvt = reinterpret_cast<SDL_MouseWheelEvent&>(curEvent);
           GetInputSystem().InjectMouseMoveEvent(wheelEvt.y, wheelEvt.y, wheelEvt.y, wheelEvt.y, true);
         }
@@ -369,6 +381,12 @@ namespace eXl
         if (curEvent.type == SDL_MOUSEBUTTONDOWN
           || curEvent.type == SDL_MOUSEBUTTONUP)
         {
+#ifndef __ANDROID__
+          if (ImGui::GetIO().WantCaptureMouse)
+          {
+            continue;
+          }
+#endif
           SDL_MouseButtonEvent& mouseEvt = reinterpret_cast<SDL_MouseButtonEvent&>(curEvent);
 
           MouseButton button;
@@ -414,7 +432,18 @@ namespace eXl
         if (curEvent.type == SDL_KEYUP
           || curEvent.type == SDL_KEYDOWN)
         {
+#ifndef __ANDROID__
+          if (ImGui::GetIO().WantCaptureKeyboard)
+          {
+            continue;
+          }
+#endif
           SDL_KeyboardEvent& keyEvt = reinterpret_cast<SDL_KeyboardEvent&>(curEvent);
+          if (keyEvt.keysym.sym == SDLK_F12 
+            && curEvent.type == SDL_KEYUP)
+          {
+            m_DisplayDebugUI = !m_DisplayDebugUI;
+          }
           if (keyEvt.keysym.sym == SDLK_BACKQUOTE)
           {
             if (curEvent.type == SDL_KEYUP)
@@ -442,6 +471,7 @@ namespace eXl
             viewportSize.y = winEvt.data2;
 
             m_World->GetCamera().view.viewportSize = viewportSize;
+            m_World->GetWorld().GetSystem<GUISystem>()->SetViewport(viewportSize);
           }
           if (winEvt.event == SDL_WINDOWEVENT_SHOWN)
           {
@@ -469,16 +499,18 @@ namespace eXl
 
       MenuManager& menuMgr = GetMenuManager();
 #ifndef __ANDROID__
-      
-      ImGui_ImplOpenGL3_NewFrame();
-      ImGui_ImplSDL2_NewFrame(win);
-
-      ImGui::NewFrame();
-
-      if (ImGui::BeginMainMenuBar())
+      if (m_DisplayDebugUI)
       {
-        menuMgr.DisplayMenus();
-        ImGui::EndMainMenuBar();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(win);
+
+        ImGui::NewFrame();
+
+        if (ImGui::BeginMainMenuBar())
+        {
+          menuMgr.DisplayMenus();
+          ImGui::EndMainMenuBar();
+        }
       }
 #endif
 
@@ -488,7 +520,10 @@ namespace eXl
       {
         bool displayPhysSaveState = m_DebugVisState.m_ViewPhysic;
 #ifndef __ANDROID__
-        menuMgr.DisplayPanels();
+        if (m_DisplayDebugUI)
+        {
+          menuMgr.DisplayPanels();
+        }
 #endif
 
         if (displayPhysSaveState != m_DebugVisState.m_ViewPhysic)
@@ -542,8 +577,11 @@ namespace eXl
       }
 
 #ifndef __ANDROID__
-      ImGui::Render();
-      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+      if (m_DisplayDebugUI)
+      {
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+      }
 #endif
 
       SDL_GL_SwapWindow(win);

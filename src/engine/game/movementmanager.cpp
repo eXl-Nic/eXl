@@ -205,7 +205,7 @@ namespace eXl
   {
     Transforms& transforms = *GetWorld().GetSystem<Transforms>();
 
-    m_KinematicEntries.Iterate([this, iTime, &transforms](KinematicEntry& entry, ObjectTable<KinematicEntry>::Handle)
+    m_KinematicEntries.Iterate([this, iTime, &transforms](ObjectTable<KinematicEntry>::Handle, KinematicEntry& entry)
     {
       if (entry.m_ParentEntry.IsAssigned())
       {

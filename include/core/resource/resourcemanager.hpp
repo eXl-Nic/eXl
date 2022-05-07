@@ -32,6 +32,7 @@ namespace eXl
     EXL_CORE_API void PopulateManifests(Stream_Base& iStreamer);
 
     EXL_CORE_API String const& GetAssetExtension();
+    EXL_CORE_API String const& GetSystemResourcePath();
 
     EXL_CORE_API ResourceLoaderName GetLoaderFromRtti(Rtti const& iRtti);
     EXL_CORE_API Type const* GetHandleType(Rtti const& iRtti);
@@ -56,6 +57,8 @@ namespace eXl
     EXL_CORE_API void Reset();
 
     EXL_CORE_API void BootstrapAssetsFromManifest(String const& iDir);
+
+    EXL_CORE_API void AddSystemResource(Resource* iRsc);
 
 #ifdef EXL_RSC_HAS_FILESYSTEM
     EXL_CORE_API void BootstrapDirectory(Path const& iPath, bool iRecursive);

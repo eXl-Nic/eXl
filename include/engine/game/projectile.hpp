@@ -16,7 +16,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   class World;
-  class GfxSpriteComponent;
 
 	class EXL_ENGINE_API ProjectileSystem
     : public MovementManagerBase
@@ -49,7 +48,6 @@ namespace eXl
       Desc m_Desc;
       uint32_t m_CurState = 0;
       ObjectTable<KinematicEntry>::Handle m_KinematicEntry;
-      GfxSpriteComponent* m_GfxComp = nullptr;
     };
 
     Optional<DenseGameDataStorage<Entry>> m_Entries;

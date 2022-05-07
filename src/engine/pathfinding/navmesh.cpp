@@ -144,7 +144,7 @@ namespace eXl
 
     for(auto const& box : iBoxes)
     {
-      auto boxF = AABB2Df(MathTools::ToFVec(box.m_Data[0]), MathTools::ToFVec(box.GetSize()));
+      auto boxF = AABB2Df::FromMinAndSize(MathTools::ToFVec(box.m_Data[0]), MathTools::ToFVec(box.GetSize()));
       auto value = std::make_pair(boxF, (unsigned int)index.size());
       index.insert(value);
       tempFaces.push_back(Face());

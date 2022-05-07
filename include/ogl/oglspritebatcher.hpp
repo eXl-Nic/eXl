@@ -10,7 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <core/idgenerator.hpp>
 #include <core/image/image.hpp>
 #include <math/aabb2d.hpp>
 //#include <gametk/gfx/fontmanager.hpp>

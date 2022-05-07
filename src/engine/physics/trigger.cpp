@@ -190,7 +190,7 @@ namespace eXl
       }
     }
 
-    m_Callbacks.Iterate([this](CallbackEntry& iEntry, ObjectTable<CallbackEntry>::Handle)
+    m_Callbacks.Iterate([this](ObjectTable<CallbackEntry>::Handle, CallbackEntry& iEntry)
     {
       iEntry.m_Callback->OnLeave(iEntry.m_NewLeave);
       iEntry.m_Callback->OnEnter(iEntry.m_NewEnter);

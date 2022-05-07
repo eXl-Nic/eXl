@@ -52,7 +52,7 @@ namespace eXl
 
   uint64_t Random::AllocateUUID()
   {
-    static boost::uuids::random_generator s_UUIDGen;
+    static thread_local boost::uuids::random_generator s_UUIDGen;
     boost::uuids::uuid newuuid = s_UUIDGen();
     uint32_t* dwords = reinterpret_cast<uint32_t*>(newuuid.data);
 

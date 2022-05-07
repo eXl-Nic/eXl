@@ -42,9 +42,45 @@ namespace eXl
     return GetType()->Unstream(readBuffer, &iStreamer);
   }
 
+  namespace
+  {
+    const uint8_t dummyWhite[] =
+    {
+      255, 255, 255, 255, 
+      255, 255, 255, 255,
+      255, 255, 255, 255,
+      255, 255, 255, 255,
+    };
+
+    inline Image BitmapToImage(uint8_t const* iBitmap, Image::Size iImageSize)
+    {
+      uint32_t numPixels = iImageSize.x * iImageSize.y;
+      uint8_t* imageData = (uint8_t*)eXl_ALLOC(numPixels * 4 * sizeof(uint8_t));
+
+      uint8_t* curPixel = imageData;
+      for (uint32_t y = 0; y < iImageSize.y; ++y)
+      {
+        uint32_t srcY = y;
+        for (uint32_t x = 0; x < iImageSize.x; ++x)
+        {
+          uint32_t srcX = x;
+          uint32_t srcOffset = srcX + srcY * iImageSize.x;
+          uint8_t intensity = (iBitmap[srcOffset] & 127) << 1;
+          uint8_t alphaValue = iBitmap[srcOffset] & 128 ? 255 : 0;
+
+          curPixel[0] = curPixel[1] = curPixel[2] = intensity;
+          curPixel[3] = alphaValue;
+
+          curPixel += 4;
+        }
+      }
+
+      return Image(imageData, iImageSize, Image::RGBA, Image::Char, Image::Adopt);
+    }
+  }
+
   class TilesetLoader : public ResourceLoader
   {
-
   public:
 
     static TilesetLoader& Get()
@@ -53,10 +89,31 @@ namespace eXl
       return s_This;
     }
 
-    TilesetLoader() 
+    ResourceHandle<Tileset> m_DefaultWhite;
+
+    TilesetLoader()
       : ResourceLoader(Tileset::StaticLoaderName(), 1)
     {
-      
+      Resource::UUID id{ 0xC34847FC, 0xD9644E0E, 0x84C94F97 , 0x3B4340E5 };
+      ResourceMetaData* metaData = CreateSystemMetaData("White", id);
+      Tileset* newTileset = eXl_NEW Tileset(*metaData);
+
+      Image::Size imgSize(4, 4);
+      ImageName imgName("White");
+
+      newTileset->m_Images.emplace(imgName, std::make_unique<Image>(BitmapToImage(dummyWhite, imgSize)));
+#ifndef EXL_IS_BAKED_PLATFORM
+      newTileset->m_ImagePathCache.emplace(imgName, Path(""));
+#endif
+
+      Tile defaultTile;
+      defaultTile.m_ImageName = imgName;
+      defaultTile.m_Size = imgSize;
+      defaultTile.m_Frames.push_back(Zero<Vec2i>());
+
+      newTileset->AddTile("Default", defaultTile);
+
+      m_DefaultWhite.Set(newTileset);
     }
 
     static Type const* GetTileType()
@@ -68,7 +125,7 @@ namespace eXl
           .AddField("FrameDuration", &Tile::m_FrameDuration)
           .AddField("Size", &Tile::m_Size)
           .AddField("AnimationType", &Tile::m_AnimType)
-          .AddCustomField("Frames", &Tile::m_Frames, TypeManager::GetArrayType<Vec2i>())
+          .AddField("Frames", &Tile::m_Frames)
           .AddField("Offset", &Tile::m_Offset)
           .AddField("Scale", &Tile::m_Scale)
           .EndRegistration();
@@ -126,6 +183,11 @@ namespace eXl
   void Tileset::Init()
   {
     ResourceManager::AddLoader(&TilesetLoader::Get(), Tileset::StaticRtti());
+  }
+
+  Tileset const* Tileset::GetWhiteTexture()
+  {
+    return TilesetLoader::Get().m_DefaultWhite.Get();
   }
 
   Type const* Tile::GetType()

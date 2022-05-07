@@ -45,7 +45,10 @@ namespace eXl
       TextureName m_Name;
     };
 
+    OGLShaderData();
     ~OGLShaderData();
+    OGLShaderData(OGLShaderData const&) = delete;
+    OGLShaderData(OGLShaderData&&);
 
     void AddData(UniformName iName, void const* iData);
 

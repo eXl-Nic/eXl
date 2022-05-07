@@ -201,6 +201,7 @@ namespace eXl
 
   void OGLDisplayList::PushData(OGLShaderData const* iData)
   {
+    eXl_ASSERT(iData != nullptr);
     //FlushDraws();
     OGLShaderDataSet const* prevSet = m_CurDataSet != -1 ? &m_DataSetStore[m_CurDataSet] : nullptr;
     OGLShaderDataSet curSet(iData, prevSet, static_cast<uint32_t>(m_DataSetStore.size()));
