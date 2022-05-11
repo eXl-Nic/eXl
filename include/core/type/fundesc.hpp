@@ -188,7 +188,7 @@ namespace eXl
       ArgsBuffer const& type = GetType();
 
       oBuffer.SetType(&type, type.Alloc(), true);
-      BufferPopulator<0, Args...>::Populate(iType, oBuffer, std::forward<Args>(iArgs)...);
+      BufferPopulator<0, Args...>::Populate(GetType(), oBuffer, std::forward<Args>(iArgs)...);
       return Err::Success;
     }
 

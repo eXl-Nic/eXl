@@ -113,17 +113,31 @@ namespace eXl
   Err Project::Serialize(Serializer iSerializer)
   {
     iSerializer.BeginStruct();
-    iSerializer.PushKey("PlayerArchetype");
-    iSerializer &= m_PlayerArchetype;
-    iSerializer.PopKey();
+    if (iSerializer.PushKey("GameDll"))
+    {
+      iSerializer &= m_GameDll;
+      iSerializer.PopKey();
+    }
+    if (iSerializer.PushKey("PlayerArchetype"))
+    {
+      iSerializer &= m_PlayerArchetype;
+      iSerializer.PopKey();
+    }
     if (iSerializer.PushKey("StartupMap"))
     {
       iSerializer &= m_StartupMap;
       iSerializer.PopKey();
     }
-    iSerializer.PushKey("ProjectTypes");
-    iSerializer.HandleMapSorted(m_Types);
-    iSerializer.PopKey();
+    if (iSerializer.PushKey("ProjectTypes"))
+    {
+      iSerializer.HandleMapSorted(m_Types);
+      iSerializer.PopKey();
+    }
+    if (iSerializer.PushKey("GameSettings"))
+    {
+      iSerializer.HandleMapSorted(m_GameSettings);
+      iSerializer.PopKey();
+    }
     iSerializer.EndStruct();
 
     return Err::Success;

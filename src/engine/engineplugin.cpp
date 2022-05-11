@@ -250,8 +250,8 @@ namespace eXl
       EventsManifest baseEvents;
       EventsManifest::FunctionsMap triggerFunctions;
 
-      triggerFunctions.insert(std::make_pair("Enter", FunDesc::Create<void(World&, ObjectHandle, ObjectHandle)>()));
-      triggerFunctions.insert(std::make_pair("Leave", FunDesc::Create<void(World&, ObjectHandle, ObjectHandle)>()));
+      triggerFunctions.insert(std::make_pair("Enter", FunDesc::Create<void(ObjectHandle)>()));
+      triggerFunctions.insert(std::make_pair("Leave", FunDesc::Create<void(ObjectHandle)>()));
       baseEvents.m_Interfaces.insert(std::make_pair("Trigger", std::move(triggerFunctions)));
 
       return baseEvents;

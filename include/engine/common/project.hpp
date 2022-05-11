@@ -46,9 +46,13 @@ namespace eXl
       SERIALIZE_METHODS;
     };
 
+    String m_GameDll;
+
     ResourceHandle<Archetype> m_PlayerArchetype;
     ResourceHandle<MapResource> m_StartupMap;
     UnorderedMap<TypeName, Typedecl> m_Types;
+
+    UnorderedMap<String, ResourceHandle<Archetype>> m_GameSettings;
 
     struct ProjectTypes
     {

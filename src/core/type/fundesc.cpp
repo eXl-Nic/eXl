@@ -161,7 +161,7 @@ namespace eXl
 
   void ArgsBuffer::RegisterLua(lua_State* iState) const
   {
-
+    eXl_FAIL_MSG("");
   }
 #endif
 }

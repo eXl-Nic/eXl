@@ -89,7 +89,7 @@ Err T_CoreType<T>::ConvertFromLua_Uninit(lua_State* iState,unsigned int& ioIndex
 template <class T>
 void T_CoreType<T>::RegisterLua(lua_State* iState) const
 {
-
+  eXl_FAIL_MSG("");
 }
 
 template <class T>

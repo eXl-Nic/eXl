@@ -169,7 +169,7 @@ namespace eXl
     
       Plugin& plugin = Function();
       plugin.m_Library = libHandle;
-      plugin.LoadDependencies();
+      Plugin::FlushLoadedPluginInit();
       return &plugin;
     }
     return iter->second;

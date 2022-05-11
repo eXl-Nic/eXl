@@ -86,8 +86,8 @@ namespace eXl
   };
 
 
-  DEFINE_TYPE_EX(ObjectHandle, ObjectHandle, EXL_ENGINE_API);
-  DEFINE_TYPE_EX(ObjectReference, ObjectReference, EXL_ENGINE_API);
+  DEFINE_TYPE_EX(eXl::ObjectHandle, eXl__ObjectHandle, EXL_ENGINE_API);
+  DEFINE_TYPE_EX(eXl::ObjectReference, eXl__ObjectReference, EXL_ENGINE_API);
 
   template <>
   struct StreamerTemplateHandler<ObjectHandle>

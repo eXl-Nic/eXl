@@ -135,7 +135,7 @@ namespace eXl
       return lua_error(iState);
     }
 
-    if (desc->GetArgs().size() != numArgs - 2)
+    if (desc->GetArgs().size()!= (numArgs - 2))
     {
       lua_pushliteral(iState, "Incorrect number of arguments for event");
       Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Event " << eventName << " needs " << desc->GetArgs().size() << " arguments\n" 
@@ -166,7 +166,7 @@ namespace eXl
     {
       Type const* argType = nullptr;
       void* arg = buffType.GetField(argsObj.GetBuffer(), i, argType);
-      uint32_t idx = i;
+      uint32_t idx = i + 3;
       argType->ConvertFromLua_Uninit(iState, idx, arg);
     }
 
@@ -243,6 +243,13 @@ namespace eXl
     lua_pushcfunction(iState, &GetPropertyData);
     luabind::object getPropFun(luabind::from_stack(iState, -1));
     _G["eXl"]["GameDatabase"]["GetProperty"] = getPropFun;
+    lua_pop(iState, 1);
+
+    lua_pushcfunction(iState, &LuaTriggerEvent);
+    luabind::object dispatchEventFun(luabind::from_stack(iState, -1));
+    _G["eXl"]["DispatchEvent"] = dispatchEventFun;
+    lua_pop(iState, 1);
+
     _G["eXl"]["PropertySheetName"] = _G["eXl"]["Name"];
 
     return 0;

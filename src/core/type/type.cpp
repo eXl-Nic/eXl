@@ -68,7 +68,38 @@ namespace eXl{
     , m_Size(iSize)/*,
     m_Flags(iFlags)*/
   {
+
+    //if (iName.find("::") == String::npos)
+    //{
+    //  m_ScopedName.push_back("eXl");
+    //  m_ScopedName.push_back(iName);
+    //}
+    //else
+    {
+      String fullyQualifiedName = iName;
+      size_t pos = fullyQualifiedName.find("::");
+      while (pos != String::npos)
+      {
+        m_ScopedName.push_back(fullyQualifiedName.substr(0,pos));
+        fullyQualifiedName = fullyQualifiedName.substr(pos + 2);
+        pos = fullyQualifiedName.find("::");
+      }
+      m_ScopedName.push_back(fullyQualifiedName);
+    }
+
     m_Flags |= iFlags;
+  }
+
+  String Type::GetDisplayName(uint32_t iIgnoreScope) const
+  {
+    uint32_t const startName = glm::min<uint32_t>(iIgnoreScope, m_ScopedName.size() - 1);
+    String displayName = m_ScopedName[startName];
+    for (uint32_t i = startName + 1; i < m_ScopedName.size(); ++i)
+    {
+      displayName += "::" + m_ScopedName[i];
+    }
+
+    return displayName;
   }
 
   void* Type::Alloc()const
@@ -225,6 +256,25 @@ namespace eXl{
   void Type::RegisterLua(lua_State* iState) const
   {
     eXl_ASSERT(false);
+  }
+
+  void Type::RegisterScope(lua_State* iState, luabind::scope& iScope) const
+  {
+    String const& moduleName = m_ScopedName[0];
+
+    luabind::scope toRegister = iScope;
+    for (uint32_t i = 1; i< m_ScopedName.size() - 1; ++i)
+    {
+      toRegister = luabind::namespace_(m_ScopedName[i].c_str())
+        [
+          toRegister
+        ];
+    }
+
+    luabind::module(iState, moduleName.c_str())
+      [
+        toRegister
+      ];
   }
 
   luabind::object Type::MakePropertyAccessor(lua_State* iState, Type const* iHolder, uint32_t iField) const

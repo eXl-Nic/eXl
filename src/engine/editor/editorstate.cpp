@@ -145,6 +145,11 @@ namespace eXl
     emit EditorState::GetState()->projectOpened();
 
     EditorState::GetSettings().setValue("projectPath", sanitizedPath.string().c_str());
+    if (!iProject.m_GameDll.empty())
+    {
+      Plugin* gamePlugin = Plugin::LoadLib(iProject.m_GameDll);
+      eXl_ASSERT_MSG(gamePlugin != nullptr, eXl_FORMAT("Could not load DLL : %s", iProject.m_GameDll.c_str()));
+    }
     UpdateProjectTypes();
   }
   

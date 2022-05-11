@@ -61,7 +61,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
 #define DEFINE_CORE_TYPE_EX(type, friendlyname) DEFINE_TYPE_EX(type, friendlyname, EXL_CORE_API)
-#define DEFINE_CORE_TYPE(type) DEFINE_CORE_TYPE_EX(type, type)
+#define DEFINE_CORE_TYPE(type) DEFINE_CORE_TYPE_EX(eXl::type, eXl__##type)
+#define DEFINE_BASE_TYPE(type) DEFINE_CORE_TYPE_EX(type, type)
 
 #define IMPLEMENT_TYPE_EX(type, friendlyname) \
   Type const* Get_##friendlyname##_NativeType() \
@@ -98,8 +99,8 @@ inline TypeName GetTypeName<Enum>()      \
 return TypeName(#Enum);                \
 }
 
-#define IMPLEMENT_TYPE(type) IMPLEMENT_TYPE_EX(type, type)
-#define IMPLEMENT_TAG_TYPE(type) IMPLEMENT_TAG_TYPE_EX(type, type)
+#define IMPLEMENT_TYPE(type) IMPLEMENT_TYPE_EX(eXl::type, eXl__##type)
+#define IMPLEMENT_TAG_TYPE(type) IMPLEMENT_TAG_TYPE_EX(eXl::type, eXl__##type)
 
 #define EXL_REFLECTION_MARKER eXl_NeedReflection
 #define EXL_REFLECTION_MARKER_STR eXl_TO_STR(EXL_REFLECTION_MARKER)
@@ -298,19 +299,19 @@ namespace eXl
     struct IsOrdered<unsigned char> { static constexpr bool s_Value = true; };
   }
 
-  DEFINE_CORE_TYPE(uint32_t)
-  DEFINE_CORE_TYPE(uint64_t)
-  DEFINE_CORE_TYPE(int32_t)
-  DEFINE_CORE_TYPE(float)
-  DEFINE_CORE_TYPE(bool)
-  DEFINE_CORE_TYPE(uint8_t)
-  DEFINE_CORE_TYPE(uint16_t)
+  DEFINE_BASE_TYPE(uint32_t)
+  DEFINE_BASE_TYPE(uint64_t)
+  DEFINE_BASE_TYPE(int32_t)
+  DEFINE_BASE_TYPE(float)
+  DEFINE_BASE_TYPE(bool)
+  DEFINE_BASE_TYPE(uint8_t)
+  DEFINE_BASE_TYPE(uint16_t)
 #ifndef __ANDROID__
   //DEFINE_CORE_TYPE(WString)
 #endif
   DEFINE_CORE_TYPE(AString)
   DEFINE_CORE_TYPE(KString)
-  DEFINE_CORE_TYPE_EX(Name, NameBase_T)
+  DEFINE_CORE_TYPE(Name)
 
   DEFINE_CORE_TYPE(ConstDynObject)
   DEFINE_CORE_TYPE(DynObject)

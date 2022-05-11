@@ -110,5 +110,5 @@ namespace eXl
     QIcon m_HIcons[3];
   };
 
-  DEFINE_TYPE_EX(TerrainTool::Island, TerrainTool__Island, );
+  DEFINE_TYPE_EX(eXl::TerrainTool::Island, eXl__TerrainTool__Island, );
 }

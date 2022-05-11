@@ -136,7 +136,7 @@ NetDriver::CommandCaller<RetType, Args...>& NetDriver::CommandCaller<RetType, Ar
 {
   if (m_Command != nullptr)
   {
-    Err res = m_Command->m_FunDesc.PopulateArgBuffer(*m_Command->m_Args, m_Data.m_Args, std::forward<Args>(iArgs)...);
+    Err res = m_Command->m_FunDesc.PopulateArgBuffer(m_Data.m_Args, std::forward<Args>(iArgs)...);
     eXl_ASSERT(res);
   }
   return *this;

@@ -115,7 +115,7 @@ namespace eXl
     struct IsComparable<AABB2DPolygon<Real>> { static constexpr bool s_Value = false; };
   }
 
-  DEFINE_MATH_TYPE_EX(AABB2DPolygon<int>, AABB2DPolygoni)
+  DEFINE_MATH_TYPE_EX(eXl::AABB2DPolygon<int>, eXl__AABB2DPolygoni)
 }
 
 #if 1 || defined(EXL_SHARED_LIBRARY)

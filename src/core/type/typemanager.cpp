@@ -275,7 +275,7 @@ namespace eXl
       Vector<Type const*> coreTypes;
       for (auto const& entry : TMData::Get().m_TypeMap)
       {
-        if (entry->IsCoreType())
+        if (entry->IsCoreType() || entry->IsEnum())
         {
           coreTypes.push_back(entry);
         }

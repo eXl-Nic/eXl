@@ -52,6 +52,7 @@ namespace eXl
     void serializer::SerializeEnumSources(std::ostream& o, const Enum& e)
     {
       String enumName = e.GetShortName();
+      String fullName = e.GetFullName();
       String friendlyName = GetNameWithoutColons(e.GetFullName());
 
       
@@ -60,7 +61,7 @@ namespace eXl
       o << "void Register_" << friendlyName << "_Type()\n";
       o << "{\n";
       o << "s_" << friendlyName << "_TypeStorage = \n";
-      o << "TypeManager::BeginEnumTypeRegistration(\"" << friendlyName << "\")\n";
+      o << "TypeManager::BeginEnumTypeRegistration(\"" << fullName << "\")\n";
       Map<uint32_t, String> values;
       for (auto const& value : e.m_Values)
       {
@@ -84,7 +85,7 @@ namespace eXl
       o << "void Register_" << friendlyName << "_Lua(lua_State* iState)\n";
       o << "{\n";
       o << "luabind::module(iState, \"eXl\")[\n";
-      o << "luabind::class_<" << e.GetFullName() << ">(\"" << enumName << "\")\n";
+      o << "luabind::class_<" << fullName << ">(\"" << enumName << "\")\n";
       o << ".enum_(\"Const\")[\n";
       bool firstEnum = true;
       for (auto const& value : e.m_Values)

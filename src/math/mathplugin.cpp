@@ -30,11 +30,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  Type const* Get_Vec4_NativeType()
+  Type const* Get_eXl__Vec4_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vec4>("Vec4")
+      return TypeManager::BeginNativeTypeRegistration<Vec4>("eXl::Vec4")
         .AddField("X", &Vec4::x)
         .AddField("Y", &Vec4::y)
         .AddField("Z", &Vec4::z)
@@ -44,11 +44,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_Vec3_NativeType()
+  Type const* Get_eXl__Vec3_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vec3>("Vec3")
+      return TypeManager::BeginNativeTypeRegistration<Vec3>("eXl::Vec3")
         .AddField("X", &Vec3::x)
         .AddField("Y", &Vec3::y)
         .AddField("Z", &Vec3::z)
@@ -57,11 +57,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_Vec2_NativeType()
+  Type const* Get_eXl__Vec2_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vec2>("Vec2")
+      return TypeManager::BeginNativeTypeRegistration<Vec2>("eXl::Vec2")
         .AddField("X", &Vec2::x)
         .AddField("Y", &Vec2::y)
         .EndRegistration();
@@ -69,11 +69,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_Vec4i_NativeType()
+  Type const* Get_eXl__Vec4i_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vec4i>("Vec4i")
+      return TypeManager::BeginNativeTypeRegistration<Vec4i>("eXl::Vec4i")
         .AddField("X", &Vec4i::x)
         .AddField("Y", &Vec4i::y)
         .AddField("Z", &Vec4i::z)
@@ -83,11 +83,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_Vec3i_NativeType()
+  Type const* Get_eXl__Vec3i_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vec3i>("Vec3i")
+      return TypeManager::BeginNativeTypeRegistration<Vec3i>("eXl::Vec3i")
         .AddField("X", &Vec3i::x)
         .AddField("Y", &Vec3i::y)
         .AddField("Z", &Vec3i::z)
@@ -96,11 +96,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_Vec2i_NativeType()
+  Type const* Get_eXl__Vec2i_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Vec2i>("Vec2i")
+      return TypeManager::BeginNativeTypeRegistration<Vec2i>("eXl::Vec2i")
         .AddField("X", &Vec2i::x)
         .AddField("Y", &Vec2i::y)
         .EndRegistration();
@@ -108,11 +108,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_Quaternion_NativeType()
+  Type const* Get_eXl__Quaternion_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<Quaternion>("Quaternion")
+      return TypeManager::BeginNativeTypeRegistration<Quaternion>("eXl::Quaternion")
         .AddField("X", &Quaternion::x)
         .AddField("Y", &Quaternion::y)
         .AddField("Z", &Quaternion::z)
@@ -122,11 +122,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_AABB2Di_NativeType()
+  Type const* Get_eXl__AABB2Di_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<AABB2Di>("AABB2Di")
+      return TypeManager::BeginNativeTypeRegistration<AABB2Di>("eXl::AABB2Di")
         .AddField("Min", &AABB2Di::m_Min)
         .AddField("Max", &AABB2Di::m_Max)
         .EndRegistration();
@@ -134,11 +134,11 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_AABB2Df_NativeType()
+  Type const* Get_eXl__AABB2Df_NativeType()
   {
     static Type const* s_Type = []
     {
-      return TypeManager::BeginNativeTypeRegistration<AABB2Df>("AABB2Df")
+      return TypeManager::BeginNativeTypeRegistration<AABB2Df>("eXl::AABB2Df")
         .AddField("Min", &AABB2Df::m_Min)
         .AddField("Max", &AABB2Df::m_Max)
         .EndRegistration();

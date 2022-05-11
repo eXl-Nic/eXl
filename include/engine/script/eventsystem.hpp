@@ -42,11 +42,11 @@ namespace eXl
     };
 
     template<typename Ret, typename... Args>
-    struct PureFunctioHandler
+    struct PureFunctionHandler
     {
       static void Execute(Name, World& iWorld, ObjectHandle iObject, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
       {
-        Invoker_RetWrapper<Ret, Args...>::Execute([this, iPayload](World& iWorld, ObjectHandle iObject, Args... iArgs)
+        Invoker_RetWrapper<Ret, Args...>::Execute([&](Args... iArgs)
           {
             union
             {
@@ -60,13 +60,13 @@ namespace eXl
     };
 
     template<typename Ret, typename... Args>
-    void AddEventHandler(ObjectHandle iObject, Name iFunction, Ret(*iFun)(ObjectHandle, Args...))
+    void AddEventHandler(ObjectHandle iObject, Name iFunction, Ret(*iFun)(World&, ObjectHandle, Args...))
     {
       if (FunDesc const* desc = GetFunDesc(iInterface, iFunction))
       {
         if (desc->ValidateSignature<Ret, Args...>())
         {
-          AddEventHandlerInternal(iObject, iInterface, iFunction, &PureFunctioHandler<Ret, ObjectHandle, Args...>::Execute, iFun);
+          AddEventHandlerInternal(iObject, iInterface, iFunction, &PureFunctionHandler<Ret, Args...>::Execute, iFun);
         }
       }
     }
@@ -80,7 +80,7 @@ namespace eXl
         return Err::Failure;
       }
       FunDesc const* desc = GetFunDesc(iFunction);
-      bool validSignature = desc->ValidateSignature<void, World&, ObjectHandle, Args...>();
+      bool validSignature = desc->ValidateSignature<void, Args...>();
       eXl_ASSERT_REPAIR_RET(validSignature, Err::Error);
 
       ArgsBuffer const& buffType(desc->GetType());

@@ -62,20 +62,20 @@ namespace eXl
   }
 
 
-  IMPLEMENT_TYPE(uint64_t)
-  IMPLEMENT_TYPE(uint32_t)
-  IMPLEMENT_TYPE(int32_t)
-  IMPLEMENT_TYPE(float)
-  IMPLEMENT_TYPE(bool)
-  IMPLEMENT_TYPE(uint8_t)
-  IMPLEMENT_TYPE(uint16_t)
+  IMPLEMENT_TYPE_EX(uint64_t, uint64_t)
+  IMPLEMENT_TYPE_EX(uint32_t, uint32_t)
+  IMPLEMENT_TYPE_EX(int32_t, int32_t)
+  IMPLEMENT_TYPE_EX(float, float)
+  IMPLEMENT_TYPE_EX(bool, bool)
+  IMPLEMENT_TYPE_EX(uint8_t, uint8_t)
+  IMPLEMENT_TYPE_EX(uint16_t, uint16_t)
 
 #ifndef __ANDROID__
   //IMPLEMENT_TYPE(WString)
 #endif
   IMPLEMENT_TYPE(AString)
   IMPLEMENT_TYPE(KString)
-  IMPLEMENT_TYPE_EX(Name, NameBase_T)
+  IMPLEMENT_TYPE(Name)
 
   IMPLEMENT_TAG_TYPE(ConstDynObject)
   IMPLEMENT_TAG_TYPE(DynObject)

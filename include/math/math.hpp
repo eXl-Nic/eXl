@@ -247,7 +247,7 @@ namespace eXl
 #include <core/stream/unstreamer.hpp>
 
 #define DEFINE_MATH_TYPE_EX(type, friendlyname) DEFINE_TYPE_EX(type, friendlyname, EXL_MATH_API)
-#define DEFINE_MATH_TYPE(type) DEFINE_MATH_TYPE_EX(type, type)
+#define DEFINE_MATH_TYPE(type) DEFINE_MATH_TYPE_EX(eXl::type, eXl__##type)
 
 namespace eXl
 {
@@ -260,8 +260,8 @@ namespace eXl
   DEFINE_MATH_TYPE(Quaternion)
   DEFINE_MATH_TYPE(Mat4)
 
-  DEFINE_MATH_TYPE_EX(AABB2D<int>, AABB2Di)
-  DEFINE_MATH_TYPE_EX(AABB2D<float>, AABB2Df)
+  DEFINE_MATH_TYPE_EX(eXl::AABB2D<int>, eXl__AABB2Di)
+  DEFINE_MATH_TYPE_EX(eXl::AABB2D<float>, eXl__AABB2Df)
 
   template <>
   struct TypeTraits::IsComparable<Vec3>{static constexpr bool s_Value = false;};

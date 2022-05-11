@@ -486,7 +486,7 @@ namespace eXl
 
   void TupleTypeStruct::RegisterLua(lua_State* iState) const
   {
-    luabind::detail::class_base newClass(GetName().c_str());
+    luabind::detail::class_base newClass(m_ScopedName.back().c_str());
     newClass.init(this, luabind::detail::allocate_class_id(this), nullptr, luabind::detail::allocate_class_id(nullptr));
     newClass.add_member(new type_constructor_registration(this));
     newClass.add_default_member(new type_constructor_registration(this));
@@ -496,10 +496,8 @@ namespace eXl
       newClass.add_member(new type_field_registration(this, i));
     }
 
-    luabind::module(iState, "eXl")
-      [
-        newClass
-      ];
+
+    RegisterScope(iState, newClass);
   }
 
 #endif

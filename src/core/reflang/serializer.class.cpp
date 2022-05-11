@@ -40,7 +40,7 @@ namespace eXl
       o << "void Register_"<< friendlyName <<"_Type()\n";
       o << "{\n";
       o << "s_" << friendlyName << "_TypeStorage = \n";
-      o << "TypeManager::BeginNativeTypeRegistration<" << fullName << ">(\"" << friendlyName << "\")\n";
+      o << "TypeManager::BeginNativeTypeRegistration<" << fullName << ">(\"" << fullName << "\")\n";
       for (auto const& field : c.m_Fields)
       {
         o << ".AddField(\"" << field.name << "\", &" << fullName << "::" << field.name << ")\n";

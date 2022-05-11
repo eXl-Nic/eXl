@@ -27,6 +27,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 extern "C" struct lua_State;
+namespace luabind
+{
+  struct scope;
+}
 #endif
 
 namespace eXl
@@ -201,17 +205,19 @@ namespace eXl
     
     inline TypeName const& GetName() const {return m_Name;}
 
+    String GetDisplayName(uint32_t iIgnoreScope = 1) const;
+
   protected:
 
     Type(TypeName iName,
          size_t iTypeId,
          size_t iSize,
          unsigned int iFlags);
-
-    void DoEnable(){};
-    void DoDisable(){};
-
+#ifdef EXL_LUA
+    void RegisterScope(lua_State* iState, luabind::scope& iScope) const;
+#endif
     TypeName m_Name;
+    SmallVector<String, 2> m_ScopedName;
     size_t m_TypeId;
     size_t m_Size;
     unsigned int m_Flags = 0;

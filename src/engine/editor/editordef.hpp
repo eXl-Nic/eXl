@@ -5,7 +5,7 @@
 #include <core/type/dynobject.hpp>
 #include <core/type/typetraits.hpp>
 
-#define DEFINE_EDITOR_TYPE(Type) DEFINE_TYPE_EX(Type, Type, )
+#define DEFINE_EDITOR_TYPE(Type) DEFINE_TYPE_EX(eXl::Type, eXl__##Type, )
 
 namespace eXl
 {

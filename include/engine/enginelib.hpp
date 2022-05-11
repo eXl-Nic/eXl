@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/typetraits.hpp>
 
 #define DEFINE_ENGINE_TYPE_EX(type, friendlyname) DEFINE_TYPE_EX(type, friendlyname, EXL_ENGINE_API)
-#define DEFINE_ENGINE_TYPE(type) DEFINE_ENGINE_TYPE_EX(type, type)
+#define DEFINE_ENGINE_TYPE(type) DEFINE_ENGINE_TYPE_EX(eXl::type, eXl__##type)
 
 namespace eXl
 {

@@ -158,7 +158,7 @@ Err CoreTupleType<T>::ConvertFromLuaRaw_Uninit(lua_State* iState,unsigned int& i
 template <class T>
 void CoreTupleType<T>::RegisterLua(lua_State* iState) const
 {
-  luabind::class_<T> newClass(GetName().c_str());
+  luabind::class_<T> newClass(m_ScopedName.back().c_str());
   newClass.def(luabind::constructor<>());
 
   for (uint32_t i = 0; i < m_Fields.size(); ++i)
@@ -166,9 +166,6 @@ void CoreTupleType<T>::RegisterLua(lua_State* iState) const
     newClass.add_member(new type_field_registration(this, i));
   }
 
-  luabind::module(iState, "eXl")
-    [
-      newClass
-    ];
+  RegisterScope(iState, newClass);
 }
 #endif

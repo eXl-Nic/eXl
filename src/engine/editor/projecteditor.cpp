@@ -26,6 +26,7 @@
 #include <QScrollArea>
 #include <QPushButton>
 #include <QComboBox>
+#include <QLineEdit>
 
 namespace eXl
 {
@@ -105,9 +106,7 @@ namespace eXl
 
 	struct ProjectEditor::Impl
 	{
-		Impl()
-		{
-		}
+    Impl(ProjectEditor* iEditor, Project* iProject);
 		
     QModelIndex m_GroupSelection;
 
@@ -128,7 +127,7 @@ namespace eXl
     ProjectEditor* m_Editor;
     Project* m_Project;
     QStringList m_TypeNames;
-
+    QStringList m_TypeDisplayNames;
     
     void UpdateEditedProperty(QModelIndex);
 	};
@@ -141,197 +140,138 @@ namespace eXl
 
   ProjectEditor::ProjectEditor(QWidget* iParent, DocumentState* iDoc)
     : ResourceEditor(iParent, iDoc)
-    , m_Impl(new Impl)
+    , m_Impl(new Impl(this, Project::DynamicCast(iDoc->GetResource())))
   {
-    m_Impl->m_Editor = this;
-    m_Impl->m_Project = Project::DynamicCast(iDoc->GetResource());
-
-    m_Impl->m_PropsCollectionModel = PropertySheetDeclCollectionModel::Create(this, m_Impl->m_Project);
-
-    QSplitter* rootSplitter = new QSplitter(Qt::Vertical, this);
-
-    QWidget* projectSettings = new QWidget(this);
-    QVBoxLayout* settingsLayout = new QVBoxLayout(projectSettings);
-    projectSettings->setLayout(settingsLayout);
-
-    QWidget* playerSelWidget = new QWidget(this);
-
-    QHBoxLayout* playerSelLayout = new QHBoxLayout(playerSelWidget);
-    playerSelWidget->setLayout(playerSelLayout);
-    settingsLayout->addWidget(playerSelWidget);
-
-    m_Impl->m_PlayerSelector = new QComboBox(playerSelWidget);
-    playerSelLayout->addWidget(new QLabel("Player Archetype : "));
-    playerSelLayout->addWidget(m_Impl->m_PlayerSelector);
     
-    auto* archetypesModel = EditorState::GetState()->GetProjectResourcesModel()->MakeFilteredModel(m_Impl->m_PlayerSelector, Archetype::StaticLoaderName(), true);
-    m_Impl->m_PlayerSelector->setModel(archetypesModel);
+	}
 
+  ProjectEditor::Impl::Impl(ProjectEditor* iEditor, Project* iProject)
+    : m_Editor(iEditor)
+    , m_Project(iProject)
+  {
+    m_PropsCollectionModel = PropertySheetDeclCollectionModel::Create(m_Editor, m_Project);
+
+    QSplitter* rootSplitter = new QSplitter(Qt::Vertical, m_Editor);
+
+    QSplitter* dataSplitter = new QSplitter(Qt::Horizontal, m_Editor);
     {
-      Resource::UUID const& archetypeUUID = m_Impl->m_Project->m_PlayerArchetype.GetUUID();
-      if (archetypeUUID.IsValid())
-      {
-        QModelIndex index = archetypesModel->GetIndexFromUUID(archetypeUUID);
-        if (index.isValid())
-        {
-          m_Impl->m_PlayerSelector->setCurrentIndex(index.row());
-        }
-      }
-    }
-
-    QObject::connect(m_Impl->m_PlayerSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, archetypesModel](int iIndex)
-      {
-        Resource::UUID const* resourceId = archetypesModel->GetResourceIDFromIndex(archetypesModel->index(iIndex, 0, QModelIndex()));
-
-        if (resourceId != nullptr)
-        {
-          if (*resourceId != m_Impl->m_Project->m_PlayerArchetype.GetUUID())
-          {
-            m_Impl->m_Project->m_PlayerArchetype.SetUUID(*resourceId);
-            ModifyResource();
-          }
-        }
-        else if(m_Impl->m_Project->m_PlayerArchetype.GetUUID().IsValid())
-        {
-          m_Impl->m_Project->m_PlayerArchetype.SetUUID(Resource::UUID());
-          ModifyResource();
-        }
-      });
-
-    QWidget* mapSelWidget = new QWidget(this);
-    QHBoxLayout* defaultMapSelLayout = new QHBoxLayout(mapSelWidget);
-    mapSelWidget->setLayout(defaultMapSelLayout);
-    settingsLayout->addWidget(mapSelWidget);
-
-    m_Impl->m_MapSelector = new ResourceSelectionWidget(playerSelWidget, MapResource::StaticLoaderName(), ResourceSelectionWidget::Combo);
-    defaultMapSelLayout->addWidget(new QLabel("Default map : "));
-    defaultMapSelLayout->addWidget(m_Impl->m_MapSelector);
-    {
-      Resource::UUID const& mapUUID = m_Impl->m_Project->m_PlayerArchetype.GetUUID();
-      m_Impl->m_MapSelector->ForceSelection(mapUUID);
-    }
-
-    QObject::connect(m_Impl->m_MapSelector, &ResourceSelectionWidget::onResourceChanged, [this, archetypesModel]()
-      {
-        Resource::UUID const& resourceId = m_Impl->m_MapSelector->GetSelectedResourceId();
-
-        if (resourceId != m_Impl->m_Project->m_StartupMap.GetUUID())
-        {
-          m_Impl->m_Project->m_StartupMap.SetUUID(resourceId);
-          ModifyResource();
-        }
-      });
-
-    rootSplitter->addWidget(projectSettings);
-
-    QSplitter* dataSplitter = new QSplitter(Qt::Horizontal, this);
-    {
-      QWidget* propCollection = new QWidget(this);
-      QVBoxLayout* propCollectionLayout = new QVBoxLayout(this);
+      QWidget* propCollection = new QWidget(m_Editor);
+      QVBoxLayout* propCollectionLayout = new QVBoxLayout(propCollection);
       propCollection->setLayout(propCollectionLayout);
-      QWidget* propData = new QWidget(this);
-      QVBoxLayout* propDataLayout = new QVBoxLayout(this);
+      QWidget* propData = new QWidget(m_Editor);
+      QVBoxLayout* propDataLayout = new QVBoxLayout(propData);
       propData->setLayout(propDataLayout);
-      QToolBar* propCollectionTool = new QToolBar(this);
-      m_Impl->m_PropCollectionView = new QListView(this);
-      m_Impl->m_PropCollectionView->setModel(m_Impl->m_PropsCollectionModel);
-      m_Impl->m_PropCollectionView->setSelectionModel(new QItemSelectionModel(m_Impl->m_PropCollectionView->model()));
+      QToolBar* propCollectionTool = new QToolBar(m_Editor);
+      m_PropCollectionView = new QListView(m_Editor);
+      m_PropCollectionView->setModel(m_PropsCollectionModel);
+      m_PropCollectionView->setSelectionModel(new QItemSelectionModel(m_PropCollectionView->model()));
 
-      QObject::connect(m_Impl->m_PropCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
-      {
-        if (iSelected.isEmpty())
+      QObject::connect(m_PropCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
         {
-          m_Impl->m_PropDataView->clear();
-          m_Impl->m_CurrentPropIdx = QModelIndex();
-          m_Impl->m_CurrentEditedSheetName = TypeName();
-        }
-        else
-        {
-          if (iSelected.indexes().size() == 1)
+          if (iSelected.isEmpty())
           {
-            m_Impl->m_CurrentPropIdx = *iSelected.indexes().begin();
-            m_Impl->UpdateEditedProperty(m_Impl->m_CurrentPropIdx);
+            m_PropDataView->clear();
+            m_CurrentPropIdx = QModelIndex();
+            m_CurrentEditedSheetName = TypeName();
           }
-        }
-      });
+          else
+          {
+            if (iSelected.indexes().size() == 1)
+            {
+              m_CurrentPropIdx = *iSelected.indexes().begin();
+              UpdateEditedProperty(m_CurrentPropIdx);
+            }
+          }
+        });
 
-      QObject::connect(m_Impl->m_PropsCollectionModel, &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
-      {
-        m_Impl->m_CurrentEditedSheetName = *m_Impl->m_PropsCollectionModel->GetNameFromIndex(iIndex);
-        m_Impl->m_Editor->ModifyResource();
-      });
+      QObject::connect(m_PropsCollectionModel, &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
+        {
+          m_CurrentEditedSheetName = *m_PropsCollectionModel->GetNameFromIndex(iIndex);
+          m_Editor->ModifyResource();
+        });
 
-      QObject::connect(m_Impl->m_PropsCollectionModel, &QAbstractItemModel::rowsInserted, [this]()
-      {
-        m_Impl->m_Editor->ModifyResource();
-      });
-      QObject::connect(m_Impl->m_PropsCollectionModel, &QAbstractItemModel::rowsRemoved, [this]()
-      {
-        m_Impl->m_Editor->ModifyResource();
-      });
+      QObject::connect(m_PropsCollectionModel, &QAbstractItemModel::rowsInserted, [this]()
+        {
+          m_Editor->ModifyResource();
+        });
+      QObject::connect(m_PropsCollectionModel, &QAbstractItemModel::rowsRemoved, [this]()
+        {
+          m_Editor->ModifyResource();
+        });
 
       Vector<Type const*> types = TypeManager::GetCoreTypes();
+      std::sort(types.begin(), types.end(), [](Type const* const& iType1, Type const* const& iType2)
+        {
+          return iType1->GetDisplayName() < iType2->GetDisplayName();
+        }
+      );
+
       for (auto type : types)
       {
-        m_Impl->m_TypeNames.append(QString::fromUtf8(type->GetName().c_str()));
+        m_TypeNames.append(QString::fromUtf8(type->GetName().c_str()));
+      }
+
+      for (auto type : types)
+      {
+        m_TypeDisplayNames.append(QString::fromUtf8(type->GetDisplayName().c_str()));
       }
 
       propCollectionLayout->addWidget(propCollectionTool);
-      propCollectionLayout->addWidget(m_Impl->m_PropCollectionView);
+      propCollectionLayout->addWidget(m_PropCollectionView);
 
-      propCollectionTool->addAction(style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this]
-      {
-        uint32_t curRowCount = m_Impl->m_PropsCollectionModel->rowCount(QModelIndex());
-        
-        if (m_Impl->m_PropsCollectionModel->insertRow(curRowCount))
+      propCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this]
         {
-          QModelIndex newIndex = m_Impl->m_PropsCollectionModel->index(curRowCount, 0, QModelIndex());
-          m_Impl->m_PropsCollectionModel->setData(newIndex, QString("NewProperty"), Qt::EditRole);
-          m_Impl->m_Editor->ModifyResource();
-        }
-      });
+          uint32_t curRowCount = m_PropsCollectionModel->rowCount(QModelIndex());
 
-      propCollectionTool->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this]
-      {
-        QModelIndex currentSelection = m_Impl->m_PropCollectionView->selectionModel()->currentIndex();
-        if (currentSelection.isValid())
+          if (m_PropsCollectionModel->insertRow(curRowCount))
+          {
+            QModelIndex newIndex = m_PropsCollectionModel->index(curRowCount, 0, QModelIndex());
+            m_PropsCollectionModel->setData(newIndex, QString("NewProperty"), Qt::EditRole);
+            m_Editor->ModifyResource();
+          }
+        });
+
+      propCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this]
         {
-          m_Impl->m_PropsCollectionModel->removeRow(currentSelection.row(), currentSelection.parent());
-          m_Impl->m_Editor->ModifyResource();
-        }
-      });
+          QModelIndex currentSelection = m_PropCollectionView->selectionModel()->currentIndex();
+          if (currentSelection.isValid())
+          {
+            m_PropsCollectionModel->removeRow(currentSelection.row(), currentSelection.parent());
+            m_Editor->ModifyResource();
+          }
+        });
 
-      m_Impl->m_PropDataView = new QTableWidget(this);
-      
-      QToolBar* propDataTool = new QToolBar(this);
+      m_PropDataView = new QTableWidget(m_Editor);
 
-      propDataTool->addAction(style()->standardIcon(QStyle::SP_FileIcon), "Add New Field", [this]
-      {
-        Project::Field newField;
-        newField.m_Name = "NewField";
-        newField.m_TypeName = "uint32_t";
-        newField.m_IsArray = false;
-        m_Impl->m_CurrentEditedType.m_Fields.push_back(newField);
-        m_Impl->m_Project->m_Types[m_Impl->m_CurrentEditedSheetName] = m_Impl->m_CurrentEditedType;
-        m_Impl->UpdateEditedProperty(m_Impl->m_CurrentPropIdx);
-        m_Impl->m_Editor->ModifyResource();
-      });
+      QToolBar* propDataTool = new QToolBar(m_Editor);
 
-      propDataTool->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Field", [this]
-      {
-        QTableWidgetItem* currentSelection = m_Impl->m_PropDataView->currentItem();
-        if (currentSelection != nullptr)
+      propDataTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Field", [this]
         {
-          int32_t row = currentSelection->row();
-          m_Impl->m_CurrentEditedType.m_Fields.erase(m_Impl->m_CurrentEditedType.m_Fields.begin() + row);
-          m_Impl->m_Project->m_Types[m_Impl->m_CurrentEditedSheetName] = m_Impl->m_CurrentEditedType;
-          m_Impl->UpdateEditedProperty(m_Impl->m_CurrentPropIdx);
-          m_Impl->m_Editor->ModifyResource();
-        }
-      });
+          Project::Field newField;
+          newField.m_Name = "NewField";
+          newField.m_TypeName = "uint32_t";
+          newField.m_IsArray = false;
+          m_CurrentEditedType.m_Fields.push_back(newField);
+          m_Project->m_Types[m_CurrentEditedSheetName] = m_CurrentEditedType;
+          UpdateEditedProperty(m_CurrentPropIdx);
+          m_Editor->ModifyResource();
+        });
+
+      propDataTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Field", [this]
+        {
+          QTableWidgetItem* currentSelection = m_PropDataView->currentItem();
+          if (currentSelection != nullptr)
+          {
+            int32_t row = currentSelection->row();
+            m_CurrentEditedType.m_Fields.erase(m_CurrentEditedType.m_Fields.begin() + row);
+            m_Project->m_Types[m_CurrentEditedSheetName] = m_CurrentEditedType;
+            UpdateEditedProperty(m_CurrentPropIdx);
+            m_Editor->ModifyResource();
+          }
+        });
 
       propDataLayout->addWidget(propDataTool);
-      propDataLayout->addWidget(m_Impl->m_PropDataView);
+      propDataLayout->addWidget(m_PropDataView);
 
       dataSplitter->addWidget(propCollection);
 
@@ -340,12 +280,105 @@ namespace eXl
       rootSplitter->addWidget(dataSplitter);
     }
 
-		QVBoxLayout* layout = new QVBoxLayout(this);
+    QTabWidget* tabs = new QTabWidget(m_Editor);
 
-		layout->addWidget(rootSplitter);
+    tabs->addTab(rootSplitter, "Types");
 
-		setLayout(layout);
-	}
+    QWidget* projectSettings = new QWidget(m_Editor);
+    QVBoxLayout* settingsLayout = new QVBoxLayout(projectSettings);
+    projectSettings->setLayout(settingsLayout);
+
+    QWidget* gameDllWidget = new QWidget(projectSettings);
+    QHBoxLayout* gameDllLayout = new QHBoxLayout(gameDllWidget);
+    gameDllWidget->setLayout(gameDllLayout);
+    settingsLayout->addWidget(gameDllWidget);
+
+    gameDllLayout->addWidget(new QLabel("Game Dll (restart if changed) : "));
+
+    QLineEdit* gameDllInput = new QLineEdit(projectSettings);
+    gameDllInput->setText(m_Project->m_GameDll.c_str());
+
+    QObject::connect(gameDllInput, &QLineEdit::editingFinished, [this, gameDllInput]()
+      {
+        m_Project->m_GameDll = gameDllInput->text().toStdString();
+        m_Editor->ModifyResource();
+      });
+    gameDllLayout->addWidget(gameDllInput);
+
+    QWidget* playerSelWidget = new QWidget(m_Editor);
+
+    QHBoxLayout* playerSelLayout = new QHBoxLayout(playerSelWidget);
+    playerSelWidget->setLayout(playerSelLayout);
+    settingsLayout->addWidget(playerSelWidget);
+
+    m_PlayerSelector = new QComboBox(playerSelWidget);
+    playerSelLayout->addWidget(new QLabel("Player Archetype : "));
+    playerSelLayout->addWidget(m_PlayerSelector);
+
+    auto* archetypesModel = EditorState::GetState()->GetProjectResourcesModel()->MakeFilteredModel(m_PlayerSelector, Archetype::StaticLoaderName(), true);
+    m_PlayerSelector->setModel(archetypesModel);
+
+    {
+      Resource::UUID const& archetypeUUID = m_Project->m_PlayerArchetype.GetUUID();
+      if (archetypeUUID.IsValid())
+      {
+        QModelIndex index = archetypesModel->GetIndexFromUUID(archetypeUUID);
+        if (index.isValid())
+        {
+          m_PlayerSelector->setCurrentIndex(index.row());
+        }
+      }
+    }
+
+    QObject::connect(m_PlayerSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, archetypesModel](int iIndex)
+      {
+        Resource::UUID const* resourceId = archetypesModel->GetResourceIDFromIndex(archetypesModel->index(iIndex, 0, QModelIndex()));
+
+        if (resourceId != nullptr)
+        {
+          if (*resourceId != m_Project->m_PlayerArchetype.GetUUID())
+          {
+            m_Project->m_PlayerArchetype.SetUUID(*resourceId);
+            m_Editor->ModifyResource();
+          }
+        }
+        else if (m_Project->m_PlayerArchetype.GetUUID().IsValid())
+        {
+          m_Project->m_PlayerArchetype.SetUUID(Resource::UUID());
+          m_Editor->ModifyResource();
+        }
+      });
+
+    QWidget* mapSelWidget = new QWidget(m_Editor);
+    QHBoxLayout* defaultMapSelLayout = new QHBoxLayout(mapSelWidget);
+    mapSelWidget->setLayout(defaultMapSelLayout);
+    settingsLayout->addWidget(mapSelWidget);
+
+    m_MapSelector = new ResourceSelectionWidget(playerSelWidget, MapResource::StaticLoaderName(), ResourceSelectionWidget::Combo);
+    defaultMapSelLayout->addWidget(new QLabel("Default map : "));
+    defaultMapSelLayout->addWidget(m_MapSelector);
+    {
+      Resource::UUID const& mapUUID = m_Project->m_PlayerArchetype.GetUUID();
+      m_MapSelector->ForceSelection(mapUUID);
+    }
+
+    QObject::connect(m_MapSelector, &ResourceSelectionWidget::onResourceChanged, [this, archetypesModel]()
+      {
+        Resource::UUID const& resourceId = m_MapSelector->GetSelectedResourceId();
+
+        if (resourceId != m_Project->m_StartupMap.GetUUID())
+        {
+          m_Project->m_StartupMap.SetUUID(resourceId);
+          m_Editor->ModifyResource();
+        }
+      });
+
+    tabs->addTab(projectSettings, "Settings");
+
+    QVBoxLayout* layout = new QVBoxLayout(m_Editor);
+    layout->addWidget(tabs);
+    m_Editor->setLayout(layout);
+  }
 
   void ProjectEditor::Impl::UpdateEditedProperty(QModelIndex iIndex)
   {
@@ -407,10 +440,10 @@ namespace eXl
       bool foundType = false;
       int32_t selType = 0;
       QComboBox* typeCombo = new QComboBox(m_PropDataView);
-      for (auto& type : m_TypeNames)
+      for(uint32_t i = 0; i<m_TypeNames.size(); ++i)
       {
-        typeCombo->addItem(type);
-        if (type == typeNameStr)
+        typeCombo->addItem(m_TypeDisplayNames[i]);
+        if (m_TypeNames[i] == typeNameStr)
         {
           foundType = true;
         }
