@@ -45,6 +45,8 @@
 #include <editor/mapeditor/mapeditor.hpp>
 #include <editor/projecteditor.hpp>
 #include <editor/scripteditor.hpp>
+#include <editor/functionlibraryeditor.hpp>
+#include <editor/coroutineeditor.hpp>
 #include <editor/mcmcmodeleditor.hpp>
 #include <engine/gfx/tileset.hpp>
 
@@ -257,6 +259,8 @@ namespace eXl
     EditorState::AddResourceHandler(&MapEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&ProjectEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&LuaScriptEditor::GetEditorHandler());
+    EditorState::AddResourceHandler(&LuaFunctionLibraryEditor::GetEditorHandler());
+    EditorState::AddResourceHandler(&LuaCoroutineEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&MCMCModelEditor::GetEditorHandler());
 
     connect(ui->actionNewProject, &QAction::triggered, this, &MainWindow::newProject);

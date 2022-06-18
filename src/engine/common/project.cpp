@@ -138,6 +138,11 @@ namespace eXl
       iSerializer.HandleMapSorted(m_GameSettings);
       iSerializer.PopKey();
     }
+    if (iSerializer.PushKey("PlayerAdditionalParameters"))
+    {
+      iSerializer &= m_PlayerAdditionalParameters;
+      iSerializer.PopKey();
+    }
     iSerializer.EndStruct();
 
     return Err::Success;

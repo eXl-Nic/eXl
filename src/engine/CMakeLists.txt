@@ -70,6 +70,9 @@ gfx/spriterenderer.cpp
 set (LUA_SRC
 
 script/luascriptsystem.cpp
+script/luaeventhandler.cpp
+script/luacoroutine.cpp
+script/luafunctionlibrary.cpp
 luabindengine.cpp
 )
 
@@ -157,7 +160,9 @@ ${INCLUDE_DIR}/gfx/gfxcomponent.hpp
 ${INCLUDE_DIR}/gfx/tileset.hpp
 ${INCLUDE_DIR}/map/map.hpp
 ${INCLUDE_DIR}/common/transforms.hpp
-${INCLUDE_DIR}/physics/physicsdef.hpp)
+${INCLUDE_DIR}/physics/physicsdef.hpp
+${INCLUDE_DIR}/common/gen_impl.hpp
+)
 
 SET (EXL_DEPENDENCIES eXl_Gen eXl_OGL)
 

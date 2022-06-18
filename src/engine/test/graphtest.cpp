@@ -10,7 +10,7 @@
 
 using namespace eXl;
 
-TEST(DunAtk, GraphTest)
+TEST(Engine, GraphTest)
 {
   {
     ES_RuleSystem sys;

@@ -295,6 +295,10 @@ namespace eXl
   template <typename Real>
   AABB2DPolygon<Real>::AABB2DPolygon(Vector<glm::vec<2,Real>> const& iPoints)
   {
+    if (iPoints.empty())
+    {
+      return;
+    }
     m_Ext.clear();
     
     if(iPoints.size()>=4)

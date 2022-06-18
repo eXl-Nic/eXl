@@ -26,7 +26,10 @@ namespace eXl
       m_Client.Connect(m_ClientId, iConnectToken.data());
     }
 
-    Client_Impl::~Client_Impl() = default;
+    Client_Impl::~Client_Impl()
+    {
+      m_Client.Disconnect();
+    }
 
     void Client_Impl::ClientSendLoopbackPacket(int clientIndex, const uint8_t* packetData, int packetBytes, uint64_t packetSequence)
     {

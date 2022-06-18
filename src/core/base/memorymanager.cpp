@@ -13,19 +13,66 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <map>
 #include <mutex>
 #include <boost/multi_index_container.hpp>
-#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/multi_index/global_fun.hpp>
 #include <core/coredef.hpp>
 #include <core/log.hpp>
+#include <core/utils/capturestack.hpp>
 
-#if defined(_DEBUG) && defined(TRACE_LEAKS)
+#if defined(EXL_TRACE_LEAKS)
 
-//#define DEBUG_ALLOC
+#define DEBUG_ALLOC
 
 #endif
 
 namespace eXl
 {
+#if defined(EXL_TRACE_LEAKS)
+  EXL_CORE_API bool s_CaptureStacks = true;
+#endif
+  struct AllocStack
+  {
+    Stack m_Stack;
+    DECLARE_RefC;
+
+    void OnNullRefC() const
+    {}
+  
+  public:
+
+    bool HasReferences() const
+    {
+      return m_RefCount > 0;
+    }
+  };
+
+  IMPLEMENT_RefCCustom(AllocStack);
+
+  size_t hash_value(Stack const& iStack)
+  {
+    return iStack.m_Hash;
+  }
+
+  size_t hash_value(IntrusivePtr<AllocStack> const& iStack)
+  {
+    return iStack->m_Stack.m_Hash;
+  }
+
+
+  Stack const& RetrieveStack(IntrusivePtr<AllocStack> const& iPtr)
+  {
+    return iPtr->m_Stack;
+  }
+
+  using AllocStackMap = boost::multi_index::multi_index_container< IntrusivePtr<AllocStack>,
+    boost::multi_index::indexed_by<
+    boost::multi_index::hashed_unique<boost::multi_index::global_fun<IntrusivePtr<AllocStack> const&, Stack const&, &RetrieveStack>>,
+    boost::multi_index::random_access<>>
+    , RawAllocator<IntrusivePtr<AllocStack>>>;
+  typedef AllocStackMap::nth_index<0>::type StackMap_by_stack;
+
   struct MemRec
   {
     size_t size;
@@ -33,16 +80,57 @@ namespace eXl
     unsigned int line;
     const char* file;
     const char* func;
+
+    IntrusivePtr<AllocStack> allocStack;
     void* ptr;
   };
 
   typedef boost::multi_index::multi_index_container<MemRec,
     boost::multi_index::indexed_by<
-    boost::multi_index::ordered_unique<boost::multi_index::member<MemRec,void*,&MemRec::ptr> > > > MemMap;
+    boost::multi_index::hashed_unique<boost::multi_index::member<MemRec,void*,&MemRec::ptr> > > 
+  , RawAllocator<MemRec>> MemMap;
   typedef MemMap::nth_index<0>::type MemMap_by_ptr;
 
-  static MemMap m_Map;
-  static std::mutex memLock;
+  static MemMap& GetMemMap()
+  {
+    static MemMap s_Map;
+
+    return s_Map;
+  }
+
+  static AllocStackMap& GetStackMap()
+  {
+    static AllocStackMap s_Map;
+
+    return s_Map;
+  }
+
+  static std::recursive_mutex& GetMemLock()
+  {
+    static std::recursive_mutex s_MemLock;
+
+    return s_MemLock;
+  }
+
+  IntrusivePtr<AllocStack> CaptureMemStack()
+  {
+    AllocStack stack;
+    stack.m_Stack = CaptureStack();
+    
+    auto& stackMap = GetStackMap();
+
+    auto iter = stackMap.find(stack.m_Stack);
+    if (iter == stackMap.end())
+    {
+      AllocStack* newStack = new(malloc(sizeof(AllocStack))) AllocStack;
+      newStack->m_Stack = std::move(stack.m_Stack);
+      return *stackMap.insert(IntrusivePtr<AllocStack>(newStack)).first;
+    }
+    else
+    {
+      return *iter;
+    }
+  }
 
   static void*(*s_AllocFn)(size_t) = nullptr;
   static void(*s_FreeFn)(void*) = nullptr;
@@ -77,8 +165,12 @@ namespace eXl
     newRec.func=nullptr;
     newRec.ptr=res;
     newRec.numElems=numElems;
-    std::unique_lock<std::mutex> mapLock(memLock);
-    m_Map.insert(newRec);
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    if (s_CaptureStacks)
+    {
+      newRec.allocStack = CaptureMemStack();
+    }
+    GetMemMap().insert(newRec);
 #endif
     return res;
   }
@@ -96,8 +188,8 @@ namespace eXl
     newRec.func=iFun;
     newRec.ptr=res;
     newRec.numElems=numElems;
-    std::unique_lock<std::mutex> mapLock(memLock);
-    m_Map.insert(newRec);
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    GetMemMap().insert(newRec);
 #endif
     return res;
   }
@@ -114,8 +206,8 @@ namespace eXl
     newRec.func=iFun;
     newRec.ptr=res;
     newRec.numElems=numElems;
-    std::unique_lock<std::mutex> mapLock(memLock);
-    m_Map.insert(newRec);
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    GetMemMap().insert(newRec);
 #endif
     return res;
   }
@@ -124,13 +216,17 @@ namespace eXl
   {
     if(!s_FreeFn)
       s_FreeFn = &free;
+    if (ptr == nullptr)
+    {
+      return;
+    }
 #ifdef DEBUG_ALLOC
     //eXl_ASSERT_MSG(ptr!=nullptr,(String("Trying to free nullptr")).c_str());
-    std::unique_lock<std::mutex> mapLock(memLock);
-    MemMap_by_ptr::iterator iter=m_Map.get<0>().find(ptr);
-    //eXl_ASSERT_MSG(iter!=m_Map.end(),(String("Trying to free unmanaged memory")).c_str());
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    MemMap_by_ptr::iterator iter= GetMemMap().get<0>().find(ptr);
+    eXl_ASSERT_MSG_REPAIR_RET(iter!= GetMemMap().end(),"Trying to free unmanaged memory", void());
     //eXl_ASSERT_MSG((!array && iter->numElems==0) || (array && iter->numElems>0),(String("Wrong dtor for memory allocated in ")+iter->file+" at "+StringUtil::FromInt(iter->line)).c_str());
-    m_Map.erase(iter);
+    GetMemMap().erase(iter);
 #endif
     s_FreeFn(ptr);
   }
@@ -139,26 +235,34 @@ namespace eXl
   {
     if(!s_FreeFn)
       s_FreeFn = &free;
+    if (ptr == nullptr)
+    {
+      return;
+    }
 #ifdef DEBUG_ALLOC
     //eXl_ASSERT_MSG(ptr!=nullptr,(String("Trying to free nullptr in ")+file+" at "+StringUtil::FromInt(line)).c_str());
-    std::unique_lock<std::mutex> mapLock(memLock);
-    MemMap_by_ptr::iterator iter=m_Map.get<0>().find(ptr);
-    //eXl_ASSERT_MSG(iter!=m_Map.end(),(String("Trying to free unmanaged memory in ")+file+" at "+StringUtil::FromInt(line)).c_str());
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    MemMap_by_ptr::iterator iter= GetMemMap().get<0>().find(ptr);
+    eXl_ASSERT_MSG_REPAIR_RET(iter != GetMemMap().end(), eXl_FORMAT("Trying to free unmanaged memory in %s at %i", file, line), void());
     //eXl_ASSERT_MSG((!array && iter->numElems==0) || (array && iter->numElems>0),(String("Wrong dtor called for memory in ")+file+" at "+StringUtil::FromInt(line)).c_str());
-    m_Map.erase(iter);
+    GetMemMap().erase(iter);
 #endif
     s_FreeFn(ptr);
   }
 
   void MemoryManager::Free_Ext(void* ptr,const char* file,unsigned int line,const char* iFun,bool array,void (*iFree)(void*))
   {
+    if (ptr == nullptr)
+    {
+      return;
+    }
 #ifdef DEBUG_ALLOC
     //eXl_ASSERT_MSG(ptr!=nullptr,(String("Trying to free nullptr in ")+file+" at "+StringUtil::FromInt(line)).c_str());
-    std::unique_lock<std::mutex> mapLock(memLock);
-    MemMap_by_ptr::iterator iter=m_Map.get<0>().find(ptr);
-    //eXl_ASSERT_MSG(iter!=m_Map.end(),(String("Trying to free unmanaged memory in ")+file+" at "+StringUtil::FromInt(line)).c_str());
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    MemMap_by_ptr::iterator iter= GetMemMap().get<0>().find(ptr);
+    eXl_ASSERT_MSG_REPAIR_RET(iter != GetMemMap().end(), eXl_FORMAT("Trying to free unmanaged memory in %s at %i", file, line), void());
     //eXl_ASSERT_MSG((!array && iter->numElems==0) || (array && iter->numElems>0),(String("Wrong dtor called for memory in ")+file+" at "+StringUtil::FromInt(line)).c_str());
-    m_Map.erase(iter);
+    GetMemMap().erase(iter);
 #endif
     iFree(ptr);
     
@@ -174,33 +278,63 @@ namespace eXl
 
   void MemoryManager::ReportLeaks()
   {
-    return;
-
-    std::vector<char> buff(4096);
+    char buff[4096];
     char* buffer = &buff[0];
     size_t totalLeak=0;
-    std::map<char const* ,unsigned int,CompStr> m_SetPos;
+
+    auto const& stackMap = GetStackMap();
+    std::vector<DebugString, RawAllocator<DebugString>> stackDumps;
+    stackDumps.resize(stackMap.size());
+    for (auto stackIter = stackMap.begin(); stackIter != stackMap.end(); ++stackIter)
     {
-      MemMap::iterator iter = m_Map.begin();
-      MemMap::iterator iterEnd = m_Map.end();
+      if ((*stackIter)->HasReferences())
+      {
+        uint32_t idx = stackMap.project<1>(stackIter) - stackMap.get<1>().begin();
+        stackDumps[idx] = DumpStackInformation((*stackIter)->m_Stack);
+      }
+    }
+
+    std::map<char const* ,unsigned int,CompStr, RawAllocator<std::pair<char const* const, unsigned int>>> m_SetPos;
+    {
+      MemMap::iterator iter = GetMemMap().begin();
+      MemMap::iterator iterEnd = GetMemMap().end();
 
       for(;iter!=iterEnd;iter++)
       {
         totalLeak+=iter->size;
         if(iter->file!=nullptr)
         {
-          snprintf(buffer, buff.size(),("Leak in file %s in function %s at line %i of size %zi"),iter->file,iter->func,iter->line,iter->size);
+          snprintf(buffer, 4096,("Leak in file %s in function %s at line %i of size %zi"),iter->file,iter->func,iter->line,iter->size);
           std::map<char const* ,unsigned int,CompStr>::iterator iter = m_SetPos.find(buffer);
           if(iter == m_SetPos.end())
           {
             size_t strLen = strlen(buffer);
-            char* strCopy = new char[strLen + 1];
+            char* strCopy = (char*)malloc(strLen + 1);
             memcpy(strCopy,buffer, strLen + 1);
             strCopy[strLen] = 0;
             std::pair<std::map<char const* ,unsigned int,CompStr>::iterator,bool> res = m_SetPos.insert(std::make_pair(strCopy,0));
             iter = res.first;
           }
           iter->second++;
+        }
+        else if (iter->allocStack)
+        {
+          auto stackIter = stackMap.find(iter->allocStack->m_Stack);
+          if (stackIter != stackMap.end())
+          {
+            uint32_t idx = stackMap.project<1>(stackIter) - stackMap.get<1>().begin();
+            if (idx < stackDumps.size())
+            {
+              char const* strPtr = stackDumps[idx].c_str();
+              std::map<char const*, unsigned int, CompStr>::iterator iter = m_SetPos.find(strPtr);
+              if (iter == m_SetPos.end())
+              {
+                std::pair<std::map<char const*, unsigned int, CompStr>::iterator, bool> res = m_SetPos.insert(std::make_pair(strPtr, 0));
+                iter = res.first;
+              }
+              iter->second++;
+            }
+          }
         }
         else
         {
@@ -213,16 +347,20 @@ namespace eXl
     std::map<char const* ,unsigned int,CompStr>::iterator iterEnd = m_SetPos.end();
     for(;iter!=iterEnd;iter++)
     {
-      //totalLeak+=iter->size;
-      LOG_INFO<<iter->first << " X "<< iter->second<<"\n";
+      if (iter->second > 1)
+      {
+        //totalLeak+=iter->size;
+        LOG_INFO << iter->first << " X " << iter->second << "\n";
+        //free((void*)iter->first);
+      }
     }
     LOG_INFO<<"Total memory leaks : "<<totalLeak<<"\n";
   }
   
   unsigned int MemoryManager::GetNum(void* iPtr,size_t& oStride,const char* file,unsigned int line,const char* iFun)
   {
-    std::unique_lock<std::mutex> mapLock(memLock); 
-    MemMap_by_ptr::iterator iter=m_Map.get<0>().find(iPtr);
+    std::unique_lock<std::recursive_mutex> mapLock(GetMemLock());
+    MemMap_by_ptr::iterator iter= GetMemMap().get<0>().find(iPtr);
     //eXl_ASSERT_MSG(iter!=m_Map.end(),(String("Trying to free unmanaged memory in ")+StringUtil::FromASCII(file)+" at "+StringUtil::FromInt(line)).c_str());
     //eXl_ASSERT_MSG(iter->numElems>0,(String("Wrong dtor called memory in ")+StringUtil::FromASCII(file)+" at "+StringUtil::FromInt(line)).c_str());
     oStride = iter->size/iter->numElems;

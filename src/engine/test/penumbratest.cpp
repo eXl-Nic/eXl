@@ -17,38 +17,38 @@ TEST(Pathfinding, VelocityObstacle)
   Random* randGen = Random::CreateDefaultRNG(0);
   VelocityObstacle obs(*randGen);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
-  obs.AddPoint(UnitX<Vector2f>() * 2.0f, 1.0, Vector2f::ZERO);
+  obs.Start(nullptr, Zero<Vec2>(), 1.0, UnitX<Vec2>(), 1.0);
+  obs.AddPoint(UnitX<Vec2>() * 2.0f, 1.0, Zero<Vec2>());
 
-  Vector2f bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_GT(Mathf::Abs(bestVel.Dot(UnitY<Vector2f>())), 0.8);
+  Vec2 bestVel = obs.FindBestVelocity(Zero<Vec2>());
+  ASSERT_GT(Mathf::Abs(dot(bestVel, UnitY<Vec2>())), 0.8);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
-  obs.AddPoint(UnitX<Vector2f>() * 2.0f, 1.0, UnitX<Vector2f>());
+  obs.Start(nullptr, Zero<Vec2>(), 1.0, UnitX<Vec2>(), 1.0);
+  obs.AddPoint(UnitX<Vec2>() * 2.0f, 1.0, UnitX<Vec2>());
 
-  bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_EQ(Mathf::Abs(bestVel.Dot(UnitX<Vector2f>())), 1.0);
+  bestVel = obs.FindBestVelocity(Zero<Vec2>());
+  ASSERT_EQ(Mathf::Abs(dot(bestVel,UnitX<Vec2>())), 1.0);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
-  obs.AddPoint(UnitX<Vector2f>() * 4.0f, 1.0, Vector2f::ZERO);
+  obs.Start(nullptr, Zero<Vec2>(), 1.0, UnitX<Vec2>(), 1.0);
+  obs.AddPoint(UnitX<Vec2>() * 4.0f, 1.0, Zero<Vec2>());
 
-  bestVel = obs.FindBestVelocity(Vector2f::ZERO);
-  ASSERT_GT(Mathf::Abs(bestVel.Dot(UnitX<Vector2f>())), 0.75);
+  bestVel = obs.FindBestVelocity(Zero<Vec2>());
+  ASSERT_GT(Mathf::Abs(dot(bestVel, UnitX<Vec2>())), 0.75);
 
-  obs.Start(nullptr, Vector2f::ZERO, 1.0, UnitX<Vector2f>(), 1.0);
-  obs.AddPoint(UnitX<Vector2f>() * 4.0f, 1.0, -UnitX<Vector2f>());
-  obs.AddPoint(UnitX<Vector2f>() * 4.0f + UnitY<Vector2f>() * 2.0f, 1.0, -UnitX<Vector2f>());
+  obs.Start(nullptr, Zero<Vec2>(), 1.0, UnitX<Vec2>(), 1.0);
+  obs.AddPoint(UnitX<Vec2>() * 4.0f, 1.0, -UnitX<Vec2>());
+  obs.AddPoint(UnitX<Vec2>() * 4.0f + UnitY<Vec2>() * 2.0f, 1.0, -UnitX<Vec2>());
 
-  Vector2f bestVel1 = obs.FindBestVelocity(Vector2f::ZERO);
+  Vec2 bestVel1 = obs.FindBestVelocity(Zero<Vec2>());
 
-  ASSERT_LT(Mathf::Abs(bestVel1.Dot(UnitX<Vector2f>())), 0.3);
-  ASSERT_LT(bestVel1.Dot(UnitY<Vector2f>()), -0.5);
+  ASSERT_LT(Mathf::Abs(dot(bestVel1, UnitX<Vec2>())), 0.3);
+  ASSERT_LT(dot(bestVel1, UnitY<Vec2>()), -0.5);
 
-  obs.Start(nullptr, UnitX<Vector2f>() * 4.0f, 1.0, -UnitX<Vector2f>(), 1.0);
-  obs.AddPoint(Vector2f::ZERO, 1.0, UnitX<Vector2f>());
-  obs.AddPoint(UnitX<Vector2f>() * 4.0f, 1.0, -UnitX<Vector2f>());
+  obs.Start(nullptr, UnitX<Vec2>() * 4.0f, 1.0, -UnitX<Vec2>(), 1.0);
+  obs.AddPoint(Zero<Vec2>(), 1.0, UnitX<Vec2>());
+  obs.AddPoint(UnitX<Vec2>() * 4.0f, 1.0, -UnitX<Vec2>());
 
-  Vector2f bestVel2 = obs.FindBestVelocity(Vector2f::ZERO);
+  Vec2 bestVel2 = obs.FindBestVelocity(Zero<Vec2>());
 
   eXl_DELETE randGen;
 }
@@ -113,9 +113,9 @@ struct SegmentComparator
   {
     if(iSeg1.m_Ext1 == iSeg2.m_Ext1)
     {
-      return iSeg1.m_Ext2 < iSeg2.m_Ext2;
+      return LexicographicCompare(iSeg1.m_Ext2, iSeg2.m_Ext2);
     }
-    return iSeg1.m_Ext1 < iSeg2.m_Ext1;
+    return LexicographicCompare(iSeg1.m_Ext1, iSeg2.m_Ext1);
   }
 };
 
@@ -141,21 +141,21 @@ TEST(Pathfinding, IntersectorTest)
   
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 0), Vector2i(10000, 0)});
-    segs.push_back({Vector2i(0, 10000), Vector2i(10000, 10000)});
-    segs.push_back({Vector2i(2000, -2000), Vector2i(8000, 12000)});
+    segs.push_back({Vec2i(0, 0), Vec2i(10000, 0)});
+    segs.push_back({Vec2i(0, 10000), Vec2i(10000, 10000)});
+    segs.push_back({Vec2i(2000, -2000), Vec2i(8000, 12000)});
 
     inter.IntersectSegments(segs, outSegs);
 
     expectedSegs = Set<Segmenti, SegmentComparator>(
     {
-      {Vector2i(2000, -2000), Vector2i(2857, 0)},
-      {Vector2i(0, 0), Vector2i(2857, 0)},
-      {Vector2i(2857, 0), Vector2i(10000, 0)},
-      {Vector2i(2857, 0), Vector2i(7142, 10000)},
-      {Vector2i(0, 10000), Vector2i(7142, 10000)},
-      {Vector2i(7142, 10000), Vector2i(10000, 10000)},
-      {Vector2i(7142, 10000), Vector2i(8000, 12000)},
+      {Vec2i(2000, -2000), Vec2i(2857, 0)},
+      {Vec2i(0, 0), Vec2i(2857, 0)},
+      {Vec2i(2857, 0), Vec2i(10000, 0)},
+      {Vec2i(2857, 0), Vec2i(7142, 10000)},
+      {Vec2i(0, 10000), Vec2i(7142, 10000)},
+      {Vec2i(7142, 10000), Vec2i(10000, 10000)},
+      {Vec2i(7142, 10000), Vec2i(8000, 12000)},
     });
 
     checkExpectedSegs();
@@ -163,9 +163,9 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 0), Vector2i(10000, 0)});
-    segs.push_back({Vector2i(0, 0), Vector2i(10000, 10000)});
-    segs.push_back({Vector2i(0, 0), Vector2i(8000, 12000)});
+    segs.push_back({Vec2i(0, 0), Vec2i(10000, 0)});
+    segs.push_back({Vec2i(0, 0), Vec2i(10000, 10000)});
+    segs.push_back({Vec2i(0, 0), Vec2i(8000, 12000)});
 
     inter.IntersectSegments(segs, outSegs);
 
@@ -176,9 +176,9 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(-10000, 0), Vector2i(0, 0)});
-    segs.push_back({Vector2i(-10000, 10000), Vector2i(0, 0)});
-    segs.push_back({Vector2i(-8000, 12000), Vector2i(0, 0)});
+    segs.push_back({Vec2i(-10000, 0), Vec2i(0, 0)});
+    segs.push_back({Vec2i(-10000, 10000), Vec2i(0, 0)});
+    segs.push_back({Vec2i(-8000, 12000), Vec2i(0, 0)});
 
     inter.IntersectSegments(segs, outSegs);
 
@@ -189,35 +189,35 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 300), Vector2i(800, 0)});
-    segs.push_back({Vector2i(100, 200), Vector2i(1300, 0)});
-    segs.push_back({Vector2i(200, 100), Vector2i(1300, 300)});
-    segs.push_back({Vector2i(300, 0), Vector2i(1000, 400)});
+    segs.push_back({Vec2i(0, 300), Vec2i(800, 0)});
+    segs.push_back({Vec2i(100, 200), Vec2i(1300, 0)});
+    segs.push_back({Vec2i(200, 100), Vec2i(1300, 300)});
+    segs.push_back({Vec2i(300, 0), Vec2i(1000, 400)});
     
 
     inter.IntersectSegments(segs, outSegs);
 
     expectedSegs = Set<Segmenti, SegmentComparator>(
     {
-      {Vector2i(100, 200), Vector2i(400, 150)},
-      {Vector2i(0, 300), Vector2i(400, 150)},
-      {Vector2i(200, 100), Vector2i(424, 140)},
-      {Vector2i(400, 150), Vector2i(424, 140)},
+      {Vec2i(100, 200), Vec2i(400, 150)},
+      {Vec2i(0, 300), Vec2i(400, 150)},
+      {Vec2i(200, 100), Vec2i(424, 140)},
+      {Vec2i(400, 150), Vec2i(424, 140)},
 
-      {Vector2i(424, 140), Vector2i(439, 143)},
-      {Vector2i(400, 150), Vector2i(439, 143)},
-      {Vector2i(300, 0), Vector2i(498, 113)},
-      {Vector2i(424, 140), Vector2i(498, 113)},
+      {Vec2i(424, 140), Vec2i(439, 143)},
+      {Vec2i(400, 150), Vec2i(439, 143)},
+      {Vec2i(300, 0), Vec2i(498, 113)},
+      {Vec2i(424, 140), Vec2i(498, 113)},
 
-      {Vector2i(498, 113), Vector2i(525, 129)},
-      {Vector2i(439, 143), Vector2i(525, 129)},
-      {Vector2i(525, 129), Vector2i(603, 173)},
-      {Vector2i(439, 143), Vector2i(603, 173)},
+      {Vec2i(498, 113), Vec2i(525, 129)},
+      {Vec2i(439, 143), Vec2i(525, 129)},
+      {Vec2i(525, 129), Vec2i(603, 173)},
+      {Vec2i(439, 143), Vec2i(603, 173)},
 
-      {Vector2i(498, 113), Vector2i(800, 0)},
-      {Vector2i(603, 173), Vector2i(1000, 400)},
-      {Vector2i(525, 129), Vector2i(1300, 0)},
-      {Vector2i(603, 173), Vector2i(1300, 300)},
+      {Vec2i(498, 113), Vec2i(800, 0)},
+      {Vec2i(603, 173), Vec2i(1000, 400)},
+      {Vec2i(525, 129), Vec2i(1300, 0)},
+      {Vec2i(603, 173), Vec2i(1300, 300)},
     });
 
     checkExpectedSegs();
@@ -225,20 +225,20 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 0), Vector2i(1000, 0)});
-    segs.push_back({Vector2i(0, 500), Vector2i(1000, -500)});
-    segs.push_back({Vector2i(0, -500), Vector2i(1000, 500)});
+    segs.push_back({Vec2i(0, 0), Vec2i(1000, 0)});
+    segs.push_back({Vec2i(0, 500), Vec2i(1000, -500)});
+    segs.push_back({Vec2i(0, -500), Vec2i(1000, 500)});
 
     inter.IntersectSegments(segs, outSegs);
 
     expectedSegs = Set<Segmenti, SegmentComparator>(
     {
-      {Vector2i(0, 0), Vector2i(500, 0)},
-      {Vector2i(0, 500), Vector2i(500, 0)},
-      {Vector2i(0, -500), Vector2i(500, 0)},
-      {Vector2i(500, 0), Vector2i(1000, 0)},
-      {Vector2i(500, 0), Vector2i(1000, -500)},
-      {Vector2i(500, 0), Vector2i(1000, 500)},
+      {Vec2i(0, 0), Vec2i(500, 0)},
+      {Vec2i(0, 500), Vec2i(500, 0)},
+      {Vec2i(0, -500), Vec2i(500, 0)},
+      {Vec2i(500, 0), Vec2i(1000, 0)},
+      {Vec2i(500, 0), Vec2i(1000, -500)},
+      {Vec2i(500, 0), Vec2i(1000, 500)},
     });
 
     checkExpectedSegs();
@@ -246,22 +246,22 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 0), Vector2i(1000, 0)});
-    segs.push_back({Vector2i(-250, 0), Vector2i(250, 0)});
-    segs.push_back({Vector2i(0, 500), Vector2i(1000, -500)});
-    segs.push_back({Vector2i(0, -500), Vector2i(1000, 500)});
+    segs.push_back({Vec2i(0, 0), Vec2i(1000, 0)});
+    segs.push_back({Vec2i(-250, 0), Vec2i(250, 0)});
+    segs.push_back({Vec2i(0, 500), Vec2i(1000, -500)});
+    segs.push_back({Vec2i(0, -500), Vec2i(1000, 500)});
 
     inter.IntersectSegments(segs, outSegs);
 
     expectedSegs = Set<Segmenti, SegmentComparator>(
     {
-      {Vector2i(-250, 0), Vector2i(250, 0)},
-      {Vector2i(250, 0), Vector2i(500, 0)},
-      {Vector2i(0, 500), Vector2i(500, 0)},
-      {Vector2i(0, -500), Vector2i(500, 0)},
-      {Vector2i(500, 0), Vector2i(1000, 0)},
-      {Vector2i(500, 0), Vector2i(1000, -500)},
-      {Vector2i(500, 0), Vector2i(1000, 500)},
+      {Vec2i(-250, 0), Vec2i(250, 0)},
+      {Vec2i(250, 0), Vec2i(500, 0)},
+      {Vec2i(0, 500), Vec2i(500, 0)},
+      {Vec2i(0, -500), Vec2i(500, 0)},
+      {Vec2i(500, 0), Vec2i(1000, 0)},
+      {Vec2i(500, 0), Vec2i(1000, -500)},
+      {Vec2i(500, 0), Vec2i(1000, 500)},
     });
 
     checkExpectedSegs();
@@ -269,21 +269,21 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 0), Vector2i(1000, 0)});
-    segs.push_back({Vector2i(-250, 0), Vector2i(500, 0)});
-    segs.push_back({Vector2i(0, 500), Vector2i(1000, -500)});
-    segs.push_back({Vector2i(0, -500), Vector2i(1000, 500)});
+    segs.push_back({Vec2i(0, 0), Vec2i(1000, 0)});
+    segs.push_back({Vec2i(-250, 0), Vec2i(500, 0)});
+    segs.push_back({Vec2i(0, 500), Vec2i(1000, -500)});
+    segs.push_back({Vec2i(0, -500), Vec2i(1000, 500)});
 
     inter.IntersectSegments(segs, outSegs);
 
     expectedSegs = Set<Segmenti, SegmentComparator>(
     {
-      {Vector2i(-250, 0), Vector2i(500, 0)},
-      {Vector2i(0, 500), Vector2i(500, 0)},
-      {Vector2i(0, -500), Vector2i(500, 0)},
-      {Vector2i(500, 0), Vector2i(1000, 0)},
-      {Vector2i(500, 0), Vector2i(1000, -500)},
-      {Vector2i(500, 0), Vector2i(1000, 500)},
+      {Vec2i(-250, 0), Vec2i(500, 0)},
+      {Vec2i(0, 500), Vec2i(500, 0)},
+      {Vec2i(0, -500), Vec2i(500, 0)},
+      {Vec2i(500, 0), Vec2i(1000, 0)},
+      {Vec2i(500, 0), Vec2i(1000, -500)},
+      {Vec2i(500, 0), Vec2i(1000, 500)},
     });
 
     checkExpectedSegs();
@@ -291,22 +291,22 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(500, -500), Vector2i(500, 1000)});
-    segs.push_back({Vector2i(-250, 0), Vector2i(500, 0)});
-    segs.push_back({Vector2i(0, 500), Vector2i(1000, -500)});
-    segs.push_back({Vector2i(0, -500), Vector2i(1000, 500)});
+    segs.push_back({Vec2i(500, -500), Vec2i(500, 1000)});
+    segs.push_back({Vec2i(-250, 0), Vec2i(500, 0)});
+    segs.push_back({Vec2i(0, 500), Vec2i(1000, -500)});
+    segs.push_back({Vec2i(0, -500), Vec2i(1000, 500)});
 
     inter.IntersectSegments(segs, outSegs);
 
     expectedSegs = Set<Segmenti, SegmentComparator>(
     {
-      {Vector2i(-250, 0), Vector2i(500, 0)},
-      {Vector2i(500, -500), Vector2i(500, 0)},
-      {Vector2i(0, 500), Vector2i(500, 0)},
-      {Vector2i(0, -500), Vector2i(500, 0)},
-      {Vector2i(500, 0), Vector2i(500, 1000)},
-      {Vector2i(500, 0), Vector2i(1000, -500)},
-      {Vector2i(500, 0), Vector2i(1000, 500)},
+      {Vec2i(-250, 0), Vec2i(500, 0)},
+      {Vec2i(500, -500), Vec2i(500, 0)},
+      {Vec2i(0, 500), Vec2i(500, 0)},
+      {Vec2i(0, -500), Vec2i(500, 0)},
+      {Vec2i(500, 0), Vec2i(500, 1000)},
+      {Vec2i(500, 0), Vec2i(1000, -500)},
+      {Vec2i(500, 0), Vec2i(1000, 500)},
     });
 
     checkExpectedSegs();
@@ -314,25 +314,25 @@ TEST(Pathfinding, IntersectorTest)
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(-9230, 3846), Vector2i(9779, -2088)});
-    segs.push_back({Vector2i(-9898, 1418), Vector2i(3974, 9176)});
-    segs.push_back({Vector2i(-9137, -4062), Vector2i(3974, 9176)});
+    segs.push_back({Vec2i(-9230, 3846), Vec2i(9779, -2088)});
+    segs.push_back({Vec2i(-9898, 1418), Vec2i(3974, 9176)});
+    segs.push_back({Vec2i(-9137, -4062), Vec2i(3974, 9176)});
     
     inter.IntersectSegments(segs, outSegs);
   }
 
   {
     Vector<Segmenti> segs;
-    segs.push_back({Vector2i(0, 0), Vector2i(27, -999)});
-    segs.push_back({Vector2i(0, 0), Vector2i(437, 898)});
-    segs.push_back({Vector2i(0, 0), Vector2i(146, 989)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-999, -27)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-958, 284)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-820, -571)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-988, -149)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-988, -149)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-900, 435)});
-    segs.push_back({Vector2i(0, 0), Vector2i(-988, -151)});
+    segs.push_back({Vec2i(0, 0), Vec2i(27, -999)});
+    segs.push_back({Vec2i(0, 0), Vec2i(437, 898)});
+    segs.push_back({Vec2i(0, 0), Vec2i(146, 989)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-999, -27)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-958, 284)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-820, -571)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-988, -149)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-988, -149)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-900, 435)});
+    segs.push_back({Vec2i(0, 0), Vec2i(-988, -151)});
 
     inter.IntersectSegments(segs, outSegs);
   }

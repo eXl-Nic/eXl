@@ -176,11 +176,11 @@ namespace eXl
     {
       if(box.Empty())
       {
-        box = AABB2Di(iIter.GetGridCoord(), Vec2i::ONE);
+        box = AABB2Di(iIter.GetGridCoord(), One<Vec2i>());
       }
       else
       {
-        box.Absorb(AABB2Di(iIter.GetGridCoord(), Vec2i::ONE));
+        box.Absorb(AABB2Di(iIter.GetGridCoord(), One<Vec2i>()));
       }
     }
   };
@@ -230,7 +230,7 @@ namespace eXl
         Vtx curVtx = visitList.front();
         visitList.pop_front();
 
-        Vec2i offsets[4] = {Vec2i::ZERO, UnitX<Vec2i>(), UnitY<Vec2i>(), Vec2i::ONE};
+        Vec2i offsets[4] = {Vec2i::ZERO, UnitX<Vec2i>(), UnitY<Vec2i>(), One<Vec2i>()};
         for(unsigned int i = 0; i<4; ++i)
         {
           m_Points.push_back(Point(curVtx.smallGridPos * 2 + offsets[i]));
@@ -656,7 +656,7 @@ namespace eXl
             newPath.m_Offset = m_Offset;
             newPath.m_Start = 0;
             //Point newPt(m_Points[curPt].pos);
-            //newPath.m_GridBox = AABB2Di(newPt.pos, Vec2i::ONE);
+            //newPath.m_GridBox = AABB2Di(newPt.pos, One<Vec2i>());
             //newPath.m_Points.push_back(newPt);
             newPath.m_NumPoints = 0;
 

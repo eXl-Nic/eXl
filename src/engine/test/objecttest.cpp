@@ -3,7 +3,6 @@
 
 #include <engine/common/object.hpp>
 #include <engine/gfx/tileset.hpp>
-#include <math/matrix4.hpp>
 
 
 using namespace eXl;
@@ -209,7 +208,7 @@ struct Tree
 };
 
 #if 0
-TEST(DunAtk, AVLTree)
+TEST(Engine, AVLTree)
 {
   Tree test;
 
@@ -226,7 +225,7 @@ TEST(DunAtk, AVLTree)
 }
 #endif
 
-TEST(DunAtk, ObjectReg) 
+TEST(Engine, ObjectReg) 
 {
   auto objTable = ObjectTable<int>();
 
@@ -269,9 +268,9 @@ TEST(DunAtk, ObjectReg)
 
 }
 
-typedef ObjectTable<Matrix4f> MatrixTable;
+typedef ObjectTable<Mat4> MatrixTable;
 
-TEST(DunAtk, ObjectTable)
+TEST(Engine, ObjectTable)
 {
   MatrixTable testTable;
 
@@ -293,7 +292,7 @@ TEST(DunAtk, ObjectTable)
   for(uint32_t i = 0; i< allocTestSize; ++i)
   {
     auto newMat = testTable.Alloc();
-    testTable.Get(newMat).m_Data[0] = i;
+    testTable.Get(newMat)[0][0] = i;
     if(i%2 == 0)
     {
       handlesToDealloc.push_back(newMat);
@@ -302,9 +301,9 @@ TEST(DunAtk, ObjectTable)
 
   uint32_t countIter = 0;
 
-  auto countObj = [&countIter](Matrix4f const& iMat, MatrixTable::Handle iHandle)
+  auto countObj = [&countIter](MatrixTable::Handle iHandle, Mat4 const& iMat)
   {
-    ASSERT_EQ((uint32_t)iMat.m_Data[0], iHandle.GetId());
+    ASSERT_EQ((uint32_t)iMat[0][0], iHandle.GetId());
     ++countIter;
   };
 
@@ -325,7 +324,7 @@ TEST(DunAtk, ObjectTable)
   for(auto handle : handlesToDealloc)
   {
     auto newMat = testTable.Alloc();
-    testTable.Get(newMat).m_Data[0] = newMat.GetId();
+    testTable.Get(newMat)[0][0] = newMat.GetId();
   }
 
   countIter = 0;
@@ -350,7 +349,7 @@ struct alignas(16) ProbObject
 
 typedef ObjectTable<ProbObject> AlignedAlloc;
 
-TEST(DunAtk, ObjectTableAlign)
+TEST(Engine, ObjectTableAlign)
 {
   AlignedAlloc testAlloc;
   auto handle1 = testAlloc.Alloc();
@@ -372,7 +371,7 @@ TEST(DunAtk, ObjectTableAlign)
 #include <engine/game/character.hpp>
 #include <thread>
 
-TEST(DunAtk, DBG)
+TEST(Engine, DBG)
 {
   PropertiesManifest manifest = EngineCommon::GetBaseProperties();
   ComponentManifest compManifest = EngineCommon::GetComponents();
@@ -389,9 +388,7 @@ TEST(DunAtk, DBG)
 
   phSys.AddKinematicController(&chars);
 
-  ProfilingState pf;
-
-  world.Tick(pf);
+  world.Tick();
   std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
   auto MakeObject = [&]
@@ -421,7 +418,7 @@ TEST(DunAtk, DBG)
     phSys.CreateComponent(obj, desc);
 
     chars.AddCharacter(obj, systemDesc);
-    chars.SetCurDir(obj, UnitX<Vector3f>());
+    chars.SetCurDir(obj, UnitX<Vec3>());
     chars.SetSpeed(obj, 10.0);
     return obj;
   };
@@ -430,24 +427,24 @@ TEST(DunAtk, DBG)
   auto obj2 = MakeObject();
   auto obj3 = MakeObject();
 
-  world.Tick(pf);
+  world.Tick();
   std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
   world.DeleteObject(obj2);
   world.DeleteObject(obj3);
 
-  world.Tick(pf);
+  world.Tick();
   std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
   obj2 = MakeObject();
   obj3 = MakeObject();
 
-  world.Tick(pf);
+  world.Tick();
   std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
   world.DeleteObject(obj2);
   world.DeleteObject(obj3);
 
-  world.Tick(pf);
+  world.Tick();
   std::this_thread::sleep_for(std::chrono::milliseconds(16));
 }

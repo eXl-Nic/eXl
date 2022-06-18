@@ -157,7 +157,14 @@ namespace eXl
 #endif
 
       if (!libHandle)
+      {
+        libHandle = OPEN_LIB(iFilename + "_dev");
+      }
+
+      if (!libHandle)
+      {
         return nullptr;
+      }
 
       PluginFactory Function = reinterpret_cast<PluginFactory>(GET_PROC(libHandle, "GetPlugin"));
 #endif

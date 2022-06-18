@@ -145,6 +145,7 @@ namespace eXl
     const LogObject& operator << (const LogObject& , const unsigned int );
     const LogObject& operator << (const LogObject& , const void* );
     const LogObject& operator << (const LogObject& , const float );
+    const LogObject& operator << (const LogObject& , const double);
     const LogObject& operator <<(const LogObject& , const AString& );
     const LogObject& operator <<(const LogObject& , const KString& );
     const LogObject& operator << (const LogObject& , const char* );

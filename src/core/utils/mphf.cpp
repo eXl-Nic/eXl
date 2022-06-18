@@ -212,6 +212,22 @@ namespace eXl
     return Err::Failure;
   }
 
+  static const uint64_t FNV_offset_basis = 0xcbf29ce484222325;
+  static const uint64_t FNV_prime = 0x100000001b3;
+
+  size_t fnv1a_hash(const char* iBegin, const char* iEnd)
+  {
+    size_t hash = FNV_offset_basis;
+
+    for (char const* iter = iBegin; iter != iEnd; ++iter)
+    {
+      hash = (hash & (~255)) | ((hash & 255) ^ *iter);
+      hash *= FNV_prime;
+    }
+
+    return hash;
+  }
+
   void StringMPH::Hash(KString iStr, uint32_t(&oHashes)[3]) const
   {
     size_t value = boost::hash_value(iStr);
@@ -220,7 +236,7 @@ namespace eXl
     boost::hash_combine(hash1, value);
 
     size_t hash2 = XXH32(iStr.data(), iStr.size(), m_Seeds[1]);
-    size_t hash3 = m_Seeds[2] ^ std::hash<KString>()(iStr);
+    size_t hash3 = m_Seeds[2] ^ fnv1a_hash(iStr.data(), iStr.data() + iStr.size());
 
     oHashes[0] = hash1;
     oHashes[1] = hash2;

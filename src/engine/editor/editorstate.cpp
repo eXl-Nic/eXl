@@ -28,7 +28,6 @@ namespace eXl
   
   DocumentState::~DocumentState()
   {
-    
   }
   
   String const& DocumentState::GetName() const
@@ -48,13 +47,13 @@ namespace eXl
   
   namespace
   {
-    EditorState*            s_State = nullptr;
-    MainWindow*             s_MainWindow = nullptr;
-    DocumentState*          s_CurrentProject = nullptr;
-    ProjectResourcesModel*  s_ProjectResources = nullptr;
-    Path                    s_ProjectPath;
-    Project::ProjectTypes   s_Types;
-    PropertiesManifest      s_Properties;
+    EditorState*                s_State = nullptr;
+    MainWindow*                 s_MainWindow = nullptr;
+    IntrusivePtr<DocumentState> s_CurrentProject;
+    ProjectResourcesModel*      s_ProjectResources = nullptr;
+    Path                        s_ProjectPath;
+    Project::ProjectTypes       s_Types;
+    PropertiesManifest          s_Properties;
 
     UnorderedMap<Resource::UUID, IntrusivePtr<DocumentState>> s_OpenedDocuments;
     UnorderedMap<ResourceLoaderName, ResourceEditorHandler*> s_ResourHandlers;
@@ -68,7 +67,7 @@ namespace eXl
       editor->CommitDocument();
     }
 
-    if (this == s_CurrentProject)
+    if (this == s_CurrentProject.get())
     {
       m_Saved = EditorState::SaveProject();
     }
@@ -116,7 +115,7 @@ namespace eXl
 
   DocumentState* EditorState::GetCurrentProject()
   {
-    return s_CurrentProject;
+    return s_CurrentProject.get();
   }
 
   void UpdateProjectTypes()
@@ -171,7 +170,7 @@ namespace eXl
       if (ResourceManager::SaveTo(newProject, filePath))
       {
         OnProjectOpened(*newProject);
-        return s_CurrentProject;
+        return s_CurrentProject.get();
       }
     }
     return nullptr;
@@ -187,7 +186,7 @@ namespace eXl
         Project* openedProject = static_cast<Project*>(project);
         OnProjectOpened(*openedProject);
 
-        return s_CurrentProject;
+        return s_CurrentProject.get();
       }
     }
     return nullptr;
@@ -263,7 +262,7 @@ namespace eXl
       }
       for (auto doc : openedDocs)
       {
-        if (doc != s_CurrentProject)
+        if (doc != s_CurrentProject.get())
         {
           if (!AttemptToCloseEditor(doc))
           {
@@ -335,7 +334,6 @@ namespace eXl
 
       delete s_ProjectResources;
       s_ProjectResources = nullptr;
-      delete s_CurrentProject;
       s_CurrentProject = nullptr;
       ResourceManager::UnloadUnusedResources();
       ResourceManager::Reset();
@@ -516,7 +514,7 @@ namespace eXl
       SetCurrentActiveEditor(nullptr);
     }
 
-    if (iDoc->IsSaved())
+    //if (iDoc->IsSaved())
     {
       Resource* rsc = iDoc->GetResource();
       if (ResourceEditor* editor = iDoc->GetEditor())
@@ -534,7 +532,10 @@ namespace eXl
         editor->close();
         iDoc->SetEditor(nullptr);
       }
-      s_OpenedDocuments.erase(rsc->GetHeader().m_ResourceId);
+      if (iDoc != s_CurrentProject.get())
+      {
+        s_OpenedDocuments.erase(rsc->GetHeader().m_ResourceId);
+      }
     }
 
     return true;

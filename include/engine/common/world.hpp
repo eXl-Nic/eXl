@@ -258,7 +258,7 @@ namespace eXl
 
     void AddTick(Stage iStage, TickDelegate&& iDelegate);
 
-    void Tick(ProfilingState& ioProfiling);
+    void Tick();
 
     TimerHandle AddTimer(float iTimeInSec, bool iLoop, std::function<void(World&)>&& iDelegate);
     TimerHandle AddGameTimer(float iTimeInSec, bool iLoop, std::function<void(World&)>&& iDelegate);
@@ -272,6 +272,8 @@ namespace eXl
 
     uint64_t GetCurrentTime() const { return m_CurrentTimestamp; }
     uint64_t GetElapsedTime() const { return m_ElapsedTimestamp; }
+
+    ProfilingState const& GetProfilingState() const { return m_Profiling; }
 
   protected:
     void FlushObjectsToDelete();
@@ -331,5 +333,25 @@ namespace eXl
 
     double m_ElapsedGameTime = 0;
     float m_GameTimeScaling = 1.0;
+
+    ProfilingState m_Profiling;
   };
+
+  template <>
+  inline GameDatabase* World::GetSystem<GameDatabase>()
+  {
+    return m_Database;
+  }
+
+  template <>
+  inline EventSystem* World::GetSystem<EventSystem>()
+  {
+    return m_Events;
+  }
+
+  template <>
+  inline Transforms* World::GetSystem<Transforms>()
+  {
+    return m_Transforms;
+  }
 }

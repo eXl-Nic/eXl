@@ -19,7 +19,7 @@ namespace eXl
   **********************************************************************/
   class HeapObject
   {
-#if defined(_DEBUG) && defined(TRACE_LEAKS)
+#if defined(EXL_TRACE_LEAKS)
   public:
     inline void* operator new(size_t size)
     {

@@ -131,11 +131,11 @@ namespace eXl
           {
             if(ret.m_Box.Empty())
             {
-              ret.m_Box = AABB2Di(item.localPosition, Vec2i::ONE);
+              ret.m_Box = AABB2Di(item.localPosition, One<Vec2i>());
             }
             else
             {
-              ret.m_Box.Absorb(AABB2Di(item.localPosition, Vec2i::ONE));
+              ret.m_Box.Absorb(AABB2Di(item.localPosition, One<Vec2i>()));
             }
           }
           ret.m_Items.swap(m_Items);

@@ -59,6 +59,7 @@ image/image.cpp
 
 utils/filetextreader.cpp
 utils/mphf.cpp
+utils/capturestack.cpp
 
 lua/luascript.cpp
 )
@@ -137,7 +138,7 @@ if(${ANDROID})
 endif()
 
 if(${WIN32})
-  SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} winmm bcrypt)
+  SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} winmm bcrypt dbghelp)
 endif()
 
 if(${UNIX})

@@ -13,8 +13,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/segment.hpp>
 #include <core/coredef.hpp>
 
-//#include <gametk/image.hpp>
-//#include <gametk/imagestreamer.hpp>
+#include <core/image/image.hpp>
+#include <core/image/imagestreamer.hpp>
+
+#include <core/log.hpp>
 
 namespace eXl
 {
@@ -32,7 +34,6 @@ namespace eXl
       return iPos.x - iBox.m_Data[0].x + (iPos.y - iBox.m_Data[0].y)*(iBox.m_Data[1].x - iBox.m_Data[0].x);
     }
 
-#if 0
     void DumpGrid(Vector<char> const& iGrid, AABB2Di const& iBox, Vector<Vec2i> const& iBorders, Vec2i const& iCurPos, Vec2i const& iNeigh)
     {
       Vec2i size = iBox.GetSize();
@@ -43,20 +44,25 @@ namespace eXl
         {
           char value = iGrid[i];
           char* dest = &image[0] + 3 * i;
+          static constexpr char In_Tag = 0;
+          static constexpr char Out_Tag = -1;
+          static constexpr char OutVisited_Tag = -2;
+          static constexpr char Corner_Tag = -3;
+          static constexpr char Border_Tag = -4;
           switch (value)
           {
-          case 0:
-            dest[0] = 255; dest[1] = 255; dest[2] = 255;
+          case In_Tag:
+            dest[0] = 128; dest[1] = 128; dest[2] = 128;
             break;
-          case -1:
-          case -2:
+          case Out_Tag:
+          case OutVisited_Tag:
             dest[0] = 0; dest[1] = 0; dest[2] = 0;
             break;
-          case -3:
-            dest[0] = 0; dest[1] = 0; dest[2] = 255;
+          case Corner_Tag:
+            dest[0] = 0; dest[1] = 0; dest[2] = 128;
             break;
-          case -4:
-            dest[0] = 192; dest[1] = 64; dest[2] = 0;
+          case Border_Tag:
+            dest[0] = 96; dest[1] = 32; dest[2] = 0;
             break;
           default:
             dest[0] = 128; dest[1] = 128; dest[2] = 128;
@@ -66,16 +72,16 @@ namespace eXl
         if (CheckCoord(iCurPos, iBox))
         {
           unsigned int offsetCur = GetOffset(iCurPos, iBox);
-          image[3 * offsetCur + 0] = 255;
-          image[3 * offsetCur + 1] = 0;
-          image[3 * offsetCur + 2] = 0;
+          image[3 * offsetCur + 0] *= 2;
+          image[3 * offsetCur + 1] *= 2;
+          image[3 * offsetCur + 2] *= 2;
         }
         if (CheckCoord(iNeigh, iBox))
         {
           unsigned int offsetCur = GetOffset(iNeigh, iBox);
-          image[3 * offsetCur + 0] = 0;
-          image[3 * offsetCur + 1] = 255;
-          image[3 * offsetCur + 2] = 0;
+          image[3 * offsetCur + 0] *= 2;
+          image[3 * offsetCur + 1] *= 2;
+          image[3 * offsetCur + 2] *= 2;
         }
         //if(!iBorders.empty())
         //{
@@ -97,7 +103,7 @@ namespace eXl
         Image* newImg = new Image(&image[0], size, Image::RGB, Image::Char, 1);
         void* oData = nullptr;
         size_t compressedSize;
-        ImageStreamer::Get().Save(newImg, ImageStreamer::Png, compressedSize, oData);
+        ImageStreamer::Save(newImg, ImageStreamer::Png, compressedSize, oData);
         if (oData)
         {
           char fileName[256];
@@ -113,7 +119,6 @@ namespace eXl
         ++numSave;
       }
     }
-#endif
   }
   uint32_t GatherNeighbours(Vec2i const& iPos, Vector<char> const& iMap, AABB2Di const& iBox
     , Vector<uint32_t>& oCompMap, char const*(&oNeigh)[4], uint32_t* (&oNeighLabel)[4])
@@ -312,26 +317,41 @@ namespace eXl
 
       if(ExamineNeigh(ioList, iGrid, curPt + UnitX<Vec2i>(), iBox))
       {
-        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
+        if(LexicographicCompare(curPt, borderStart))
+        {
+          borderStart = curPt;
+        }
+        
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
       if(ExamineNeigh(ioList, iGrid, curPt - UnitX<Vec2i>(), iBox))
       {
-        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
+        if (LexicographicCompare(curPt, borderStart))
+        {
+          borderStart = curPt;
+        }
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
       if(ExamineNeigh(ioList, iGrid, curPt + UnitY<Vec2i>(), iBox))
       {
-        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
+        if (LexicographicCompare(curPt, borderStart))
+        {
+          borderStart = curPt;
+        }
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
       if(ExamineNeigh(ioList, iGrid, curPt - UnitY<Vec2i>(), iBox))
       {
-        borderStart = LexicographicCompare(curPt, borderStart) ? curPt : borderStart;
+        if (LexicographicCompare(curPt, borderStart))
+        {
+          borderStart = curPt;
+        }
         iGrid[GetOffset(curPt, iBox)] = Border_Tag;
       }
     }
 
+    uint32_t const extIdx = iExt ? 1 : 0;
+    uint32_t const nExtIdx = iExt ? 0 : 1;
 
     int nextDir[2][4] = {{2,3,1,0}, {3,2,0,1}};
 
@@ -339,8 +359,8 @@ namespace eXl
     int startBorderDir = 4;
     for(int dir = 0; dir<4; ++dir)
     {
-      Vec2i expectedFilledPos;
-      int expectedDir = nextDir[iExt][dir];
+      Vec2i expectedFilledPos = Zero<Vec2i>();
+      int expectedDir = nextDir[extIdx][dir];
       expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
       expectedFilledPos += borderStart;
 
@@ -357,8 +377,8 @@ namespace eXl
       return;
     }
 
-    Vec2i expectedFilledPos;
-    int expectedDir = nextDir[iExt][startBorderDir];
+    Vec2i expectedFilledPos = Zero<Vec2i>();
+    int expectedDir = nextDir[extIdx][startBorderDir];
     expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
     expectedFilledPos[startBorderDir / 2] = 1 - 2*(startBorderDir%2);
     unsigned int curBorderDir = startBorderDir;
@@ -366,11 +386,11 @@ namespace eXl
 
     do
     {
-      Vec2i neigh;
+      Vec2i neigh = Zero<Vec2i>();
       neigh[curBorderDir / 2] = 2*(curBorderDir%2) - 1;
       neigh += curBorderPos;
 
-      Vec2i neighExpected;
+      Vec2i neighExpected = Zero<Vec2i>();
       neighExpected[expectedDir / 2] = 2*(expectedDir%2) - 1;
       neighExpected += neigh;
 
@@ -390,9 +410,9 @@ namespace eXl
           //internal corner
         {
           oBorder.push_back(neigh * 2 + expectedFilledPos);
-          curBorderDir = nextDir[!iExt][curBorderDir];
+          curBorderDir = nextDir[nExtIdx][curBorderDir];
           expectedFilledPos = Zero<Vec2i>();
-          expectedDir = nextDir[iExt][curBorderDir];
+          expectedDir = nextDir[extIdx][curBorderDir];
           expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
           expectedFilledPos[curBorderDir / 2] = 1 - 2*(curBorderDir%2);
         }
@@ -408,7 +428,7 @@ namespace eXl
           //external corner
         {
           oBorder.push_back(neigh * 2 + expectedFilledPos);
-          curBorderDir = nextDir[iExt][curBorderDir];
+          curBorderDir = nextDir[extIdx][curBorderDir];
           neigh[curBorderDir / 2] += 2*(curBorderDir%2) - 1;
           bool cond = CheckCoord(neigh, iBox) && iGrid[GetOffset(neigh, iBox)] == -4;
           eXl_ASSERT_MSG(cond, "Bad");
@@ -419,7 +439,7 @@ namespace eXl
           }
           curBorderPos = neigh;
           expectedFilledPos = Zero<Vec2i>();
-          expectedDir = nextDir[iExt][curBorderDir];
+          expectedDir = nextDir[extIdx][curBorderDir];
           expectedFilledPos[expectedDir / 2] = 2*(expectedDir%2) - 1;
           expectedFilledPos[curBorderDir / 2] = 1 - 2*(curBorderDir%2);
         }

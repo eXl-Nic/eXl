@@ -74,6 +74,7 @@ namespace eXl
         Vec3 sideDir = cross(frontDir, upDir);
         rot = Quaternion(frontDir, sideDir);
       }
+      
       m_System.m_MovedTransform.push_back(translate(Identity<Mat4>(), FROM_BTVECT(worldTrans.getOrigin())) * Mat4(rot));
       m_System.m_MovedObject.push_back(m_ObjectId);
     }

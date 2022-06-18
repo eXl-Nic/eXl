@@ -26,11 +26,11 @@ namespace
 TEST(NavMesh, Building)
 {
   Vector<AABB2Di> boxes({
-    AABB2Di(Vector2i(0,0), Vector2i(10, 10)),
-    AABB2Di(Vector2i(5,10), Vector2i(2, 2)),
-    AABB2Di(Vector2i(5,12), Vector2i(10, 10)),
-    AABB2Di(Vector2i(13,10), Vector2i(2, 2)),
-    AABB2Di(Vector2i(13,0), Vector2i(10, 10)),
+    AABB2Di::FromMinAndSize(Vec2i(0,0), Vec2i(10, 10)),
+    AABB2Di::FromMinAndSize(Vec2i(5,10), Vec2i(2, 2)),
+    AABB2Di::FromMinAndSize(Vec2i(5,12), Vec2i(10, 10)),
+    AABB2Di::FromMinAndSize(Vec2i(13,10), Vec2i(2, 2)),
+    AABB2Di::FromMinAndSize(Vec2i(13,0), Vec2i(10, 10)),
   });
 
   NavMesh navMesh = NavMesh::MakeFromBoxes(boxes);
@@ -56,10 +56,10 @@ TEST(NavMesh, Building)
     }
   }
 
-  checkEdge(navMesh, faceMapping[0], faceMapping[1], Segmentf({Vector2f(5.0, 10.0), Vector2f(7.0, 10.0)}));
-  checkEdge(navMesh, faceMapping[1], faceMapping[2], Segmentf({Vector2f(5.0, 12.0), Vector2f(7.0, 12.0)}));
-  checkEdge(navMesh, faceMapping[2], faceMapping[3], Segmentf({Vector2f(13.0, 12.0), Vector2f(15.0, 12.0)}));
-  checkEdge(navMesh, faceMapping[3], faceMapping[4], Segmentf({Vector2f(13.0, 10.0), Vector2f(15.0, 10.0)}));
+  checkEdge(navMesh, faceMapping[0], faceMapping[1], Segmentf({Vec2(5.0, 10.0), Vec2(7.0, 10.0)}));
+  checkEdge(navMesh, faceMapping[1], faceMapping[2], Segmentf({Vec2(5.0, 12.0), Vec2(7.0, 12.0)}));
+  checkEdge(navMesh, faceMapping[2], faceMapping[3], Segmentf({Vec2(13.0, 12.0), Vec2(15.0, 12.0)}));
+  checkEdge(navMesh, faceMapping[3], faceMapping[4], Segmentf({Vec2(13.0, 10.0), Vec2(15.0, 10.0)}));
 }
 
 #include <math/halfedge.hpp>
@@ -118,7 +118,7 @@ void DoFaceExtraction(Vector<Segmenti> const& iSegments)
       for (auto edgeIdx : faces[i])
       {
         PolyHalfEdge const& edge = mesh.edges[edgeIdx];
-        Vector2f const& srcVtx = mesh.vertices[edge.srcVtx].positionf;
+        Vec2 const& srcVtx = mesh.vertices[edge.srcVtx].positionf;
         printf(" (%f, %f)", srcVtx.X(), srcVtx.Y());
       }
       printf("\n");
@@ -127,7 +127,7 @@ void DoFaceExtraction(Vector<Segmenti> const& iSegments)
 #endif
 }
 
-void TrianglesTest(std::vector<Vector2f> const& iTri1, std::vector<Vector2f> const& iTri2)
+void TrianglesTest(std::vector<Vec2> const& iTri1, std::vector<Vec2> const& iTri2)
 {
   for(int32_t orderSwap = 0; orderSwap<2; ++orderSwap)
   {
@@ -138,8 +138,8 @@ void TrianglesTest(std::vector<Vector2f> const& iTri1, std::vector<Vector2f> con
       for(uint32_t j = 0; j<3; ++j)
       {
         Segmenti seg;
-        seg.m_Ext1 = Vector2i(curTri[j].X() * 100, curTri[j].Y() * 100);
-        seg.m_Ext2 = Vector2i(curTri[(j + 1) % 3].X() * 100, curTri[(j + 1) % 3].Y() * 100);
+        seg.m_Ext1 = Vec2i(curTri[j].x * 100, curTri[j].y * 100);
+        seg.m_Ext2 = Vec2i(curTri[(j + 1) % 3].x * 100, curTri[(j + 1) % 3].y * 100);
         segments.push_back(seg);
       }
     }
@@ -151,35 +151,35 @@ TEST(NavMesh, TriInter)
 {
   Vector<Segmenti> triangles = 
   {
-    Segmenti({Vector2i(0, 0), Vector2i(500, 0)}),
-    Segmenti({Vector2i(500, 0), Vector2i(250, 750)}),
-    Segmenti({Vector2i(250, 750), Vector2i(0, 0)}),
-    Segmenti({Vector2i(0, 500), Vector2i(500, 500)}),
-    Segmenti({Vector2i(500, 500), Vector2i(250, -250)}),
-    Segmenti({Vector2i(250, -250), Vector2i(0, 500)}),
+    Segmenti({Vec2i(0, 0), Vec2i(500, 0)}),
+    Segmenti({Vec2i(500, 0), Vec2i(250, 750)}),
+    Segmenti({Vec2i(250, 750), Vec2i(0, 0)}),
+    Segmenti({Vec2i(0, 500), Vec2i(500, 500)}),
+    Segmenti({Vec2i(500, 500), Vec2i(250, -250)}),
+    Segmenti({Vec2i(250, -250), Vec2i(0, 500)}),
   };
 
   Vector<Segmenti> triangles2 =
   {
-    Segmenti({Vector2i(0, 0), Vector2i(500, 0)}),
-    Segmenti({Vector2i(500, 0), Vector2i(250, 750)}),
-    Segmenti({Vector2i(250, 750), Vector2i(0, 0)}),
-    Segmenti({Vector2i(0, 250), Vector2i(500, 250)}),
-    Segmenti({Vector2i(500, 250), Vector2i(250, 900)}),
-    Segmenti({Vector2i(250, 900), Vector2i(0, 250)}),
+    Segmenti({Vec2i(0, 0), Vec2i(500, 0)}),
+    Segmenti({Vec2i(500, 0), Vec2i(250, 750)}),
+    Segmenti({Vec2i(250, 750), Vec2i(0, 0)}),
+    Segmenti({Vec2i(0, 250), Vec2i(500, 250)}),
+    Segmenti({Vec2i(500, 250), Vec2i(250, 900)}),
+    Segmenti({Vec2i(250, 900), Vec2i(0, 250)}),
   };
 
-  std::vector<Vector2f> t1;
-  std::vector<Vector2f> t2;
+  std::vector<Vec2> t1;
+  std::vector<Vec2> t2;
     //Intersection is a triangle
       //same triangles
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
     TrianglesTest(t1, t2);
     
     //three vertices of t2 on edges of t1, two edges of t2 included into edges of t1
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 2), Vector2f(2, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 2), Vec2(2, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -187,8 +187,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //two vertices of t2 on edges of t1
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0.25, 0.25), Vector2f(0, 0.25), Vector2f(0.25, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0.25, 0.25), Vec2(0, 0.25), Vec2(0.25, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -196,8 +196,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //three vertices of t2 on edges of t1 (no inclusion of edges)
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0.5f, 0.5f), Vector2f(0, 0.25), Vector2f(0.25, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0.5f, 0.5f), Vec2(0, 0.25), Vec2(0.25, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -205,8 +205,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //t2 is in the interior of t1
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0.25, 0.25), Vector2f(0.25, 0.3), Vector2f(0.3, 0.25)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0.25, 0.25), Vec2(0.25, 0.3), Vec2(0.3, 0.25)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -214,8 +214,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //one edge is common
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(0.1, 0.1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(0.1, 0.1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -223,8 +223,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //one edge of t2 included into an edge of t1, one common vertex
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 0.9), Vector2f(0.1, 0.1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 0.9), Vec2(0.1, 0.1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -232,8 +232,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //one edge of t2 included into an edge of t1, no common point
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0.1), Vector2f(0, 0.9), Vector2f(0.1, 0.1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0.1), Vec2(0, 0.9), Vec2(0.1, 0.1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -241,8 +241,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //only one vertex of t2 included by t1
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, -1), Vector2f(0.25, 0.25), Vector2f(1, -1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, -1), Vec2(0.25, 0.25), Vec2(1, -1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -250,8 +250,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //only one vertex of t2 included by t1 and one vertex of t1 included in t2
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, -1), Vector2f(0, 0.25), Vector2f(1, -1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, -1), Vec2(0, 0.25), Vec2(1, -1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -259,8 +259,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //one vertex of t1 on edges of t2
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(-1, -1), Vector2f(0.25, 0.25), Vector2f(0.25, -1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(-1, -1), Vec2(0.25, 0.25), Vec2(0.25, -1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -268,8 +268,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
 
     //two vertices of t1 on edges of t2
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0.5, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(-1, -1), Vector2f(0.5, 0.5), Vector2f(2, -1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0.5, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(-1, -1), Vec2(0.5, 0.5), Vec2(2, -1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Triangle>(&obj) != NULL);
@@ -278,8 +278,8 @@ TEST(NavMesh, TriInter)
 
     //Intersection is a point  
       //edges  are collinear, one vertex in common
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(-0.25, 0), Vector2f(0, -0.25)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(-0.25, 0), Vec2(0, -0.25)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Point>(&obj) != NULL);
@@ -287,8 +287,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Point>(&obj) != NULL);
 
     //edges  are non-collinear, one vertex in common
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0.1, 1), Vector2f(1, 0.1)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(-0.25, 0), Vector2f(0, -0.25)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0.1, 1), Vec2(1, 0.1)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(-0.25, 0), Vec2(0, -0.25)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Point>(&obj) != NULL);
@@ -296,8 +296,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Point>(&obj) != NULL);
 
     //one vertex of a triangle on an edge of another
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0.1), Vector2f(-0.25, 0.1), Vector2f(-0.25, -0.1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0.1), Vec2(-0.25, 0.1), Vec2(-0.25, -0.1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Point>(&obj) != NULL);
@@ -306,8 +306,8 @@ TEST(NavMesh, TriInter)
 
     //Intersection is a segment
       //triangles have a common edge
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(-1, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(-1, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
@@ -315,8 +315,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
 
     //one triangle edge is included into an edge of the other triangle
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0.1), Vector2f(0, 0.9), Vector2f(-1, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0.1), Vec2(0, 0.9), Vec2(-1, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
@@ -324,8 +324,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
 
     //one triangle edge is included into an edge of the other triangle + share a vertex
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 0.9), Vector2f(-1, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 0.9), Vec2(-1, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
@@ -333,16 +333,16 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
 
     //exactly one vertex of each triangle contributes
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(0, -0.1), Vector2f(0, 0.9), Vector2f(-1, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(0, -0.1), Vec2(0, 0.9), Vec2(-1, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
     //obj = CGAL::intersection(t2, t1);
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
 
-    t1 = std::vector<Vector2f>({Vector2f(-10, 0), Vector2f(10, 0), Vector2f(0, -3)});
-    t2 = std::vector<Vector2f>({Vector2f(-8, 0), Vector2f(12, 0), Vector2f(1, 5)});
+    t1 = std::vector<Vec2>({Vec2(-10, 0), Vec2(10, 0), Vec2(0, -3)});
+    t2 = std::vector<Vec2>({Vec2(-8, 0), Vec2(12, 0), Vec2(1, 5)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Segment>(&obj) != NULL);
@@ -351,8 +351,8 @@ TEST(NavMesh, TriInter)
 
     //Intersection is a polygon  
       //David's star
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(1, 0), Vector2f(0.5, 1.5)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 1), Vector2f(1, 1), Vector2f(0.5, -0.5)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(1, 0), Vec2(0.5, 1.5)});
+    t2 = std::vector<Vec2>({Vec2(0, 1), Vec2(1, 1), Vec2(0.5, -0.5)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Polygon2>(&obj) != NULL);
@@ -362,8 +362,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Polygon2>(&obj)->size() == 6);
 
     //intersection of two triangle corners
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(1, 0), Vector2f(0.5, 1)});
-    t2 = std::vector<Vector2f>({Vector2f(0, 1), Vector2f(1, 1), Vector2f(0.5, 0)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(1, 0), Vec2(0.5, 1)});
+    t2 = std::vector<Vec2>({Vec2(0, 1), Vec2(1, 1), Vec2(0.5, 0)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Polygon2>(&obj) != NULL);
@@ -373,8 +373,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Polygon2>(&obj)->size() == 4);
 
     //t2 pierces two edges of t1
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(1, 0), Vector2f(0, 1)});
-    t2 = std::vector<Vector2f>({Vector2f(-0.1, 0.1), Vector2f(-0.1, 0.2), Vector2f(0.5, 0.8)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(1, 0), Vec2(0, 1)});
+    t2 = std::vector<Vec2>({Vec2(-0.1, 0.1), Vec2(-0.1, 0.2), Vec2(0.5, 0.8)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(CGAL::object_cast<Polygon2>(&obj) != NULL);
@@ -384,8 +384,8 @@ TEST(NavMesh, TriInter)
     //assert(CGAL::object_cast<Polygon2>(&obj)->size() == 4);
 
     //Intersection is empty
-    t1 = std::vector<Vector2f>({Vector2f(0, 0), Vector2f(0, 1), Vector2f(1, 0)});
-    t2 = std::vector<Vector2f>({Vector2f(-0.1, -0.1), Vector2f(-0.1, -0.9), Vector2f(-1, -0.1)});
+    t1 = std::vector<Vec2>({Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)});
+    t2 = std::vector<Vec2>({Vec2(-0.1, -0.1), Vec2(-0.1, -0.9), Vec2(-1, -0.1)});
     TrianglesTest(t1, t2);
     //obj = CGAL::intersection(t1, t2);
     //assert(obj.empty());

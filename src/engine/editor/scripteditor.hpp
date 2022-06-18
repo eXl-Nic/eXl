@@ -8,7 +8,7 @@
 
 namespace eXl
 {
-  class LuaScriptBehaviour;
+  class LuaEventHandler;
 
   class LuaScriptEditor : public ResourceEditor
   {

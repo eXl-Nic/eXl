@@ -20,7 +20,7 @@ namespace eXl
     size_t testSize = 2 * iObjectSize;
     size_t testSizeOut = testSize;
     void* testPtr = (uint8_t*)iObjectSize;
-    std::align(iAlignment, iObjectSize, testPtr, testSize);
+    std::align(iAlignment, iObjectSize, testPtr, testSizeOut);
     size_t additionalReq = testSize - testSizeOut;
     m_ObjectOffset = iObjectSize + additionalReq;
   }

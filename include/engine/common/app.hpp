@@ -117,6 +117,7 @@ namespace eXl
     ~Engine_Application();
 
     void Start() override;
+    void Terminated() override;
 
     MenuManager& GetMenuManager();
     InputSystem& GetInputSystem();

@@ -262,7 +262,7 @@ do \
 #define eXl_FREE(ptr) ::eXl::MemoryManager::Free(ptr,false);
 
 //Memory manager compliant allocator calls.
-#if defined(_DEBUG) && defined(TRACE_LEAKS)
+#if defined(EXL_TRACE_LEAKS)
 
 #define eXl_NEW new(__FILE__,__LINE__,FUN_STR)
 #define eXl_NEW_DATA(Type) new(::eXl::MemoryManager::Allocate(sizeof(Type),__FILE__,__LINE__,FUN_STR)) Type

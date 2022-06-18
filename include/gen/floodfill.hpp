@@ -78,8 +78,8 @@ namespace eXl
     oPolys.clear();
 
     AABB2Di extendedBox = iBox;
-    extendedBox.m_Data[0] = extendedBox.m_Data[0] - Vec2i::ONE;
-    extendedBox.m_Data[1] = extendedBox.m_Data[1] + Vec2i::ONE;
+    extendedBox.m_Data[0] = extendedBox.m_Data[0] - One<Vec2i>();
+    extendedBox.m_Data[1] = extendedBox.m_Data[1] + One<Vec2i>();
     Vec2i dim = extendedBox.GetSize();
     Vector<char> grid(dim.x * dim.y, Out_Tag);
     unsigned int offsetOrig = 0;

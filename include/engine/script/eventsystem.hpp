@@ -20,7 +20,7 @@ namespace eXl
     UnorderedMap<String, FunctionsMap> m_Interfaces;
   };
 
-  class EventSystem : public WorldSystem
+  class EXL_ENGINE_API EventSystem : public WorldSystem
   {
     DECLARE_RTTI(EventSystem, WorldSystem);
 
@@ -44,13 +44,13 @@ namespace eXl
     template<typename Ret, typename... Args>
     struct PureFunctionHandler
     {
-      static void Execute(Name, World& iWorld, ObjectHandle iObject, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
+      static void Execute(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
       {
         Invoker_RetWrapper<Ret, Args...>::Execute([&](Args... iArgs)
           {
             union
             {
-              Ret(*funPtr)(Args...);
+              Ret(*funPtr)(World&, ObjectHandle, Args...);
               void* ptr;
             } horribleCast;
             horribleCast.ptr = iPayload;
@@ -62,11 +62,11 @@ namespace eXl
     template<typename Ret, typename... Args>
     void AddEventHandler(ObjectHandle iObject, Name iFunction, Ret(*iFun)(World&, ObjectHandle, Args...))
     {
-      if (FunDesc const* desc = GetFunDesc(iInterface, iFunction))
+      if (FunDesc const* desc = GetFunDesc(iFunction))
       {
         if (desc->ValidateSignature<Ret, Args...>())
         {
-          AddEventHandlerInternal(iObject, iInterface, iFunction, &PureFunctionHandler<Ret, Args...>::Execute, iFun);
+          AddEventHandlerInternal(iObject, iFunction, &PureFunctionHandler<Ret, Args...>::Execute, iFun);
         }
       }
     }

@@ -24,6 +24,7 @@ namespace eXl
     ~Process();
 
     void AddArgument(const char* iArg);
+    void StopOnDestruction();
 
     Err Start();
 
@@ -42,10 +43,20 @@ namespace eXl
 
     String m_ExecutablePath;
     Vector<String> m_Arguments;
+    bool m_CloseOnClear = false;
 
     class Impl;
 
     Impl* m_Impl = nullptr;
+  };
+
+  class EXL_CORE_API TerminationHandler
+  {
+  public:
+    TerminationHandler(int(*iEndFn)(unsigned long));
+    ~TerminationHandler();
+  protected:
+    int(*m_EndFn)(unsigned long);
   };
 }
 

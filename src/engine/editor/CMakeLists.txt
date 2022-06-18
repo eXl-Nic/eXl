@@ -43,6 +43,10 @@ aspectratiowidget.cpp
 archetypeeditor.cpp
 projectresourcesmodel.cpp
 projecteditor.cpp
+luahighlighter.cpp
+scripteditor.cpp
+coroutineeditor.cpp
+functionlibraryeditor.cpp
 scripteditor.cpp
 mcmcmodeleditor.cpp
 miniaturecache.cpp
@@ -99,7 +103,10 @@ aspectratiowidget.hpp
 archetypeeditor.hpp
 projectresourcesmodel.hpp
 projecteditor.hpp
+luahighlighter.hpp
 scripteditor.hpp
+coroutineeditor.hpp
+functionlibraryeditor.hpp
 mcmcmodeleditor.hpp
 miniaturecache.hpp
 

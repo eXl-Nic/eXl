@@ -39,6 +39,12 @@ inline const Log_Manager::LogObject& Log_Manager::operator << (const Log_Manager
   return LM;
 }
 
+inline const Log_Manager::LogObject& Log_Manager::operator << (const Log_Manager::LogObject& LM, const double tolog)
+{
+  LM.write(StringUtil::FromFloat(tolog).c_str());
+  return LM;
+}
+
 //inline const Log_Manager::LogObject& operator <<(const Log_Manager::LogObject& LM,const WString& tolog)
 //{
 //  LM.write(tolog);

@@ -147,9 +147,123 @@ namespace eXl
       return false;
     }
   };    //    end of class Allocator 
+
+  /**
+*  Allocator bypassing the eXl Memory Manager, for a couple of debug facilities.
+*/
+  template<typename T>
+  struct EXL_ALLOCATOR_NAME(RawAllocator) : public std::allocator<T>
+  {
+  public:
+    //    typedefs
+    typedef T value_type;
+    typedef value_type* pointer;
+    typedef const value_type* const_pointer;
+    typedef value_type& reference;
+    typedef const value_type& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+
+    typedef std::integral_constant<bool, true> propagate_on_container_move_assignment;
+    typedef std::integral_constant<bool, true> is_always_equal;
+
+  public:
+    //    convert an allocator<T> to allocator<U>
+    template<typename U>
+    struct rebind
+    {
+      typedef EXL_ALLOCATOR_NAME(RawAllocator) < U > other;
+    };
+
+  public:
+    inline EXL_ALLOCATOR_NAME(RawAllocator)() {}
+    inline ~EXL_ALLOCATOR_NAME(RawAllocator)() {}
+    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) const&) {}
+    template<typename U>
+    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) <U> const&) {}
+
+    //    address
+    inline pointer address(value_type& r) { return &r; }
+    inline const_pointer address(value_type const& r) { return &r; }
+
+    //    memory allocation
+    inline pointer allocate(size_type cnt, const_pointer ptr = 0)
+    {
+      return reinterpret_cast<pointer>(malloc(cnt * sizeof(T)));
+    }
+
+    inline void deallocate(pointer p, size_type bytes)
+    {
+      return free(p);
+    }
+
+    //    size
+    inline size_type max_size() const {
+      return std::numeric_limits<size_type>::max() / sizeof(T);
+    }
+
+    //    construction/destruction
+    template <typename... U>
+    inline void construct(pointer p, U&&... u) { new(p) T(std::forward<U>(u)...); }
+    inline void destroy(pointer p) { p->~T(); }
+
+    friend void swap(EXL_ALLOCATOR_NAME(RawAllocator)&, EXL_ALLOCATOR_NAME(RawAllocator)&)
+    {}
+    friend bool operator==(const EXL_ALLOCATOR_NAME(RawAllocator)&, const EXL_ALLOCATOR_NAME(RawAllocator)&)
+    {
+      return true;
+    }
+    friend bool operator!=(const EXL_ALLOCATOR_NAME(RawAllocator)&, const EXL_ALLOCATOR_NAME(RawAllocator)&)
+    {
+      return false;
+    }
+
+  };
+
+  template<>
+  class EXL_ALLOCATOR_NAME(RawAllocator) < void >
+  {
+  public:
+    //    typedefs
+    typedef void value_type;
+    typedef value_type* pointer;
+    typedef const value_type* const_pointer;
+
+    typedef std::integral_constant<bool, true> propagate_on_container_move_assignment;
+    typedef std::integral_constant<bool, true> is_always_equal;
+
+  public:
+    //    convert an allocator<T> to allocator<U>
+    template<typename U>
+    struct rebind
+    {
+      typedef EXL_ALLOCATOR_NAME(RawAllocator) < U > other;
+    };
+
+  public:
+    inline EXL_ALLOCATOR_NAME(RawAllocator)() {}
+    inline ~EXL_ALLOCATOR_NAME(RawAllocator)() {}
+    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) const&) {}
+    template<typename U>
+    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) < U > const&) {}
+
+    friend void swap(EXL_ALLOCATOR_NAME(RawAllocator) < void > &, EXL_ALLOCATOR_NAME(RawAllocator) < void > &)
+    {}
+    friend bool operator==(const EXL_ALLOCATOR_NAME(RawAllocator) < void > &, const EXL_ALLOCATOR_NAME(RawAllocator) < void > &)
+    {
+      return true;
+    }
+    friend bool operator!=(const EXL_ALLOCATOR_NAME(RawAllocator) < void > &, const EXL_ALLOCATOR_NAME(RawAllocator) < void > &)
+    {
+      return false;
+    }
+  };    //    end of class Allocator 
+
 #ifndef EXL_NAMESPACE_ALLOC_INJECTION
 }
 #endif
+
+
   
 #if 0
 namespace eXl

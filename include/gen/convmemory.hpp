@@ -587,7 +587,7 @@ namespace eXl
   template <unsigned int N, unsigned int TFieldSize, bool UseDictionnary>
   void ConvMemory<N, TFieldSize, UseDictionnary>::ComputePatternReceptor(Pattern<unsigned int>& oPattern, Pattern<unsigned int> const& iSample, Vec2i const& iCoord)
   {
-    oPattern.SetSize(2*(Vec2i(FieldSize, FieldSize) - Vec2i::ONE) + Vec2i::ONE);
+    oPattern.SetSize(2*(Vec2i(FieldSize, FieldSize) - One<Vec2i>()) + One<Vec2i>());
     unsigned int localOffset = 0;
     for(int i = -FieldSize + 1; i<FieldSize; ++i)
     {

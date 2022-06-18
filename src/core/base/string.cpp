@@ -285,4 +285,19 @@ namespace eXl
 
     return String();
   }
+
+  DebugString StringUtil::FormatDebug(const char* iFormatStr, ...)
+  {
+    va_list args;
+    va_start(args, iFormatStr);
+    int res = vsnprintf(s_PrintBuffer, ArrayLength(s_PrintBuffer), iFormatStr, args);
+    va_end(args);
+
+    if (res > 0)
+    {
+      return DebugString(s_PrintBuffer, s_PrintBuffer + res);
+    }
+
+    return DebugString();
+  }
 }

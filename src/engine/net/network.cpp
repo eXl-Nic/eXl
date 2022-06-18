@@ -82,7 +82,7 @@ namespace eXl
         }
         else
         {
-          str += ('A' + digit);
+          str += ('A' + (digit - 10));
         }
         iId >>= 4;
       }

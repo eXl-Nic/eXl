@@ -9,7 +9,7 @@
 
 using namespace eXl;
 #if 0
-TEST(DunAtk, Tileset)
+TEST(Engine, Tileset)
 {
   Tileset* newSet = Tileset::Create("D:\\TestDir", "Cloud_Strife");
   boost::optional<ImageName> img = newSet->ImageNameFromImagePath("D:\\TestDir\\Cloud_Strife.png");
@@ -20,9 +20,9 @@ TEST(DunAtk, Tileset)
   testTile.m_ImageName = *img;
   testTile.m_AnimType = AnimationType::Loop;
   testTile.m_FrameDuration = 0.2;
-  testTile.m_Size = Vector2i::ONE * 16;
-  testTile.m_Frames.push_back(Vector2i::ZERO);
-  testTile.m_Frames.push_back(UnitX<Vector2i>() * 16);
+  testTile.m_Size = Vec2i::ONE * 16;
+  testTile.m_Frames.push_back(Zero<Vec2i>());
+  testTile.m_Frames.push_back(UnitX<Vec2i>() * 16);
 
   newSet->AddTile(TileName("Tile1"), testTile);
 
@@ -30,9 +30,9 @@ TEST(DunAtk, Tileset)
 
   testTile.m_AnimType = AnimationType::None;
   testTile.m_FrameDuration = 0.4;
-  testTile.m_Size = Vector2i::ONE * 32;
-  testTile.m_Frames.push_back(Vector2i::ZERO);
-  testTile.m_Frames.push_back(UnitY<Vector2i>() * 32);
+  testTile.m_Size = Vec2i::ONE * 32;
+  testTile.m_Frames.push_back(Zero<Vec2i>());
+  testTile.m_Frames.push_back(UnitY<Vec2i>() * 32);
 
   newSet->AddTile(TileName("Tile2"), testTile);
 

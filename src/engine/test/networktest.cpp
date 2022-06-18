@@ -219,7 +219,7 @@ TEST(Network, BasicConnect)
 
   ASSERT_TRUE(net.ctx.m_Server != nullptr);
 
-  Vector<uint8_t> connectToken = Network::Client::CreateConnectToken("FEDCBA987654321", serverAddress, net.key, Vector<uint8_t>());
+  Vector<uint8_t> connectToken = Network::Client::CreateConnectToken("FEDCBA987654321", serverAddress, serverAddress, net.key, Vector<uint8_t>());
 
   auto localIdx = Network::Client::Connect(net.ctx, "FEDCBA987654321", connectToken);
   ASSERT_TRUE(localIdx);
@@ -235,7 +235,7 @@ TEST(Network, BasicConnect)
 
   ASSERT_TRUE(client1->GetState() == Network::ClientState::Connected);
 
-  connectToken = Network::Client::CreateConnectToken("2", serverAddress, net.key, Vector<uint8_t>());
+  connectToken = Network::Client::CreateConnectToken("2", serverAddress, serverAddress, net.key, Vector<uint8_t>());
   localIdx = Network::Client::Connect(net.ctx, "2", connectToken);
   ASSERT_TRUE(localIdx);
 
@@ -308,7 +308,7 @@ TEST(Network, BasicRepl)
 
   Network::ClientInputData input;
   input.m_Moving = true;
-  input.m_Dir = UnitX<Vector3f>();
+  input.m_Dir = UnitX<Vec3>();
   net.driver.CallServerCommand(0, net.driver.SetPlayerInput).WithArgs(input).Send();
   //client1->SetClientInput(input);
 
@@ -316,21 +316,21 @@ TEST(Network, BasicRepl)
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
   // Server just received client's packet.
-  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Vector3f::ZERO);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == Zero<Vec3>());
 
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
 
   // Server ticked once.
-  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == UnitX<Vector3f>());
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == UnitX<Vec3>());
 
   serverEvents.TickAuth(1.0);
   serverEvents.FlushAuth(*net.ctx.m_Server);
   net.Tick(0.01);
 
   // Server ticked twice.
-  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == UnitX<Vector3f>() * 2);
+  ASSERT_TRUE(clientWorlds[*localIdx].m_Objects.begin()->second.m_Pos == UnitX<Vec3>() * 2);
 
   localIdx = Network::Client::ConnectLoopback(net.ctx, "2");
   ASSERT_TRUE(localIdx);

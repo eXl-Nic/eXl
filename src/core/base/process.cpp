@@ -27,11 +27,12 @@ namespace eXl
       ZeroMemory( &si, sizeof(si) );
       si.cb = sizeof(si);
       ZeroMemory( &pi, sizeof(pi) );
-
+      
       // Set the bInheritHandle flag so pipe handles are inherited. 
 
       saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-      saAttr.bInheritHandle = TRUE; 
+      //saAttr.bInheritHandle = TRUE; 
+      saAttr.bInheritHandle = FALSE;
       saAttr.lpSecurityDescriptor = NULL; 
 
       // Create a pipe for the child process's STDOUT. 
@@ -77,8 +78,38 @@ namespace eXl
       } 
     }
 
+    static DWORD WINAPI SendCloseEvent(LPVOID lpThreadParameter)
+    {
+      GenerateConsoleCtrlEvent(CTRL_C_EVENT ,0);
+      return 0;
+    }
+
     void Clear()
     {
+      if (closeOnClear)
+      {
+        //GenerateConsoleCtrlEvent(CTRL_C_EVENT, pi.dwProcessId);
+        HANDLE hThread = CreateRemoteThread(pi.hProcess,
+          NULL,
+          0,
+          &SendCloseEvent,
+          nullptr,
+          0,
+          nullptr
+        );
+        if (hThread)
+        {
+          // wait for end of thread
+          WaitForSingleObject(hThread, INFINITE);
+          CloseHandle(hThread);
+        }
+      }
+
+      if (m_readerThread.joinable())
+      {
+        m_readerThread.detach();
+      }
+      //TerminateProcess(pi.hProcess, 0);
       CloseHandle(hChildStd_OUT_Rd);
       CloseHandle(hChildStd_ERR_Rd);
       CloseHandle(pi.hProcess);
@@ -97,6 +128,7 @@ namespace eXl
     Vector<char> stdOut;
     Vector<char> stdErr;
     DWORD exitCode;
+    bool closeOnClear = false;
   };
 
   Process::Process(const char* iExecutablePath)
@@ -115,6 +147,11 @@ namespace eXl
     m_Arguments.push_back(iArg);
   }
 
+  void Process::StopOnDestruction()
+  {
+    m_CloseOnClear = true;
+  }
+
   Err Process::Start()
   {
     if(m_Impl)
@@ -123,6 +160,7 @@ namespace eXl
     }
 
     m_Impl = new Impl;
+    m_Impl->closeOnClear = m_CloseOnClear;
 
     Vector<char> cmdLine(m_ExecutablePath.begin(), m_ExecutablePath.end());
     
@@ -140,7 +178,7 @@ namespace eXl
       NULL,           // Process handle not inheritable
       NULL,           // Thread handle not inheritable
       TRUE,          // Set handle inheritance
-      0,              // No creation flags
+      m_CloseOnClear ? CREATE_NEW_PROCESS_GROUP | CREATE_NEW_CONSOLE : 0,
       NULL,           // Use parent's environment block
       NULL,           // Use parent's starting directory 
       &m_Impl->si,    // Pointer to STARTUPINFO structure
@@ -228,6 +266,17 @@ namespace eXl
   bool Process::IsRunning()
   {
     return m_Impl != nullptr;
+  }
+
+  TerminationHandler::TerminationHandler(int(*iEndFn)(unsigned long))
+    : m_EndFn(iEndFn)
+  {
+    SetConsoleCtrlHandler(m_EndFn, TRUE);
+  }
+
+  TerminationHandler::~TerminationHandler()
+  {
+    SetConsoleCtrlHandler(m_EndFn, FALSE);
   }
 }
 

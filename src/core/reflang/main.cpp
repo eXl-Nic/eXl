@@ -68,8 +68,15 @@ namespace eXl
 using namespace eXl;
 using namespace eXl::reflang;
 
+namespace eXl
+{
+  EXL_CORE_API bool s_CaptureStacks;
+}
+
 int main(int argc, char** argv)
 {
+  eXl::s_CaptureStacks = false;
+
   cxxopts::Options options(argv[0]);
   options.positional_help("[optional args]").show_positional_help();
 

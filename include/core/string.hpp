@@ -56,6 +56,8 @@ namespace eXl
 
   typedef std::basic_string_view<char> KString;
 
+  using DebugString = std::basic_string<EXL_CHAR_TYPE, std::char_traits<EXL_CHAR_TYPE>, RawAllocator<EXL_CHAR_TYPE>>;
+
   class EXL_CORE_API StringUtil
   {
   public:
@@ -108,6 +110,7 @@ namespace eXl
 
     // Limited to 4kB length
     static String Format(const char* iFormatStr, ...);
+    static DebugString FormatDebug(const char* iFormatStr, ...);
 
   };
 #ifdef EXL_CHAR_TYPE_IS_CHAR

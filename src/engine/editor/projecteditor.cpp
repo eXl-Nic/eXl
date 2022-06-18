@@ -288,22 +288,43 @@ namespace eXl
     QVBoxLayout* settingsLayout = new QVBoxLayout(projectSettings);
     projectSettings->setLayout(settingsLayout);
 
-    QWidget* gameDllWidget = new QWidget(projectSettings);
-    QHBoxLayout* gameDllLayout = new QHBoxLayout(gameDllWidget);
-    gameDllWidget->setLayout(gameDllLayout);
-    settingsLayout->addWidget(gameDllWidget);
+    {
+      QWidget* gameDllWidget = new QWidget(projectSettings);
+      QHBoxLayout* gameDllLayout = new QHBoxLayout(gameDllWidget);
+      gameDllWidget->setLayout(gameDllLayout);
+      settingsLayout->addWidget(gameDllWidget);
 
-    gameDllLayout->addWidget(new QLabel("Game Dll (restart if changed) : "));
+      gameDllLayout->addWidget(new QLabel("Game Dll (restart if changed) : "));
+      QLineEdit* gameDllInput = new QLineEdit(projectSettings);
+      gameDllInput->setText(m_Project->m_GameDll.c_str());
 
-    QLineEdit* gameDllInput = new QLineEdit(projectSettings);
-    gameDllInput->setText(m_Project->m_GameDll.c_str());
+      QObject::connect(gameDllInput, &QLineEdit::editingFinished, [this, gameDllInput]()
+        {
+          m_Project->m_GameDll = gameDllInput->text().toStdString();
+          m_Editor->ModifyResource();
+        });
+      gameDllLayout->addWidget(gameDllInput);
+    }
 
-    QObject::connect(gameDllInput, &QLineEdit::editingFinished, [this, gameDllInput]()
-      {
-        m_Project->m_GameDll = gameDllInput->text().toStdString();
-        m_Editor->ModifyResource();
-      });
-    gameDllLayout->addWidget(gameDllInput);
+    
+    {
+      QWidget* playerParamsWidget = new QWidget(projectSettings);
+      QHBoxLayout* playerParamsLayout = new QHBoxLayout(playerParamsWidget);
+      playerParamsWidget->setLayout(playerParamsLayout);
+      settingsLayout->addWidget(playerParamsWidget);
+
+      playerParamsLayout->addWidget(new QLabel("Player additional parameters "));
+
+      QLineEdit* playerParams = new QLineEdit(projectSettings);
+      playerParams->setText(m_Project->m_PlayerAdditionalParameters.c_str());
+
+      QObject::connect(playerParams, &QLineEdit::editingFinished, [this, playerParams]()
+        {
+          m_Project->m_PlayerAdditionalParameters = playerParams->text().toStdString();
+          m_Editor->ModifyResource();
+        });
+      playerParamsLayout->addWidget(playerParams);
+    }
 
     QWidget* playerSelWidget = new QWidget(m_Editor);
 

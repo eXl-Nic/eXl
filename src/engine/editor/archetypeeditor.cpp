@@ -391,24 +391,6 @@ namespace eXl
     m_Impl->m_ComponentCollectionView = new QListWidget(this);
     m_Impl->m_ComponentCollectionView->setSelectionModel(new QItemSelectionModel(m_Impl->m_ComponentCollectionView->model()));
 
-    QObject::connect(m_Impl->m_ComponentCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
-      {
-      });
-
-    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
-    {
-      m_Impl->m_Editor->ModifyResource();
-    });
-
-    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::rowsInserted, [this]()
-    {
-      m_Impl->m_Editor->ModifyResource();
-    });
-    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::rowsRemoved, [this]()
-    {
-      m_Impl->m_Editor->ModifyResource();
-    });
-
     componentCollectionLayout->addWidget(new QLabel(QString::fromUtf8("Component"), componentCollection));
     QComboBox* componentSelector = new QComboBox(componentCollection);
     componentCollectionLayout->addWidget(componentSelector);
@@ -421,6 +403,24 @@ namespace eXl
     {
       m_Impl->m_ComponentCollectionView->addItem(QString::fromUtf8(compName.c_str()));
     }
+
+    QObject::connect(m_Impl->m_ComponentCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
+      {
+      });
+
+    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
+      {
+        m_Impl->m_Editor->ModifyResource();
+      });
+
+    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::rowsInserted, [this]()
+      {
+        m_Impl->m_Editor->ModifyResource();
+      });
+    QObject::connect(m_Impl->m_ComponentCollectionView->model(), &QAbstractItemModel::rowsRemoved, [this]()
+      {
+        m_Impl->m_Editor->ModifyResource();
+      });
 
     componentCollectionLayout->addWidget(compCollectionTool);
     componentCollectionLayout->addWidget(m_Impl->m_ComponentCollectionView);

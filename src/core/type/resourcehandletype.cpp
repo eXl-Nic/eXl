@@ -18,7 +18,7 @@ namespace eXl
   IMPLEMENT_RTTI(ResourceHandleType);
 
   ResourceHandleType::ResourceHandleType()
-    :CoreType("ResourceHandleType",
+    :CoreType("eXl::ResourceHandleType",
           0,
           sizeof(ResourceHandle<Resource>),
           Type_Is_CoreType)
@@ -28,7 +28,7 @@ namespace eXl
   }
 
   ResourceHandleType::ResourceHandleType(Rtti const& iRtti)
-    : CoreType(TypeName(AString("ResourceHandle_For") + iRtti.GetName().data()),
+    : CoreType(TypeName(AString("eXl::ResourceHandle_For") + iRtti.GetName().data()),
           0,
       sizeof(ResourceHandle<Resource>),
           Type_Is_CoreType)

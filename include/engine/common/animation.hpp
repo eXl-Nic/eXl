@@ -113,7 +113,7 @@ namespace eXl
   using LinearPositionAnimation = Animation<Vec3>;
 
   template <typename TimelineBehaviour, typename Impl>
-  class TimelineManager : public WorldSystem
+  class TimelineManager
   {
   public:
 
@@ -129,14 +129,14 @@ namespace eXl
 
     void Stop(TimelineHandle);
 
-    void Tick();
+    void Tick(World& iWorld);
+    void Cleanup();
 
     float GetTime(TimelineHandle);
 
   protected:
 
-    TimelineHandle Impl_Start(TimelineEntry*& oNewEntry);
-    TimelineHandle Impl_StartLooping(float iLoopTime, TimelineEntry*& oNewEntry);
+    TimelineHandle Impl_Start(World& iWorld, TimelineEntry*& oNewEntry, Optional<float> iLoopTime = {});
 
     TimelineTable m_Timelines;
     UnorderedSet<TimelineHandle> m_ToDelete;

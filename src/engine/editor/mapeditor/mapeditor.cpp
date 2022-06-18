@@ -27,6 +27,7 @@
 #include <engine/gfx/gfxcomponent.hpp>
 #include <engine/physics/physicsys.hpp>
 #include <engine/common/app.hpp>
+#include <engine/common/project.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
 #include <math/geometrytraits.hpp>
@@ -183,7 +184,8 @@ namespace eXl
         {
           if (!m_Player.IsRunning())
           {
-            Path projectPath = ResourceManager::GetPath(EditorState::GetCurrentProject()->GetResource()->GetHeader().m_ResourceId);
+            Project const* project = Project::DynamicCast(EditorState::GetCurrentProject()->GetResource());
+            Path projectPath = ResourceManager::GetPath(project->GetHeader().m_ResourceId);
             Path projectDir = projectPath.parent_path();
             m_Player.AddArgument("--project");
             m_Player.AddArgument(projectPath.string().c_str());
@@ -191,7 +193,30 @@ namespace eXl
             Path localMapPath = Filesystem::relative(mapPath, projectDir);
             m_Player.AddArgument("--map");
             m_Player.AddArgument(localMapPath.string().c_str());
-
+            Vector<String> params;
+            String paramsToTokenize = project->m_PlayerAdditionalParameters;
+            auto spacePredicate = [](char iChar)
+            {
+              return std::isspace(iChar);
+            };
+            auto notSpacePredicate = [](char iChar)
+            {
+              return !std::isspace(iChar);
+            };
+            auto firstParam = std::find_if(paramsToTokenize.begin(), paramsToTokenize.end(), notSpacePredicate);
+            auto firstSpace = std::find_if(firstParam, paramsToTokenize.end(), spacePredicate);
+            while (firstSpace != paramsToTokenize.end())
+            {
+              m_Player.AddArgument(String(firstParam, firstSpace).c_str());
+              paramsToTokenize = String(firstSpace + 1, paramsToTokenize.end());
+              firstParam = std::find_if(paramsToTokenize.begin(), paramsToTokenize.end(), notSpacePredicate);
+              firstSpace = std::find_if(firstParam, paramsToTokenize.end(), spacePredicate);
+            }
+            if (firstParam != paramsToTokenize.end())
+            {
+              m_Player.AddArgument(String(firstParam, firstSpace).c_str());
+            }
+            
             if (m_Player.Start())
             {
               m_PlayAction->setDisabled(true);

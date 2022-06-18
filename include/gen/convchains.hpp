@@ -553,7 +553,7 @@ namespace eXl
 
       Vec2i curPos;
 
-      Pattern<uint32_t> pattern(Vec2i::ONE * FieldSize);
+      Pattern<uint32_t> pattern(One<Vec2i>() * FieldSize);
       for(auto rIter = patternSort.rbegin(); rIter != patternSort.rend(); ++rIter)
       {
         patternDict[rIter->second]->first.Extract(pattern);

@@ -7,25 +7,25 @@
 
 using namespace eXl;
 
-void PrintPos(Matrix4f const& iMat, ObjectHandle iHandle)
+void PrintPos(Mat4 const& iMat, ObjectHandle iHandle)
 {
-  Vector3f pos  = MathTools::GetPosition(iMat);
-  printf("%i->(%f, %f, %f)\n", iHandle.GetId(), pos.X(), pos.Y(), pos.Z());
+  Vec3 pos = iMat[3];
+  printf("%i->(%f, %f, %f)\n", iHandle.GetId(), pos.x, pos.y, pos.z);
 }
 
-void CheckExpected(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Matrix4f const& iMat, ObjectHandle iHandle)
+void CheckExpected(UnorderedMap<ObjectHandle, Vec3>& iExpected, Mat4 const& iMat, ObjectHandle iHandle)
 {
   //PrintPos(iMat, iHandle);
   auto iter = iExpected.find(iHandle);
   ASSERT_TRUE(iter != iExpected.end());
-  ASSERT_TRUE(iter->second == MathTools::GetPosition(iMat));
+  ASSERT_TRUE(iter->second == Vec3(iMat[3]));
   iExpected.erase(iter);
 }
 
-void DoCheck(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Transforms& transforms)
+void DoCheck(UnorderedMap<ObjectHandle, Vec3>& iExpected, Transforms& transforms)
 {
   //printf("-------------------\n\n");
-  auto checkFunctor = [&iExpected](Matrix4f const& iMat, ObjectHandle iHandle)
+  auto checkFunctor = [&iExpected](Mat4 const& iMat, ObjectHandle iHandle)
   {
     CheckExpected(iExpected, iMat, iHandle);
   };
@@ -34,7 +34,7 @@ void DoCheck(UnorderedMap<ObjectHandle, Vector3f>& iExpected, Transforms& transf
   ASSERT_TRUE(iExpected.empty());
 }
 
-TEST(DunAtk, TransformsTest)
+TEST(Engine, TransformsTest)
 {
   eXl::ComponentManifest dummy;
   World world(dummy);
@@ -51,22 +51,22 @@ TEST(DunAtk, TransformsTest)
 
   float pos[] = { 1, 10, 100, 1000, 10000 };
 
-  Matrix4f testTrans;
+  Mat4 testTrans = Identity<Mat4>();
   for (uint32_t i = 0; i < 5; ++i)
   {
-    MathTools::GetPosition(testTrans) = UnitX<Vector3f>() * pos[i];
+    testTrans[3] = Vec4(UnitX<Vec3>() * pos[i], 1);
     transforms->AddTransform(objs[i]);
     transforms->UpdateTransform(objs[i], testTrans);
   }
 
-  UnorderedMap<ObjectHandle, Vector3f> expectedMap;
+  UnorderedMap<ObjectHandle, Vec3> expectedMap;
   expectedMap = 
   {
-    {objs[0], UnitX<Vector3f>() * pos[0]},
-    {objs[1], UnitX<Vector3f>() * pos[1]},
-    {objs[2], UnitX<Vector3f>() * pos[2]},
-    {objs[3], UnitX<Vector3f>() * pos[3]},
-    {objs[4], UnitX<Vector3f>() * pos[4]},
+    {objs[0], UnitX<Vec3>() * pos[0]},
+    {objs[1], UnitX<Vec3>() * pos[1]},
+    {objs[2], UnitX<Vec3>() * pos[2]},
+    {objs[3], UnitX<Vec3>() * pos[3]},
+    {objs[4], UnitX<Vec3>() * pos[4]},
   };
 
   DoCheck(expectedMap, *transforms);
@@ -80,7 +80,7 @@ TEST(DunAtk, TransformsTest)
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[0] + UnitX<Vector3f>() * pos[1]},
+    {objs[0], UnitX<Vec3>() * pos[0] + UnitX<Vec3>() * pos[1]},
   };
 
   DoCheck(expectedMap, *transforms);
@@ -89,7 +89,7 @@ TEST(DunAtk, TransformsTest)
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[0]},
+    {objs[0], UnitX<Vec3>() * pos[0]},
   };
 
   DoCheck(expectedMap, *transforms);
@@ -100,13 +100,13 @@ TEST(DunAtk, TransformsTest)
   }
 
   transforms->Attach(objs[0], objs[2]);
-  MathTools::GetPosition(testTrans) = UnitX<Vector3f>() * pos[2];
+  testTrans[3] = Vec4(UnitX<Vec3>() * pos[2], 1);
   transforms->UpdateTransform(objs[2], testTrans);
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[0] + UnitX<Vector3f>() * pos[2]},
-    {objs[2], UnitX<Vector3f>() * pos[2]},
+    {objs[0], UnitX<Vec3>() * pos[0] + UnitX<Vec3>() * pos[2]},
+    {objs[2], UnitX<Vec3>() * pos[2]},
   };
 
   DoCheck(expectedMap, *transforms);
@@ -115,9 +115,9 @@ TEST(DunAtk, TransformsTest)
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[2] + UnitX<Vector3f>() * pos[0]},
-    {objs[2], UnitX<Vector3f>() * pos[2]},
-    {objs[4], UnitX<Vector3f>() * pos[2] + UnitX<Vector3f>() * pos[4]},
+    {objs[0], UnitX<Vec3>() * pos[2] + UnitX<Vec3>() * pos[0]},
+    {objs[2], UnitX<Vec3>() * pos[2]},
+    {objs[4], UnitX<Vec3>() * pos[2] + UnitX<Vec3>() * pos[4]},
   };
 
   DoCheck(expectedMap, *transforms);
@@ -126,23 +126,23 @@ TEST(DunAtk, TransformsTest)
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[2] + UnitX<Vector3f>() * pos[0]},
-    {objs[1], UnitX<Vector3f>() * pos[2] + UnitX<Vector3f>() * pos[0] + UnitX<Vector3f>() * pos[1]},
-    {objs[2], UnitX<Vector3f>() * pos[2]},
-    {objs[4], UnitX<Vector3f>() * pos[2] + UnitX<Vector3f>() * pos[4]},
+    {objs[0], UnitX<Vec3>() * pos[2] + UnitX<Vec3>() * pos[0]},
+    {objs[1], UnitX<Vec3>() * pos[2] + UnitX<Vec3>() * pos[0] + UnitX<Vec3>() * pos[1]},
+    {objs[2], UnitX<Vec3>() * pos[2]},
+    {objs[4], UnitX<Vec3>() * pos[2] + UnitX<Vec3>() * pos[4]},
   };
 
   DoCheck(expectedMap, *transforms);
 
-  MathTools::GetPosition(testTrans) = UnitX<Vector3f>() * pos[3];
+  testTrans[3] = Vec4(UnitX<Vec3>() * pos[3], 1);
   transforms->UpdateTransform(objs[2], testTrans);
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[3] + UnitX<Vector3f>() * pos[0]},
-    {objs[1], UnitX<Vector3f>() * pos[3] + UnitX<Vector3f>() * pos[0] + UnitX<Vector3f>() * pos[1]},
-    {objs[2], UnitX<Vector3f>() * pos[3]},
-    {objs[4], UnitX<Vector3f>() * pos[3] + UnitX<Vector3f>() * pos[4]},
+    {objs[0], UnitX<Vec3>() * pos[3] + UnitX<Vec3>() * pos[0]},
+    {objs[1], UnitX<Vec3>() * pos[3] + UnitX<Vec3>() * pos[0] + UnitX<Vec3>() * pos[1]},
+    {objs[2], UnitX<Vec3>() * pos[3]},
+    {objs[4], UnitX<Vec3>() * pos[3] + UnitX<Vec3>() * pos[4]},
   };
 
   DoCheck(expectedMap, *transforms);
@@ -151,9 +151,9 @@ TEST(DunAtk, TransformsTest)
 
   expectedMap =
   {
-    {objs[0], UnitX<Vector3f>() * pos[0]},
-    {objs[1], UnitX<Vector3f>() * pos[0] + UnitX<Vector3f>() * pos[1]},
-    {objs[4], UnitX<Vector3f>() * pos[4]},
+    {objs[0], UnitX<Vec3>() * pos[0]},
+    {objs[1], UnitX<Vec3>() * pos[0] + UnitX<Vec3>() * pos[1]},
+    {objs[4], UnitX<Vec3>() * pos[4]},
   };
 
   DoCheck(expectedMap, *transforms);

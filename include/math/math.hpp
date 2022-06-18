@@ -66,12 +66,15 @@ namespace eXl
   template<glm::length_t L, typename T, glm::qualifier Q>
   inline bool LexicographicCompare(glm::vec<L,T,Q> const& iVal1, glm::vec<L,T,Q> const& iVal2)
   {
-    auto comp = glm::lessThan(iVal1, iVal2);
     for (uint32_t i = 0; i < L; ++i)
     {
-      if (comp[i])
+      if (iVal1[i] < iVal2[i])
       {
         return true;
+      }
+      if (iVal1[i] > iVal2[i])
+      {
+        return false;
       }
     }
 

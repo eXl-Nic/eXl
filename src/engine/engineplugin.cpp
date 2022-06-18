@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/log.hpp>
 #include <core/corelib.hpp>
 #include <core/type/typemanager.hpp>
+#include <core/type/tagtype.hpp>
 
 #include <engine/game/commondef.hpp>
 
@@ -39,6 +40,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #ifdef EXL_LUA
 #include <engine/script/luascriptsystem.hpp>
+#include <engine/script/luaeventhandler.hpp>
+#include <engine/script/luafunctionlibrary.hpp>
+#include <engine/script/luacoroutine.hpp>
+
 #endif
 
 #include <yojimbo.h>
@@ -224,23 +229,28 @@ namespace eXl
   using namespace EngineCommon;
 
   ComponentManifest const& EngineCommon::GetComponents() { return *s_EngineCommonManifest; }
-  PropertiesManifest EngineCommon::GetBaseProperties()
+  PropertiesManifest& EngineCommon::GetBaseProperties()
   {
-    PropertiesManifest baseManifest;
-    baseManifest.RegisterPropertySheet<HealthData>(HealthData::PropertyName());
-    baseManifest.RegisterPropertySheet<GrabData>(GrabData::PropertyName());
-    baseManifest.RegisterPropertySheet<TurretData>(TurretData::PropertyName());
-    baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName());
+    static PropertiesManifest s_BaseManifest = []
+    {
+      PropertiesManifest baseManifest;
+      baseManifest.RegisterPropertySheet<HealthData>(HealthData::PropertyName());
+      baseManifest.RegisterPropertySheet<GrabData>(GrabData::PropertyName());
+      baseManifest.RegisterPropertySheet<TurretData>(TurretData::PropertyName());
+      baseManifest.RegisterPropertySheet<TerrainCarver>(TerrainCarver::PropertyName());
 
-    baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(GfxSpriteDescName());
-    baseManifest.RegisterPropertySheet<ObjectShapeData>(ObjectShapeData::PropertyName());
-    baseManifest.RegisterPropertySheet<PhysicBodyData>(PhysicBodyData::PropertyName());
-    baseManifest.RegisterPropertySheet<TriggerComponentDesc>(TriggerComponentDesc::PropertyName());
-    baseManifest.RegisterPropertySheet<CharacterDesc>(CharacterDesc::PropertyName());
+      baseManifest.RegisterPropertySheet<GfxSpriteComponent::Desc>(GfxSpriteDescName());
+      baseManifest.RegisterPropertySheet<ObjectShapeData>(ObjectShapeData::PropertyName());
+      baseManifest.RegisterPropertySheet<PhysicBodyData>(PhysicBodyData::PropertyName());
+      baseManifest.RegisterPropertySheet<TriggerComponentDesc>(TriggerComponentDesc::PropertyName());
+      baseManifest.RegisterPropertySheet<CharacterDesc>(CharacterDesc::PropertyName());
 
-    baseManifest.RegisterPropertySheet<Vec3>(VelocityName(), false);
+      baseManifest.RegisterPropertySheet<Vec3>(VelocityName(), false);
 
-    return baseManifest;
+      return baseManifest;
+    }();
+
+    return s_BaseManifest;
   }
 
   EventsManifest& EngineCommon::GetBaseEvents()
@@ -259,6 +269,8 @@ namespace eXl
 
     return s_BaseEvents;
   }
+
+  IMPLEMENT_TAG_TYPE(CoroutineAPI)
 
   class EnginePlugin : public Plugin
   {
@@ -286,7 +298,9 @@ namespace eXl
       MCMCModelRsc::Init();
       FontResource::Init();
       //CharacterAnimation::Init();
-      LuaScriptBehaviour::Init();
+      LuaFunctionLibrary::Init();
+      LuaEventHandler::Init();
+      LuaCoroutine::Init();
 
       Register_ENGINE_Types();
 #ifdef EXL_LUA
@@ -390,7 +404,7 @@ namespace eXl
         eXl_ASSERT_REPAIR_RET(shapeDesc != nullptr, void());
         eXl_ASSERT_REPAIR_RET(desc != nullptr, void());
 
-        LuaScriptBehaviour const* script = desc->m_Script.GetOrLoad();
+        LuaEventHandler const* script = desc->m_Script.GetOrLoad();
         if (!script)
         {
           return;
@@ -419,7 +433,7 @@ namespace eXl
         def.m_Filter = s_TriggerMask;
 
         phSys->AddTrigger(iObject, def, triggerSys->GetScriptCallbackhandle());
-        scriptSys->AddBehaviour(iObject, *script);
+        scriptSys->AddHandler(iObject, *script);
       };
 #endif
 

@@ -9,8 +9,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <engine/script/luascriptsystem.hpp>
-
-#include <engine/script/luascriptbehaviour.hpp>
+#include <engine/script/luaeventhandler.hpp>
+#include <engine/script/luafunctionlibrary.hpp>
+#include <engine/script/luacoroutine.hpp>
 
 #include <core/resource/resourceloader.hpp>
 #include <core/stream/serializer.hpp>
@@ -18,72 +19,222 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  IMPLEMENT_RTTI(LuaScriptBehaviour);
-
-  using LuaScriptBehaviourLoader = LuaScriptLoader_T<LuaScriptBehaviour>;
-
-  void LuaScriptBehaviour::Init()
-  {
-    ResourceManager::AddLoader(&TResourceLoader<LuaScriptBehaviour, LuaScriptLoader>::Get(), LuaScriptBehaviour::StaticRtti());
-  }
-
-  ResourceLoaderName LuaScriptBehaviour::StaticLoaderName()
-  {
-    return ResourceLoaderName("LuaScriptBehaviour");
-  }
-
-#ifdef EXL_RSC_HAS_FILESYSTEM
-  LuaScriptBehaviour* LuaScriptBehaviour::Create(Path const& iPath, String const& iName)
-  {
-    return LuaScriptBehaviourLoader::Get().Create(iPath, iName);
-  }
-#endif
-
-  Err LuaScriptBehaviour::Serialize(Serializer iStreamer)
-  {
-    iStreamer.BeginStruct();
-    iStreamer.PushKey("Interface");
-    iStreamer &= m_InterfaceName;
-    iStreamer.PopKey();
-    iStreamer.EndStruct();
-
-    return Err::Success;
-  }
-
-  Err LuaScriptBehaviour::Stream_Data(Streamer& iStreamer) const
-  {
-    return const_cast<LuaScriptBehaviour*>(this)->Serialize(iStreamer);
-  }
-
-  Err LuaScriptBehaviour::Unstream_Data(Unstreamer& iStreamer)
-  {
-    return Serialize(iStreamer);
-  }
-
-  LuaScriptBehaviour::LuaScriptBehaviour(ResourceMetaData& iMeta)
-    : LuaScript(iMeta)
-  {
-
-  }
 #ifdef EXL_LUA
+
+  namespace
+  {
+    enum ScriptType
+    {
+      FunctionLib,
+      EventHandler,
+      Coroutine
+    };
+
+    struct ScriptEntry
+    {
+      //ResourceHandle<LuaEventHandler> m_ScriptHandle;
+      luabind::object m_ScriptObject;
+      luabind::object m_InitFunction;
+      UnorderedMap<Name, luabind::object> m_ScriptFunctions;
+
+      ScriptType m_Type;
+    };
+  }
+
+  struct LuaCoroutineHandler
+  {
+    ScriptEntry const* m_Script = nullptr;
+    LuaWorld* m_LuaWorld = nullptr;
+    luabind::object m_ScriptData;
+
+    LuaCoroutineHandler() = default;
+
+    LuaCoroutineHandler(ScriptEntry const& iScript, LuaWorld& iLuaWorld)
+      : m_Script(&iScript)
+      , m_LuaWorld(&iLuaWorld)
+    {}
+
+    void Start(World& iWorld, ObjectHandle iObj)
+    {
+      static const Name s_Name("Coroutine::Start");
+
+      auto iter = m_Script->m_ScriptFunctions.find(s_Name);
+      eXl_ASSERT_REPAIR_RET(iter != m_Script->m_ScriptFunctions.end(), void());
+
+      LuaStateHandle stateHandle = m_LuaWorld->GetState();
+      {
+        lua_State* state = stateHandle.GetState();
+        auto call = stateHandle.PrepareCall(iter->second);
+        call.PushArgs(iObj);
+        if (auto res = call.Call(1))
+        {
+          if (*res == 1)
+          {
+            luabind::object scriptObj(luabind::from_stack(state, -1));
+            scriptObj.push(state);
+            if (!lua_isnil(state, -1))
+            {
+              if (!lua_istable(state, -1))
+              {
+                LOG_ERROR << "Not a table" << "\n";
+              }
+            }
+            m_ScriptData = scriptObj;
+          }
+        }
+      }
+    }
+
+    void Step(CoroutineAPI& iApi, World& iWorld, ObjectHandle iObj, float iTime)
+    {
+      static const Name s_Name("Coroutine::Step");
+
+      auto iter = m_Script->m_ScriptFunctions.find(s_Name);
+      eXl_ASSERT_REPAIR_RET(iter != m_Script->m_ScriptFunctions.end(), void());
+
+      LuaStateHandle stateHandle = m_LuaWorld->GetState();
+      {
+        auto call = stateHandle.PrepareCall(iter->second);
+        call.Push(m_ScriptData);
+        call.PushArgs(&iApi, iObj, iTime);
+        call.Call(0);
+      }
+    }
+    void Terminate(World& iWorld, ObjectHandle iObj)
+    {
+      static const Name s_Name("Coroutine::Terminate");
+
+      auto iter = m_Script->m_ScriptFunctions.find(s_Name);
+      eXl_ASSERT_REPAIR_RET(iter != m_Script->m_ScriptFunctions.end(), void());
+
+      LuaStateHandle stateHandle = m_LuaWorld->GetState();
+      {
+        auto call = stateHandle.PrepareCall(iter->second);
+        call.Push(m_ScriptData);
+        call.PushArgs(iObj);
+        call.Call(0);
+      }
+    }
+    void Paused(World& iWorld, ObjectHandle iObj)
+    {
+      static const Name s_Name("Coroutine::Paused");
+
+      auto iter = m_Script->m_ScriptFunctions.find(s_Name);
+      eXl_ASSERT_REPAIR_RET(iter != m_Script->m_ScriptFunctions.end(), void());
+
+      LuaStateHandle stateHandle = m_LuaWorld->GetState();
+      {
+        auto call = stateHandle.PrepareCall(iter->second);
+        call.Push(m_ScriptData);
+        call.PushArgs(iObj);
+        call.Call(0);
+      }
+    }
+    void Resume(World& iWorld, ObjectHandle iObj)
+    {
+      static const Name s_Name("Coroutine::Resume");
+
+      auto iter = m_Script->m_ScriptFunctions.find(s_Name);
+      eXl_ASSERT_REPAIR_RET(iter != m_Script->m_ScriptFunctions.end(), void());
+
+      LuaStateHandle stateHandle = m_LuaWorld->GetState();
+      {
+        auto call = stateHandle.PrepareCall(iter->second);
+        call.Push(m_ScriptData);
+        call.PushArgs(iObj);
+        call.Call(0);
+      }
+    }
+  };
+
+  struct LuaScriptSystem::Impl
+  {
+    Impl(LuaScriptSystem& iSys, World& iWorld)
+      : m_Sys(iSys)
+      , m_World(iWorld)
+      , m_LuaWorld(LuaManager::CreateWorld(&iSys))
+      , m_ObjectsScripts(iWorld)
+    {
+
+    }
+
+    ~Impl()
+    {
+      m_ObjectsScripts.Clear();
+      m_LoadedScripts.clear();
+      m_Scripts.Reset();
+    }
+
+    void LoadScript(const LuaScript& iScript);
+
+    Err AddHandler(ObjectHandle, const LuaEventHandler& iHandler);
+    Err AddCoroutine(ObjectHandle, const LuaCoroutine& iHandler);
+
+    void PauseCoroutine(ObjectHandle);
+    void ResumeCoroutine(ObjectHandle);
+
+    Err DeleteComponent(ObjectHandle);
+
+    void Tick();
+
+    ObjectTable<ScriptEntry> m_Scripts;
+    using ScriptHandle = ObjectTableHandle<ScriptEntry>;
+    UnorderedMap<Resource::UUID, ScriptHandle> m_LoadedScripts;
+
+    struct ObjectScript
+    {
+      ScriptHandle m_LoadedScript;
+      luabind::object m_Self;
+    };
+
+    DenseGameDataStorage<UnorderedMap<Name, ObjectScript>> m_ObjectsScripts;
+
+    struct DependenciesStack
+    {
+      struct LoadingLib
+      {
+        LoadingLib(DependenciesStack&, bool iOk);
+        ~LoadingLib();
+        explicit operator bool() const;
+        DependenciesStack& m_Stack;
+        bool m_Ok;
+      };
+
+      LoadingLib StartLoading(LuaFunctionLibrary const& iLib);
+
+      Vector<Resource::UUID> m_Ids;
+    };
+
+    ScriptHandle LoadScript_Handler(const LuaEventHandler& iHandler);
+    ScriptHandle LoadScript_Coroutine(const LuaCoroutine& iCoroutine);
+    ScriptHandle LoadScript_FunctionLib(DependenciesStack& Deps, const LuaFunctionLibrary& iLib);
+    Err LoadDependencies(DependenciesStack& Deps, Resource const& iScript, Vector<ResourceHandle<LuaFunctionLibrary>> const& iDeps);
+    Err LoadInterface(lua_State* state, ScriptEntry& iEntry, String const& iItfName, EventsManifest::FunctionsMap const& iFunctions);
+
+    static void CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload);
+    void DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput);
+
+    LuaScriptSystem& m_Sys;
+    World& m_World;
+    LuaWorld m_LuaWorld;
+
+    T_CoroutineManager<LuaCoroutineHandler> m_Coroutines;
+  };
 
   IMPLEMENT_RTTI(LuaScriptSystem);
 
   LuaScriptSystem::LuaScriptSystem()
-    : m_LuaWorld(LuaManager::CreateWorld(this))
   {}
 
   LuaScriptSystem::~LuaScriptSystem()
   {
-    m_ObjectsScripts.reset();
-    m_LoadedScripts.clear();
-    m_Scripts.Reset();
+    m_Impl.reset();
   }
 
   void LuaScriptSystem::Register(World& iWorld)
   {
     ComponentManager::Register(iWorld);
-    m_ObjectsScripts.emplace(iWorld);
+    m_Impl = std::make_unique<Impl>(*this, iWorld);
   }
 
   World* LuaScriptSystem::GetWorld_Static()
@@ -98,42 +249,54 @@ namespace eXl
     return nullptr;
   }
 
-  void LuaScriptSystem::LoadScript(const LuaScriptBehaviour& iBehaviour)
+  void LuaScriptSystem::LoadScript(const LuaScript& iScript)
   {
-    LoadScript_Internal(iBehaviour);
+    m_Impl->LoadScript(iScript);
   }
 
-  LuaScriptSystem::ScriptHandle LuaScriptSystem::LoadScript_Internal(const LuaScriptBehaviour& iBehaviour)
+  void LuaScriptSystem::Impl::LoadScript(const LuaScript& iScript)
   {
-    Resource::UUID const& rscId = iBehaviour.GetHeader().m_ResourceId;
-    auto loadedScipt = m_LoadedScripts.find(rscId);
-    if (loadedScipt != m_LoadedScripts.end())
+    auto iter = m_LoadedScripts.find(iScript.GetHeader().m_ResourceId);
+    if (iter != m_LoadedScripts.end())
     {
-      return loadedScipt->second;
+      return;
     }
-    EventSystem& events = *m_World->GetSystem<EventSystem>();
-
-    auto itfIter = events.GetManifest().m_Interfaces.find(iBehaviour.m_InterfaceName);
-    if (itfIter == events.GetManifest().m_Interfaces.end())
+    if (auto handler = LuaEventHandler::DynamicCast(&iScript))
     {
-      LOG_ERROR << "Behaviour " << iBehaviour.m_InterfaceName << " missing" << "\n";
-      return ScriptHandle();
+      LoadScript_Handler(*handler);
+      return;
     }
+    else if (auto coroutine = LuaCoroutine::DynamicCast(&iScript))
+    {
+      LoadScript_Coroutine(*coroutine);
+      return;
+    }
+    else if (auto library = LuaFunctionLibrary::DynamicCast(&iScript))
+    {
+      DependenciesStack deps;
+      LoadScript_FunctionLib(deps, *library);
+      return;
+    }
+    eXl_FAIL_MSG(eXl_FORMAT("Script %s is not of a supported type", iScript.GetName()));
+  }
 
+  static luabind::object LoadScriptAsTable(LuaWorld& iWorld, const LuaScript& iScript)
+  {
     luabind::object scriptObject;
     String executionRes;
-    if (!m_LuaWorld.DoString(iBehaviour.m_Script, executionRes, scriptObject))
+    if (!iWorld.DoString(iScript.m_Script, executionRes, scriptObject))
     {
       LOG_ERROR << "Script loading failed with error " << executionRes << "\n";
-      return ScriptHandle();
+      return luabind::object();
     }
 
     if (!scriptObject.is_valid())
     {
       LOG_ERROR << "Script did not return a valid script object " << "\n";
-      return ScriptHandle();
+      return luabind::object();
     }
-    LuaStateHandle stateHandle = m_LuaWorld.GetState();
+
+    LuaStateHandle stateHandle = iWorld.GetState();
     lua_State* state = stateHandle.GetState();
     scriptObject.push(state);
 
@@ -142,35 +305,261 @@ namespace eXl
     if (!isTable)
     {
       LOG_ERROR << "Script did not return a valid script object " << "\n";
+      return luabind::object();
+    }
+
+    return scriptObject;
+  }
+
+  LuaScriptSystem::Impl::DependenciesStack::LoadingLib::LoadingLib(DependenciesStack& iStack, bool iOk)
+    : m_Stack(iStack)
+    , m_Ok(iOk)
+  {
+
+  }
+  LuaScriptSystem::Impl::DependenciesStack::LoadingLib::~LoadingLib()
+  {
+    if (m_Ok)
+    {
+      m_Stack.m_Ids.pop_back();
+    }
+  }
+
+  LuaScriptSystem::Impl::DependenciesStack::LoadingLib::operator bool() const
+  {
+    return m_Ok;
+  }
+
+  LuaScriptSystem::Impl::DependenciesStack::LoadingLib LuaScriptSystem::Impl::DependenciesStack::StartLoading(LuaFunctionLibrary const& iLib)
+  {
+    auto iter = std::find(m_Ids.begin(), m_Ids.end(), iLib.GetHeader().m_ResourceId);
+    bool isOk = iter == m_Ids.end();
+    if (isOk)
+    {
+      m_Ids.push_back(iLib.GetHeader().m_ResourceId);
+    }
+    return LoadingLib(*this, isOk);
+  }
+
+  Err LuaScriptSystem::Impl::LoadDependencies(DependenciesStack& Deps, Resource const& iScript, Vector<ResourceHandle<LuaFunctionLibrary>> const& iDeps)
+  {
+    for (auto depHandle : iDeps)
+    {
+      LuaFunctionLibrary const* dep = depHandle.GetOrLoad();
+      if (dep == nullptr)
+      {
+        LOG_ERROR << "Script " << iScript.GetName() << " has an unresolved resource handle as dependency : " << depHandle.GetUUID().ToString() << "\n";
+        return Err::Failure;
+      }
+      auto handle = LoadScript_FunctionLib(Deps, *dep);
+      if (!handle.IsAssigned())
+      {
+        LOG_ERROR << "Script " << iScript.GetName() << " could not load dependency : " << dep->GetName() << "\n";
+        return Err::Failure;
+      }
+    }
+
+    return Err::Success;
+  }
+
+  LuaScriptSystem::Impl::ScriptHandle LuaScriptSystem::Impl::LoadScript_FunctionLib(DependenciesStack& Deps, const LuaFunctionLibrary& iLibrary)
+  {
+    Resource::UUID const& rscId = iLibrary.GetHeader().m_ResourceId;
+    auto loadedScipt = m_LoadedScripts.find(rscId);
+    if (loadedScipt != m_LoadedScripts.end())
+    {
+      return loadedScipt->second;
+    }
+
+    auto loadingLib = Deps.StartLoading(iLibrary);
+    if (!loadingLib)
+    {
+      LOG_ERROR << "Library " << iLibrary.GetName() << " has a cyclic dependency" << "\n";
       return ScriptHandle();
+    }
+
+    if (!LoadDependencies(Deps, iLibrary, iLibrary.m_Dependencies))
+    {
+      return ScriptHandle();
+    }
+
+    luabind::object scriptObject = LoadScriptAsTable(m_LuaWorld, iLibrary);
+    if (!scriptObject)
+    {
+      return ScriptHandle();
+    }
+
+    if (!scriptObject["namespace"])
+    {
+      LOG_ERROR << "Library " << iLibrary.GetName() << " missing a namespace in the returned table" << "\n";
+      return ScriptHandle();
+    }
+
+    if (!scriptObject["functions"])
+    {
+      LOG_ERROR << "Library " << iLibrary.GetName() << " missing a function table" << "\n";
+      return ScriptHandle();
+    }
+
+    luabind::object libNamespaceRef = scriptObject["namespace"];
+    luabind::object functionsTable = scriptObject["functions"];
+    String libNamespace = *luabind::object_cast<String const*>(libNamespaceRef);
+
+    luabind::object libScope = luabind::globals(scriptObject.interpreter());
+    if (!libNamespace.empty())
+    {
+      libScope = libScope[libNamespace.c_str()];
+      if (!libScope)
+      {
+        libScope = luabind::newtable(libScope.interpreter());
+        luabind::globals(scriptObject.interpreter())[libNamespace.c_str()] = libScope;
+      }
+    }
+
+    for (auto iter = luabind::iterator(functionsTable); iter != luabind::iterator(); ++iter)
+    {
+      libScope[iter.key()] = iter.operator*();
     }
 
     ScriptEntry newEntry;
     newEntry.m_ScriptObject = scriptObject;
+    newEntry.m_Type = FunctionLib;
 
-    newEntry.m_InitFunction = scriptObject["Init"];
+    ScriptHandle entryHandle = m_Scripts.Alloc();
+    m_Scripts.Get(entryHandle) = std::move(newEntry);
+    m_LoadedScripts.insert(std::make_pair(rscId, entryHandle));
 
-    for (auto const& functionEntry : itfIter->second)
+    return entryHandle;
+  }
+
+  Err LuaScriptSystem::Impl::LoadInterface(lua_State* state, ScriptEntry& iEntry, String const& iItfName, EventsManifest::FunctionsMap const& iFunctions)
+  {
+    for (auto const& functionEntry : iFunctions)
     {
-      luabind::object function = scriptObject[functionEntry.first.c_str()];
+      luabind::object function = iEntry.m_ScriptObject[functionEntry.first.c_str()];
       if (function.is_valid())
       {
         function.push(state);
         if (!lua_isfunction(state, -1))
         {
           LOG_ERROR << "Script missing function " << functionEntry.first << "\n";
-          return ScriptHandle();
+          return Err::Failure;
         }
 
-        newEntry.m_ScriptFunctions.insert(std::make_pair(Name(itfIter->first + "::" + functionEntry.first), function));
+        iEntry.m_ScriptFunctions.insert(std::make_pair(Name(iItfName + "::" + functionEntry.first), function));
       }
       else
       {
         LOG_ERROR << "Script missing function " << functionEntry.first << "\n";
-        return ScriptHandle();
+        return Err::Failure;
       }
     }
-    newEntry.m_ScriptHandle.Set(&iBehaviour);
+
+    return Err::Success;
+  }
+
+  LuaScriptSystem::Impl::ScriptHandle LuaScriptSystem::Impl::LoadScript_Coroutine(const LuaCoroutine& iCoroutine)
+  {
+    Resource::UUID const& rscId = iCoroutine.GetHeader().m_ResourceId;
+    auto loadedScipt = m_LoadedScripts.find(rscId);
+    if (loadedScipt != m_LoadedScripts.end())
+    {
+      return loadedScipt->second;
+    }
+
+    DependenciesStack deps;
+    if (!LoadDependencies(deps, iCoroutine, iCoroutine.m_Dependencies))
+    {
+      return ScriptHandle();
+    }
+
+    luabind::object scriptObject = LoadScriptAsTable(m_LuaWorld, iCoroutine);
+    if (!scriptObject)
+    {
+      return ScriptHandle();
+    }
+
+    LuaStateHandle stateHandle = m_LuaWorld.GetState();
+    lua_State* state = stateHandle.GetState();
+
+    ScriptEntry newEntry;
+    newEntry.m_ScriptObject = scriptObject;
+    newEntry.m_Type = Coroutine;
+
+    static const EventsManifest::FunctionsMap s_CoroutineDesc = []
+    {
+      EventsManifest::FunctionsMap functions
+        =
+      {
+        {"Start", FunDesc::Create<void(ObjectHandle)>()},
+        {"Terminate", FunDesc::Create<void(ObjectHandle)>()},
+        {"Step", FunDesc::Create<void(CoroutineAPI, ObjectHandle, float)>()},
+        {"Paused", FunDesc::Create<void(ObjectHandle)>()},
+        {"Resume", FunDesc::Create<void(ObjectHandle)>()},
+      };
+
+      return functions;
+    }();
+
+    if (!LoadInterface(state, newEntry, "Coroutine", s_CoroutineDesc))
+    {
+      return ScriptHandle();
+    }
+
+    //newEntry.m_ScriptHandle.Set(&iCoroutine);
+
+    ScriptHandle entryHandle = m_Scripts.Alloc();
+    m_Scripts.Get(entryHandle) = std::move(newEntry);
+    m_LoadedScripts.insert(std::make_pair(rscId, entryHandle));
+
+    return entryHandle;
+  }
+
+  LuaScriptSystem::Impl::ScriptHandle LuaScriptSystem::Impl::LoadScript_Handler(const LuaEventHandler& iHandler)
+  {
+    Resource::UUID const& rscId = iHandler.GetHeader().m_ResourceId;
+    auto loadedScipt = m_LoadedScripts.find(rscId);
+    if (loadedScipt != m_LoadedScripts.end())
+    {
+      return loadedScipt->second;
+    }
+
+    DependenciesStack deps;
+    if (!LoadDependencies(deps, iHandler, iHandler.m_Dependencies))
+    {
+      return ScriptHandle();
+    }
+
+    EventSystem& events = *m_World.GetSystem<EventSystem>();
+
+    auto itfIter = events.GetManifest().m_Interfaces.find(iHandler.m_InterfaceName);
+    if (itfIter == events.GetManifest().m_Interfaces.end())
+    {
+      LOG_ERROR << "Behaviour " << iHandler.m_InterfaceName << " missing" << "\n";
+      return ScriptHandle();
+    }
+
+    luabind::object scriptObject = LoadScriptAsTable(m_LuaWorld, iHandler);
+    if (!scriptObject)
+    {
+      return ScriptHandle();
+    }
+
+    LuaStateHandle stateHandle = m_LuaWorld.GetState();
+    lua_State* state = stateHandle.GetState();
+
+    ScriptEntry newEntry;
+    newEntry.m_ScriptObject = scriptObject;
+    newEntry.m_Type = EventHandler;
+
+    newEntry.m_InitFunction = scriptObject["Init"];
+
+    if (!LoadInterface(state, newEntry, itfIter->first, itfIter->second))
+    {
+      return ScriptHandle();
+    }
+
+    //newEntry.m_ScriptHandle.Set(&iHandler);
     
     ScriptHandle entryHandle = m_Scripts.Alloc();
     m_Scripts.Get(entryHandle) = std::move(newEntry);
@@ -179,20 +568,20 @@ namespace eXl
     return entryHandle;
   }
 
-  void LuaScriptSystem::CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
+  void LuaScriptSystem::Impl::CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
   {
-    ((LuaScriptSystem*)(iPayload))->DispatchCallback(iObject, iFunction, iArgsBuffer, oOutput);
+    ((LuaScriptSystem*)(iPayload))->m_Impl->DispatchCallback(iObject, iFunction, iArgsBuffer, oOutput);
   }
 
-  void LuaScriptSystem::DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
+  void LuaScriptSystem::Impl::DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
   {
-    EventSystem& events = *m_World->GetSystem<EventSystem>();
+    EventSystem& events = *m_World.GetSystem<EventSystem>();
 
     FunDesc const* desc = events.GetFunDesc(iFunction);
     eXl_ASSERT_REPAIR_RET(desc != nullptr, void());
 
     ObjectScript* objScript = nullptr;
-    if (auto scriptMap = m_ObjectsScripts->Get(iObject))
+    if (auto scriptMap = m_ObjectsScripts.Get(iObject))
     {
       auto iter = scriptMap->find(iFunction);
       if (iter != scriptMap->end())
@@ -249,20 +638,28 @@ namespace eXl
 
   };
 
-  void LuaScriptSystem::AddBehaviour(ObjectHandle iObject, const LuaScriptBehaviour& iBehaviour)
+  void LuaScriptSystem::AddHandler(ObjectHandle iObject, const LuaEventHandler& iHandler)
   {
-    EventSystem& events = *m_World->GetSystem<EventSystem>();
+    if (m_Impl->AddHandler(iObject, iHandler))
+    {
+      ComponentManager::CreateComponent(iObject);
+    }
+  }
 
-    auto itfIter = events.GetManifest().m_Interfaces.find(iBehaviour.m_InterfaceName);
+  Err LuaScriptSystem::Impl::AddHandler(ObjectHandle iObject, const LuaEventHandler& iHandler)
+  {
+    EventSystem& events = *m_World.GetSystem<EventSystem>();
+
+    auto itfIter = events.GetManifest().m_Interfaces.find(iHandler.m_InterfaceName);
     if (itfIter == events.GetManifest().m_Interfaces.end())
     {
-      return;
+      return Err::Failure;
     }
 
-    ScriptHandle loadedScript = LoadScript_Internal(iBehaviour);
+    ScriptHandle loadedScript = LoadScript_Handler(iHandler);
     if (!loadedScript.IsAssigned())
     {
-      return;
+      return Err::Failure;
     }
 
     ScriptEntry const& scriptDesc = m_Scripts.Get(loadedScript);
@@ -296,20 +693,91 @@ namespace eXl
       }
     }
 
-    UnorderedMap<Name, ObjectScript>& funMap = m_ObjectsScripts->GetOrCreate(iObject);
+    UnorderedMap<Name, ObjectScript>& funMap = m_ObjectsScripts.GetOrCreate(iObject);
 
     for (auto const& fun : scriptDesc.m_ScriptFunctions)
     {
       funMap.insert(std::make_pair(fun.first, ObjectScript{ loadedScript, scriptData}));
-      events.AddEventHandlerInternal(iObject, fun.first, &LuaScriptSystem::CallbackDispatcher, this);
+      events.AddEventHandlerInternal(iObject, fun.first, &LuaScriptSystem::Impl::CallbackDispatcher, this);
     }
-    ComponentManager::CreateComponent(iObject);
+    return Err::Success;
   }
 
   void LuaScriptSystem::DeleteComponent(ObjectHandle iHandle)
   {
-    m_ObjectsScripts->Erase(iHandle);
-    ComponentManager::DeleteComponent(iHandle);
+    if (m_Impl->DeleteComponent(iHandle))
+    {
+      ComponentManager::DeleteComponent(iHandle);
+    }
+  }
+
+  Err LuaScriptSystem::Impl::DeleteComponent(ObjectHandle iHandle)
+  {
+    Err res = Err::Failure;
+    if (m_ObjectsScripts.Get(iHandle))
+    {
+      m_ObjectsScripts.Erase(iHandle);
+      res = Err::Success;
+    }
+
+    if (m_Coroutines.RemoveCoroutine(m_World, iHandle))
+    {
+      res = Err::Success;
+    }
+
+    return res;
+  }
+
+  void LuaScriptSystem::AddCoroutine(ObjectHandle iHandle, const LuaCoroutine& iCoroutine)
+  {
+    if (m_Impl->AddCoroutine(iHandle, iCoroutine))
+    {
+      ComponentManager::CreateComponent(iHandle);
+    }
+  }
+
+  Err LuaScriptSystem::Impl::AddCoroutine(ObjectHandle iHandle, const LuaCoroutine& iCoroutine)
+  {
+    ScriptHandle script = LoadScript_Coroutine(iCoroutine);
+
+    if (!script.IsAssigned())
+    {
+      return Err::Failure;
+    }
+
+    ScriptEntry const& entry = m_Scripts.Get(script);
+
+    return m_Coroutines.AddCoroutine(m_World, iHandle, LuaCoroutineHandler(entry, m_LuaWorld), iCoroutine.m_DefaultTickRate, iCoroutine.m_DefaultStartPaused);
+  }
+
+  void LuaScriptSystem::Impl::PauseCoroutine(ObjectHandle iHandle)
+  {
+    m_Coroutines.Pause(m_World, iHandle);
+  }
+
+  void LuaScriptSystem::Impl::ResumeCoroutine(ObjectHandle iHandle)
+  {
+    m_Coroutines.Resume(m_World, iHandle);
+  }
+
+  void LuaScriptSystem::PauseCoroutine(ObjectHandle iHandle)
+  {
+    m_Impl->PauseCoroutine(iHandle);
+  }
+
+  void LuaScriptSystem::ResumeCoroutine(ObjectHandle iHandle)
+  {
+    m_Impl->ResumeCoroutine(iHandle);
+  }
+
+  void LuaScriptSystem::Impl::Tick()
+  {
+    m_Coroutines.Tick(m_World);
+  }
+
+  void LuaScriptSystem::Tick()
+  {
+    m_Impl->Tick();
   }
 #endif
 }

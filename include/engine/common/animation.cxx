@@ -4,27 +4,13 @@
 namespace eXl
 {
   template <typename TimelineBehaviour, typename Impl>
-  typename TimelineManager<TimelineBehaviour, Impl>::TimelineHandle TimelineManager<TimelineBehaviour, Impl>::Impl_Start(TimelineEntry*& oNewEntry)
+  typename TimelineManager<TimelineBehaviour, Impl>::TimelineHandle TimelineManager<TimelineBehaviour, Impl>::Impl_Start(World& iWorld, TimelineEntry*& oNewEntry, Optional<float> iLoopTime)
   {
     TimelineHandle newTimeline = m_Timelines.Alloc();
     TimelineEntry& entry = m_Timelines.Get(newTimeline);
 
     entry.curTime = 0.0;
-    entry.startTime = GetWorld().GetGameTimeInSec();
-
-    oNewEntry = &entry;
-
-    return newTimeline;
-  }
-
-  template <typename TimelineBehaviour, typename Impl>
-  typename TimelineManager<TimelineBehaviour, Impl>::TimelineHandle TimelineManager<TimelineBehaviour, Impl>::Impl_StartLooping(float iLoopTime, TimelineEntry*& oNewEntry)
-  {
-    TimelineHandle newTimeline = m_Timelines.Alloc();
-    TimelineEntry& entry = m_Timelines.Get(newTimeline);
-
-    entry.curTime = 0.0;
-    entry.startTime = GetWorld().GetGameTimeInSec();
+    entry.startTime = iWorld.GetGameTimeInSec();
     entry.loopTime = iLoopTime;
 
     oNewEntry = &entry;
@@ -33,29 +19,33 @@ namespace eXl
   }
 
   template <typename TimelineBehaviour, typename Impl>
-  void TimelineManager<TimelineBehaviour, Impl>::Tick()
+  void TimelineManager<TimelineBehaviour, Impl>::Tick(World& iWorld)
   {
-    double curTimestamp = GetWorld().GetGameTimeInSec();
+    double curTimestamp = iWorld.GetGameTimeInSec();
     m_Timelines.Iterate([&](TimelineHandle handle, TimelineEntry& entry)
-    {
-      float elapsed = curTimestamp - entry.startTime;;
-
-      if (entry.loopTime)
       {
-        while (elapsed > *entry.loopTime)
+        float elapsed = curTimestamp - entry.startTime;
+
+        if (entry.loopTime)
         {
-          elapsed -= *entry.loopTime;
-          entry.startTime += *entry.loopTime;
+          while (elapsed > *entry.loopTime)
+          {
+            elapsed -= *entry.loopTime;
+            entry.startTime += *entry.loopTime;
+          }
         }
-      }
-      
-      entry.curTime = elapsed;
-      if (!entry.Update(entry.curTime, *static_cast<Impl*>(this)))
-      {
-        m_ToDelete.insert(handle);
-      }
-    });
 
+        entry.curTime = elapsed;
+        if (!entry.Update(entry.curTime, *static_cast<Impl*>(this)))
+        {
+          m_ToDelete.insert(handle);
+        }
+      });
+  }
+
+  template <typename TimelineBehaviour, typename Impl>
+  void TimelineManager<TimelineBehaviour, Impl>::Cleanup()
+  {
     for (auto handle : m_ToDelete)
     {
       Stop(handle);

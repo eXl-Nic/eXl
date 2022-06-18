@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#ifdef TRACE_LEAKS
+#ifdef EXL_TRACE_LEAKS
 #define eXl_Bullet_NEW(Type) new(MemoryManager::Allocate_Ext(sizeof(Type),__FILE__,__LINE__,FUN_STR,0,&btAlignedAllocInternal)) Type
 #define eXl_Bullet_DELETE(Type,Obj) do{if(Obj)Obj->~Type();MemoryManager::Free_Ext(Obj,__FILE__,__LINE__,FUN_STR,false,&btAlignedFreeInternal);}while(false)
 #else

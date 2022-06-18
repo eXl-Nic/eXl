@@ -34,6 +34,9 @@ namespace eXl
 
     inline int GetArgc() const { return m_Argc; }
     inline char const* const* GetArgV() const { return m_ArgV; }
+
+    bool HasCommandLineOption(char const*) const;
+    Optional<String> GetCommandLineOption(char const*) const;
   
     virtual void Start();
 

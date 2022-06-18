@@ -16,21 +16,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  class EXL_ENGINE_API LuaScriptBehaviour : public LuaScript
+  class LuaFunctionLibrary;
+
+  class EXL_ENGINE_API LuaCoroutine : public LuaScript
   {
-    DECLARE_RTTI(LuaScriptBehaviour, LuaScript);
+    DECLARE_RTTI(LuaCoroutine, LuaScript);
   public:
 
     static void Init();
     static ResourceLoaderName StaticLoaderName();
 
 #ifdef EXL_RSC_HAS_FILESYSTEM
-    static LuaScriptBehaviour* Create(Path const& iPath, String const& iName);
+    static LuaCoroutine* Create(Path const& iPath, String const& iName);
 #endif
 
-    String m_InterfaceName;
+    LuaCoroutine(ResourceMetaData&);
+    ~LuaCoroutine();
 
-    LuaScriptBehaviour(ResourceMetaData&);
+    bool m_DefaultStartPaused = false;
+    float m_DefaultTickRate = 1.0f / 1000.f;
+
+    Vector<ResourceHandle<LuaFunctionLibrary>> m_Dependencies;
   protected:
     Err Serialize(Serializer iStreamer);
     Err Stream_Data(Streamer& iStreamer) const override;

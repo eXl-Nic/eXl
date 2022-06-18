@@ -47,6 +47,7 @@ namespace eXl
     };
 
     String m_GameDll;
+    String m_PlayerAdditionalParameters;
 
     ResourceHandle<Archetype> m_PlayerArchetype;
     ResourceHandle<MapResource> m_StartupMap;

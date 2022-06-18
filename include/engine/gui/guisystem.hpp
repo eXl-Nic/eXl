@@ -26,6 +26,10 @@ namespace eXl
 
     void AddDialog(IntrusivePtr<GUI::Dialog> iDlg, Optional<ObjectHandle> iWorldParent = {});
 
+    void RemoveDialog(IntrusivePtr<GUI::Dialog> const& iDlg);
+
+    void RefreshDialog(IntrusivePtr<GUI::Dialog> const& iDlg);
+
     void SetViewport(Vec2i iSize);
 
     void Pick(Vec2i const& iPointerPos);

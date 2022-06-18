@@ -49,14 +49,15 @@ namespace eXl
     m_Transforms = iWorld.GetSystem<Transforms>();
     iWorld.AddTick(World::PrePhysics, [this](World& iWorld, float)
     {
-      Tick();
+      Tick(GetWorld());
+      Cleanup();
     });
   }
 
   TransformAnimManager::TimelineHandle TransformAnimManager::Start(ObjectHandle iObject, LinearPositionAnimation& iAnim, Mat4 const& iPreTrans, Mat4 const& iPostTrans)
   {
     TimelineEntry* newEntry;
-    TimelineHandle newHandle = Impl_Start(newEntry);
+    TimelineHandle newHandle = Impl_Start(GetWorld(), newEntry);
     newEntry->m_Object = iObject;
     newEntry->m_Anim = &iAnim;
     newEntry->m_PreTransform = iPreTrans;
@@ -68,7 +69,7 @@ namespace eXl
   TransformAnimManager::TimelineHandle TransformAnimManager::StartLooping(ObjectHandle iObject, LinearPositionAnimation& iAnim, float iLoopTime, Mat4 const& iPreTrans, Mat4 const& iPostTrans)
   {
     TimelineEntry* newEntry;
-    TimelineHandle newHandle = Impl_StartLooping(iLoopTime, newEntry);
+    TimelineHandle newHandle = Impl_Start(GetWorld(), newEntry, iLoopTime);
     newEntry->m_Object = iObject;
     newEntry->m_Anim = &iAnim;
     newEntry->m_PreTransform = iPreTrans;

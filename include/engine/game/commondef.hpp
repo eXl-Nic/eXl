@@ -13,7 +13,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/game/ability.hpp>
 #include <engine/common/gamedata.hpp>
 #include <engine/script/eventsystem.hpp>
-#include <engine/script/luascriptbehaviour.hpp>
 #include <engine/map/map.hpp>
 
 #define EXL_REFLECT_PROPERTY \
@@ -23,11 +22,12 @@ static PropertySheetName PropertyName()
 namespace eXl
 {
   class ComponentManifest;
+  class LuaEventHandler;
 
   namespace EngineCommon
   {
     EXL_ENGINE_API ComponentManifest const& GetComponents();
-    EXL_ENGINE_API PropertiesManifest GetBaseProperties();
+    EXL_ENGINE_API PropertiesManifest& GetBaseProperties();
     EXL_ENGINE_API EventsManifest& GetBaseEvents();
 
     EXL_ENGINE_API GameTagName ActionLock();
@@ -166,7 +166,7 @@ namespace eXl
       TriggerComponentDesc(TriggerComponentDesc&&);
 
       EXL_REFLECT_PROPERTY;
-      ResourceHandle<LuaScriptBehaviour> m_Script;
+      ResourceHandle<LuaEventHandler> m_Script;
     };
 
     enum class CharacterControlKind

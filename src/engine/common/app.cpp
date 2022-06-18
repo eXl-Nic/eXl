@@ -76,8 +76,6 @@ namespace eXl
       }
 
     Scenario* scenario = nullptr;
-
-    ProfilingState m_ProfilingState;
   };
 
   struct Engine_Application::Impl : public HeapObject
@@ -265,7 +263,7 @@ namespace eXl
 
   ProfilingState const& WorldState::GetProfilingState()
   {
-    return m_Impl->m_ProfilingState;
+    return m_Impl->world.GetProfilingState();
   }
 
   World& WorldState::GetWorld()
@@ -504,7 +502,7 @@ namespace eXl
     Engine_Application& app = Engine_Application::GetAppl();
     InputSystem& inputs = app.GetInputSystem();
 
-    world.Tick(m_ProfilingState);
+    world.Tick();
 
     inputs.Clear();
   }
@@ -523,7 +521,7 @@ namespace eXl
     lastRenderTime = curWorldTime;
     //view.pos.z() -= 1;
 
-    m_ProfilingState.m_RendererTime = profiler.GetTime() * 1000.0;
+    //m_ProfilingState.m_RendererTime = profiler.GetTime() * 1000.0;
 #endif
   }
 
@@ -535,5 +533,12 @@ namespace eXl
   InputSystem& Engine_Application::GetInputSystem()
   {
     return m_Impl->m_Inputs;
+  }
+
+  void Engine_Application::Terminated()
+  {
+    m_Scenario.reset();
+    m_Impl.reset();
+    Application::Terminated();
   }
 }

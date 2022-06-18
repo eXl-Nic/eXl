@@ -34,7 +34,6 @@ namespace eXl
     : m_Width(1024)
     , m_Height(768)
   { 
-    eXl::StartCoreLib();
     {
       LOG_INFO<<"Started Core lib"<<"\n";
     }
@@ -60,15 +59,52 @@ namespace eXl
     return *s_Instance;
   }
 
+  bool Application::HasCommandLineOption(char const* iOpt) const
+  {
+    cxxopts::Options options(m_ArgV[0]);
+
+    options.allow_unrecognised_options();
+    options.add_options()
+      (iOpt, "desc", cxxopts::value<bool>());
+
+    cxxopts::ParseResult result = options.parse(m_Argc, m_ArgV);
+
+    if (result.count(iOpt))
+    {
+      return true;
+    }
+
+    return false;
+  }
+
+  Optional<String> Application::GetCommandLineOption(char const* iOpt) const
+  {
+    cxxopts::Options options(m_ArgV[0]);
+
+    options.allow_unrecognised_options();
+    options.add_options()
+      (iOpt, "desc", cxxopts::value<std::string>());
+
+    cxxopts::ParseResult result = options.parse(m_Argc, m_ArgV);
+
+    if (result.count(iOpt))
+    {
+      return String(result[iOpt].as<std::string>());
+    }
+
+    return {};
+  }
+
   void Application::Start()
   {
+    eXl::StartCoreLib();
     cxxopts::Options options(m_ArgV[0]);
 
     options.allow_unrecognised_options();
     options.add_options()
       ("w,width", "Window width", cxxopts::value<int>())
       ("h,height", "Window width", cxxopts::value<int>())
-      ("s, seed", "App random seed", cxxopts::value<int>());
+      ("s,seed", "App random seed", cxxopts::value<int>());
 
     cxxopts::ParseResult result = options.parse(m_Argc, m_ArgV);
 
@@ -110,11 +146,12 @@ namespace eXl
 #endif
       }
     }
+
+    Terminated();
   }
 
   void Application::Terminated()
   {
-    
     eXl::StopCoreLib();
   }
 

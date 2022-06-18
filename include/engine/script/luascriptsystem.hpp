@@ -16,12 +16,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/lua/luascript.hpp>
 #include <engine/script/eventsystem.hpp>
 #include <engine/common/gamedata.hpp>
+#include <engine/common/coroutine.hpp>
 #include <boost/optional.hpp>
 #include <core/path.hpp>
 
 namespace eXl
 {
-  class LuaScriptBehaviour;
+  class LuaScript;
+  class LuaEventHandler;
+  class LuaCoroutine;
+  class LuaFunctionLibrary;
 
   class EXL_ENGINE_API LuaScriptSystem : public ComponentManager
   {
@@ -33,39 +37,24 @@ namespace eXl
 
     void Register(World& iWorld) override;
 
-    void LoadScript(const LuaScriptBehaviour& iBehaviour);
+    void LoadScript(const LuaScript& iScript);
 
-    void AddBehaviour(ObjectHandle, const LuaScriptBehaviour& iBehaviour);
+    void AddHandler(ObjectHandle, const LuaEventHandler& iHandler);
+    void AddCoroutine(ObjectHandle, const LuaCoroutine& iHandler);
+
+    void PauseCoroutine(ObjectHandle);
+    void ResumeCoroutine(ObjectHandle);
+
     void DeleteComponent(ObjectHandle) override;
+
+    void Tick();
 
     static World* GetWorld_Static();
   protected:
     
-    struct ScriptEntry
-    {
-      ResourceHandle<LuaScriptBehaviour> m_ScriptHandle;
-      luabind::object m_ScriptObject;
-      luabind::object m_InitFunction;
-      UnorderedMap<Name, luabind::object> m_ScriptFunctions;
-    };
+    struct Impl;
 
-    ObjectTable<ScriptEntry> m_Scripts;
-    using ScriptHandle = ObjectTableHandle<ScriptEntry>;
-    UnorderedMap<Resource::UUID, ScriptHandle> m_LoadedScripts;
-
-    struct ObjectScript
-    {
-      ScriptHandle m_LoadedScript;
-      luabind::object m_Self;
-    };
-
-    Optional<DenseGameDataStorage<UnorderedMap<Name, ObjectScript>>> m_ObjectsScripts;
-
-    ScriptHandle LoadScript_Internal(const LuaScriptBehaviour& iBehaviour);
-    static void CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload);
-    void DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput);
-
-    LuaWorld m_LuaWorld;
+    std::unique_ptr<Impl> m_Impl;
   };
 }
 #endif

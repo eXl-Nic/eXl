@@ -78,17 +78,28 @@ extern "C"
 
 #ifndef EXL_SHARED_LIBRARY
 
+#ifndef EXL_MAIN_ADDITIONAL_PLUGINS
+#define EXL_MAIN_ADDITIONAL_PLUGINS
+#endif
+
+#ifndef EXL_MAIN_ADDITIONAL_PLUGINS_DEF
+#define EXL_MAIN_ADDITIONAL_PLUGINS_DEF
+#endif
+
+
 namespace eXl
 {
   Plugin& MathPlugin_GetPlugin();
   Plugin& OGLPlugin_GetPlugin();
   Plugin& EnginePlugin_GetPlugin();
+  EXL_MAIN_ADDITIONAL_PLUGINS_DEF
 
   PluginLoadMap s_StaticPluginMap =
   {
     {"eXl_OGL", &OGLPlugin_GetPlugin},
     {"eXl_Math", &MathPlugin_GetPlugin},
-    {"eXl_Engine", &EnginePlugin_GetPlugin}
+    {"eXl_Engine", &EnginePlugin_GetPlugin},
+    EXL_MAIN_ADDITONAL_PLUGINS
   };
 }
 #endif
@@ -587,10 +598,24 @@ namespace eXl
       SDL_GL_SwapWindow(win);
     }
 
+    void Start() override
+    {
+      worldCtor.emplace();
+      m_World = &(*worldCtor);
+      Engine_Application::Start();
+    }
+
+    void Terminated() override
+    {
+      worldCtor.reset();
+      Engine_Application::Terminated();
+    }
+
     ImGuiLogState m_LogState;
 
     bool m_ConsoleOpen = true;
-    LuaConsole m_Console;
+    Optional<WorldState> worldCtor;
+    Optional<LuaConsole> m_Console;
     DebugVisualizerState m_DebugVisState;
     Vec2i m_MousePos;
   };
@@ -614,15 +639,13 @@ int eXl_Main::Start(int argc, char const* const argv[])
 {
   LOG_INFO << "eXl_Main Startup";
   SDL_Application& app = GetApp();
-  InitConsoleLog();
 
   app.SetWindowSize(1024, 768);
   app.SetArgs(argc, argv);
 
-  WorldState world;
-  app.m_World = &world;
-
   app.Start();
+
+  InitConsoleLog();
 
   Path projectPath = app.GetProjectPath();
 
@@ -678,6 +701,12 @@ int eXl_Main::Start(int argc, char const* const argv[])
   }
 
   eXl_ASSERT_REPAIR_RET(project != nullptr, -1);
+
+  if (!project->m_GameDll.empty())
+  {
+    Plugin const* gamePlugin = Plugin::LoadLib(project->m_GameDll);
+    eXl_ASSERT_REPAIR_RET(gamePlugin != nullptr, -1);
+  }
   
   project->FillProperties(types, appManifest);
 

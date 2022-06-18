@@ -28,6 +28,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/stream/reader.hpp>
 #include <core/stream/writer.hpp>
+#include <core/resource/resourcemanager.hpp>
 
 #if WIN32
 #include <Windows.h>
@@ -222,15 +223,18 @@ namespace eXl
     }
     s_CorelibStarted = false;
 
+    ResourceManager::UnloadUnusedResources();
+
 #ifdef EXL_LUA
     LuaManager::Destroy();
 #endif
     //TypeManager::Destroy();
     detail::_PLClose();
-#ifdef _DEBUG
-    //MemoryManager::ReportLeaks();
-#endif
     Name_Destroy();
+#ifdef EXL_TRACE_LEAKS
+    MemoryManager::ReportLeaks();
+#endif
+    
     detail::_LogShutdown();
     //MemoryManager::SetFreeFn(&free);
     

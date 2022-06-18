@@ -308,7 +308,7 @@ namespace eXl
     return nullptr;
   }
 
-  void World::Tick(ProfilingState& ioProfiling)
+  void World::Tick()
   {
     float iDelta = 0;
     if (m_CurrentTimestamp != 0)
@@ -326,7 +326,7 @@ namespace eXl
       m_CurrentTimestamp = m_StartTimestamp;
     }
 
-    ioProfiling.m_LastFrameTime = ioProfiling.m_CurFrameTime;
+    m_Profiling.m_LastFrameTime = m_Profiling.m_CurFrameTime;
     Clock profiler;
 
     FlushObjectsToDelete();
@@ -362,14 +362,14 @@ namespace eXl
 
     ProcessTimers();
 
-    ioProfiling.m_FrameStartTime = profiler.GetTime();
+    m_Profiling.m_FrameStartTime = profiler.GetTime();
     
     if (m_PhSystem)
     {
       m_PhSystem->GetNeighborhoodExtraction().Run(Vec3(0.0, 0.0, 0.0), 10.0);
     }
 
-    ioProfiling.m_NeighETime = profiler.GetTime();
+    m_Profiling.m_NeighETime = profiler.GetTime();
 
     for (auto const& tickFn : m_Tick[PrePhysics])
     {
@@ -381,30 +381,30 @@ namespace eXl
       m_PhSystem->Step(iDelta);
     }
 
-    ioProfiling.m_PhysicTime = profiler.GetTime() * 1000.0;
+    m_Profiling.m_PhysicTime = profiler.GetTime() * 1000.0;
 
     for (auto const& tickFn : m_Tick[PostPhysics])
     {
       tickFn(*this, iDelta);
     }
 
-    ioProfiling.m_PostPhysicsTime = profiler.GetTime() * 1000.0;
+    m_Profiling.m_PostPhysicsTime = profiler.GetTime() * 1000.0;
 
     if (m_AbilitySystem)
     {
       m_AbilitySystem->Tick(iDelta);
     }
 
-    ioProfiling.m_AbilitiesTime = profiler.GetTime() * 1000.0;
+    m_Profiling.m_AbilitiesTime = profiler.GetTime() * 1000.0;
 
     for (auto const& tickFn : m_Tick[PostAbilites])
     {
       tickFn(*this, iDelta);
     }
 
-    ioProfiling.m_PostAbilitiesTime = profiler.GetTime() * 1000.0;
+    m_Profiling.m_PostAbilitiesTime = profiler.GetTime() * 1000.0;
 
-    ioProfiling.m_CurFrameTime = 1000 * double(Clock::GetTimestamp() - m_CurrentTimestamp) / Clock::GetTicksPerSecond();
+    m_Profiling.m_CurFrameTime = 1000 * double(Clock::GetTimestamp() - m_CurrentTimestamp) / Clock::GetTicksPerSecond();
   }
 
   double World::GetRealTimeInSec()

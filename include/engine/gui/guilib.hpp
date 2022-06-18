@@ -38,41 +38,41 @@ namespace eXl
     struct Dim
     {
       // Value relative to the parent size
-      float m_Scale;
+      const float m_Scale;
       // Absolute value. 
-      float m_Offset;
+      const float m_Offset;
       Dim(float iScale, float iOffset)
+        : m_Offset(iOffset)
+        , m_Scale(Mathf::Clamp(iScale, -1.f, 1.f))
       {
-        m_Offset = iOffset;
-        m_Scale = Mathf::Clamp(iScale, -1.f, 1.f);
       }
     };
 
-    struct Position
+    enum class Anchor
     {
-      enum Anchor
-      {
-        None = 0,
-        UpperLeft = 1,
-        UpperRight = 2,
-        LowerLeft = 3,
-        LowerRight = 4,
-        Center = 5,
-      };
+      Low,
+      Middle,
+      High
+    };
 
+    struct EXL_ENGINE_API Position
+    {
       Dim m_X;
       Dim m_Y;
-      Anchor m_Anchor;
 
-      Position(Dim iX, Dim iY, Anchor iAnchor = None)
-        : m_X(iX), m_Y(iY), m_Anchor(iAnchor)
+      Anchor m_Anchors[2] = { Anchor::Low, Anchor::Low };
+
+      Position(Dim iX, Dim iY, Anchor iXAnchor = Anchor::Low, Anchor iYAnchor = Anchor::Low)
+        : m_X(iX), m_Y(iY) 
       {
+        m_Anchors[0] = iXAnchor;
+        m_Anchors[1] = iYAnchor;
       }
 
-      Vec2i Get(Vec2i iSize, Vec2i iElementSize) const;
+      Vec2i Get(Vec2i iSize) const;
     };
 
-    struct Size
+    struct EXL_ENGINE_API Size
     {
       enum AspectConstraint
       {
@@ -111,7 +111,10 @@ namespace eXl
     // A laid out dialog size.
     struct DlgDim
     {
-      AABB2Di m_Box;
+      DlgDim ChildDlg(Size iChildSize) const;
+      Vec2i m_Size;
+      Vec2i m_AnchorPoint;
+      Anchor m_Anchors[2] = { Anchor::Middle, Anchor::Middle };
       uint32_t m_Layer;
       bool m_HardX = true;
       bool m_HardY = true;
@@ -126,7 +129,7 @@ namespace eXl
       Optional<ObjectHandle> worldParent;
     };
 
-    class Dialog : public HeapObject
+    class EXL_ENGINE_API Dialog : public HeapObject
     {
       DECLARE_RefC;
 
@@ -151,7 +154,7 @@ namespace eXl
       bool m_NeedScissor = false;
       bool m_WorldSpace = false;
 
-      std::function<Vec2i(uint32_t iChildIdx, DlgDim iDlgDim)> m_GetChildOrigin;
+      std::function<DlgDim(uint32_t iChildIdx, DlgDim iDlgDim)> m_GetChildOrigin;
       std::function<uint32_t(uint32_t iOrigLayer, uint32_t iChildLayer)> m_NextLayer;
       std::function<void()> m_Pick;
       using LayoutCallback = std::function<std::tuple<DlgDim, ObjectHandle>(Dialog&, DlgDim const&, LayoutCtx const&)>;
@@ -187,8 +190,7 @@ namespace eXl
       DlgDim GetChildOrigin(uint32_t iChildIdx, DlgDim iDlgDim) const
       {
         DlgDim childDim = iDlgDim;
-        childDim.m_Box = AABB2Di::FromCenterAndSize(m_GetChildOrigin ? m_GetChildOrigin(iChildIdx, iDlgDim) : Zero<Vec2i>(), iDlgDim.m_Box.GetSize());
-        return childDim;
+        return m_GetChildOrigin ? m_GetChildOrigin(iChildIdx, iDlgDim) : iDlgDim;
       }
 
       //void OnChildMove(iItem, iPos, iDeltaPos)
@@ -216,7 +218,6 @@ namespace eXl
         auto [actualDim, object] = m_Layout ? m_Layout(*this, iDlgDim, iCtx)
           : Layout_Default(iDlgDim, iCtx);
 
-        m_LayoutBox = actualDim.m_Box;
         m_Obj = object;
 
         m_Pickable = !(!m_Pick);
@@ -252,7 +253,7 @@ namespace eXl
       std::tuple<DlgDim, ObjectHandle> Layout_Default(DlgDim const& iDlgDim, LayoutCtx const& iCtx);
     };
 
-    class Container : public Dialog
+    class EXL_ENGINE_API Container : public Dialog
     {
     public:
 
@@ -265,7 +266,14 @@ namespace eXl
         };
         m_GetChildOrigin = [this](uint32_t iChildIdx, DlgDim iDlgDim)
         {
-          return m_Positions[iChildIdx].Get(iDlgDim.m_Box.GetSize(), m_Children[iChildIdx]->GetSize().Get(iDlgDim.m_Box.GetSize()));
+          Position const& relPos = m_Positions[iChildIdx];
+          Vec2i pos = relPos.Get(iDlgDim.m_Size);
+          DlgDim childDim = iDlgDim;
+          childDim.m_AnchorPoint = pos;
+          childDim.m_Anchors[0] = relPos.m_Anchors[0];
+          childDim.m_Anchors[1] = relPos.m_Anchors[1];
+
+          return childDim;
         };
       }
 
@@ -285,7 +293,7 @@ namespace eXl
 
     Dialog::LayoutCallback MakeStackLayout(Size iHalfOffset, bool iVertical);
 
-    class Image : public Dialog
+    class EXL_ENGINE_API Image : public Dialog
     {
     public:
 

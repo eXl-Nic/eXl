@@ -8,6 +8,7 @@ set(EXL_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ARMADILLO_ROOT "" CACHE PATH "Path to armadillo root directory")
 
+set(EXL_TRACE_LEAKS OFF CACHE BOOL "Trace memory")
 set(EXL_BUILD_SHARED ON CACHE BOOL "Build library as dlls")
 set(EXL_BUILD_OGL ON CACHE BOOL "Build the opengl renderer")
 set(EXL_BUILD_ENGINE ON CACHE BOOL "Build the eXl engine")

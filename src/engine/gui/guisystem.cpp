@@ -66,20 +66,61 @@ namespace eXl
     {
       newEntry.m_WorldParent = *iParent;
     }
+    m_Impl->m_Dialogs.push_back(newEntry);
+    RefreshDialog(iDlg);
+  }
+
+  void GUISystem::RemoveDialog(IntrusivePtr<GUI::Dialog> const& iDlg)
+  {
+    if (!iDlg)
+    {
+      return;
+    }
+
+    auto iter = std::find_if(m_Impl->m_Dialogs.begin(), m_Impl->m_Dialogs.end(), [&iDlg](Impl::DlgEntry const& iEntry)
+      {
+        return iEntry.m_Dialog == iDlg;
+      });
+
+    if(iter == m_Impl->m_Dialogs.end())
+    {
+      return;
+    }
+
+    m_Impl->m_Dialogs.erase(iter);
+  }
+
+  void GUISystem::RefreshDialog(IntrusivePtr<GUI::Dialog> const& iDlg)
+  {
+    if (!iDlg)
+    {
+      return;
+    }
+
+    auto iter = std::find_if(m_Impl->m_Dialogs.begin(), m_Impl->m_Dialogs.end(), [&iDlg](Impl::DlgEntry const& iEntry)
+      {
+        return iEntry.m_Dialog == iDlg;
+      });
+
+    if (iter == m_Impl->m_Dialogs.end())
+    {
+      return;
+    }
 
     GfxSystem* gfx = GetWorld().GetSystem<GfxSystem>();
     if (gfx)
     {
       GfxGUIRenderNode& renderer = *GfxGUIRenderNode::DynamicCast(gfx->GetRenderNode(m_Impl->m_RenderHandle));
-      // Center dialog on world objects by default.
-      GUI::DlgDim baseDim{AABB2Di::FromCenterAndSize(Zero<Vec2i>(), m_Impl->m_WinSetup.m_WinDimension), 0};
 
-      GUI::LayoutCtx ctx{ GetWorld(), renderer, m_Impl->m_WinSetup, ObjectHandle(), iParent};
+      GUI::DlgDim baseDim;
+      baseDim.m_AnchorPoint = Zero<Vec2i>();
+      baseDim.m_Size = m_Impl->m_WinSetup.m_WinDimension;
+      baseDim.m_Anchors[0] = baseDim.m_Anchors[1] = GUI::Anchor::Low;
+
+      GUI::LayoutCtx ctx{ GetWorld(), renderer, m_Impl->m_WinSetup, ObjectHandle(), iter->m_WorldParent };
 
       iDlg->Layout(baseDim, ctx);
     }
-
-    m_Impl->m_Dialogs.push_back(newEntry);
   }
 
   void TryPickDialog(Transforms& iTrans, GUI::Dialog& iDlg, Vec2i const& iPointerPos)

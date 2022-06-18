@@ -12,6 +12,7 @@ graphtest.cpp
 maptest.cpp
 mphf.cpp
 networktest.cpp
+coroutinetest.cpp
 
 main.cpp
 )
