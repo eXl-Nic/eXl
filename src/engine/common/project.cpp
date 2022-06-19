@@ -78,7 +78,7 @@ namespace eXl
 
   void Project::Init()
   {
-    ResourceManager::AddLoader(&ProjectLoader::Get(), Project::StaticRtti());
+    ResourceManager::AddLoader(&ProjectLoader::Get(), Project::StaticRtti(), GetType());
   }
 
   ResourceLoaderName Project::StaticLoaderName()

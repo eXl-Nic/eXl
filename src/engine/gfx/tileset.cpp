@@ -182,7 +182,7 @@ namespace eXl
 
   void Tileset::Init()
   {
-    ResourceManager::AddLoader(&TilesetLoader::Get(), Tileset::StaticRtti());
+    ResourceManager::AddLoader(&TilesetLoader::Get(), Tileset::StaticRtti(), GetType());
   }
 
   Tileset const* Tileset::GetWhiteTexture()

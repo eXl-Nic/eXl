@@ -21,7 +21,7 @@ namespace eXl
 
   void TilingGroup::Init()
   {
-    ResourceManager::AddLoader(&TilingGroupLoader::Get(), TilingGroup::StaticRtti());
+    ResourceManager::AddLoader(&TilingGroupLoader::Get(), TilingGroup::StaticRtti(), GetType());
   }
 
   ResourceLoaderName TilingGroup::StaticLoaderName()

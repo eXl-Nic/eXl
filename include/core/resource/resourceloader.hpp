@@ -22,7 +22,7 @@ namespace eXl
 
   namespace ResourceManager
   {
-    EXL_CORE_API void AddLoader(ResourceLoader* iLoader, Rtti const& iRtti);
+    EXL_CORE_API void AddLoader(ResourceLoader* iLoader, Rtti const& iRtti, Type const*);
     EXL_CORE_API String const& GetAssetExtension();
 #ifdef EXL_RSC_HAS_FILESYSTEM
     EXL_CORE_API Err SetPath(Resource* iRsc, Path const& iPath);

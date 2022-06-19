@@ -23,7 +23,7 @@ namespace eXl
 
   void LuaCoroutine::Init()
   {
-    ResourceManager::AddLoader(&LuaCoroutineLoader::Get(), LuaCoroutine::StaticRtti());
+    ResourceManager::AddLoader(&LuaCoroutineLoader::Get(), LuaCoroutine::StaticRtti(), GetType());
   }
 
   ResourceLoaderName LuaCoroutine::StaticLoaderName()

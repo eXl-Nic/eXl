@@ -22,7 +22,7 @@ namespace eXl
 
   void LuaFunctionLibrary::Init()
   {
-    ResourceManager::AddLoader(&LuaFunctionLibraryLoader::Get(), LuaFunctionLibrary::StaticRtti());
+    ResourceManager::AddLoader(&LuaFunctionLibraryLoader::Get(), LuaFunctionLibrary::StaticRtti(), GetType());
   }
 
   ResourceLoaderName LuaFunctionLibrary::StaticLoaderName()

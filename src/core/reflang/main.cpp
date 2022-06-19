@@ -75,7 +75,9 @@ namespace eXl
 
 int main(int argc, char** argv)
 {
+#ifdef EXL_TRACE_LEAKS
   eXl::s_CaptureStacks = false;
+#endif
 
   cxxopts::Options options(argv[0]);
   options.positional_help("[optional args]").show_positional_help();

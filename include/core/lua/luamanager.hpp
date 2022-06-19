@@ -23,6 +23,14 @@ extern "C" struct lua_State;
 
 #define LUA_REG_FUN(FunctionName) int FunctionName(lua_State* iState)
 
+namespace luabind
+{
+  namespace detail
+  {
+    class class_rep;
+  }
+}
+
 namespace eXl
 {
   class Type;
@@ -144,6 +152,7 @@ namespace eXl
 
     EXL_CORE_API LuaWorld CreateWorld(RttiObject* iUserPtr);
 
+    EXL_CORE_API luabind::detail::class_rep* GetClassRepFromType(lua_State* iState, Type const* iType);
     EXL_CORE_API void PushRefToLua(lua_State*, Type const* iType, void* iObject, bool iIsConst);
     EXL_CORE_API void PushRefToLua(lua_State*, Type const* iType, void const* iObject);
 

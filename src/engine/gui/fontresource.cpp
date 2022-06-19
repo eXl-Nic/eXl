@@ -78,7 +78,7 @@ namespace eXl
 
   void FontResource::Init()
   {
-    ResourceManager::AddLoader(&FontLoader::Get(), FontResource::StaticRtti());
+    ResourceManager::AddLoader(&FontLoader::Get(), FontResource::StaticRtti(), GetType());
   }
 
 

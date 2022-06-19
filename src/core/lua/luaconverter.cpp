@@ -145,20 +145,20 @@ namespace eXl
     RETURN_SUCCESS;
   }
 
-  luabind::object LuaConverter<std::string>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
+  luabind::object LuaConverter<String>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
   {
     if (iObj == nullptr || iType == nullptr)
     {
       return luabind::object();
     }
-    std::string* val = (std::string*)iObj;
+    String* val = (String*)iObj;
     lua_pushlstring(iState,val->c_str(),val->size());
     luabind::object res(luabind::from_stack(iState,-1));
     lua_pop(iState,1);
     return res;
 
   }
-  Err LuaConverter<std::string>::ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex)
+  Err LuaConverter<String>::ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex)
   {
     if(!lua_isstring(iState,ioIndex))
     {
@@ -166,7 +166,7 @@ namespace eXl
       eXl_ASSERT_MSG(false,"Conversion failed");
     }
     const char* tempStr = lua_tostring(iState,ioIndex);
-    std::string tempVal(tempStr);
+    String tempVal(tempStr);
     iType->Copy_Uninit(&tempVal,oObj);
     ioIndex++;
     RETURN_SUCCESS;

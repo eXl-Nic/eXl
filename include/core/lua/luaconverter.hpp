@@ -112,7 +112,7 @@ namespace eXl
   };
 
   template <>
-  struct LuaConverter<std::string>{
+  struct LuaConverter<String>{
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };

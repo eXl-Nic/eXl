@@ -16,6 +16,9 @@
 #include <QPushButton>
 #include <QTextCharFormat>
 #include <QTextEdit>
+#include <QSpinBox>
+#include <QCheckBox>
+#include <QLabel>
 
 class QTextDocument;
 
@@ -56,6 +59,43 @@ namespace eXl
     m_Impl->m_Script = LuaCoroutine::DynamicCast(iDoc->GetResource());
 
     QVBoxLayout* layout = new QVBoxLayout(this);
+
+
+    {
+      QWidget* stepTimeWidget = new QWidget(this);
+      QHBoxLayout* stepTimeLayout = new QHBoxLayout(stepTimeWidget);
+      stepTimeWidget->setLayout(stepTimeLayout);
+      QLabel* label = new QLabel("Default Step Time", stepTimeWidget);
+      stepTimeLayout->addWidget(label);
+      QDoubleSpinBox* stepTimeEntry = new QDoubleSpinBox(this);
+      stepTimeEntry->setValue(m_Impl->m_Script->m_DefaultTickRate);
+      stepTimeLayout->addWidget(stepTimeEntry);
+
+      QObject::connect(stepTimeEntry, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double iValue)
+        {
+          m_Impl->m_Script->m_DefaultTickRate = iValue;
+          m_Impl->m_Editor->ModifyResource();
+        });
+      layout->addWidget(stepTimeWidget);
+    }
+
+    {
+      QWidget* startPausedWidget = new QWidget(this);
+      QHBoxLayout* startPausedLayout = new QHBoxLayout(startPausedWidget);
+      startPausedWidget->setLayout(startPausedLayout);
+      QLabel* label = new QLabel("Start Paused", startPausedWidget);
+      startPausedLayout->addWidget(label);
+      QCheckBox* startPausedEntry = new QCheckBox(this);
+      startPausedEntry->setChecked(m_Impl->m_Script->m_DefaultStartPaused);
+      startPausedLayout->addWidget(startPausedEntry);
+
+      QObject::connect(startPausedEntry, &QCheckBox::stateChanged, [this, startPausedEntry](int)
+        {
+          m_Impl->m_Script->m_DefaultStartPaused = startPausedEntry->checkState() == Qt::Checked;
+          m_Impl->m_Editor->ModifyResource();
+        });
+      layout->addWidget(startPausedWidget);
+    }
 
     m_Impl->m_ScriptSrc = new QTextEdit(this);
     m_Impl->m_ScriptSrc->setTabStopWidth(m_Impl->m_ScriptSrc->tabStopWidth() / 2);

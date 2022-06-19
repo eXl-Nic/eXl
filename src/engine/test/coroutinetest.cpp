@@ -24,6 +24,7 @@ namespace eXl
     EXL_REFLECT
 
     uint32_t m_Counter;
+    ResourceHandle<Archetype> m_ToSpawn;
   };
 
   Type const* TestStruct::GetType()
@@ -31,7 +32,9 @@ namespace eXl
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<TestStruct>("eXl::TestStruct")
-        .AddField("counter", &TestStruct::m_Counter).EndRegistration();
+        .AddField("counter", &TestStruct::m_Counter)
+        .AddField("toSpawn", &TestStruct::m_ToSpawn)
+        .EndRegistration();
     }();
 
     return s_Type;
@@ -59,8 +62,6 @@ namespace eXl
     {
       nativeCounter = 0;
       (*iWorld.GetSystem<GameDatabase>()->ModifyData(iObj, GetTestProp()).CastBuffer<TestStruct>()).m_Counter = nativeCounter;
-      Stack st = CaptureStack();
-      LOG_INFO << DumpStackInformation(st);
     }
     void Step(CoroutineAPI& iApi, World& iWorld, ObjectHandle iObj, float iTime)
     {
@@ -116,8 +117,9 @@ namespace eXl
     GameDatabase& db = *world.GetSystem<GameDatabase>();
 
     Archetype* dummyArch = Archetype::Create("", "dummy");
-    uint32_t counter = -1;
-    ConstDynObject obj(TypeManager::GetType<uint32_t>(), &counter);
+    TestStruct data;
+    data.m_Counter = -1;
+    ConstDynObject obj(TypeManager::GetType<TestStruct>(), &data);
     dummyArch->SetProperty(GetTestProp(), obj, true);
 
     world.Tick();
@@ -230,8 +232,10 @@ namespace eXl
     LuaScriptSystem& scripts = *world.GetSystem<LuaScriptSystem>();
 
     Archetype* dummyArch = Archetype::Create("", "dummy");
-    uint32_t counter = -1;
-    ConstDynObject obj(TypeManager::GetType<uint32_t>(), &counter);
+    TestStruct data;
+    data.m_Counter = -1;
+    data.m_ToSpawn.Set(dummyArch);
+    ConstDynObject obj(TypeManager::GetType<TestStruct>(), &data);
     dummyArch->SetProperty(GetTestProp(), obj, true);
 
     world.Tick();
@@ -257,6 +261,12 @@ function Test_routine.Start(object)
   self.data = eXl.AccessProperty(object, propName)
   self.data.counter = 0
 
+  local archToSpawn = self.data.toSpawn:GetOrLoad()
+  if archToSpawn ~= nil then
+    local newObj = eXl.GetWorld():CreateObject()
+    local custoTable = {TestCounter={counter=0}}
+    eXl.InstantiateArchetype(newObj, archToSpawn, custoTable)
+  end
   return self
 end
 

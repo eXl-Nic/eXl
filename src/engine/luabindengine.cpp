@@ -24,6 +24,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
 #include <engine/script/luascriptsystem.hpp>
+#include <engine/game/character.hpp>
+#include <engine/game/archetype.hpp>
 
 namespace eXl
 {
@@ -215,6 +217,114 @@ namespace eXl
     }
   }
 
+  int InstantiateArchetype_Script(lua_State* iState)
+  {
+    luabind::default_converter<ObjectHandle> converterObject;
+    if (converterObject.match(iState, luabind::by_value<ObjectHandle>(), -3) < 0)
+    {
+      lua_pushliteral(iState, "Incorrect argument for object handle");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    luabind::default_converter<Archetype const*> converterArch;
+    if (converterArch.match(iState, luabind::by_const_pointer<Archetype>(), -2) < 0)
+    {
+      lua_pushliteral(iState, "Incorrect argument for property sheet name");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    World* world = LuaScriptSystem::GetWorld_Static();
+    if (world == nullptr)
+    {
+      lua_pushliteral(iState, "Calling lua functions outside of the script system");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+    //GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -3);
+    GameDatabase* sys = world->GetSystem<GameDatabase>();
+    ObjectHandle obj = converterObject.to_cpp(iState, luabind::by_value<ObjectHandle>(), -3);
+    Archetype const* archetype = converterArch.to_cpp(iState, luabind::by_const_pointer<Archetype>(), -2);
+
+    if (!world->IsObjectValid(obj))
+    {
+      lua_pushstring(iState, "Invalid object");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    if (archetype == nullptr)
+    {
+      lua_pushstring(iState, "Invalid archetype");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
+    CustomizationData data;
+    if (!lua_isnil(iState, -1) && lua_istable(iState, -1))
+    {
+      luabind::table customTable(luabind::from_stack(iState, -1));
+      for (auto iter = luabind::iterator(customTable); iter != luabind::iterator(); ++iter)
+      {
+        String prop;
+        void* nameBuffer = &prop;
+        if (!TypeManager::GetType<String>()->ConvertFromLua(iter.key(), nameBuffer))
+        {
+          Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Invalid key in customization table" << "\n"  << LuaManager::StackDump(iState);
+          continue;
+        }
+
+        ConstDynObject const& archProp = archetype->GetProperty(prop);
+        if (!archProp.IsValid())
+        {
+          Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Property " << prop <<" not found in archetype" << "\n" << LuaManager::StackDump(iState);
+          continue;
+        }
+
+        TupleType const* type = archProp.GetType()->IsTuple();
+        if (!type)
+        {
+          continue;
+        }
+        
+        for (auto iterFields = luabind::iterator(*iter); iterFields != luabind::iterator(); ++iterFields)
+        {
+          String field;
+          void* fieldBuffer = &field;
+          if (!TypeManager::GetType<String>()->ConvertFromLua(iterFields.key(), fieldBuffer))
+          {
+            Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Invalid field in customization table" << "\n" << LuaManager::StackDump(iState);
+            continue;
+          }
+          Type const* fieldType = nullptr;
+          uint32_t offset;
+          if (type->ResolveFieldPath(field, offset, fieldType))
+          {
+            DynObject newCustomization;
+            newCustomization.SetType(fieldType, fieldType->Alloc(), true);
+            luabind::detail::stack_pop pop(iState, 1);
+            luabind::object obj(*iterFields);
+            obj.push(iState);
+            uint32_t top = lua_gettop(iState);
+            fieldType->ConvertFromLua_Uninit(iState, top, newCustomization.GetBuffer());
+          }
+          else
+          {
+            Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Unknown field "<< field <<" in customization table for " << prop << "\n" << LuaManager::StackDump(iState);
+            continue;
+          }
+        }
+      }
+    }
+
+    lua_pop(iState, 3);
+
+    sys->InstantiateArchetype(obj, archetype, &data);
+    
+    return 0;
+  }
+
   LUA_REG_FUN(BindEngine)
   {
     luabind::module(iState, "eXl")[
@@ -244,18 +354,24 @@ namespace eXl
           luabind::def("SetFlat", &GfxSpriteComponent::SetFlat)
         ],
 
+        luabind::class_<Archetype>("Archetype"),
+
         luabind::class_<GfxSystem>("GfxSystem")
         .def("CreateSpriteComponent", &GfxSystem::CreateSpriteComponent),
         //.def("GetSpriteComponent", &GfxSystem::GetSpriteComponent),
 
+        luabind::class_<CharacterSystem>("CharacterSystem")
+        .def("GetCurrentFacingDirection", &CharacterSystem::GetCurrentFacingDirection)
+        .def("GetCurrentState", &CharacterSystem::GetCurrentState)
+        .def("SetCurDir", &CharacterSystem::SetCurDir)
+        .def("SetSpeed", &CharacterSystem::SetSpeed),
+
         luabind::class_<World>("World")
         .def("CreateObject", (ObjectHandle (World::*)())&World::CreateObject)
         .def("DeleteObject", &World::DeleteObject)
-        //.def("GetTransforms", &GetTransforms)
-        //.def("GetArchetypeSys", &GetArchetypeSys)
-        //.def("GetGfxSystem", &GetGfxSystem)
         .def("GetTransforms", &World::GetSystem<Transforms>)
-        .def("GetGfxSystem", &World::GetSystem<GfxSystem>),
+        .def("GetGfxSystem", &World::GetSystem<GfxSystem>)
+        .def("GetCharactersSystem", &World::GetSystem<CharacterSystem>),
 
         luabind::class_<CoroutineAPI>("CoroutineAPI")
         .def("Pause", &CoroutineAPI::Pause)
@@ -281,6 +397,13 @@ namespace eXl
     lua_pushcfunction(iState, &LuaTriggerEvent);
     luabind::object dispatchEventFun(luabind::from_stack(iState, -1));
     _G["eXl"]["DispatchEvent"] = dispatchEventFun;
+    lua_pop(iState, 1);
+
+    _G["eXl"]["PropertySheetName"] = _G["eXl"]["Name"];
+
+    lua_pushcfunction(iState, &InstantiateArchetype_Script);
+    luabind::object instantiateArch(luabind::from_stack(iState, -1));
+    _G["eXl"]["InstantiateArchetype"] = instantiateArch;
     lua_pop(iState, 1);
 
     _G["eXl"]["PropertySheetName"] = _G["eXl"]["Name"];

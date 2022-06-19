@@ -298,6 +298,6 @@ namespace eXl
 
 #include "network.inl"
   }
-  DEFINE_ENGINE_TYPE_EX(Network::ClientId, NetClientId);
-  DEFINE_ENGINE_TYPE_EX(Network::ObjectId, NetObjectId);
+  DECLARE_ENGINE_TYPE_EX(Network::ClientId, NetClientId);
+  DECLARE_ENGINE_TYPE_EX(Network::ObjectId, NetObjectId);
 }

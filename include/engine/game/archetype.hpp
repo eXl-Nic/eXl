@@ -33,6 +33,8 @@ namespace eXl
     SERIALIZE_METHODS;
   };
 
+  class Archetype;
+
   class EXL_ENGINE_API Archetype : public Resource
   {
     DECLARE_RTTI(Archetype, Resource)
@@ -89,4 +91,4 @@ namespace eXl
   };
 
 #include "archetype.inl"
-}
+} 

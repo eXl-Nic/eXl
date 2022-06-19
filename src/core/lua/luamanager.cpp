@@ -31,6 +31,7 @@ extern "C"
 #include <luabind/luabind.hpp>
 #include <luabind/class_info.hpp>
 #include <core/lua/luabind_eXl.hpp>
+#include <core/resource/resourcemanager.hpp>
 
 #include <sstream>
 #include <boost/optional.hpp>
@@ -326,7 +327,6 @@ namespace eXl
         {nullptr, nullptr} /* end of array */
       };
 
-
       void BuildState(LuaStateHandle iStateHandle)
       {
         lua_State* iState = iStateHandle.GetState();
@@ -358,6 +358,19 @@ namespace eXl
             eXl_ASSERT_MSG(false, errMsg.c_str());
           }
         }
+
+        try
+        {
+          lua_pushcfunction(iState, &ResourceManager::RegisterHandles );
+          lua_pcall(iState, 0, LUA_MULTRET, -2);
+        }
+        catch (std::exception& e)
+        {
+          std::string errMsg("Err during LuaReg : ");
+          errMsg = errMsg + e.what();
+          eXl_ASSERT_MSG(false, errMsg.c_str());
+        }
+
         lua_remove(iState, stackTop);
       }
 
@@ -972,7 +985,7 @@ namespace eXl
     return GetPushedObjectRef(state, iType);
   }
 
-  luabind::detail::class_rep* GetClassRepFromType(lua_State* iState, Type const* iType)
+  luabind::detail::class_rep* LuaManager::GetClassRepFromType(lua_State* iState, Type const* iType)
   {
     lua_pushliteral(iState, "__luabind_class_id_map");
     lua_rawget(iState, LUA_REGISTRYINDEX);

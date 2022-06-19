@@ -249,22 +249,22 @@ namespace eXl
 #include <core/stream/streamer.hpp>
 #include <core/stream/unstreamer.hpp>
 
-#define DEFINE_MATH_TYPE_EX(type, friendlyname) DEFINE_TYPE_EX(type, friendlyname, EXL_MATH_API)
-#define DEFINE_MATH_TYPE(type) DEFINE_MATH_TYPE_EX(eXl::type, eXl__##type)
+#define DECLARE_MATH_TYPE_EX(type, friendlyname) DECLARE_TYPE_EX(type, friendlyname, EXL_MATH_API)
+#define DECLARE_MATH_TYPE(type) DECLARE_MATH_TYPE_EX(eXl::type, eXl__##type)
 
 namespace eXl
 {
-  DEFINE_MATH_TYPE(Vec4)
-  DEFINE_MATH_TYPE(Vec3)
-  DEFINE_MATH_TYPE(Vec2)
-  DEFINE_MATH_TYPE(Vec4i)
-  DEFINE_MATH_TYPE(Vec3i)
-  DEFINE_MATH_TYPE(Vec2i)
-  DEFINE_MATH_TYPE(Quaternion)
-  DEFINE_MATH_TYPE(Mat4)
+  DECLARE_MATH_TYPE(Vec4)
+  DECLARE_MATH_TYPE(Vec3)
+  DECLARE_MATH_TYPE(Vec2)
+  DECLARE_MATH_TYPE(Vec4i)
+  DECLARE_MATH_TYPE(Vec3i)
+  DECLARE_MATH_TYPE(Vec2i)
+  DECLARE_MATH_TYPE(Quaternion)
+  DECLARE_MATH_TYPE(Mat4)
 
-  DEFINE_MATH_TYPE_EX(eXl::AABB2D<int>, eXl__AABB2Di)
-  DEFINE_MATH_TYPE_EX(eXl::AABB2D<float>, eXl__AABB2Df)
+  DECLARE_MATH_TYPE_EX(eXl::AABB2D<int>, eXl__AABB2Di)
+  DECLARE_MATH_TYPE_EX(eXl::AABB2D<float>, eXl__AABB2Df)
 
   template <>
   struct TypeTraits::IsComparable<Vec3>{static constexpr bool s_Value = false;};

@@ -53,7 +53,7 @@ namespace luabind
 
 namespace eXl
 {
-  DEFINE_TYPE_EX(luabind::class_info, luabind__class_info, LUABIND_API)
+  DECLARE_TYPE_EX(luabind::class_info, luabind__class_info, LUABIND_API)
   namespace TypeTraits
   {
     template <>

@@ -17,6 +17,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/stream/textreader.hpp>
 #include <functional>
 
+struct lua_State;
+
 namespace eXl
 {
   namespace ResourceManager
@@ -37,9 +39,10 @@ namespace eXl
     EXL_CORE_API ResourceLoaderName GetLoaderFromRtti(Rtti const& iRtti);
     EXL_CORE_API Type const* GetHandleType(Rtti const& iRtti);
     EXL_CORE_API Type const* GetHandleType(ResourceLoaderName iLoaderName);
-    EXL_CORE_API void AddLoader(ResourceLoader* iLoader, Rtti const& iRtti);
+    EXL_CORE_API void AddLoader(ResourceLoader* iLoader, Rtti const& iRtti, Type const* iResourceType);
     EXL_CORE_API Vector<ResourceLoaderName> ListLoaders();
     EXL_CORE_API ResourceLoader* GetLoader(ResourceLoaderName iLoaderName);
+    EXL_CORE_API int RegisterHandles(lua_State* iState);
 
     EXL_CORE_API Resource* LoadExpectedType(Resource::UUID const& iUUID, const ResourceLoaderName& iExpectedLoader);
     template <typename T>

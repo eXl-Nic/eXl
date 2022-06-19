@@ -29,7 +29,7 @@ namespace eXl
 
   struct CoroutineAPI;
 
-  DEFINE_ENGINE_TYPE(CoroutineAPI)
+  DECLARE_ENGINE_TYPE(CoroutineAPI)
 
   struct CoroutineAPI
   {

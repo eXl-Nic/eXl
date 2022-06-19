@@ -163,7 +163,7 @@ namespace eXl
 
   void MapResource::Init()
   {
-    ResourceManager::AddLoader(&MapLoader::Get(), MapResource::StaticRtti());
+    ResourceManager::AddLoader(&MapLoader::Get(), MapResource::StaticRtti(), GetType());
   }
 
 #ifndef EXL_IS_BAKED_PLATFORM

@@ -16,7 +16,7 @@ namespace eXl
 
   void MCMCModelRsc::Init()
   {
-    ResourceManager::AddLoader(&MCMCModelLoader::Get(), MCMCModelRsc::StaticRtti());
+    ResourceManager::AddLoader(&MCMCModelLoader::Get(), MCMCModelRsc::StaticRtti(), GetType());
   }
 
   ResourceLoaderName MCMCModelRsc::StaticLoaderName()

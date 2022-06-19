@@ -23,7 +23,7 @@ namespace eXl
 
   void LuaEventHandler::Init()
   {
-    ResourceManager::AddLoader(&LuaEventHandlerLoader::Get(), LuaEventHandler::StaticRtti());
+    ResourceManager::AddLoader(&LuaEventHandlerLoader::Get(), LuaEventHandler::StaticRtti(), GetType());
   }
 
   ResourceLoaderName LuaEventHandler::StaticLoaderName()

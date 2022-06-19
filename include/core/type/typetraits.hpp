@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/typedefs.hpp>
 #include <core/corelibexp.hpp>
 
-#define DEFINE_TYPE_EX(type, friendlyname, DLL) \
+#define DECLARE_TYPE_EX(type, friendlyname, DLL) \
   DLL Type const* Get_##friendlyname##_NativeType(); \
                                            \
   template <>                              \
@@ -60,9 +60,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     return TypeName(#type);                \
   }
 
-#define DEFINE_CORE_TYPE_EX(type, friendlyname) DEFINE_TYPE_EX(type, friendlyname, EXL_CORE_API)
-#define DEFINE_CORE_TYPE(type) DEFINE_CORE_TYPE_EX(eXl::type, eXl__##type)
-#define DEFINE_BASE_TYPE(type) DEFINE_CORE_TYPE_EX(type, type)
+#define DECLARE_CORE_TYPE_EX(type, friendlyname) DECLARE_TYPE_EX(type, friendlyname, EXL_CORE_API)
+#define DECLARE_CORE_TYPE(type) DECLARE_CORE_TYPE_EX(eXl::type, eXl__##type)
+#define DECLARE_BASE_TYPE(type) DECLARE_CORE_TYPE_EX(type, type)
 
 #define IMPLEMENT_TYPE_EX(type, friendlyname) \
   Type const* Get_##friendlyname##_NativeType() \
@@ -78,7 +78,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
      return &s_Type;                            \
   }
 
-#define DEFINE_ENUM_TYPE(Enum, friendlyName, DLL)      \
+#define DECLARE_ENUM_TYPE(Enum, friendlyName, DLL)      \
 template <>                              \
 struct IsEnumType<Enum>                  \
 {                                        \
@@ -118,7 +118,7 @@ return TypeName(#Enum);                \
     static Type const* GetType(); \
     Err Stream(Streamer& iStreamer) const; \
     Err Unstream(Unstreamer& iStreamer);
-  #define EXL_REFLECT_ENUM(Enum, FriendlyName, DLL) DEFINE_ENUM_TYPE(Enum, FriendlyName, DLL)
+  #define EXL_REFLECT_ENUM(Enum, FriendlyName, DLL) DECLARE_ENUM_TYPE(Enum, FriendlyName, DLL)
 #endif
 
 #include <core/name.hpp>
@@ -299,24 +299,24 @@ namespace eXl
     struct IsOrdered<unsigned char> { static constexpr bool s_Value = true; };
   }
 
-  DEFINE_BASE_TYPE(uint32_t)
-  DEFINE_BASE_TYPE(uint64_t)
-  DEFINE_BASE_TYPE(int32_t)
-  DEFINE_BASE_TYPE(float)
-  DEFINE_BASE_TYPE(bool)
-  DEFINE_BASE_TYPE(uint8_t)
-  DEFINE_BASE_TYPE(uint16_t)
+  DECLARE_BASE_TYPE(uint32_t)
+  DECLARE_BASE_TYPE(uint64_t)
+  DECLARE_BASE_TYPE(int32_t)
+  DECLARE_BASE_TYPE(float)
+  DECLARE_BASE_TYPE(bool)
+  DECLARE_BASE_TYPE(uint8_t)
+  DECLARE_BASE_TYPE(uint16_t)
 #ifndef __ANDROID__
-  //DEFINE_CORE_TYPE(WString)
+  //DECLARE_CORE_TYPE(WString)
 #endif
-  DEFINE_CORE_TYPE(AString)
-  DEFINE_CORE_TYPE(KString)
-  DEFINE_CORE_TYPE(Name)
+  DECLARE_CORE_TYPE(AString)
+  DECLARE_CORE_TYPE(KString)
+  DECLARE_CORE_TYPE(Name)
 
-  DEFINE_CORE_TYPE(ConstDynObject)
-  DEFINE_CORE_TYPE(DynObject)
-  DEFINE_CORE_TYPE(Rtti)
-  DEFINE_CORE_TYPE(Err)
+  DECLARE_CORE_TYPE(ConstDynObject)
+  DECLARE_CORE_TYPE(DynObject)
+  DECLARE_CORE_TYPE(Rtti)
+  DECLARE_CORE_TYPE(Err)
 }
 
 #include <core/stream/streamer.hpp>

@@ -109,5 +109,5 @@ namespace eXl
 		QSpinBox* m_SelectionY;
 	};
 
-  DEFINE_TYPE_EX(eXl::ObjectsTool::PlacedObject, eXl__ObjectsTool__PlacedObject, )
+  DECLARE_TYPE_EX(eXl::ObjectsTool::PlacedObject, eXl__ObjectsTool__PlacedObject, )
 }

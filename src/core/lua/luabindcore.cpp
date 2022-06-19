@@ -21,6 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/dynobject.hpp>
 
 #include <core/rtti.hpp>
+#include <core/resource/resource.hpp>
 
 
 #include <luabind/luabind.hpp>
@@ -80,6 +81,9 @@ namespace eXl
       
       luabind::class_<RttiObject>("RttiObject")
       .def("GetRtti",&RttiObject::GetRtti),
+
+      luabind::class_<Resource, RttiObject>("Resource")
+      .def("GetName", &Resource::GetName),
 
       luabind::class_<String>("String")
           .def(luabind::constructor<>())

@@ -18,12 +18,12 @@ namespace eXl
   class ResourceLoader;
   namespace ResourceManager
   {
-    EXL_CORE_API void AddLoader(ResourceLoader* , Rtti const& );
+    EXL_CORE_API void AddLoader(ResourceLoader* , Rtti const&, Type const*);
   }
 
   class EXL_CORE_API ResourceHandleType : public CoreType
   {
-    friend void ResourceManager::AddLoader(ResourceLoader*, Rtti const&);
+    friend void ResourceManager::AddLoader(ResourceLoader*, Rtti const&, Type const*);
     DECLARE_RTTI(ResourceHandleType, Type);
   public:
 
@@ -44,6 +44,8 @@ namespace eXl
     Err ConvertFromLua_Uninit(lua_State* iState,unsigned int& ioIndex,void* oObj)const;
 
     luabind::object ConvertToLua(void const* iObj,lua_State* iState)const;
+
+    void RegisterLua(lua_State* iState) const;
 #endif
     Err Compare(void const* iVal1, void const* iVal2, CompRes& oRes)const;
 
@@ -55,11 +57,13 @@ namespace eXl
 
     Resource::UUID const& GetUUID(void const* iData) const;
     void SetUUID(void* iData, Resource::UUID const&) const;
+    Type const* GetResourceType() const { return m_ResourceType; }
 
   protected:
     ResourceHandleType();
-    ResourceHandleType(Rtti const& iRtti);
+    ResourceHandleType(Rtti const& iRtti, Type const* iResourceType);
 
     Rtti const& m_Rtti;
+    Type const* m_ResourceType;
   };
 }

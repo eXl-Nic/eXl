@@ -39,8 +39,8 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         o << "#pragma once\n";
 		    //o << "#include <core/type/typetraits.hpp>\n";
-        //o << "#define DEFINE_"<< options.internalLibName <<"_TYPE_EX(type, friendlyname) DEFINE_TYPE_EX(type, friendlyname, EXL_" << options.internalLibName << "_API)\n";
-        //o << "#define DEFINE_"<< options.internalLibName <<"_TYPE(type) DEFINE_"<< options.internalLibName <<"_TYPE_EX(type, type)\n";
+        //o << "#define DECLARE_"<< options.internalLibName <<"_TYPE_EX(type, friendlyname) DECLARE_TYPE_EX(type, friendlyname, EXL_" << options.internalLibName << "_API)\n";
+        //o << "#define DECLARE_"<< options.internalLibName <<"_TYPE(type) DEFINE_"<< options.internalLibName <<"_TYPE_EX(type, type)\n";
 		    //o << options.include_path << "\n";
 
         o << "namespace eXl\n";
@@ -118,7 +118,7 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		    out_cpp = fout_cpp.get();
 	    }
 
-      String defineMacroName = "DEFINE_";
+      String defineMacroName = "DECLARE_";
       defineMacroName.append(options.internalLibName);
       defineMacroName.append("_TYPE");
 

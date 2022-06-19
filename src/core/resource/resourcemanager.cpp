@@ -243,7 +243,7 @@ namespace eXl
       return nullptr;
     }
 
-    void AddLoader(ResourceLoader* iLoader, Rtti const& iRtti)
+    void AddLoader(ResourceLoader* iLoader, Rtti const& iRtti, Type const* iResourceType)
     {
       if (iLoader)
       {
@@ -254,13 +254,22 @@ namespace eXl
         ResourceTypeEntry newType;
         newType.loader = iLoader;
         newType.rtti = &iRtti;
-        newType.handleType = new ResourceHandleType(iRtti);
+        newType.handleType = new ResourceHandleType(iRtti, iResourceType);
         TypeManager::RegisterType(newType.handleType);
         TypeManager::RegisterArrayType(new CoreArrayType<ResourceHandle<Resource>>(newType.handleType));
 
         GetImpl().m_Loaders.emplace(std::make_pair(loaderName, std::move(newType)));
         GetImpl().m_RttiToLoader.emplace(std::make_pair(&iRtti, loaderName));
       }
+    }
+
+    int RegisterHandles(lua_State* iState)
+    {
+      for (auto const& entry : GetImpl().m_Loaders)
+      {
+        entry.second.handleType->RegisterLua(iState);
+      }
+      return 0;
     }
 
     Vector<ResourceLoaderName> ListLoaders()
