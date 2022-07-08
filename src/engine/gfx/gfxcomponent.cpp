@@ -18,7 +18,7 @@ namespace eXl
 {
   IMPLEMENT_RefC(GfxResource)
 
-  void GeometryInfo::SetupAssembly(bool hasTexCoord)
+  void Geometry::SetupAssembly(bool hasTexCoord)
   {
     m_Assembly.m_Attribs.clear();
 
@@ -64,7 +64,7 @@ namespace eXl
     m_Transform = iTransform;
   }
 
-  void GfxComponent::SetGeometry(GeometryInfo* iGeometry)
+  void GfxComponent::SetGeometry(Geometry* iGeometry)
   {
     m_Geometry = iGeometry;
   }

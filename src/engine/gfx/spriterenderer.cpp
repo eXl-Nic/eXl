@@ -136,14 +136,14 @@ namespace eXl
       auto cacheIter = m_SpriteGeomCache.find(cacheKey);
       if (cacheIter == m_SpriteGeomCache.end())
       {
-        IntrusivePtr<GeometryInfo> geom(eXl_NEW GeometryInfo);
+        IntrusivePtr<Geometry> geom(eXl_NEW Geometry);
         geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(descData->m_Size, descData->m_Flat);
         geom->m_Indices = m_DefaultSpriteIdxBuffer;
         geom->SetupAssembly(true);
         cacheIter = m_SpriteGeomCache.insert(std::make_pair(cacheKey, geom)).first;
       }
 
-      IntrusivePtr<GeometryInfo> geom = cacheIter->second;
+      IntrusivePtr<Geometry> geom = cacheIter->second;
 
       Vec2 texStep(1.0f / imageSize.x, 1.0f / imageSize.y);
 

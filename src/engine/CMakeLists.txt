@@ -65,6 +65,11 @@ gfx/gfxcomponentrendernode.cpp
 gfx/gfxspriterendernode.cpp
 gfx/gfxguirendernode.cpp
 gfx/spriterenderer.cpp
+
+gfx/model.cpp
+gfx/model_importer.cpp
+gfx/bounds3d.cpp
+gfx/gfx3dscene.cpp
 )
 
 set (LUA_SRC
@@ -148,6 +153,7 @@ target_include_directories(eXl_Engine PRIVATE
   ${FREETYPE_INCLUDE_DIR}
   ${UTF8_INCLUDE_DIR}
   ${YOJIMBO_INCLUDE_DIR}
+  ${ASSIMP_INCLUDE_DIR}
 )
 
 target_include_directories(eXl_Engine PUBLIC  
@@ -173,6 +179,7 @@ set( PREREQS_PRIV
   BulletCollision
   LinearMath
   yojimbo
+  assimp
 )
 
 if(${EXL_BUILD_OGL})

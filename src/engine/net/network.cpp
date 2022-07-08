@@ -5,8 +5,6 @@
 
 namespace eXl
 {
-  IMPLEMENT_TYPE_EX(Network::ClientId, NetClientId);
-  IMPLEMENT_TYPE_EX(Network::ObjectId, NetObjectId);
   namespace Network
   {
     Optional<uint64_t> HexToUint64(KString iStr)

@@ -89,7 +89,7 @@ namespace eXl
 
       Mat4 identMatrix = Identity<Mat4>();
 
-      auto geom = eXl_NEW GeometryInfo;
+      auto geom = eXl_NEW Geometry;
       geom->m_Assembly = assembly;
       geom->m_Vertices = buffer;
       geom->m_Command = OGLDraw::TriangleList;

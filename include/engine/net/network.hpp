@@ -45,8 +45,6 @@ namespace eXl
       uint64_t id;
       bool operator == (ClientId const& iOther) const;
       bool operator != (ClientId const& iOther) const;
-      Err Stream(Streamer& iStreamer) const;
-      Err Unstream(Unstreamer& iStreamer);
     };
 
     struct ObjectId
@@ -56,8 +54,6 @@ namespace eXl
       uint64_t id;
       bool operator == (ObjectId const& iOther) const;
       bool operator != (ObjectId const& iOther) const;
-      Err Stream(Streamer& iStreamer) const;
-      Err Unstream(Unstreamer& iStreamer);
     };
 
     size_t hash_value(ClientId const& iId);

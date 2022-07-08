@@ -19,7 +19,7 @@ namespace eXl
     DenseGameDataView<GfxSpriteData>& m_SpriteData;
     Transforms& m_Transforms;
 
-    UnorderedMap<Vec3, IntrusivePtr<GeometryInfo>> m_SpriteGeomCache;
+    UnorderedMap<Vec3, IntrusivePtr<Geometry>> m_SpriteGeomCache;
 
     UniquePtr<OGLCompiledProgram const> m_SpriteProgram;
     IntrusivePtr<OGLBuffer> m_DefaultSpriteIdxBuffer;

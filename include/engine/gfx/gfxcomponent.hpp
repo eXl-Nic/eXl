@@ -34,7 +34,7 @@ namespace eXl
 		virtual ~GfxResource() {}
 	};
 
-  class EXL_ENGINE_API GeometryInfo : public GfxResource
+  class EXL_ENGINE_API Geometry : public GfxResource
   {
   public:
 
@@ -47,14 +47,17 @@ namespace eXl
     OGLDraw::Command m_Command;
   };
 
-  class EXL_ENGINE_API MaterialInfo : public GfxResource
+  class EXL_ENGINE_API MaterialInterface : public GfxResource
   {
   public:
-
     virtual uint32_t Push(OGLDisplayList& iList) = 0;
   };
 
-  class EXL_ENGINE_API SpriteMaterialInfo : public MaterialInfo
+  class EXL_ENGINE_API Material : public MaterialInterface
+  {
+  };
+
+  class EXL_ENGINE_API SpriteMaterialInfo : public Material
   {
   public:
 
@@ -76,7 +79,7 @@ namespace eXl
   protected:
     struct Draw
     {
-      IntrusivePtr<MaterialInfo> m_Material;
+      IntrusivePtr<Material> m_Material;
 
       uint32_t m_NumElements = 0;
       uint32_t m_Offset = 0;
@@ -97,8 +100,8 @@ namespace eXl
     }
     void SetTransform(Mat4 const& iTransform);
 
-    void SetGeometry(GeometryInfo* iGeom);
-    inline void SetGeometry(IntrusivePtr<GeometryInfo> const& iGeom) { SetGeometry(iGeom.get()); }
+    void SetGeometry(Geometry* iGeom);
+    inline void SetGeometry(IntrusivePtr<Geometry> const& iGeom) { SetGeometry(iGeom.get()); }
 
     struct [[nodiscard]] DrawBuilder
     {
@@ -112,7 +115,7 @@ namespace eXl
       void End() { m_Component.AddDraw(std::move(m_Draw)); }
     protected:
       friend GfxComponent;
-      DrawBuilder(GfxComponent& iComp, MaterialInfo* iMat)
+      DrawBuilder(GfxComponent& iComp, Material* iMat)
         : m_Component(iComp)
       {
         m_Draw.m_Material = iMat;
@@ -124,8 +127,8 @@ namespace eXl
 
     //void AddDraw(MaterialInfo* iMat, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
     //void AddDrawIstanced(MaterialInfo* iMat, uint32_t iNumInstances, uint32_t iNumElems, uint32_t iOffset, uint8_t iLayer = 0);
-    DrawBuilder AddDraw(MaterialInfo* iMat) { return DrawBuilder(*this, iMat); }
-    DrawBuilder AddDraw(IntrusivePtr<MaterialInfo> const& iMat) { return AddDraw(iMat.get()); }
+    DrawBuilder AddDraw(Material* iMat) { return DrawBuilder(*this, iMat); }
+    DrawBuilder AddDraw(IntrusivePtr<Material> const& iMat) { return AddDraw(iMat.get()); }
 
     void ClearDraws()
     {
@@ -147,7 +150,7 @@ namespace eXl
     Mat4 m_Transform;
 
     Vector<Draw> m_Draws;
-    IntrusivePtr<GeometryInfo> m_Geometry;
+    IntrusivePtr<Geometry> m_Geometry;
 
     OGLShaderData m_PositionData;
     OGLCompiledProgram const* m_Program = nullptr;
@@ -155,7 +158,7 @@ namespace eXl
 
 	struct EXL_ENGINE_API GfxSpriteData
 	{
-		IntrusivePtr<GeometryInfo> m_Geometry;
+		IntrusivePtr<Geometry> m_Geometry;
 
 		SpriteColor m_SpriteInfo;
 
