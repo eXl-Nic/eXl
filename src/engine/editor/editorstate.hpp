@@ -6,6 +6,7 @@
 #include <core/log.hpp>
 
 #include <core/resource/resource.hpp>
+#include <engine/common/world.hpp>
 
 #include "projectresourcesmodel.hpp"
 
@@ -119,6 +120,7 @@ namespace eXl
 
     static void RestoreProject();
 
+    static WorldConfig BuildWorldConfig();
     static DocumentState* GetCurrentProject();
     static DocumentState* CreateProject(Path const& iDir, String const& iName);
     static DocumentState* OpenProject(Path const& iPath);

@@ -8,6 +8,7 @@
 #include <engine/game/archetype.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/script/luacoroutine.hpp>
+#include <engine/script/luafunctionlibrary.hpp>
 
 #include <core/utils/capturestack.hpp>
 
@@ -248,7 +249,26 @@ namespace eXl
     db.InstantiateArchetype(obj2, dummyArch, nullptr);
     db.InstantiateArchetype(obj3, dummyArch, nullptr);
 
+    LuaFunctionLibrary* funLib = LuaFunctionLibrary::Create("", "TestFunLib");
+
+    funLib->m_Script =
+R"(
+
+local module Test_Utils = {}
+
+function Test_Utils.SpawnStuff(archToSpawn)
+
+    local newObj = eXl.GetWorld():CreateObject()
+    local custoTable = {TestCounter={counter=0}}
+    eXl.InstantiateArchetype(newObj, archToSpawn, custoTable)
+
+end
+  
+return {namespace = "eXl.Test", functions = Test_Utils}
+)";
+
     LuaCoroutine* luaCo = LuaCoroutine::Create("", "TestLuaCoroutine");
+    luaCo->m_Dependencies.emplace_back(funLib);
 
     luaCo->m_Script =
 R"(
@@ -263,9 +283,7 @@ function Test_routine.Start(object)
 
   local archToSpawn = self.data.toSpawn:GetOrLoad()
   if archToSpawn ~= nil then
-    local newObj = eXl.GetWorld():CreateObject()
-    local custoTable = {TestCounter={counter=0}}
-    eXl.InstantiateArchetype(newObj, archToSpawn, custoTable)
+    eXl.Test.SpawnStuff(archToSpawn)
   end
   return self
 end

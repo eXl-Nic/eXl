@@ -172,6 +172,12 @@ namespace eXl
   {
   public:
 
+    ResourceHandle() = default;
+    ResourceHandle(T const* iRsc)
+    {
+      Set(iRsc);
+    }
+
     bool IsLoaded() const { return m_Resource != nullptr; }
 
     void Set(T const* iResource)

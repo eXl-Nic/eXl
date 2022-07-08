@@ -254,8 +254,9 @@ namespace eXl
     SDL_GLContext context = 0;
     SDL_Renderer* renderer = 0;
 
-    WorldState* m_World;
-    PropertiesManifest* m_Manifest;
+    WorldState* m_World = nullptr;
+    Project* m_Project = nullptr;
+    WorldConfig const* m_Conf = nullptr;
     bool m_DisplayDebugUI = false;
 
     void InitOGL()
@@ -281,7 +282,7 @@ namespace eXl
 
       GfxSystem::StaticInit();
 
-      m_World->Init(*m_Manifest).WithGfx();
+      m_World->Init(*m_Conf).WithGfx();
       if (GetScenario())
       {
         m_World->WithScenario(GetScenario());
@@ -671,10 +672,10 @@ int eXl_Main::Start(int argc, char const* const argv[])
 
   Project::ProjectTypes types;
   PropertiesManifest appManifest = EngineCommon::GetBaseProperties();
-  app.m_Manifest = &appManifest;
-
-  Project* project = nullptr;
-
+  EventsManifest events = EngineCommon::GetBaseEvents();
+  ComponentManifest component = EngineCommon::GetComponents();
+  
+  app.m_Project = nullptr;
 
 #if defined(__ANDROID__)
   ResourceManager::BootstrapAssetsFromManifest(String());
@@ -686,29 +687,33 @@ int eXl_Main::Start(int argc, char const* const argv[])
     ResourceManager::BootstrapAssetsFromManifest(projectDir);
 #else
     ResourceManager::BootstrapDirectory(projectDir, true);
-    project = ResourceManager::Load<Project>(projectPath);
+    app.m_Project = ResourceManager::Load<Project>(projectPath);
 #endif
   }
 #endif
 
-  if(!project)
+  if(!app.m_Project)
   {
     Vector<Resource::Header> projectRes = ResourceManager::ListResources(Project::StaticLoaderName());
 
     eXl_ASSERT_REPAIR_RET(!projectRes.empty(), -1);
 
-    project = ResourceManager::Load<Project>(projectRes[0].m_ResourceId);
+    app.m_Project = ResourceManager::Load<Project>(projectRes[0].m_ResourceId);
   }
 
-  eXl_ASSERT_REPAIR_RET(project != nullptr, -1);
+  eXl_ASSERT_REPAIR_RET(app.m_Project != nullptr, -1);
 
-  if (!project->m_GameDll.empty())
+  if (!app.m_Project->m_GameDll.empty())
   {
-    Plugin const* gamePlugin = Plugin::LoadLib(project->m_GameDll);
+    Plugin const* gamePlugin = Plugin::LoadLib(app.m_Project->m_GameDll);
     eXl_ASSERT_REPAIR_RET(gamePlugin != nullptr, -1);
   }
   
-  project->FillProperties(types, appManifest);
+  app.m_Project->FillProperties(types, appManifest);
+  app.m_Project->FillEvents(events);
+
+  WorldConfig conf = { *app.m_Project, component, appManifest, events };
+  app.m_Conf = &conf;
 
   ResourceManager::AddManifest(EngineCommon::GetComponents());
   ResourceManager::AddManifest(appManifest);
@@ -745,12 +750,12 @@ int eXl_Main::Start(int argc, char const* const argv[])
 #endif
     if (!scenario->GetMainCharHandle().GetUUID().IsValid())
     {
-      scenario->SetMainChar(project->m_PlayerArchetype);
+      scenario->SetMainChar(app.m_Project->m_PlayerArchetype);
     }
 
     if (!scenario->GetMapHandle().GetUUID().IsValid())
     {
-      scenario->SetMap(project->m_StartupMap);
+      scenario->SetMap(app.m_Project->m_StartupMap);
     }
   }
 

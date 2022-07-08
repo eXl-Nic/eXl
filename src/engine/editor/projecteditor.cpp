@@ -6,6 +6,7 @@
 #include "objectdelegate.hpp"
 
 #include "collectionmodel.hpp"
+#include "fundecleditor.hpp"
 
 #include <core/type/typemanager.hpp>
 
@@ -30,55 +31,88 @@
 
 namespace eXl
 {
-  class PropertySheetDeclCollectionModel : public CollectionModel<TypeName, Project::Typedecl, Project>
+  using PropertySheetDeclCollectionModel = CollectionModelMapAdaptor<TypeName, Project::TypeDecl, Project, &Project::m_Types>;
+  using ClientCallbacksCollectionModel = CollectionModelMapAdaptor<String, Project::FunctionDecl, Project, &Project::m_ClientCommands>;
+  using ServerCallbacksCollectionModel = CollectionModelMapAdaptor<String, Project::FunctionDecl, Project, &Project::m_ServerCommands>;
+  using ItfCollectionModel = CollectionModelMapAdaptor<String, UnorderedMap<String, Project::FunctionDecl>, Project, &Project::m_Events>;
+
+  class EventsCollectionModel : public CollectionModel<String, Project::FunctionDecl, Project>
   {
-    //Q_OBJECT
   public:
-    static PropertySheetDeclCollectionModel* Create(QObject* iParent, Project* iProject);
+
+    static EventsCollectionModel* Create(QObject* iParent, String iInterfaceName, Project* iResource)
+    {
+      auto iter = iResource->m_Events.find(iInterfaceName);
+      if (iter == iResource->m_Events.end())
+      {
+        return nullptr;
+      }
+      EventsCollectionModel* model = new EventsCollectionModel(iParent, iInterfaceName, iResource);
+
+      model->BuildMap(iter->second);
+
+      return model;
+    }
 
   protected:
-    PropertySheetDeclCollectionModel(QObject* iParent, Project* iGroup);
-    bool AddToResource(TypeName const& iName, Project::Typedecl const&) override;
-    bool RemoveFromResource(TypeName const& iName) override;
-    Project::Typedecl const* FindInResource(TypeName const& iName) const override;
+    String m_InterfaceName;
 
-  };
-
-  PropertySheetDeclCollectionModel* PropertySheetDeclCollectionModel::Create(QObject* iParent, Project* iProject)
-  {
-    PropertySheetDeclCollectionModel* newModel = new PropertySheetDeclCollectionModel(iParent, iProject);
-    newModel->BuildMap(iProject->m_Types);
-
-    return newModel;
-  }
-
-  PropertySheetDeclCollectionModel::PropertySheetDeclCollectionModel(QObject* iParent, Project* iArchetype)
-    : CollectionModel(iParent, iArchetype)
-  {
-  }
-
-  bool PropertySheetDeclCollectionModel::AddToResource(TypeName const& iName, Project::Typedecl const& iValue)
-  {
-    auto insertRes = m_Resource->m_Types.insert(std::make_pair(iName, iValue));
-    
-    return insertRes.second;
-  }
-
-  bool PropertySheetDeclCollectionModel::RemoveFromResource(TypeName const& iName)
-  {
-    m_Resource->m_Types.erase(iName);
-    return true;
-  }
-
-  Project::Typedecl const* PropertySheetDeclCollectionModel::FindInResource(TypeName const& iName) const
-  {
-    auto iter = m_Resource->m_Types.find(iName);
-    if (iter != m_Resource->m_Types.end())
+    EventsCollectionModel(QObject* iParent, String iInterfaceName, Project* iResource)
+      : CollectionModel(iParent, iResource)
+      , m_InterfaceName(iInterfaceName)
     {
-      return &iter->second;
+
     }
-    return nullptr;
-  }
+
+    bool AddToResource(String const& iName, Project::FunctionDecl const& iValue) override
+    {
+      auto iter = m_Resource->m_Events.find(m_InterfaceName);
+      if (iter == m_Resource->m_Events.end())
+      {
+        return false;
+      }
+
+      auto insertRes = iter->second.insert(std::make_pair(iName, iValue));
+
+      return insertRes.second;
+    }
+
+    bool RemoveFromResource(String const& iName) override
+    {
+      auto iter = m_Resource->m_Events.find(m_InterfaceName);
+      if (iter == m_Resource->m_Events.end())
+      {
+        return false;
+      }
+
+      auto iterEvt = iter->second.find(iName);
+      if (iterEvt == iter->second.end())
+      {
+        return false;
+      }
+
+      iter->second.erase(iterEvt);
+
+      return true;
+    }
+
+    Project::FunctionDecl const* FindInResource(String const& iName) const override
+    {
+      auto iter = m_Resource->m_Events.find(m_InterfaceName);
+      if (iter == m_Resource->m_Events.end())
+      {
+        return nullptr;
+      }
+
+      auto iterEvt = iter->second.find(iName);
+      if (iterEvt == iter->second.end())
+      {
+        return nullptr;
+      }
+
+      return &iterEvt->second;
+    }
+  };
 
   class ProjectEditorHandler : public ResourceEditorHandler
   {
@@ -107,29 +141,37 @@ namespace eXl
 	struct ProjectEditor::Impl
 	{
     Impl(ProjectEditor* iEditor, Project* iProject);
+
+    void AddEventEdit(QTabWidget* iWidget);
+
+    template<typename Collection, Collection* Impl::* iCol, typename Collection::key_type Impl::* iEdited>
+    QListView* SetupTypeEdit(QTabWidget* iWidget, char const* iName, TypeDeclEditor* iEditor);
+
+    template<typename Collection, Collection* Impl::* iCol, typename Collection::key_type Impl::* iEdited>
+    void AddTypeEdit(QTabWidget* iWidget, char const* iName);
+
+    template<typename Collection, Collection* Impl::* iCol, typename Collection::key_type Impl::* iEdited>
+    void AddFunDeclEdit(QTabWidget* iWidget, char const* iName);
 		
     QModelIndex m_GroupSelection;
 
     PropertySheetDeclCollectionModel* m_PropsCollectionModel;
-
-    QTableWidget* m_PropDataView;
-    QMetaObject::Connection m_PropDataChangeCb;
-    QListView* m_PropCollectionView;
-
-    QModelIndex m_CurrentPropIdx;
+    ClientCallbacksCollectionModel* m_ClientCallbacksModel;
+    ServerCallbacksCollectionModel* m_ServerCallbacksModel;
+    ItfCollectionModel* m_ItfCollection;
+    EventsCollectionModel* m_EventsCollection = nullptr;
 
     TypeName m_CurrentEditedSheetName;
-    Project::Typedecl m_CurrentEditedType;
+    String m_CurrentEditedClientCBName;
+    String m_CurrentEditedServerCBName;
+    String m_CurrentEditedEventItfName;
+    String m_CurrentEditedEventFunName;
     
     QComboBox* m_PlayerSelector;
     ResourceSelectionWidget* m_MapSelector;
 
     ProjectEditor* m_Editor;
     Project* m_Project;
-    QStringList m_TypeNames;
-    QStringList m_TypeDisplayNames;
-    
-    void UpdateEditedProperty(QModelIndex);
 	};
 
   void ProjectEditor::Cleanup()
@@ -145,144 +187,395 @@ namespace eXl
     
 	}
 
+  void ProjectEditor::Impl::AddEventEdit(QTabWidget* iTabs)
+  {
+    QSplitter* dataSplitter = new QSplitter(Qt::Horizontal, m_Editor);
+
+    QWidget* itfCollection = new QWidget(m_Editor);
+
+    QVBoxLayout* itfCollectionLayout = new QVBoxLayout(itfCollection);
+
+    itfCollection->setLayout(itfCollectionLayout);
+
+    QToolBar* itfCollectionTool = new QToolBar(m_Editor);
+    QToolBar* evtCollectionTool = new QToolBar(m_Editor);
+
+    QWidget* evtData = new QWidget(m_Editor);
+    QVBoxLayout* evtDataLayout = new QVBoxLayout(evtData);
+    evtData->setLayout(evtDataLayout);
+
+    QListView* itfCollectionView = new QListView(m_Editor);
+    QListView* evtCollectionView = new QListView(m_Editor);
+    
+    itfCollectionView->setModel(m_ItfCollection);
+    itfCollectionView->setSelectionModel(new QItemSelectionModel(itfCollectionView->model()));
+
+    FunDeclEditor* declEditor = FunDeclEditor::Create(m_Editor, "");
+
+    QObject::connect(itfCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this, declEditor, evtCollectionView, itfCollectionTool, evtCollectionTool](const QItemSelection& iSelected, const QItemSelection& iDeselected)
+      {
+        if (iSelected.isEmpty())
+        {
+          declEditor->Clear();
+          m_CurrentEditedEventFunName.clear();
+          m_CurrentEditedEventItfName.clear();
+          m_EventsCollection = nullptr;
+          itfCollectionTool->setDisabled(true);
+          evtCollectionTool->setDisabled(true);
+          declEditor->setDisabled(true);
+        }
+        else
+        {
+          if (iSelected.indexes().size() == 1)
+          {
+            QModelIndex currentPropIdx = *iSelected.indexes().begin();
+            if (auto const* decl = m_ItfCollection->GetObjectFromIndex(currentPropIdx))
+            {
+              m_CurrentEditedEventItfName = *m_ItfCollection->GetNameFromIndex(currentPropIdx);
+              m_EventsCollection = EventsCollectionModel::Create(evtCollectionView, m_CurrentEditedEventItfName, m_Project);
+              itfCollectionTool->setDisabled(false);
+              evtCollectionView->setModel(m_EventsCollection);
+              evtCollectionView->setSelectionModel(new QItemSelectionModel(evtCollectionView->model()));
+              
+              QObject::connect(evtCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this, declEditor, evtCollectionTool](const QItemSelection& iSelected, const QItemSelection& iDeselected)
+                {
+                  if (iSelected.isEmpty())
+                  {
+                    declEditor->Clear();
+                    declEditor->setDisabled(true);
+                    m_CurrentEditedEventFunName.clear();
+                    evtCollectionTool->setDisabled(true);
+                  }
+                  else
+                  {
+                    if (iSelected.indexes().size() == 1)
+                    {
+                      QModelIndex currentPropIdx = *iSelected.indexes().begin();
+                      if (auto const* decl = m_EventsCollection->GetObjectFromIndex(currentPropIdx))
+                      {
+                        m_CurrentEditedEventFunName = *m_EventsCollection->GetNameFromIndex(currentPropIdx);
+                        evtCollectionTool->setDisabled(false);
+                        declEditor->SetDecl(*decl);
+                        declEditor->setDisabled(false);
+                      }
+                    }
+                  }
+                });
+
+              QObject::connect(m_EventsCollection, &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
+                {
+                  m_CurrentEditedEventFunName = *m_EventsCollection->GetNameFromIndex(iIndex);
+                  m_Editor->ModifyResource();
+                });
+
+              QObject::connect(m_EventsCollection, &QAbstractItemModel::rowsInserted, [this]()
+                {
+                  m_Editor->ModifyResource();
+                });
+              QObject::connect(m_EventsCollection, &QAbstractItemModel::rowsRemoved, [this]()
+                {
+                  m_Editor->ModifyResource();
+                });
+
+            }
+          }
+        }
+      });
+
+    QObject::connect(declEditor, &TypeDeclEditor::OnDeclChange, [this, declEditor]()
+      {
+        auto iter = m_Project->m_Events.find(m_CurrentEditedEventItfName);
+        if (iter == m_Project->m_Events.end())
+        {
+          return;
+        }
+
+        auto iterEvt = iter->second.find(m_CurrentEditedEventFunName);
+        if (iterEvt == iter->second.end())
+        {
+          return;
+        }
+
+        iterEvt->second.m_Fields = declEditor->GetDecl().m_Fields;
+        m_Editor->ModifyResource();
+      });
+
+    QObject::connect(declEditor, &FunDeclEditor::OnRetTypeChanged, [this, declEditor]()
+      {
+        auto iter = m_Project->m_Events.find(m_CurrentEditedEventItfName);
+        if (iter == m_Project->m_Events.end())
+        {
+          return;
+        }
+
+        auto iterEvt = iter->second.find(m_CurrentEditedEventFunName);
+        if (iterEvt == iter->second.end())
+        {
+          return;
+        }
+
+        iterEvt->second.m_Ret = declEditor->GetRetType();
+        m_Editor->ModifyResource();
+      });
+
+    QObject::connect(m_ItfCollection, &QAbstractItemModel::dataChanged, [this, itfCollectionView, evtCollectionView](QModelIndex const& iIndex, QModelIndex const&)
+      {
+        m_CurrentEditedEventItfName = *m_ItfCollection->GetNameFromIndex(iIndex);
+        m_EventsCollection = EventsCollectionModel::Create(evtCollectionView, m_CurrentEditedEventItfName, m_Project);
+        evtCollectionView->setModel(m_EventsCollection);
+        evtCollectionView->setSelectionModel(new QItemSelectionModel(evtCollectionView->model()));
+
+        m_Editor->ModifyResource();
+      });
+
+    QObject::connect(m_ItfCollection, &QAbstractItemModel::rowsInserted, [this]()
+      {
+        m_Editor->ModifyResource();
+      });
+    QObject::connect(m_ItfCollection, &QAbstractItemModel::rowsRemoved, [this]()
+      {
+        m_Editor->ModifyResource();
+      });
+
+    itfCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this, itfCollectionView]
+      {
+        uint32_t curRowCount = m_ItfCollection->rowCount(QModelIndex());
+
+        if (m_ItfCollection->insertRow(curRowCount))
+        {
+          QModelIndex newIndex = m_ItfCollection->index(curRowCount, 0, QModelIndex());
+          m_ItfCollection->setData(newIndex, QString("NewItf"), Qt::EditRole);
+          m_Editor->ModifyResource();
+        }
+      });
+
+    itfCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this, itfCollectionView]
+      {
+        QModelIndex currentSelection = itfCollectionView->selectionModel()->currentIndex();
+        if (currentSelection.isValid())
+        {
+          m_ItfCollection->removeRow(currentSelection.row(), currentSelection.parent());
+          m_Editor->ModifyResource();
+        }
+      });
+
+    evtCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this, evtCollectionView]
+      {
+        if (m_EventsCollection == nullptr)
+        {
+          return;
+        }
+        uint32_t curRowCount = m_EventsCollection->rowCount(QModelIndex());
+
+        if (m_EventsCollection->insertRow(curRowCount))
+        {
+          QModelIndex newIndex = m_EventsCollection->index(curRowCount, 0, QModelIndex());
+          m_EventsCollection->setData(newIndex, QString("NewEvt"), Qt::EditRole);
+          m_Editor->ModifyResource();
+        }
+      });
+
+    evtCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this, evtCollectionView]
+      {
+        if (m_EventsCollection == nullptr)
+        {
+          return;
+        }
+        QModelIndex currentSelection = evtCollectionView->selectionModel()->currentIndex();
+        if (currentSelection.isValid())
+        {
+          m_EventsCollection->removeRow(currentSelection.row(), currentSelection.parent());
+          m_Editor->ModifyResource();
+        }
+      });
+
+
+    itfCollectionLayout->addWidget(itfCollectionTool);
+    itfCollectionLayout->addWidget(itfCollectionView);
+    itfCollectionLayout->addWidget(evtCollectionTool);
+    itfCollectionLayout->addWidget(evtCollectionView);
+
+    evtDataLayout->addWidget(declEditor);
+
+    dataSplitter->addWidget(itfCollection);
+
+    dataSplitter->addWidget(evtData);
+
+    iTabs->addTab(dataSplitter, "Events");
+  }
+
+  template<typename Collection, Collection* ProjectEditor::Impl::* iColModel, typename Collection::key_type ProjectEditor::Impl::* iEdited>
+  QListView* ProjectEditor::Impl::SetupTypeEdit(QTabWidget* iTabs, char const* iName, TypeDeclEditor* iEditor)
+  {
+    using KeyType = typename Collection::key_type;
+    using ValueType = typename Collection::value_type;
+
+    QSplitter* dataSplitter = new QSplitter(Qt::Horizontal, m_Editor);
+
+    QWidget* propCollection = new QWidget(m_Editor);
+    QVBoxLayout* propCollectionLayout = new QVBoxLayout(propCollection);
+    propCollection->setLayout(propCollectionLayout);
+    QWidget* propData = new QWidget(m_Editor);
+    QVBoxLayout* propDataLayout = new QVBoxLayout(propData);
+    propData->setLayout(propDataLayout);
+    QToolBar* propCollectionTool = new QToolBar(m_Editor);
+    QListView* propCollectionView = new QListView(m_Editor);
+    Collection* col = (this->*iColModel);
+    propCollectionView->setModel(col);
+    propCollectionView->setSelectionModel(new QItemSelectionModel(propCollectionView->model()));
+
+    TypeDeclEditor* declEditor = iEditor;
+
+    QObject::connect(propCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this, col, declEditor](const QItemSelection& iSelected, const QItemSelection& iDeselected)
+      {
+        if (iSelected.isEmpty())
+        {
+          declEditor->Clear();
+          (this->*iEdited) = KeyType();
+        }
+        else
+        {
+          if (iSelected.indexes().size() == 1)
+          {
+            QModelIndex currentPropIdx = *iSelected.indexes().begin();
+            if (ValueType const* decl = col->GetObjectFromIndex(currentPropIdx))
+            {
+              (this->*iEdited) = *col->GetNameFromIndex(currentPropIdx);
+              declEditor->SetDecl(*decl);
+            }
+          }
+        }
+      });
+
+    QObject::connect(col, &QAbstractItemModel::dataChanged, [this, col](QModelIndex const& iIndex, QModelIndex const&)
+      {
+        (this->*iEdited) = *col->GetNameFromIndex(iIndex);
+        m_Editor->ModifyResource();
+      });
+
+    QObject::connect(col, &QAbstractItemModel::rowsInserted, [this]()
+      {
+        m_Editor->ModifyResource();
+      });
+    QObject::connect(col, &QAbstractItemModel::rowsRemoved, [this]()
+      {
+        m_Editor->ModifyResource();
+      });
+
+    propCollectionLayout->addWidget(propCollectionTool);
+    propCollectionLayout->addWidget(propCollectionView);
+
+    propCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this, col, propCollectionView]
+      {
+        uint32_t curRowCount = col->rowCount(QModelIndex());
+
+        if (col->insertRow(curRowCount))
+        {
+          QModelIndex newIndex = col->index(curRowCount, 0, QModelIndex());
+          col->setData(newIndex, QString("NewDecl"), Qt::EditRole);
+          m_Editor->ModifyResource();
+        }
+      });
+
+    propCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this, col, propCollectionView]
+      {
+        QModelIndex currentSelection = propCollectionView->selectionModel()->currentIndex();
+        if (currentSelection.isValid())
+        {
+          col->removeRow(currentSelection.row(), currentSelection.parent());
+          m_Editor->ModifyResource();
+        }
+      });
+
+    propDataLayout->addWidget(declEditor);
+
+    dataSplitter->addWidget(propCollection);
+
+    dataSplitter->addWidget(propData);
+
+    iTabs->addTab(dataSplitter, iName);
+
+    return propCollectionView;
+  }
+
+  template<typename Collection, Collection* ProjectEditor::Impl::* iCol, typename Collection::key_type ProjectEditor::Impl::* iEdited>
+  void ProjectEditor::Impl::AddTypeEdit(QTabWidget* iWidget, char const* iName)
+  {
+    TypeDeclEditor* declEditor = TypeDeclEditor::Create(m_Editor);
+    Collection* col = (this->*iCol);
+
+    SetupTypeEdit<Collection, iCol, iEdited>(iWidget, iName, declEditor);
+
+    QObject::connect(declEditor, &TypeDeclEditor::OnDeclChange, [this, col, declEditor]()
+      {
+        col->SetOnResource((this->*iEdited), declEditor->GetDecl());
+        m_Editor->ModifyResource();
+      });
+
+  }
+
+  template<typename Collection, Collection* ProjectEditor::Impl::* iCol, typename Collection::key_type ProjectEditor::Impl::* iEdited>
+  void ProjectEditor::Impl::AddFunDeclEdit(QTabWidget* iWidget, char const* iName)
+  {
+    FunDeclEditor* declEditor = FunDeclEditor::Create(m_Editor, "");
+    Collection* col = (this->*iCol);
+
+    QListView* propCollectionView = SetupTypeEdit<Collection, iCol, iEdited>(iWidget, iName, declEditor);
+
+    QObject::connect(declEditor, &TypeDeclEditor::OnDeclChange, [this, col, declEditor]()
+      {
+        Project::FunctionDecl decl;
+        decl.m_Fields = declEditor->GetDecl().m_Fields;
+        decl.m_Ret = declEditor->GetRetType();
+        col->SetOnResource((this->*iEdited), std::move(decl));
+        m_Editor->ModifyResource();
+      });
+
+    QObject::connect(declEditor, &FunDeclEditor::OnRetTypeChanged, [this, col, declEditor]()
+      {
+        Project::FunctionDecl decl;
+        decl.m_Fields = declEditor->GetDecl().m_Fields;
+        decl.m_Ret = declEditor->GetRetType();
+        col->SetOnResource((this->*iEdited), std::move(decl));
+        m_Editor->ModifyResource();
+      });
+
+    QObject::connect(propCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this, col, declEditor](const QItemSelection& iSelected, const QItemSelection& iDeselected)
+      {
+        if (iSelected.isEmpty())
+        {
+          declEditor->Clear();
+        }
+        else
+        {
+          if (iSelected.indexes().size() == 1)
+          {
+            QModelIndex currentPropIdx = *iSelected.indexes().begin();
+            if (Project::FunctionDecl const* decl = col->GetObjectFromIndex(currentPropIdx))
+            {
+              (this->*iEdited) = *col->GetNameFromIndex(currentPropIdx);
+              declEditor->SetRetType(decl->m_Ret);
+            }
+          }
+        }
+      });
+  }
+
   ProjectEditor::Impl::Impl(ProjectEditor* iEditor, Project* iProject)
     : m_Editor(iEditor)
     , m_Project(iProject)
   {
     m_PropsCollectionModel = PropertySheetDeclCollectionModel::Create(m_Editor, m_Project);
-
-    QSplitter* rootSplitter = new QSplitter(Qt::Vertical, m_Editor);
-
-    QSplitter* dataSplitter = new QSplitter(Qt::Horizontal, m_Editor);
-    {
-      QWidget* propCollection = new QWidget(m_Editor);
-      QVBoxLayout* propCollectionLayout = new QVBoxLayout(propCollection);
-      propCollection->setLayout(propCollectionLayout);
-      QWidget* propData = new QWidget(m_Editor);
-      QVBoxLayout* propDataLayout = new QVBoxLayout(propData);
-      propData->setLayout(propDataLayout);
-      QToolBar* propCollectionTool = new QToolBar(m_Editor);
-      m_PropCollectionView = new QListView(m_Editor);
-      m_PropCollectionView->setModel(m_PropsCollectionModel);
-      m_PropCollectionView->setSelectionModel(new QItemSelectionModel(m_PropCollectionView->model()));
-
-      QObject::connect(m_PropCollectionView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
-        {
-          if (iSelected.isEmpty())
-          {
-            m_PropDataView->clear();
-            m_CurrentPropIdx = QModelIndex();
-            m_CurrentEditedSheetName = TypeName();
-          }
-          else
-          {
-            if (iSelected.indexes().size() == 1)
-            {
-              m_CurrentPropIdx = *iSelected.indexes().begin();
-              UpdateEditedProperty(m_CurrentPropIdx);
-            }
-          }
-        });
-
-      QObject::connect(m_PropsCollectionModel, &QAbstractItemModel::dataChanged, [this](QModelIndex const& iIndex, QModelIndex const&)
-        {
-          m_CurrentEditedSheetName = *m_PropsCollectionModel->GetNameFromIndex(iIndex);
-          m_Editor->ModifyResource();
-        });
-
-      QObject::connect(m_PropsCollectionModel, &QAbstractItemModel::rowsInserted, [this]()
-        {
-          m_Editor->ModifyResource();
-        });
-      QObject::connect(m_PropsCollectionModel, &QAbstractItemModel::rowsRemoved, [this]()
-        {
-          m_Editor->ModifyResource();
-        });
-
-      Vector<Type const*> types = TypeManager::GetCoreTypes();
-      std::sort(types.begin(), types.end(), [](Type const* const& iType1, Type const* const& iType2)
-        {
-          return iType1->GetDisplayName() < iType2->GetDisplayName();
-        }
-      );
-
-      for (auto type : types)
-      {
-        m_TypeNames.append(QString::fromUtf8(type->GetName().c_str()));
-      }
-
-      for (auto type : types)
-      {
-        m_TypeDisplayNames.append(QString::fromUtf8(type->GetDisplayName().c_str()));
-      }
-
-      propCollectionLayout->addWidget(propCollectionTool);
-      propCollectionLayout->addWidget(m_PropCollectionView);
-
-      propCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Entry", [this]
-        {
-          uint32_t curRowCount = m_PropsCollectionModel->rowCount(QModelIndex());
-
-          if (m_PropsCollectionModel->insertRow(curRowCount))
-          {
-            QModelIndex newIndex = m_PropsCollectionModel->index(curRowCount, 0, QModelIndex());
-            m_PropsCollectionModel->setData(newIndex, QString("NewProperty"), Qt::EditRole);
-            m_Editor->ModifyResource();
-          }
-        });
-
-      propCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Entry", [this]
-        {
-          QModelIndex currentSelection = m_PropCollectionView->selectionModel()->currentIndex();
-          if (currentSelection.isValid())
-          {
-            m_PropsCollectionModel->removeRow(currentSelection.row(), currentSelection.parent());
-            m_Editor->ModifyResource();
-          }
-        });
-
-      m_PropDataView = new QTableWidget(m_Editor);
-
-      QToolBar* propDataTool = new QToolBar(m_Editor);
-
-      propDataTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Field", [this]
-        {
-          Project::Field newField;
-          newField.m_Name = "NewField";
-          newField.m_TypeName = "uint32_t";
-          newField.m_IsArray = false;
-          m_CurrentEditedType.m_Fields.push_back(newField);
-          m_Project->m_Types[m_CurrentEditedSheetName] = m_CurrentEditedType;
-          UpdateEditedProperty(m_CurrentPropIdx);
-          m_Editor->ModifyResource();
-        });
-
-      propDataTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Field", [this]
-        {
-          QTableWidgetItem* currentSelection = m_PropDataView->currentItem();
-          if (currentSelection != nullptr)
-          {
-            int32_t row = currentSelection->row();
-            m_CurrentEditedType.m_Fields.erase(m_CurrentEditedType.m_Fields.begin() + row);
-            m_Project->m_Types[m_CurrentEditedSheetName] = m_CurrentEditedType;
-            UpdateEditedProperty(m_CurrentPropIdx);
-            m_Editor->ModifyResource();
-          }
-        });
-
-      propDataLayout->addWidget(propDataTool);
-      propDataLayout->addWidget(m_PropDataView);
-
-      dataSplitter->addWidget(propCollection);
-
-      dataSplitter->addWidget(propData);
-
-      rootSplitter->addWidget(dataSplitter);
-    }
+    m_ClientCallbacksModel = ClientCallbacksCollectionModel::Create(iEditor, m_Project);
+    m_ServerCallbacksModel = ServerCallbacksCollectionModel::Create(iEditor, m_Project);
+    m_ItfCollection = ItfCollectionModel::Create(iEditor, m_Project);
 
     QTabWidget* tabs = new QTabWidget(m_Editor);
 
-    tabs->addTab(rootSplitter, "Types");
+    AddTypeEdit<PropertySheetDeclCollectionModel, &Impl::m_PropsCollectionModel, &Impl::m_CurrentEditedSheetName>(tabs, "Types");
+    AddFunDeclEdit<ClientCallbacksCollectionModel, &Impl::m_ClientCallbacksModel, &Impl::m_CurrentEditedClientCBName>(tabs, "Client RPC");
+    AddFunDeclEdit<ServerCallbacksCollectionModel, &Impl::m_ServerCallbacksModel, &Impl::m_CurrentEditedServerCBName>(tabs, "Server RPC");
+    AddEventEdit(tabs);
 
     QWidget* projectSettings = new QWidget(m_Editor);
     QVBoxLayout* settingsLayout = new QVBoxLayout(projectSettings);
@@ -399,101 +692,5 @@ namespace eXl
     QVBoxLayout* layout = new QVBoxLayout(m_Editor);
     layout->addWidget(tabs);
     m_Editor->setLayout(layout);
-  }
-
-  void ProjectEditor::Impl::UpdateEditedProperty(QModelIndex iIndex)
-  {
-    Project::Typedecl const* obj = m_PropsCollectionModel->GetObjectFromIndex(iIndex);
-    eXl_ASSERT(obj != nullptr);
-
-    TypeName const* name = m_PropsCollectionModel->GetNameFromIndex(iIndex);
-    m_CurrentEditedSheetName = *name;
-    m_CurrentEditedType = *obj;
-
-    QObject::disconnect(m_PropDataChangeCb);
-    m_PropDataView->clear();
-    m_PropDataView->setRowCount(obj->m_Fields.size());
-    m_PropDataView->setColumnCount(3);
-
-    auto onSheetDataChanged = [this](QModelIndex const& iIndex)
-    {
-      QTableWidgetItem* item = m_PropDataView->item(iIndex.row(), iIndex.column());
-      switch (iIndex.column())
-      {
-      case 0:
-      {
-        //TypeFieldName oldFieldName = item->data(Qt::UserRole).toString().toUtf8();
-        TypeFieldName newFieldName = item->text().toUtf8();
-        Project::Field& fieldData = m_CurrentEditedType.m_Fields[iIndex.row()];
-        fieldData.m_Name = newFieldName;
-      }
-      break;
-      case 1:
-      {
-        QComboBox* typeSelector = static_cast<QComboBox*>(m_PropDataView->cellWidget(iIndex.row(), iIndex.column()));
-        m_CurrentEditedType.m_Fields[iIndex.row()].m_TypeName = m_TypeNames[typeSelector->currentIndex()].toUtf8();
-      }
-      break;
-      case 2:
-      {
-        TypeFieldName fieldName = item->data(Qt::UserRole).toString().toUtf8();
-        m_CurrentEditedType.m_Fields[iIndex.row()].m_IsArray = item->checkState() == Qt::Checked;
-      }
-      break;
-      }
-
-      m_Project->m_Types[m_CurrentEditedSheetName] = m_CurrentEditedType;
-      m_Editor->ModifyResource();
-    };
-    
-    
-    for (uint32_t numRow = 0; numRow < obj->m_Fields.size(); ++numRow)
-    {
-      auto const& field = obj->m_Fields[numRow];
-      QTableWidgetItem* nameItem = new QTableWidgetItem;
-      QString fieldName = QString::fromUtf8(field.m_Name.c_str());
-      nameItem->setData(Qt::UserRole, QVariant(fieldName));
-      nameItem->setText(fieldName);
-      m_PropDataView->setItem(numRow, 0, nameItem);
-      
-      QString typeNameStr = QString::fromUtf8(field.m_TypeName.c_str());
-
-      bool foundType = false;
-      int32_t selType = 0;
-      QComboBox* typeCombo = new QComboBox(m_PropDataView);
-      for(uint32_t i = 0; i<m_TypeNames.size(); ++i)
-      {
-        typeCombo->addItem(m_TypeDisplayNames[i]);
-        if (m_TypeNames[i] == typeNameStr)
-        {
-          foundType = true;
-        }
-        if (!foundType)
-        {
-          ++selType;
-        }
-      }
-      if (selType < m_TypeNames.size())
-      {
-        typeCombo->setCurrentIndex(selType);
-      }
-      m_PropDataView->setCellWidget(numRow, 1, typeCombo);
-      QObject::connect(typeCombo, (void (QComboBox::*)(int ))&QComboBox::currentIndexChanged, 
-        [onSheetDataChanged, index = m_PropDataView->model()->index(numRow, 1)](int)
-        { onSheetDataChanged(index); });
-
-      QTableWidgetItem* isArrayItem = new QTableWidgetItem;
-      isArrayItem->setData(Qt::UserRole, QVariant(fieldName));
-      isArrayItem->setCheckState(field.m_IsArray ? Qt::Checked : Qt::Unchecked);
-      m_PropDataView->setItem(numRow, 2, isArrayItem);
-    }
-    
-    m_PropDataChangeCb = QObject::connect(m_PropDataView->model(), &QAbstractItemModel::dataChanged, [onSheetDataChanged](QModelIndex const& iDataIndex)
-    {
-      onSheetDataChanged(iDataIndex);
-    });
-
-    //QObject::connect(m_Impl->m_PropDataView->model(), &QAbstractItemModel::rowsInserted, onSheetDataChanged);
-    //QObject::connect(m_Impl->m_PropDataView->model(), &QAbstractItemModel::rowsRemoved, onSheetDataChanged);
   }
 }

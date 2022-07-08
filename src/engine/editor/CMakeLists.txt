@@ -43,6 +43,8 @@ aspectratiowidget.cpp
 archetypeeditor.cpp
 projectresourcesmodel.cpp
 projecteditor.cpp
+typedecleditor.cpp
+fundecleditor.cpp
 luahighlighter.cpp
 scripteditor.cpp
 coroutineeditor.cpp
@@ -103,6 +105,8 @@ aspectratiowidget.hpp
 archetypeeditor.hpp
 projectresourcesmodel.hpp
 projecteditor.hpp
+typedecleditor.hpp
+fundecleditor.hpp
 luahighlighter.hpp
 scripteditor.hpp
 coroutineeditor.hpp

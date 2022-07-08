@@ -403,17 +403,26 @@ namespace eXl
 
     luabind::object libNamespaceRef = scriptObject["namespace"];
     luabind::object functionsTable = scriptObject["functions"];
-    String libNamespace = *luabind::object_cast<String const*>(libNamespaceRef);
-
+    String libNamespace = luabind::to_string(libNamespaceRef).c_str();
+    
     luabind::object libScope = luabind::globals(scriptObject.interpreter());
-    if (!libNamespace.empty())
+    while (!libNamespace.empty())
     {
-      libScope = libScope[libNamespace.c_str()];
-      if (!libScope)
+      String remainder;
+      auto dotPos = libNamespace.find(".");
+      if (dotPos != String::npos)
       {
-        libScope = luabind::newtable(libScope.interpreter());
-        luabind::globals(scriptObject.interpreter())[libNamespace.c_str()] = libScope;
+        remainder = libNamespace.substr(dotPos + 1);
+        libNamespace = libNamespace.substr(0, dotPos);
       }
+      luabind::object nextScope = libScope[libNamespace.c_str()];
+      if (!nextScope)
+      {
+        nextScope = luabind::newtable(libScope.interpreter());
+        libScope[libNamespace.c_str()] = nextScope;
+      }
+      libScope = nextScope;
+      libNamespace = std::move(remainder);
     }
 
     for (auto iter = luabind::iterator(functionsTable); iter != luabind::iterator(); ++iter)

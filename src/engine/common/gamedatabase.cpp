@@ -144,13 +144,13 @@ namespace eXl
       AllocatorInfo newInfo;
       if (entry.second.isSparse)
       {
-        newInfo.m_SparseAllocator = static_cast<SparseGameDataAllocator*>(entry.second.factory(iWorld));
+        newInfo.m_SparseAllocator.reset(static_cast<SparseGameDataAllocator*>(entry.second.factory(iWorld)));
       }
       else
       {
-        newInfo.m_DenseAllocator = static_cast<DenseGameDataAllocator*>(entry.second.factory(iWorld));
+        newInfo.m_DenseAllocator.reset(static_cast<DenseGameDataAllocator*>(entry.second.factory(iWorld)));
       }
-      m_Allocators.push_back(newInfo);
+      m_Allocators.emplace_back(std::move(newInfo));
     }
   }
 
@@ -168,7 +168,7 @@ namespace eXl
       auto iter = m_AllocatorSlot.find(propertySheet);
       eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
 
-      if(SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+      if(SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator.get())
       {
         uint32_t slot = sparseAlloc->GetSlot(iObject);
 
@@ -209,7 +209,7 @@ namespace eXl
       else
       {
         eXl_FAIL_MSG("Unreachable? Should not have archetypes on dense data");
-        DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator;
+        DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator.get();
         ObjectTableHandle_Base handle = denseAlloc->GetDataFromSlot_Inl(denseAlloc->AllocateSlot_Inl(iObject));
         ObjectTable_Data* dataTable = denseAlloc->GetObjectTable();
         if (dataTable == nullptr)
@@ -245,7 +245,7 @@ namespace eXl
     }
 
     ObjectTable_Data* dataTable;
-    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator)
+    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator.get())
     {
       dataTable = denseAlloc->GetObjectTable();
       if (dataTable == nullptr)
@@ -281,7 +281,7 @@ namespace eXl
     }
 
     ObjectTable_Data* dataTable;
-    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator)
+    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator.get())
     {
       dataTable = denseAlloc->GetObjectTable();
       if (dataTable == nullptr)
@@ -313,7 +313,7 @@ namespace eXl
         auto iter = m_AllocatorSlot.find(propertySheet);
         eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
 
-        if (SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+        if (SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator.get())
         {
           ObjectTableHandle_Base newHandle;
           sparseAlloc->m_ObjectData.Alloc(newHandle);
@@ -347,7 +347,7 @@ namespace eXl
         auto iter = m_AllocatorSlot.find(propertySheet);
         eXl_ASSERT_REPAIR_BEGIN(iter != m_AllocatorSlot.end()) { continue; }
 
-        if (SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator)
+        if (SparseGameDataAllocator* sparseAlloc = m_Allocators[iter->second].m_SparseAllocator.get())
         {
           for (uint32_t i = 0; i < sparseAlloc->m_ArchetypeHandle.size(); ++i)
           {

@@ -308,6 +308,10 @@ namespace eXl
             obj.push(iState);
             uint32_t top = lua_gettop(iState);
             fieldType->ConvertFromLua_Uninit(iState, top, newCustomization.GetBuffer());
+
+            auto propTable = data.m_PropertyCustomization.insert(std::make_pair(PropertySheetName(prop), CustomizationData::FieldsMap())).first;
+            propTable->second.insert(std::make_pair(field, std::move(newCustomization)));
+
           }
           else
           {

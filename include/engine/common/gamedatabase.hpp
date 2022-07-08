@@ -40,6 +40,8 @@ namespace eXl
       }
     }
 
+    template <typename T>
+    void RegisterPropertySheet() { return RegisterPropertySheet(T::PropertyName(), TypeManager::GetType<T>()); }
     void RegisterPropertySheet(PropertySheetName, Type const*);
     void RegisterPropertySheet(PropertySheetName, Type const*, std::function<SparseGameDataAllocator* (World&)> iFactory);
     void RegisterPropertySheet(PropertySheetName, Type const*, std::function<DenseGameDataAllocator* (World&)> iFactory);
@@ -124,7 +126,7 @@ namespace eXl
   public:
 
     template <typename T>
-    GameDataView<T>* GetView(PropertySheetName iName)
+    GameDataView<T>* GetView(PropertySheetName iName = T::PropertyName())
     {
       if (TypeManager::GetType<T>() != m_Manifest.GetTypeFromName(iName))
       {
@@ -141,15 +143,21 @@ namespace eXl
 
     struct AllocatorInfo
     {
-      SparseGameDataAllocator* m_SparseAllocator = nullptr;
-      DenseGameDataAllocator* m_DenseAllocator = nullptr;
+      UniquePtr<SparseGameDataAllocator> m_SparseAllocator;
+      UniquePtr<DenseGameDataAllocator> m_DenseAllocator;
       GameDataAllocatorBase* GetAlloc()
       {
         return m_SparseAllocator 
-          ? static_cast<GameDataAllocatorBase*>(m_SparseAllocator)
-          : m_DenseAllocator;
+          ? static_cast<GameDataAllocatorBase*>(m_SparseAllocator.get())
+          : m_DenseAllocator.get();
       }
+      AllocatorInfo() = default;
+      ~AllocatorInfo() = default;
+      AllocatorInfo(AllocatorInfo&&) = default;
+      AllocatorInfo(AllocatorInfo const&) = delete;
     };
+
+    GameDatabase(GameDatabase const&) = delete;
 
     Vector<AllocatorInfo> m_Allocators;
     UnorderedMap<PropertySheetName, uint32_t> m_AllocatorSlot;

@@ -40,6 +40,8 @@ namespace eXl
 
     struct ClientId
     {
+      EXL_REFLECT
+
       uint64_t id;
       bool operator == (ClientId const& iOther) const;
       bool operator != (ClientId const& iOther) const;
@@ -49,6 +51,8 @@ namespace eXl
 
     struct ObjectId
     {
+      EXL_REFLECT
+
       uint64_t id;
       bool operator == (ObjectId const& iOther) const;
       bool operator != (ObjectId const& iOther) const;
@@ -165,11 +169,12 @@ namespace eXl
       template<typename RetType, typename... Args>
       void DeclareServerCommand(CommandName iName, std::function<RetType(ClientId, Args...)>& iFun, bool iReliable);
 
+      void DeclareCommand(NetRole iExecutor, CommandName iName, CommandCallback iCb, FunDesc iArgs, void* iCommandPtr, bool iReliable);
+
       NetDriver(NetCtx& iCtx);
       NetDriver(NetDriver const&) = delete;
 
     private:
-      void DeclareCommand(NetRole iExecutor, CommandName iName, CommandCallback iCb, FunDesc iArgs, void* iCommandPtr, bool iReliable);
       Vector<CommandDesc> m_Commands;
       UnorderedMap<CommandName, uint32_t> m_CommandsByName;
       UnorderedMap<void*, uint32_t> m_CommandsByPtr;

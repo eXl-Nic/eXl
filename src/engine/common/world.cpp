@@ -109,8 +109,8 @@ namespace eXl
     return names;
   }
 
-  World::World(ComponentManifest const& iComponents)
-    : m_Components(iComponents)
+  World::World(WorldConfig const& iConfig)
+    : m_Config(iConfig)
   {
     m_Tick.resize(NumStages);
   }

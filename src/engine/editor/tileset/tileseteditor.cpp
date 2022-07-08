@@ -120,12 +120,15 @@ namespace eXl
 	struct TilesetEditor::Impl
 	{
 		Impl()
-      : m_World(EngineCommon::GetComponents())
+      : m_Config(EditorState::BuildWorldConfig())
+      , m_World(m_Config)
 		{
 			m_Transforms = m_World.AddSystem(std::make_unique<Transforms>());
 			m_Gfx = m_World.AddSystem(std::make_unique<GfxSystem>(*m_Transforms));
       m_World.AddSystem(std::make_unique<GameDatabase>(EditorState::GetProjectProperties()));
 		}
+
+    WorldConfig m_Config;
 		World m_World;
 		Transforms* m_Transforms;
 		GfxSystem* m_Gfx;

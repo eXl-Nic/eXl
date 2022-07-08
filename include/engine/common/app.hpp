@@ -15,6 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/application.hpp>
 #include <core/rtti.hpp>
+#include <engine/common/world.hpp>
 #include <engine/gfx/gfxsystem.hpp>
 
 
@@ -23,7 +24,6 @@ namespace eXl
   class PropertiesManifest;
   class MenuManager;
   class InputSystem;
-  class World;
   class WorldState;
   struct CameraState;
 
@@ -79,7 +79,7 @@ namespace eXl
     WorldState(WorldState&&);
     WorldState& operator=(WorldState&&);
 
-    WorldState& Init(PropertiesManifest const& iProperties);
+    WorldState& Init(WorldConfig const& iConf);
 
     WorldState& WithGfx();
 

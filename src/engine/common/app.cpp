@@ -38,7 +38,7 @@ namespace eXl
   IMPLEMENT_RTTI(Scenario);
   struct WorldState::Impl
   {
-    Impl(PropertiesManifest const& iManifest);
+    Impl(WorldConfig const& iConf);
 
     World world;
 
@@ -237,9 +237,9 @@ namespace eXl
     return m_WorldState->GetCamera();
   }
 
-  WorldState& WorldState::Init(PropertiesManifest const& iProperties)
+  WorldState& WorldState::Init(WorldConfig const& iConf)
   {
-    m_Impl = std::make_unique<Impl>(iProperties);
+    m_Impl = std::make_unique<Impl>(iConf);
     m_CamState.Init(m_Impl->world);
 
     return *this;
@@ -281,9 +281,8 @@ namespace eXl
     m_Impl->Render(iView);
   }
 
-  WorldState::Impl::Impl(PropertiesManifest const& iManifest)
-    : world(EngineCommon::GetComponents())
-    , m_Manifest(iManifest)
+  WorldState::Impl::Impl(WorldConfig const& iConf)
+    : world(iConf)
   {
     transforms = world.AddSystem(std::make_unique<Transforms>());
 
@@ -293,8 +292,8 @@ namespace eXl
     abilities = world.AddSystem(std::make_unique<AbilitySystem>());
     projectiles = world.AddSystem(std::make_unique<ProjectileSystem>());
     world.AddSystem(std::make_unique<TransformAnimManager>());
-    world.AddSystem(std::make_unique<GameDatabase>(m_Manifest));
-    world.AddSystem(std::make_unique<EventSystem>(EngineCommon::GetBaseEvents()));
+    world.AddSystem(std::make_unique<GameDatabase>(iConf.m_Properties));
+    world.AddSystem(std::make_unique<EventSystem>(iConf.m_Events));
 #ifdef EXL_LUA
     world.AddSystem(std::make_unique<LuaScriptSystem>());
 #endif

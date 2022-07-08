@@ -230,9 +230,10 @@ namespace eXl
 
 	struct ArchetypeEditor::Impl
 	{
-		Impl()
+    Impl()
+      : m_Config(EditorState::BuildWorldConfig())
 		{
-      m_World.Init(EditorState::GetProjectProperties()).WithGfx();
+      m_World.Init(m_Config).WithGfx();
 
       World& world = m_World.GetWorld();
       GfxSystem& gfx = *world.GetSystem<GfxSystem>();
@@ -242,6 +243,7 @@ namespace eXl
 		}
 
     ObjectHandle m_Handle;
+    WorldConfig m_Config;
     WorldState m_World;
     InputSystem m_Inputs;
     ObjectHandle m_ArchetypeObject;

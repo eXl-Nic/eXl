@@ -74,13 +74,14 @@ namespace eXl
 	{
 		Impl(MapEditor* iEditor)
       : m_Player((Path(GetAppPath().data()).parent_path() / "eXl_Player.exe").string().c_str())
+      , m_Config(EditorState::BuildWorldConfig())
 		{
       PropertiesManifest mapEditorManifest = EditorState::GetProjectProperties();
       mapEditorManifest.RegisterPropertySheet<TileItemData>(TilesTool::ToolDataName(), false);
       mapEditorManifest.RegisterPropertySheet<TerrainIslandItemData>(TerrainTool::ToolDataName(), false);
       mapEditorManifest.RegisterPropertySheet<MapResource::ObjectHeader>(ObjectsTool::ToolDataName(), false);
 
-      m_World.Init(mapEditorManifest).WithGfx();
+      m_World.Init(m_Config).WithGfx();
 
       World& world = m_World.GetWorld();
 
@@ -291,6 +292,7 @@ namespace eXl
 
     GameWidget* m_GameWidget;
     ObjectHandle m_Handle;
+    WorldConfig m_Config;
     WorldState m_World;
     InputSystem m_Inputs;
 

@@ -118,6 +118,14 @@ namespace eXl
     return s_CurrentProject.get();
   }
 
+  WorldConfig EditorState::BuildWorldConfig()
+  {
+    Project* proj = Project::DynamicCast(EditorState::GetCurrentProject()->GetResource());
+    WorldConfig conf = { *proj, EngineCommon::GetComponents(), GetProjectProperties(), EngineCommon::GetBaseEvents() };
+
+    return conf;
+  }
+
   void UpdateProjectTypes()
   {
     s_Properties = EngineCommon::GetBaseProperties();

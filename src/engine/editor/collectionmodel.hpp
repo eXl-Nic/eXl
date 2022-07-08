@@ -10,6 +10,9 @@ namespace eXl
   {
   public:
 
+    using key_type = Key;
+    using value_type = Val;
+
     template <typename Container>
     void Reset(Container const&);
 
@@ -51,6 +54,21 @@ namespace eXl
     Resource* m_Resource;
     UnorderedMap<Key, uint32_t> m_NameToIndex;
     Vector<Key> m_IndexToName;
+  };
+
+  template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
+  class CollectionModelMapAdaptor : public CollectionModel<Key, Val, Resource>
+  {
+  public:
+    static CollectionModelMapAdaptor* Create(QObject* iParent, Resource* iResource);
+
+    // Bypasses model, only use on modification callbacks.
+    bool SetOnResource(Key const& iName, Val iObject);
+  protected:
+    CollectionModelMapAdaptor(QObject* iParent, Resource* iResource);
+    bool AddToResource(Key const& iName, Val const& iValue) override;
+    bool RemoveFromResource(Key const& iName) override;
+    Val const* FindInResource(Key const& iName) const override;
   };
 }
 

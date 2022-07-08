@@ -288,7 +288,7 @@ namespace eXl
     TupleType const* objType = ioData.GetType()->IsTuple();
     for (auto fieldEntry : iFields)
     {
-      TypeFieldName fieldName = fieldEntry.first;
+      TypeFieldName const& fieldName = fieldEntry.first;
       uint32_t fieldIdx;
       if (objType->GetFieldDetails(fieldName, fieldIdx) != nullptr)
       {
@@ -484,7 +484,7 @@ namespace eXl
 
     for (auto const& component : m_Components)
     {
-      ComponentFactory const* factory = iWorld.GetComponents().GetComponentFactory(component);
+      ComponentFactory const* factory = iWorld.GetConfig().m_Components.GetComponentFactory(component);
       if (factory && (*factory))
       {
         (*factory)(iWorld, iHandle);

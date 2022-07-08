@@ -199,16 +199,32 @@ namespace eXl
     UnorderedMap<ComponentName, ComponentEntry> m_Components;
   };
 
+
+  class Project;
+  struct EventsManifest;
+  class PropertiesManifest;
+
+  struct WorldConfig
+  {
+    Project const& m_Project;
+    ComponentManifest const& m_Components;
+    PropertiesManifest const& m_Properties;
+    EventsManifest const& m_Events;
+  };
+
+  static constexpr char* s_ClientInterface = "NetClient";
+  static constexpr char* s_ServerInterface = "NetServer";
+
   class EXL_ENGINE_API World
   {
   public:
 
-    World(ComponentManifest const& iManifest);
+    World(WorldConfig const& iConfig);
     World(World const&) = delete;
     ~World();
     World& operator=(World const&) = delete;
 
-    ComponentManifest const& GetComponents() const { return m_Components; }
+    WorldConfig const& GetConfig() const { return m_Config; }
 
     ObjectHandle CreateObject();
 
@@ -316,10 +332,9 @@ namespace eXl
         return nextTick > iOther.nextTick;
       }
     };
+    WorldConfig const& m_Config;
     Vector<TimerSchedule> m_TimerSchedule;
     Vector<GameTimerSchedule> m_GameTimerSchedule;
-
-    ComponentManifest const& m_Components;
 
     GameDatabase* m_Database = nullptr;
     EventSystem* m_Events = nullptr;

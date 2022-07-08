@@ -21,6 +21,7 @@ namespace eXl
   class MapResource;
   class ProjectLoader;
   class PropertiesManifest;
+  struct EventsManifest;
 
   class EXL_ENGINE_API Project : public Resource
   {
@@ -40,9 +41,17 @@ namespace eXl
       SERIALIZE_METHODS;
     };
 
-    struct Typedecl
+    struct TypeDecl
     {
       Vector<Field> m_Fields;
+      SERIALIZE_METHODS;
+    };
+
+    struct FunctionDecl : TypeDecl
+    {
+      Vector<Field> const& GetArgs() { return m_Fields; }
+
+      TypeName m_Ret;
       SERIALIZE_METHODS;
     };
 
@@ -51,7 +60,10 @@ namespace eXl
 
     ResourceHandle<Archetype> m_PlayerArchetype;
     ResourceHandle<MapResource> m_StartupMap;
-    UnorderedMap<TypeName, Typedecl> m_Types;
+    UnorderedMap<TypeName, TypeDecl> m_Types;
+    UnorderedMap<String, UnorderedMap<String, FunctionDecl>> m_Events;
+    UnorderedMap<String, FunctionDecl> m_ClientCommands;
+    UnorderedMap<String, FunctionDecl> m_ServerCommands;
 
     UnorderedMap<String, ResourceHandle<Archetype>> m_GameSettings;
 
@@ -60,6 +72,7 @@ namespace eXl
       Vector<std::unique_ptr<Type const>> m_Types;
     };
     void FillProperties(ProjectTypes& oTypes, PropertiesManifest& oManifest) const;
+    void FillEvents(EventsManifest& oManifest) const;
 
     ~Project();
   protected:
