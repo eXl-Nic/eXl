@@ -318,7 +318,7 @@ namespace eXl
 #else
       //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
       //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-      //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
       win = SDL_CreateWindow("eXl", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewportSize.x, viewportSize.y, windowFlags);
@@ -452,7 +452,7 @@ namespace eXl
           }
 #endif
           SDL_KeyboardEvent& keyEvt = reinterpret_cast<SDL_KeyboardEvent&>(curEvent);
-          if (keyEvt.keysym.sym == SDLK_F12 
+          if (keyEvt.keysym.sym == SDLK_F11 
             && curEvent.type == SDL_KEYUP)
           {
             m_DisplayDebugUI = !m_DisplayDebugUI;

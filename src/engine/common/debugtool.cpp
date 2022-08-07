@@ -23,7 +23,9 @@ namespace eXl
         {}
         void DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace = false) override
         {}
-        void DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace = false) override
+        void DrawBox(Box3D const& iBox, const Vec4& iColor) override
+        {}
+        void DrawConvex(Vector<Vec3> const& iConvex, const Vec4& iColor, bool iScreenSpace = false) override
         {}
       };
 

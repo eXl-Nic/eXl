@@ -10,8 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <math/matrix4.hpp>
-#include <math/vector4.hpp>
+#include <math/math.hpp>
 #include <ogl/oglexp.hpp>
 #include <ogl/oglbasealgo.hpp>
 
@@ -22,15 +21,15 @@ namespace eXl
 
   struct LightInfo
   {
-    //Vector3f m_Position;
-    Vector3f m_Direction;
-    Vector3f m_Color;
+    //Vec3 m_Position;
+    Vec3 m_Direction = UnitZ<Vec3>();
+    Vec3 m_Color = One<Vec3>();
   };
 
   struct MeshMaterialInfo
   {
-    Vector4f m_BRDFParameters;
-    Vector3f m_DiffuseColor;
+    Vec4 m_BRDFParameters;
+    Vec3 m_DiffuseColor;
   };
 
   class EXL_OGL_API OGLMeshAlgo
@@ -75,14 +74,14 @@ namespace eXl
     struct AlgoData
     {
       inline AlgoData()
-        :phiComputationRange(0.0, 2.0 * Mathf::PI, 0.025)
-        ,thetaComputationRange(0.0, Mathf::PI / 2.0, 0.05)
+        : phiComputationRange(0.0, 2.0 * glm::pi<float>(), 0.025)
+        , thetaComputationRange(0.0, glm::pi<float>() / 2.0, 0.05)
       {
 
       }
 
-      Vector3f phiComputationRange;
-      Vector3f thetaComputationRange;
+      Vec3 phiComputationRange;
+      Vec3 thetaComputationRange;
       int face;
     };
 

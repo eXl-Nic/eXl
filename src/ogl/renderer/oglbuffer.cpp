@@ -21,7 +21,7 @@ namespace eXl
   static size_t s_TempBufferSize = 0;
 #endif
 
-  OGLBuffer* OGLBuffer::CreateBuffer(OGLBufferUsage iUsage, size_t iSize, void* iData)
+  OGLBuffer* OGLBuffer::CreateBuffer(OGLBufferUsage iUsage, size_t iSize, void const* iData)
   {
 #ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(iUsage);

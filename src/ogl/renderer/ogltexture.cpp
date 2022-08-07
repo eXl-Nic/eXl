@@ -200,7 +200,7 @@ namespace eXl
           for (uint32_t slice = 0; slice < 6; ++slice)
           {
             GLenum textureFaceUpdate = IsCubeMap() ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + slice : GL_TEXTURE_2D;
-            glTexImage2D(textureFaceUpdate, level, internalFormat, m_Size.X() >> level, m_Size.Y() >> level, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
+            glTexImage2D(textureFaceUpdate, level, internalFormat, m_Size.x >> level, m_Size.y >> level, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
           }
         }
 

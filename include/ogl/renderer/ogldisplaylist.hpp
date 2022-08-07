@@ -145,11 +145,11 @@ namespace eXl
         char m_KeyBytes[16];
         struct
         {
-          uint16_t m_UserKey;
-          uint16_t m_StateKey;
-          uint32_t m_ProgramKey;
-          uint32_t m_AssemblyKey;
           uint32_t m_MatKey;
+          uint32_t m_AssemblyKey;
+          uint32_t m_ProgramKey;
+          uint16_t m_StateKey;
+          uint16_t m_UserKey;
         };
 #ifndef __ANDROID__
         __m128i m_SSEVal;

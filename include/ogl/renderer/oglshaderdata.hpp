@@ -71,6 +71,8 @@ namespace eXl
     void AddTexture(TextureName iName, IntrusivePtr<OGLTexture const> const& iTexture) { AddTexture(iName, iTexture.get()); }
     void AddTexture(TextureName iName, IntrusivePtr<OGLTexture> const& iTexture) { AddTexture(iName, iTexture.get()); }
 
+    void Clear();
+
     inline uint32_t GetNumData() const { return m_Data.size(); }
     inline uint32_t GetNumUBO() const { return m_UBOData.size(); }
     ShaderData const* GetDataDescPtr() const { return &m_Data[0]; }

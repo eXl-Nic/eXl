@@ -23,7 +23,13 @@ namespace eXl
     DECLARE_RefC;
   public:
 
-    static OGLBuffer* CreateBuffer(OGLBufferUsage iUsage, size_t iSize, void* iData = NULL);
+    static OGLBuffer* CreateBuffer(OGLBufferUsage iUsage, size_t iSize, void const* iData = nullptr);
+    template<typename T>
+    static OGLBuffer* CreateBuffer(OGLBufferUsage iUsage, Vector<T> const& iData)
+    {
+      return CreateBuffer(iUsage, iData.size() * sizeof(T), iData.data());
+    }
+    
 
     void SetData(size_t iOffset, size_t iSize, void* iData);
 

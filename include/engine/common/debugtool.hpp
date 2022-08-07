@@ -17,6 +17,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  struct Box3D;
+
   namespace DebugTool
   {
     class Drawer
@@ -24,7 +26,8 @@ namespace eXl
     public:
       virtual void DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace = false) = 0;
       virtual void DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace = false) = 0;
-      virtual void DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace = false) = 0;
+      virtual void DrawBox(Box3D const& iBox, const Vec4& iColor) = 0;
+      virtual void DrawConvex(Vector<Vec3> const& iConvex, const Vec4& iColor, bool iScreenSpace = false) = 0;
     };
 
     enum System

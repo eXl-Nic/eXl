@@ -375,11 +375,9 @@ namespace eXl
         return IntrusivePtr<OGLTexture>();
       }
 
-      //Image dummy = DummySprites::BitmapToImage(DummySprites::dummyChar, img->GetSize());
-      //img = &dummy;
 			if (OGLTexture* newTex = OGLTextureLoader::CreateFromImage(img, true))
 			{
-        LOG_INFO << "Created texture for image " << img << " of size (" << img->GetSize().x << ", " << img->GetSize().y << ")\n";
+        //LOG_INFO << "Created texture for image " << img << " of size (" << img->GetSize().x << ", " << img->GetSize().y << ")\n";
 				iter = const_cast<Tileset*>(this)->m_Textures.insert(std::make_pair(iImage, newTex)).first;
 			}
 			else

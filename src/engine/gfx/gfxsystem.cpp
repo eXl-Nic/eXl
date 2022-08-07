@@ -9,6 +9,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <engine/gfx/gfxsystem.hpp>
+
+#include <engine/gfx/bounds3d.hpp>
+
 #include "gfxdebugdrawer.hpp"
 #include "gfxcomponentrendernode.hpp"
 #include "gfxspriterendernode.hpp"
@@ -26,6 +29,151 @@ namespace eXl
 {
   IMPLEMENT_RTTI(GfxSystem);
   IMPLEMENT_RTTI(GfxRenderNode);
+
+  void GfxSystem::ViewInfo::ComputeFrustumPlanes(Plane(&oPlanes)[6]) const
+  {
+    float hwRatio = float(viewportSize.y) / viewportSize.x;
+
+    if (projection == Perspective)
+    {
+      float nearPlane = displayedSize * 0.5 / tan(fov * 0.5);
+      float farPlane = displayedSize * 1000;
+
+      float halfWidth = tan(fov * 0.5) * nearPlane;
+
+      Vec3 nearPlaneCenter = pos - basis[2] * nearPlane;
+      Vec3 farPlaneCenter = pos - basis[2] * farPlane;
+
+      Vec3 nearPlaneRect[4] =
+      {
+        normalize(Vec3(-halfWidth, -halfWidth * hwRatio, nearPlane)),
+        normalize(Vec3(-halfWidth,  halfWidth * hwRatio, nearPlane)),
+        normalize(Vec3(halfWidth,  halfWidth * hwRatio, nearPlane)),
+        normalize(Vec3(halfWidth, -halfWidth * hwRatio, nearPlane)),
+      };
+
+      for (auto& pt : nearPlaneRect)
+      {
+        pt = basis[0] * pt.x
+          + basis[1] * pt.y
+          + basis[2] * pt.z;
+      }
+
+      oPlanes[0] = Plane::FromPointAndNormal(cross(nearPlaneRect[1], nearPlaneRect[0]), pos);
+      oPlanes[1] = Plane::FromPointAndNormal(cross(nearPlaneRect[3], nearPlaneRect[2]), pos);
+      oPlanes[2] = Plane::FromPointAndNormal(cross(nearPlaneRect[0], nearPlaneRect[3]), pos);
+      oPlanes[3] = Plane::FromPointAndNormal(cross(nearPlaneRect[2], nearPlaneRect[1]), pos);
+      oPlanes[4] = Plane::FromPointAndNormal( basis[2], nearPlaneCenter);
+      oPlanes[5] = Plane::FromPointAndNormal(-basis[2], farPlaneCenter);
+    }
+    else
+    {
+      float nearPlane = 0.0001;
+      float farPlane = displayedSize * 100.0;
+
+      Vec3 nearPlaneCenter = pos - basis[2] * nearPlane;
+      Vec3 farPlaneCenter = pos - basis[2] * farPlane;
+
+      Vec3 clipSpaceCenter = (nearPlaneCenter + farPlaneCenter) * 0.5f;
+
+      oPlanes[0] = Plane::FromPointAndNormal( basis[0], clipSpaceCenter + displayedSize * 0.5 * basis[0]);
+      oPlanes[1] = Plane::FromPointAndNormal(-basis[0], clipSpaceCenter - displayedSize * 0.5 * basis[0]);
+      oPlanes[2] = Plane::FromPointAndNormal( basis[1], clipSpaceCenter + displayedSize * 0.5 * hwRatio * basis[1]);
+      oPlanes[3] = Plane::FromPointAndNormal(-basis[1], clipSpaceCenter - displayedSize * 0.5 * hwRatio * basis[1]);
+      oPlanes[4] = Plane::FromPointAndNormal( basis[2], nearPlaneCenter);
+      oPlanes[5] = Plane::FromPointAndNormal(-basis[2], farPlaneCenter);
+    }
+  }
+
+  void GfxSystem::ViewInfo::GetFurstumCornerDir(Vec3(&oDirs)[4]) const
+  {
+    float hwRatio = float(viewportSize.y) / viewportSize.x;
+
+    if (projection == Perspective)
+    {
+      float nearPlane = displayedSize * 0.5 / tan(fov * 0.5);
+      float farPlane = displayedSize * 1000;
+
+      float halfWidth = tan(fov * 0.5) * nearPlane;
+
+      oDirs[0] = normalize(Vec3(-halfWidth, -halfWidth * hwRatio, nearPlane));
+      oDirs[1] = normalize(Vec3(-halfWidth,  halfWidth * hwRatio, nearPlane));
+      oDirs[2] = normalize(Vec3( halfWidth,  halfWidth * hwRatio, nearPlane));
+      oDirs[3] = normalize(Vec3( halfWidth, -halfWidth * hwRatio, nearPlane));
+
+      for (auto& pt : oDirs)
+      {
+        pt = basis[0] * pt.x
+          + basis[1] * pt.y
+          + basis[2] * pt.z;
+      }
+    }
+    else
+    {
+      oDirs[0] = -basis[2];
+      oDirs[1] = oDirs[2] = oDirs[3];
+    }
+  }
+
+  void GfxSystem::ViewInfo::DrawFrustum(DebugTool::Drawer& iDrawer) const
+  {
+    float hwRatio = float(viewportSize.y) / viewportSize.x;
+    if (projection == Perspective)
+    {
+      float nearPlane = displayedSize * 0.5 / tan(fov * 0.5);
+      float farPlane = displayedSize * 1000;
+
+      float halfWidth = tan(fov * 0.5) * nearPlane;
+
+      Vec3 nearPlaneCenter = pos - basis[2] * nearPlane;
+      Vec3 farPlaneCenter = pos - basis[2] * farPlane;
+
+      Vec3 nearPlaneRect[4] =
+      {
+        Vec3(-halfWidth, -halfWidth * hwRatio, -nearPlane),
+        Vec3(-halfWidth,  halfWidth * hwRatio, -nearPlane),
+        Vec3(halfWidth,  halfWidth * hwRatio, -nearPlane),
+        Vec3(halfWidth, -halfWidth * hwRatio, -nearPlane),
+      };
+
+      Vec3 farPlaneRect[4] =
+      {
+        (nearPlaneRect[0] / nearPlane) * farPlane,
+        (nearPlaneRect[1] / nearPlane) * farPlane,
+        (nearPlaneRect[2] / nearPlane) * farPlane,
+        (nearPlaneRect[3] / nearPlane) * farPlane,
+      };
+
+      for (auto& pt : nearPlaneRect)
+      {
+        pt = basis[0] * pt.x
+          + basis[1] * pt.y
+          + basis[2] * pt.z;
+      }
+
+      for (auto& pt : farPlaneRect)
+      {
+        pt = basis[0] * pt.x
+          + basis[1] * pt.y
+          + basis[2] * pt.z;
+      }
+
+      for (uint32_t i = 0; i < 4; ++i)
+      {
+        iDrawer.DrawLine(pos + nearPlaneRect[i], pos + farPlaneRect[i], Vec4(0, 1, 0, 1));
+      }
+
+      for (uint32_t i = 0; i < 4; ++i)
+      {
+        iDrawer.DrawLine(pos + nearPlaneRect[i], pos + nearPlaneRect[(i + 1) % 4], Vec4(0, 1, 0, 1));
+        iDrawer.DrawLine(pos + farPlaneRect[i], pos + farPlaneRect[(i + 1) % 4], Vec4(0, 1, 0, 1));
+      }
+
+    }
+    else
+    {
+    }
+  }
 
   class GfxSystem::Impl
   {
@@ -338,10 +486,16 @@ namespace eXl
 
     List<GfxComponent*> toDelete;
 
-    m_Impl->m_Nodes.Iterate([&](Impl::RenderNodeHandle, Impl::RenderNodeEntry& iNode)
+    m_Impl->m_Nodes.Iterate([&](Impl::RenderNodeHandle iHandle, Impl::RenderNodeEntry& iNode)
     {
-      iNode.m_Node->Push(list, iDelta);
+        if (iHandle == m_Impl->m_DebugDrawerHandle)
+        {
+          return;
+        }
+        iNode.m_Node->Push(list, iDelta);
     });
+
+    m_Impl->m_Nodes.Get(m_Impl->m_DebugDrawerHandle).m_Node->Push(list, iDelta);
 
     OGLRenderContext renderContext(GetSemanticManager());
     list.Render(&renderContext);

@@ -12,10 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/gfx/model.hpp>
 
 #include <ogl/renderer/oglbuffer.hpp>
-//#include <renderer/program.hpp>
-//#include <renderer/buffer.hpp>
-//#include <renderer/texture.hpp>
-//#include <renderer/material.hpp>
+#include <ogl/oglmeshalgo.hpp>
 
 #include <core/image/image.hpp>
 #include <assimp/scene.h>
@@ -102,7 +99,7 @@ namespace eXl
 
     info.hasNormals |= iMesh.HasNormals();
     info.hasUV |= iMesh.HasTextureCoords(0);
-    info.hasTangentSpace |= iMesh.HasTangentsAndBitangents();
+    info.hasTangentSpace |= false & iMesh.HasTangentsAndBitangents();
 
     info.numVtx = iMesh.mNumVertices;
     info.numIdx = iMesh.mNumFaces * 3;
@@ -136,7 +133,7 @@ namespace eXl
         if (iMesh.HasNormals())
         {
           //memcpy(oVtxData, iMesh.mNormals + i, sizeof(aiVector3D));
-          *reinterpret_cast<Vec3*>(oVtxData) = iTransform * Vec4(*reinterpret_cast<Vec3*>(iMesh.mNormals + i), 0);
+          *reinterpret_cast<Vec3*>(oVtxData) = normalize(iTransform * Vec4(*reinterpret_cast<Vec3*>(iMesh.mNormals + i), 0));
         }
         else
         {
@@ -164,8 +161,8 @@ namespace eXl
         {
           //memcpy(oVtxData, iMesh.mTangents + i, sizeof(aiVector3D));
           //memcpy(oVtxData + 3, iMesh.mBitangents + i, sizeof(aiVector3D));
-          *reinterpret_cast<Vec3*>(oVtxData) = iTransform * Vec4(*reinterpret_cast<Vec3*>(iMesh.mTangents + i), 0);
-          *reinterpret_cast<Vec3*>(oVtxData + 3) = iTransform * Vec4(*reinterpret_cast<Vec3*>(iMesh.mBitangents + i), 0);
+          *reinterpret_cast<Vec3*>(oVtxData) = normalize(iTransform * Vec4(*reinterpret_cast<Vec3*>(iMesh.mTangents + i), 0));
+          *reinterpret_cast<Vec3*>(oVtxData + 3) = normalize(iTransform * Vec4(*reinterpret_cast<Vec3*>(iMesh.mBitangents + i), 0));
         }
         else
         {
@@ -244,6 +241,7 @@ namespace eXl
     Vector<uint32_t> meshesIdxOffsets;
     Vector<uint32_t> meshesIdxSize;
     Vector<uint32_t> meshesMaterial;
+    Vector<Box3D> meshesBox;
 
     MeshInfo meshInfo;
   };
@@ -317,13 +315,56 @@ namespace eXl
     }
   }
 
-  IntrusivePtr<Model> ImportModel(ImporterContext const& iCtx, String const& iPath)
+  void ComputeSceneFromTree(SceneImportData const& iMeshes,
+    aiScene const& iScene,
+    aiNode const& iNode,
+    Mat4 const& iParentMat,
+    IntrusivePtr<Geometry> const& iGeom,
+    Vector<IntrusivePtr<Material const>> const& iMaterials,
+    Scene& oScene
+    )
+  {
+    Mat4 curMat = iParentMat * transpose(*reinterpret_cast<Mat4 const*>(&iNode.mTransformation));
+
+    if(iNode.mNumMeshes > 0)
+    {
+      Box3D modelBox;
+      for (uint32_t i = 0; i < iNode.mNumMeshes; ++i)
+      {
+        uint32_t meshIdx = iNode.mMeshes[i];
+        if (iMeshes.meshesIdxSize[meshIdx] != 0)
+        {
+          modelBox = modelBox.Merge(iMeshes.meshesBox[meshIdx]);
+          oScene.m_SceneBox = oScene.m_SceneBox.Merge(curMat * iMeshes.meshesBox[meshIdx]);
+        }
+      }
+
+      auto builder = Model::Create(iGeom, modelBox);
+      for (uint32_t i = 0; i < iNode.mNumMeshes; ++i)
+      {
+        uint32_t meshIdx = iNode.mMeshes[i];
+        if (iMeshes.meshesIdxSize[meshIdx] != 0)
+        {
+          builder.AddPart(iMaterials[iMeshes.meshesMaterial[meshIdx]], iMeshes.meshesIdxSize[meshIdx], iMeshes.meshesIdxOffsets[meshIdx]);
+        }
+      }
+
+      oScene.m_Models.push_back(builder.End());
+      oScene.m_Transforms.push_back(curMat);
+    }
+    for (uint32_t i = 0; i < iNode.mNumChildren; ++i)
+    {
+      ComputeSceneFromTree(iMeshes, iScene, *iNode.mChildren[i], curMat, iGeom, iMaterials, oScene);
+    }
+  }
+
+  Scene ImportScene(ImporterContext const& iCtx, String const& iPath)
   {
     aiScene const* scene = aiImportFile(iPath.c_str(), ppsteps);
 
     if (scene == nullptr)
     {
-      return nullptr;
+      return Scene();
     }
 
     // Gather informations about all the scene's meshes.
@@ -372,41 +413,42 @@ namespace eXl
         MeshInfo curInfo = GetMeshInfos(*curMesh);
         if (curInfo.numVtx == 0)
         {
+          mergedMeshesInfo.meshesBox.push_back(Box3D());
           continue;
         }
 
         float* outData = vertexData.data() + vertexSize * mergedMeshesInfo.meshesVtxOffsets[meshNum];
         uint32_t* outIdx = indices.data() + mergedMeshesInfo.meshesIdxOffsets[meshNum];
 
-        Box3D meshBox = ReadMesh(*curMesh, mergedMeshesInfo.meshInfo, vertexSize, baseIdx, outData, outIdx, iCtx.importTransform);
-        modelBox = modelBox.Merge(meshBox);
+        Box3D meshBox = ReadMesh(*curMesh, mergedMeshesInfo.meshInfo, vertexSize, baseIdx, outData, outIdx, Identity<Mat4>());
+        mergedMeshesInfo.meshesBox.push_back(meshBox);
 
         baseIdx += curMesh->mNumVertices;
       }
     }
 
     // Create vertex and index buffers.
-    IntrusivePtr<OGLBuffer> vtxBuffer(OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, vertexData.size(), vertexData.data()));
-    IntrusivePtr<OGLBuffer> idxBuffer(OGLBuffer::CreateBuffer(OGLBufferUsage::ELEMENT_ARRAY_BUFFER, indices.size(), indices.data()));
+    IntrusivePtr<OGLBuffer> vtxBuffer(OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, vertexData));
+    IntrusivePtr<OGLBuffer> idxBuffer(OGLBuffer::CreateBuffer(OGLBufferUsage::ELEMENT_ARRAY_BUFFER, indices));
 
     uint32_t vertexSizeInBytes = vertexSize * sizeof(float);
     uint32_t bufferOffset = 0;
 
     // Create the model's geometry.
     IntrusivePtr<Geometry> modelGeom = MakeRefCounted<Geometry>();
-    modelGeom->m_Assembly.AddAttrib(vtxBuffer, "position", 3, vertexSizeInBytes, bufferOffset);
+    modelGeom->m_Assembly.AddAttrib(vtxBuffer, OGLBaseAlgo::GetPosAttrib(), 3, vertexSizeInBytes, bufferOffset);
     bufferOffset += 3 * sizeof(float);
     if (mergedMeshesInfo.meshInfo.hasNormals)
     {
-      modelGeom->m_Assembly.AddAttrib(vtxBuffer, "normal", 3, vertexSizeInBytes, bufferOffset);
+      modelGeom->m_Assembly.AddAttrib(vtxBuffer, OGLMeshAlgo::GetNormalAttrib(), 3, vertexSizeInBytes, bufferOffset);
       bufferOffset += 3 * sizeof(float);
     }
     if (mergedMeshesInfo.meshInfo.hasUV)
     {
-      modelGeom->m_Assembly.AddAttrib(vtxBuffer, "texCoord", 2, vertexSizeInBytes, bufferOffset);
+      modelGeom->m_Assembly.AddAttrib(vtxBuffer, OGLBaseAlgo::GetTexCoordAttrib(), 2, vertexSizeInBytes, bufferOffset);
       bufferOffset += 2 * sizeof(float);
     }
-    if (mergedMeshesInfo.meshInfo.hasTangentSpace)
+    if (mergedMeshesInfo.meshInfo.hasTangentSpace && 0)
     {
       modelGeom->m_Assembly.AddAttrib(vtxBuffer, "tangent", 3, vertexSizeInBytes, bufferOffset);
       modelGeom->m_Assembly.AddAttrib(vtxBuffer, "bitangent", 3, vertexSizeInBytes, bufferOffset + 3*sizeof(float));
@@ -414,6 +456,13 @@ namespace eXl
     }
 
     modelGeom->m_Assembly.m_IBuffer = idxBuffer;
+
+    if (iCtx.keepShadowCopy)
+    {
+      modelGeom->m_ShadowCopy = std::make_unique<GeometryData>();
+      modelGeom->m_ShadowCopy->m_VertexData = std::move(vertexData);
+      modelGeom->m_ShadowCopy->m_Indices = std::move(indices);
+    }
 
     // Gather scene's materials.
     Vector<IntrusivePtr<Material const>> materials;
@@ -447,11 +496,11 @@ namespace eXl
       PrintMatProperties(*curMat);
 #endif
     }
-
-    // Create the final model, the combination of all the meshes and their material.
-    auto builder = Model::Create(std::move(modelGeom), modelBox);
     if (iCtx.bakeTransforms)
     {
+      // Create the final model, the combination of all the meshes and their material.
+      auto builder = Model::Create(std::move(modelGeom), modelBox);
+
       for (uint32_t i = 0; i < mergedMeshesInfo.meshesIdxOffsets.size(); ++i)
       {
         if (mergedMeshesInfo.meshesIdxSize[i] != 0)
@@ -459,18 +508,20 @@ namespace eXl
           builder.AddPart(materials[mergedMeshesInfo.meshesMaterial[i]], mergedMeshesInfo.meshesIdxSize[i], mergedMeshesInfo.meshesIdxOffsets[i]);
         }
       }
+     
+      Scene mergedScene;
+      mergedScene.m_Models.push_back(builder.End());
+      mergedScene.m_Transforms.push_back(Identity<Mat4>());
+      mergedScene.m_SceneBox = modelBox;
+        
+      return mergedScene;
     }
     else
     {
-      for (uint32_t i = 0; i < mergedMeshesInfo.meshesIdxOffsets.size(); ++i)
-      {
-        if (mergedMeshesInfo.meshesIdxSize[i] != 0)
-        {
-          builder.AddPart(materials[mergedMeshesInfo.meshesMaterial[i]], mergedMeshesInfo.meshesIdxSize[i], mergedMeshesInfo.meshesIdxOffsets[i]);
-        }
-      }
-    }
+      Scene splitScene;
+      ComputeSceneFromTree(mergedMeshesInfo, *scene, *scene->mRootNode, iCtx.importTransform, modelGeom, materials, splitScene);
 
-    return builder.End();
+      return splitScene;
+    }
   }
 };

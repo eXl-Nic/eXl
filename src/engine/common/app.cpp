@@ -326,7 +326,7 @@ namespace eXl
     view.basis[1] = UnitY<Vec3>() * Mathf::Cos(viewAngle) + UnitZ<Vec3>() * Mathf::Sin(viewAngle);
     view.basis[2] = UnitY<Vec3>() * -Mathf::Sin(viewAngle) + UnitZ<Vec3>() * Mathf::Cos(viewAngle);
 
-    view.pos = view.basis[2] * 100;
+    view.pos = view.basis[2] * 10;
 
     cameraObj = iWorld.CreateObject();
 

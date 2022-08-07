@@ -11,6 +11,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/gfx/gfxsystem.hpp>
 #include "gfxdebugdrawer.hpp"
 
+#include <engine/gfx/bounds3d.hpp>
+
 #include <ogl/renderer/ogldisplaylist.hpp>
 #include <ogl/renderer/oglcompiledprogram.hpp>
 #include <ogl/renderer/ogltextureloader.hpp>
@@ -214,7 +216,7 @@ namespace eXl
           {
             continue;
           }
-          Vec2 midPt;
+          Vec3 midPt = Zero<Vec3>();
           for (auto const& pt : cvx)
           {
             midPt += pt;
@@ -223,9 +225,9 @@ namespace eXl
           for (uint32_t j = 0; j < cvx.size(); ++j)
           {
             uint32_t nextPt = (j + 1) % cvx.size();
-            *(ptData++) = Vec3(midPt.x, midPt.y, 0.0);
-            *(ptData++) = Vec3(cvx[j].x, cvx[j].y, 0.0);
-            *(ptData++) = Vec3(cvx[nextPt].x, cvx[nextPt].y, 0.0);
+            *(ptData++) = midPt;
+            *(ptData++) = cvx[j];
+            *(ptData++) = cvx[nextPt];
           }
         }
       }
@@ -235,6 +237,10 @@ namespace eXl
         if (m_GeomBoxes == nullptr || m_GeomBoxes->GetBufferSize() < totBufferSize)
         {
           m_GeomBoxes = OGLBuffer::CreateBuffer(OGLBufferUsage::ARRAY_BUFFER, totBufferSize, (void*)triangles.data());
+        }
+        else
+        {
+          m_GeomBoxes->SetData(0, totBufferSize, triangles.data());
         }
       }
       //debugGeomBoxes->SetData(0, triangles.size() * sizeof(Vec3), (void*)triangles.data());
@@ -305,15 +311,34 @@ namespace eXl
     boxes.push_back(iBox);
   }
 
-  void GfxDebugDrawer::DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace)
+  void GfxDebugDrawer::DrawConvex(Vector<Vec3> const& iConvex, const Vec4& iColor, bool iScreenSpace)
   {
     auto matEntry = m_Colors.insert(std::make_pair(iColor, (uint32_t)m_Colors.size())).first;
     while (m_Convex.size() <= matEntry->second)
     {
-      m_Convex.push_back(Vector<Vector<Vec2>>());
+      m_Convex.push_back(Vector<Vector<Vec3>>());
     }
 
     auto& boxes = m_Convex[matEntry->second];
     boxes.push_back(iConvex);
+  }
+
+  void GfxDebugDrawer::DrawBox(Box3D const& iBox, const Vec4& iColor)
+  {
+    Vec3 points[8];
+    iBox.GetPoints(points);
+
+    DrawLine(points[0], points[1], iColor);
+    DrawLine(points[1], points[2], iColor);
+    DrawLine(points[2], points[3], iColor);
+    DrawLine(points[3], points[0], iColor);
+    DrawLine(points[4], points[5], iColor);
+    DrawLine(points[5], points[6], iColor);
+    DrawLine(points[6], points[7], iColor);
+    DrawLine(points[7], points[4], iColor);
+    DrawLine(points[0], points[4], iColor);
+    DrawLine(points[1], points[5], iColor);
+    DrawLine(points[2], points[6], iColor);
+    DrawLine(points[3], points[7], iColor);
   }
 }

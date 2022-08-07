@@ -10,8 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <math/matrix4.hpp>
-#include <math/vector4.hpp>
+#include <math/math.hpp>
 #include <ogl/oglexp.hpp>
 #include <ogl/renderer/oglsemanticmanager.hpp>
 
@@ -24,9 +23,9 @@ namespace eXl
   {
     EXL_REFLECT;
 
-    Matrix4f viewMatrix;
-    Matrix4f viewInverseMatrix;
-    Matrix4f projMatrix;
+    Mat4 viewMatrix;
+    Mat4 viewInverseMatrix;
+    Mat4 projMatrix;
   };
 
   class EXL_OGL_API OGLBaseAlgo

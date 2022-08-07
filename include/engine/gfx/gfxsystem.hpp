@@ -22,6 +22,7 @@ namespace eXl
   class GfxSystem;
   class Transforms;
   class OGLDisplayList;
+  struct Plane;
 
   namespace DebugTool
   {
@@ -91,6 +92,10 @@ namespace eXl
       // For ortho, it is exactly how much of the world we will see
       // For perspective, it is how much we will see at nearPlane distance.
       float displayedSize = 1.0;
+
+      void ComputeFrustumPlanes(Plane(&oPlanes)[6]) const;
+      void DrawFrustum(DebugTool::Drawer&) const;
+      void GetFurstumCornerDir(Vec3(&oDirs)[4]) const;
     };
 
     static void StaticInit();

@@ -83,4 +83,16 @@ namespace eXl
 
     return Box3D::FromExtremas(minPt, maxPt);
   }
+
+  void Box3D::GetPoints(Vec3* oPoints) const
+  {
+    oPoints[0] = m_Center + Vec3(-m_HalfExtent.x, -m_HalfExtent.y, -m_HalfExtent.z);
+    oPoints[1] = m_Center + Vec3( m_HalfExtent.x, -m_HalfExtent.y, -m_HalfExtent.z);
+    oPoints[2] = m_Center + Vec3( m_HalfExtent.x,  m_HalfExtent.y, -m_HalfExtent.z);
+    oPoints[3] = m_Center + Vec3(-m_HalfExtent.x,  m_HalfExtent.y, -m_HalfExtent.z);
+    oPoints[4] = m_Center + Vec3(-m_HalfExtent.x, -m_HalfExtent.y,  m_HalfExtent.z);
+    oPoints[5] = m_Center + Vec3( m_HalfExtent.x, -m_HalfExtent.y,  m_HalfExtent.z);
+    oPoints[6] = m_Center + Vec3( m_HalfExtent.x,  m_HalfExtent.y,  m_HalfExtent.z);
+    oPoints[7] = m_Center + Vec3(-m_HalfExtent.x,  m_HalfExtent.y,  m_HalfExtent.z);
+  }
 }

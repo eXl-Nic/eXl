@@ -23,14 +23,14 @@ namespace eXl
   * Model, loaded from a file.
   * Aggregates a geometry, optionaly made of individual parts with different materials.
   */
-  class Model : public GfxResource
+  class EXL_ENGINE_API Model : public GfxResource
   {
     struct private_ctor;
   public:
 
     Model(private_ctor&);
 
-    class Builder
+    class EXL_ENGINE_API Builder
     {
     public:
       Builder& AddPart(IntrusivePtr<Material const> const& iMat, uint32_t iCount, uint32_t iStart = 0);
@@ -70,7 +70,7 @@ namespace eXl
   /**
   * Model instance, allows one to override a given part's material
   */
-  class ModelInstance : public GfxResource
+  class EXL_ENGINE_API ModelInstance : public GfxResource
   {
     struct private_ctor;
   public:

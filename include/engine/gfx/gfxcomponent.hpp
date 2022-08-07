@@ -34,6 +34,13 @@ namespace eXl
 		virtual ~GfxResource() {}
 	};
 
+  struct GeometryData
+  {
+    Vector<float> m_VertexData;
+    Vector<uint32_t> m_Indices;
+  };
+
+
   class EXL_ENGINE_API Geometry : public GfxResource
   {
   public:
@@ -42,6 +49,8 @@ namespace eXl
 
     IntrusivePtr<OGLBuffer> m_Vertices;
     IntrusivePtr<OGLBuffer> m_Indices;
+
+    UniquePtr<GeometryData> m_ShadowCopy;
 
     OGLVAssembly m_Assembly;
     OGLDraw::Command m_Command;
@@ -55,6 +64,8 @@ namespace eXl
 
   class EXL_ENGINE_API Material : public MaterialInterface
   {
+  public:
+    uint32_t Push(OGLDisplayList& iList) { return 0; }
   };
 
   class EXL_ENGINE_API SpriteMaterialInfo : public Material

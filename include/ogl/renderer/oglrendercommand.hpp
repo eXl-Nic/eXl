@@ -198,7 +198,7 @@ namespace eXl
     { AddAttrib(iBuffer.get(), iAttribId, iNum, iStride, iOffset); }
 
     IntrusivePtr<OGLBuffer const> m_IBuffer;
-    uint32_t m_IOffset;
+    uint32_t m_IOffset = 0;
 
     void Apply(OGLSemanticManager const& iSemantics, OGLRenderContext* ) const;
   };

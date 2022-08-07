@@ -11,20 +11,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <math/math.hpp>
 #include <core/containers.hpp>
+#include <engine/gfx/model.hpp>
 
 namespace eXl
 {
   class Model;
   class Material;
 
-  struct ImporterContext
+  struct EXL_ENGINE_API ImporterContext
   {
     ~ImporterContext();
     Mat4 importTransform = Identity<Mat4>();
     IntrusivePtr<Material const> baseMaterial;
     bool bakeTransforms = false;
+    bool keepShadowCopy = false;
     UnorderedMap<String, IntrusivePtr<Material const>> materialMapping;
   };
 
-  IntrusivePtr<Model> ImportModel(ImporterContext const& iCtx, String const& iPath);
+  struct Scene
+  {
+    Vector<Mat4> m_Transforms;
+    Vector<IntrusivePtr<Model>> m_Models;
+    Box3D m_SceneBox;
+  };
+
+  EXL_ENGINE_API Scene ImportScene(ImporterContext const& iCtx, String const& iPath);
 }

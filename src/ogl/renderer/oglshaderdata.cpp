@@ -36,6 +36,13 @@ namespace eXl
     //}
   }
 
+  void OGLShaderData::Clear()
+  {
+    m_Data.clear();
+    m_UBOData.clear();
+    m_TexData.clear();
+  }
+
   void OGLShaderData::UpdateDirty(OGLSemanticManager const& iManager) const
   {
     for (auto& data : m_Data)

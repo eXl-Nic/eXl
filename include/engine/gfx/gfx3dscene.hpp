@@ -14,13 +14,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  class Gfx3DScene
+  class Model;
+  class Image;
+  
+  class EXL_ENGINE_API Gfx3DScene
   {
   public:
 
     void Initialize(GfxSystem& iSys);
 
-    void Create3DModel( ObjectHandle iObj, IntrusivePtr<Model> iModel);
+    void Add3DModel(ObjectHandle iObj, IntrusivePtr<Model> iModel);
+    void Hide3DModel(ObjectHandle iObj, bool iHide);
+
+    void SetSkybox(Vector<Image*> const& iPlanes);
 
   protected:
     GfxSystem* m_Sys = nullptr;

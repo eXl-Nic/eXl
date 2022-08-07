@@ -33,7 +33,8 @@ namespace eXl
     void Push(OGLDisplayList& iList, float iDelta) override;
     void DrawLine(const Vec3& iFrom, const Vec3& iTo, const Vec4& iColor, bool iScreenSpace = false) override;
     void DrawBox(AABB2Df const& iBox, const Vec4& iColor, bool iScreenSpace = false) override;
-    void DrawConvex(Vector<Vec2> const& iConvex, const Vec4& iColor, bool iScreenSpace) override;
+    void DrawBox(Box3D const& iBox, const Vec4& iColor) override;
+    void DrawConvex(Vector<Vec3> const& iConvex, const Vec4& iColor, bool iScreenSpace) override;
 
     OGLCompiledProgram const* GetLineProgram() { return m_LineProgram.get(); }
 
@@ -53,7 +54,7 @@ namespace eXl
     // Debugdrawer data
     Vector<Vector<Vec3>> m_Lines;
     Vector<Vector<AABB2Df>> m_Boxes;
-    Vector<Vector<Vector<Vec2>>> m_Convex;
+    Vector<Vector<Vector<Vec3>>> m_Convex;
     UnorderedMap<Vec4, uint32_t> m_Colors;
 
     // Rendering data

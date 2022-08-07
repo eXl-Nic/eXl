@@ -537,6 +537,10 @@ namespace eXl
   void OGLDisplayList::Render(OGLRenderContext* iCtx, OGLFramebuffer* iFBO)
   {
     FlushDraws();
+
+    //glEnable(GL_CULL_FACE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     m_States.InitForRender();
     std::sort(m_Keys.begin(), m_Keys.end());
 

@@ -260,7 +260,7 @@ namespace eXl
   {
     {
       auto insertRet = oManifest.m_Interfaces.insert(std::make_pair(s_ClientInterface, EventsManifest::FunctionsMap()));
-      eXl_ASSERT_MSG(insertRet.second, "Duplicated interface name %s", s_ClientInterface);
+      eXl_ASSERT_MSG(insertRet.second, eXl_FORMAT("Duplicated interface name %s", s_ClientInterface));
       auto& funMap = insertRet.first->second;
 
       for (auto const& funDesc : m_ClientCommands)
@@ -271,7 +271,7 @@ namespace eXl
 
     {
       auto insertRet = oManifest.m_Interfaces.insert(std::make_pair(s_ServerInterface, EventsManifest::FunctionsMap()));
-      eXl_ASSERT_MSG(insertRet.second, "Duplicated interface name %s", s_ServerInterface);
+      eXl_ASSERT_MSG(insertRet.second, eXl_FORMAT("Duplicated interface name %s", s_ServerInterface));
       auto& funMap = insertRet.first->second;
 
       for (auto const& funDesc : m_ServerCommands)

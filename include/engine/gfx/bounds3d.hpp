@@ -11,12 +11,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once 
 
 #include <math/math.hpp>
+#include <engine/enginelib.hpp>
 
 namespace eXl
 {
   struct Box3D;
 
-  struct BoundingSphere
+  struct EXL_ENGINE_API BoundingSphere
   {
     static BoundingSphere FromBox(Box3D const& iSphere);
 
@@ -24,7 +25,7 @@ namespace eXl
     float m_Radius;
   };
 
-  struct Box3D
+  struct EXL_ENGINE_API Box3D
   {
     Vec3 m_Center;
     Vec3 m_HalfExtent = Vec3(0,0,0);
@@ -43,19 +44,21 @@ namespace eXl
     Box3D Merge(Box3D const& other) const;
     Box3D Merge(Vec3 const& iPoint) const;
     Vec3 Min() const { return m_Center - m_HalfExtent; }
-    Vec3 Max() { return m_Center + m_HalfExtent; }
+    Vec3 Max() const { return m_Center + m_HalfExtent; }
+    Vec3 Size() const { return m_HalfExtent * 2; }
+    void GetPoints(Vec3* oPoints) const;
 
   };
 
 
-  Box3D operator*(Mat4 const& iMat, Box3D const& iBox);
+  EXL_ENGINE_API Box3D operator*(Mat4 const& iMat, Box3D const& iBox);
 
   inline BoundingSphere BoundingSphere::FromBox(Box3D const& iBox)
   {
     return BoundingSphere{ iBox.m_Center, length(iBox.m_HalfExtent) };
   }
 
-  struct Plane
+  struct EXL_ENGINE_API Plane
   {
     Vec3 m_PlaneNormal;
     float m_Dist;
