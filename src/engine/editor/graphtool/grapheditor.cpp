@@ -216,7 +216,7 @@ namespace eXl
         }
       });
 
-    m_RuleScriptSelection = new ResourceSelectionWidget(rulesCollection, LuaScriptBehaviour::StaticLoaderName(), ResourceSelectionWidget::Combo);
+    m_RuleScriptSelection = new ResourceSelectionWidget(rulesCollection, LuaEventHandler::StaticLoaderName(), ResourceSelectionWidget::Combo);
     rulesCollectionLayout->addWidget(m_RuleScriptSelection);
     QObject::connect(m_RuleScriptSelection, &ResourceSelectionWidget::onResourceChanged, [this]()
       {
@@ -839,7 +839,7 @@ namespace eXl
     : m_Editor(iEditor)
   {
 
-    m_World.Init(EditorState::GetProjectProperties()).WithGfx();
+    m_World.Init(EditorState::BuildWorldConfig()).WithGfx();
 
     World& world = m_World.GetWorld();
     GfxSystem& gfx = *world.GetSystem<GfxSystem>();
@@ -889,10 +889,10 @@ namespace eXl
       gameWidget->SetPainterInterface(m_GraphPainter);
 
       GfxSystem::ViewInfo& view = gameWidget->GetViewInfo();
-      view.pos = Vector3f::UNIT_Z * 2;
+      view.pos = UnitZ<Vec3>() * 2;
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = GraphPainter::s_NodeSize * 10;
-      view.backgroundColor = Vector4f::ONE;
+      view.backgroundColor = One<Vec4>();
 
       m_World.GetCamera().view = view;
 
@@ -1249,7 +1249,7 @@ namespace eXl
         {
           ObjectHandle obj = world.CreateObject();
           database.InstantiateArchetype(obj, arch, nullptr);
-          trans.AddTransform(obj, Matrix4f::FromPosition(Vector3f(pos[0], pos[1], 0.0)));
+          trans.AddTransform(obj, glm::translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
           gfx.CreateSpriteComponent(obj);
           m_DisplayNodes.push_back(obj);
         }
@@ -1260,12 +1260,11 @@ namespace eXl
     {
       auto pos1 = boost::get(positionMap, edge.m_source);
       auto pos2 = boost::get(positionMap, edge.m_target);
-      Vector2d& pos1V = reinterpret_cast<Vector2d&>(pos1);
-      Vector2d& pos2V = reinterpret_cast<Vector2d&>(pos2);
-      Vector2d dir = pos2V - pos1V;
-      dir.Normalize();
-      pos2V -= dir * GraphPainter::s_NodeSize;
-      pos1V += dir * GraphPainter::s_NodeSize;
+      Vec2d& pos1V = reinterpret_cast<Vec2d&>(pos1);
+      Vec2d& pos2V = reinterpret_cast<Vec2d&>(pos2);
+      Vec2d dir = normalize(pos2V - pos1V);
+      pos2V -= dir * double(GraphPainter::s_NodeSize);
+      pos1V += dir * double(GraphPainter::s_NodeSize);
       m_GraphPainter->edges.push_back(qMakePair(QPointF(pos1[0], pos1[1]), QPointF(pos2[0], pos2[1])));
     }
 
@@ -1341,7 +1340,7 @@ namespace eXl
         {
           ObjectHandle obj = world.CreateObject();
           database.InstantiateArchetype(obj, arch, nullptr);
-          trans.AddTransform(obj, Matrix4f::FromPosition(Vector3f(pos[0], pos[1], 0.0)));
+          trans.AddTransform(obj, translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
           gfx.CreateSpriteComponent(obj);
           m_DisplayNodes.push_back(obj);
         }
@@ -1352,12 +1351,11 @@ namespace eXl
     {
       auto pos1 = boost::get(positionMap, edge.m_source);
       auto pos2 = boost::get(positionMap, edge.m_target);
-      Vector2d& pos1V = reinterpret_cast<Vector2d&>(pos1);
-      Vector2d& pos2V = reinterpret_cast<Vector2d&>(pos2);
-      Vector2d dir = pos2V - pos1V;
-      dir.Normalize();
-      pos2V -= dir * GraphPainter::s_NodeSize;
-      pos1V += dir * GraphPainter::s_NodeSize;
+      Vec2d& pos1V = reinterpret_cast<Vec2d&>(pos1);
+      Vec2d& pos2V = reinterpret_cast<Vec2d&>(pos2);
+      Vec2d dir = normalize(pos2V - pos1V);
+      pos2V -= dir * double(GraphPainter::s_NodeSize);
+      pos1V += dir * double(GraphPainter::s_NodeSize);
       m_GraphPainter->edges.push_back(qMakePair(QPointF(pos1[0], pos1[1]), QPointF(pos2[0], pos2[1])));
     }
   }

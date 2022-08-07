@@ -70,7 +70,7 @@ namespace eXl
     : m_Widget(iWidget)
     , m_Sys(iSys)
   {
-    m_World.Init(EditorState::GetProjectProperties()).WithGfx();
+    m_World.Init(EditorState::BuildWorldConfig()).WithGfx();
 
     World& world = m_World.GetWorld();
     GfxSystem& gfx = *world.GetSystem<GfxSystem>();
@@ -143,10 +143,10 @@ namespace eXl
       gameWidget->SetPainterInterface(m_GraphPainter);
 
       GfxSystem::ViewInfo& view = gameWidget->GetViewInfo();
-      view.pos = Vector3f::UNIT_Z * 2;
+      view.pos = UnitZ<Vec3>() * 2;
       view.projection = GfxSystem::Orthographic;
       view.displayedSize = GraphPainter::s_NodeSize * 10;
-      view.backgroundColor = Vector4f::ONE;
+      view.backgroundColor = One<Vec4>();
 
       m_World.GetCamera().view = view;
 
@@ -255,11 +255,11 @@ namespace eXl
       data->rewriteSys = &m_Sys;
       data->ruleObject = world.CreateObject();
 
-      if (LuaScriptBehaviour const* script = ruleEntry.second.m_RewriteScript.GetOrLoad())
+      if (LuaEventHandler const* script = ruleEntry.second.m_RewriteScript.GetOrLoad())
       {
-        if (script->m_BehaviourName == "RewriteRule")
+        if (script->m_InterfaceName == "RewriteRule")
         {
-          luaSys.AddBehaviour(data->ruleObject, *script);
+          luaSys.AddHandler(data->ruleObject, *script);
         }
       }
 
@@ -271,15 +271,15 @@ namespace eXl
         if (data->nodeTags[iIdx] == RewriteSystem::GetAnyTag()
           || data->nodeTags[iIdx] == nodeTag)
         {
-          LuaScriptSystem& luaSys = *ctx.m_SourceGraph.m_World.GetSystem<LuaScriptSystem>();
-          if (!luaSys.HasBehaviour(data->ruleObject, "RewriteRule"))
+          static Name const checkNodeEvt("RewriteRule::CheckNode");
+          EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
+          if (evtSys.GetEventHandlerInternal(data->ruleObject, checkNodeEvt) == nullptr)
           {
             return true;
           }
 
           MatchWrapper wrapper(ctx.m_SourceGraph);
-          Optional<bool> ret = luaSys.CallBehaviour<bool>(data->ruleObject, "RewriteRule", "CheckNode"
-            , wrapper, iIdx, nodeObj);
+          Optional<bool> ret = evtSys.Dispatch<bool>(data->ruleObject, checkNodeEvt, wrapper, iIdx, nodeObj);
 
           eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckNode function", false);
 
@@ -297,15 +297,15 @@ namespace eXl
         if (data->edgeTags[iIdx] == RewriteSystem::GetAnyTag()
           || data->edgeTags[iIdx] == edgeTag)
         {
-          LuaScriptSystem& luaSys = *ctx.m_SourceGraph.m_World.GetSystem<LuaScriptSystem>();
-          if (!luaSys.HasBehaviour(data->ruleObject, "RewriteRule"))
+          static Name const checkEdgeEvt("RewriteRule::CheckEdge");
+          EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
+          if (evtSys.GetEventHandlerInternal(data->ruleObject, checkEdgeEvt) == nullptr)
           {
             return true;
           }
 
           MatchWrapper wrapper(ctx.m_SourceGraph);
-          Optional<bool> ret = luaSys.CallBehaviour<bool>(data->ruleObject, "RewriteRule", "CheckEdge"
-            , wrapper, iIdx, edgeObj);
+          Optional<bool> ret = evtSys.Dispatch<bool>(data->ruleObject, checkEdgeEvt, wrapper, iIdx, edgeObj);
 
           eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckEdge function", false);
 
@@ -319,8 +319,9 @@ namespace eXl
       {
         SimMatchCtx const& ctx = *SimMatchCtx::DynamicCast(iCtx.userCtx);
 
-        LuaScriptSystem& luaSys = *ctx.m_SourceGraph.m_World.GetSystem<LuaScriptSystem>();
-        if (!luaSys.HasBehaviour(data->ruleObject, "RewriteRule"))
+        static Name const checkMatchEvt("RewriteRule::CheckMatch");
+        EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
+        if (evtSys.GetEventHandlerInternal(data->ruleObject, checkMatchEvt) == nullptr)
         {
           return true;
         }
@@ -333,8 +334,7 @@ namespace eXl
         }
 
         MatchWrapper wrapper(ctx.m_SourceGraph);
-        Optional<bool> ret = luaSys.CallBehaviour<bool>(data->ruleObject, "RewriteRule", "CheckMatch"
-          , wrapper, nodeObjects);
+        Optional<bool> ret = evtSys.Dispatch<bool>(data->ruleObject, checkMatchEvt, wrapper, nodeObjects);
 
         eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckMatch function", false);
 
@@ -600,7 +600,7 @@ namespace eXl
           Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
           if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
           {
-            trans.AddTransform(iObj, Matrix4f::FromPosition(Vector3f(pos[0], pos[1], 0.0)));
+            trans.AddTransform(iObj, translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
             gfx.CreateSpriteComponent(iObj);
             m_DisplayNodes.push_back(iObj);
           }
@@ -611,12 +611,11 @@ namespace eXl
     {
       auto pos1 = boost::get(positionMap, edge.m_source);
       auto pos2 = boost::get(positionMap, edge.m_target);
-      Vector2d& pos1V = reinterpret_cast<Vector2d&>(pos1);
-      Vector2d& pos2V = reinterpret_cast<Vector2d&>(pos2);
-      Vector2d dir = pos2V - pos1V;
-      dir.Normalize();
-      pos2V -= dir * GraphPainter::s_NodeSize;
-      pos1V += dir * GraphPainter::s_NodeSize;
+      Vec2d& pos1V = reinterpret_cast<Vec2d&>(pos1);
+      Vec2d& pos2V = reinterpret_cast<Vec2d&>(pos2);
+      Vec2d dir = normalize(pos2V - pos1V);
+      pos2V -= dir * double(GraphPainter::s_NodeSize);
+      pos1V += dir * double(GraphPainter::s_NodeSize);
       m_GraphPainter->edges.push_back(qMakePair(QPointF(pos1[0], pos1[1]), QPointF(pos2[0], pos2[1])));
     }
   }

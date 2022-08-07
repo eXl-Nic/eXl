@@ -2,6 +2,7 @@
 #include <gen/graphutils.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <core/type/tagtype.hpp>
+#include <engine/game/commondef.hpp>
 
 namespace eXl
 {
@@ -177,18 +178,19 @@ namespace eXl
 
     void RewriteSystem::Init()
     {
-      BehaviourDesc desc;
-      desc.behaviourName = "RewriteRule";
-      desc.functions.insert(std::make_pair("CheckNode", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("CheckEdge", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("CheckMatch", FunDesc::Create<bool(MatchWrapper&, Vector<ObjectHandle>)>()));
-      desc.functions.insert(std::make_pair("CreateNode", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("CreateEdge", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("RemoveNode", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
-      desc.functions.insert(std::make_pair("RemoveEdge", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
+      EventsManifest::FunctionsMap functions;
+      //desc.behaviourName = "RewriteRule";
+      functions.insert(std::make_pair("CheckNode", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
+      functions.insert(std::make_pair("CheckEdge", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
+      functions.insert(std::make_pair("CheckMatch", FunDesc::Create<bool(MatchWrapper&, Vector<ObjectHandle>)>()));
+      functions.insert(std::make_pair("CreateNode", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
+      functions.insert(std::make_pair("CreateEdge", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
+      functions.insert(std::make_pair("RemoveNode", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
+      functions.insert(std::make_pair("RemoveEdge", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
 
-      LuaScriptSystem::AddBehaviourDesc(desc);
-      ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystem::StaticRtti());
+      //LuaScriptSystem::AddBehaviourDesc(desc);
+      EngineCommon::GetBaseEvents().m_Interfaces.insert(std::make_pair("RewriteRule", functions));
+      ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystem::StaticRtti(), RewriteSystem::GetType());
 
       LuaManager::AddRegFun(&BindGraphWrappers);
     }

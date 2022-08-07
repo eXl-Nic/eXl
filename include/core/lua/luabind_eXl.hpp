@@ -243,7 +243,7 @@ namespace eXl
     bool m_IsConst;
   };
 
-  DEFINE_CORE_TYPE(LuaArrayIterator);
+  DECLARE_CORE_TYPE(LuaArrayIterator);
 
   struct array_length
   {

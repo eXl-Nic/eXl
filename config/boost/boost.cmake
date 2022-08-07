@@ -1,12 +1,12 @@
 
 if(${ANDROID})  
-  SET(Boost_INCLUDE_DIR ${Boost_ROOT})
+  SET(Boost_INCLUDE_DIR ${BOOST_ROOT})
   
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
-  SET(Boost_LIBRARY_DIR ${Boost_ROOT}/stage_arm_r20/lib)
+  SET(Boost_LIBRARY_DIR ${BOOST_ROOT}/stage_arm_r20/lib)
   SET(Boost_LIBRARIES )
 else()
-  SET(Boost_LIBRARY_DIR ${Boost_ROOT}/stage/lib)
+  SET(Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
   SET(Boost_LIBRARIES )
 endif()
 

@@ -56,6 +56,21 @@ namespace eXl
     Vector<Key> m_IndexToName;
   };
 
+  template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
+  class CollectionModelMapAdaptor : public CollectionModel<Key, Val, Resource>
+  {
+  public:
+    static CollectionModelMapAdaptor* Create(QObject* iParent, Resource* iResource);
+
+    // Bypasses model, only use on modification callbacks.
+    bool SetOnResource(Key const& iName, Val iObject);
+  protected:
+    CollectionModelMapAdaptor(QObject* iParent, Resource* iResource);
+    bool AddToResource(Key const& iName, Val const& iValue) override;
+    bool RemoveFromResource(Key const& iName) override;
+    Val const* FindInResource(Key const& iName) const override;
+  };
+
   template<typename Key, typename Value, typename ResourceType>
   class MapCollectionModel : public CollectionModel<Key, Value, ResourceType>
   {

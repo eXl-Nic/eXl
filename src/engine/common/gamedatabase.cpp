@@ -387,8 +387,21 @@ namespace eXl
       return ConstIterRange();
     }
 
-    DataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
-    return ConstIterRange(alloc->begin(GetWorld()), alloc->end(GetWorld()));
+    GameDataAllocatorBase const* alloc = nullptr;
+
+    ObjectTable_Data* dataTable;
+    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator.get())
+    {
+      alloc = denseAlloc;
+      dataTable = denseAlloc->GetObjectTable();
+    }
+    else
+    {
+      alloc = m_Allocators[iter->second].m_SparseAllocator.get();
+      dataTable = &m_Allocators[iter->second].m_SparseAllocator->m_ObjectData;
+    }
+
+    return ConstIterRange(alloc->begin(GetWorld(), dataTable), alloc->end(GetWorld()));
   }
 
   GameDatabase::IterRange GameDatabase::IterateOverData(PropertySheetName iName)
@@ -399,7 +412,20 @@ namespace eXl
       return IterRange();
     }
 
-    DataAllocatorBase* alloc = m_Allocators[iter->second].GetAlloc();
-    return IterRange(alloc->begin(GetWorld()), alloc->end(GetWorld()));
+    GameDataAllocatorBase* alloc = nullptr;
+
+    ObjectTable_Data* dataTable;
+    if (DenseGameDataAllocator* denseAlloc = m_Allocators[iter->second].m_DenseAllocator.get())
+    {
+      alloc = denseAlloc;
+      dataTable = denseAlloc->GetObjectTable();
+    }
+    else
+    {
+      alloc = m_Allocators[iter->second].m_SparseAllocator.get();
+      dataTable = &m_Allocators[iter->second].m_SparseAllocator->m_ObjectData;
+    }
+
+    return IterRange(alloc->begin(GetWorld(), dataTable), alloc->end(GetWorld()));
   }
 }

@@ -51,6 +51,8 @@ namespace eXl
     
     static World* GetWorld_Static();
 
+    LuaWorld& GetLuaWorld();
+
   protected:
     
     struct Impl;

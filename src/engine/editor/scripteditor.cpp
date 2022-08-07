@@ -34,7 +34,7 @@ namespace eXl
 
   lac::an::UserDefined BuildExlInformation()
   {
-    World world(EngineCommon::GetComponents());
+    World world(EditorState::BuildWorldConfig());
     world.AddSystem(std::make_unique<GameDatabase>(EditorState::GetProjectProperties()));
     LuaScriptSystem* luaScripts = world.AddSystem(std::make_unique<LuaScriptSystem>());
 

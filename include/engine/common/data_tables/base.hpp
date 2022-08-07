@@ -10,14 +10,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/common/world.hpp>
+#include <core/type/dynobject.hpp>
 
 namespace eXl
 {
   class Type;
 
+  using ObjectToSlotMap = UnorderedMap<ObjectHandle, uint32_t>;
+
   struct EXL_ENGINE_API ObjectDataIndex
   {
-    UnorderedMap<ObjectHandle, uint32_t> m_ObjectToSlot;
+    ObjectToSlotMap m_ObjectToSlot;
     Vector<ObjectHandle> m_WorldObjects;
   };
 
@@ -37,6 +40,50 @@ namespace eXl
     virtual void EraseSlot(uint32_t) = 0;
     virtual ObjectTableHandle_Base GetDataFromSlot(uint32_t) = 0;
     virtual ObjectTableHandle_Base GetDataFromSlot(uint32_t) const = 0;
+
+    class ConstIterator
+    {
+      friend GameDataAllocatorBase;
+      using value_type = std::pair<ObjectHandle, ConstDynObject>;
+      ConstIterator(World& iWorld, GameDataAllocatorBase const& iAlloc, ObjectTable_Data* iData, ObjectToSlotMap::const_iterator iIter);
+      bool IsValid() const;
+    public:
+      ConstIterator();
+      value_type operator*() const;
+      ConstIterator& operator++();
+      bool operator ==(ConstIterator const& iOther) const;
+      bool operator !=(ConstIterator const& iOther) const;
+
+      World* m_World;
+      GameDataAllocatorBase const* m_Alloc;
+      ObjectTable_Data* m_Data;
+      ObjectToSlotMap::const_iterator m_Iter;
+    };
+
+    class Iterator
+    {
+      friend GameDataAllocatorBase;
+      using value_type = std::pair<ObjectHandle, DynObject>;
+      Iterator(World& iWorld, GameDataAllocatorBase& iAlloc, ObjectTable_Data* iData, ObjectToSlotMap::const_iterator iIter);
+      bool IsValid() const;
+    public:
+      Iterator();
+      value_type operator*() const;
+      Iterator& operator++();
+      bool operator ==(Iterator const& iOther) const;
+      bool operator !=(Iterator const& iOther) const;
+
+      World* m_World;
+      GameDataAllocatorBase* m_Alloc;
+      ObjectTable_Data* m_Data;
+      ObjectToSlotMap::const_iterator m_Iter;
+    };
+
+    ConstIterator begin(World& iWorld, ObjectTable_Data* iData) const { return ConstIterator(iWorld, *this, iData, m_IndexRef.m_ObjectToSlot.begin()); }
+    ConstIterator end(World& iWorld) const { return ConstIterator(iWorld, *this, nullptr, m_IndexRef.m_ObjectToSlot.end()); }
+
+    Iterator begin(World& iWorld, ObjectTable_Data* iData) { return Iterator(iWorld, *this, iData, m_IndexRef.m_ObjectToSlot.begin()); }
+    Iterator end(World& iWorld) { return Iterator(iWorld, *this, nullptr, m_IndexRef.m_ObjectToSlot.end()); }
 
     ObjectDataIndex& m_IndexRef;
     Type const* m_Type;

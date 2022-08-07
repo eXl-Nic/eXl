@@ -90,8 +90,8 @@ namespace eXl
     DynObject ModifyData(ObjectHandle iObject, PropertySheetName iName);
     ConstDynObject GetData(ObjectHandle iObject, PropertySheetName iName);
 
-    using ConstIterRange = std::pair<DataAllocatorBase::ConstIterator, DataAllocatorBase::ConstIterator>;
-    using IterRange = std::pair<DataAllocatorBase::Iterator, DataAllocatorBase::Iterator>;
+    using ConstIterRange = std::pair<GameDataAllocatorBase::ConstIterator, GameDataAllocatorBase::ConstIterator>;
+    using IterRange = std::pair<GameDataAllocatorBase::Iterator, GameDataAllocatorBase::Iterator>;
 
     ConstIterRange IterateOverDataConst(PropertySheetName) const;
     IterRange IterateOverData(PropertySheetName);
@@ -156,6 +156,13 @@ namespace eXl
       GameDataAllocatorBase* GetAlloc()
       {
         return m_SparseAllocator 
+          ? static_cast<GameDataAllocatorBase*>(m_SparseAllocator.get())
+          : m_DenseAllocator.get();
+      }
+
+      GameDataAllocatorBase const* GetAlloc() const
+      {
+        return m_SparseAllocator
           ? static_cast<GameDataAllocatorBase*>(m_SparseAllocator.get())
           : m_DenseAllocator.get();
       }

@@ -15,6 +15,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/common/gamedata.hpp>
 #include <engine/common/animation.cxx>
 
+#ifdef Yield
+#undef Yield
+#endif
+
+
 namespace eXl
 {
   template <typename Coroutine>
@@ -28,7 +33,6 @@ namespace eXl
   };
 
   struct CoroutineAPI;
-
   DECLARE_ENGINE_TYPE(CoroutineAPI)
 
   struct CoroutineAPI

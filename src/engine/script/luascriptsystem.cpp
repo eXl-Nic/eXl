@@ -238,7 +238,6 @@ namespace eXl
   }
 
   World* LuaScriptSystem::GetWorld_Static()
-
   {
     LuaStateHandle curState = LuaManager::GetCurrentState();
     LuaScriptSystem* self = LuaScriptSystem::DynamicCast(curState.GetUserPtr());
@@ -248,6 +247,11 @@ namespace eXl
     }
 
     return nullptr;
+  }
+
+  LuaWorld& LuaScriptSystem::GetLuaWorld()
+  {
+    return m_Impl->m_LuaWorld;
   }
 
   void LuaScriptSystem::LoadScript(const LuaScript& iScript)
@@ -711,23 +715,6 @@ namespace eXl
       events.AddEventHandlerInternal(iObject, fun.first, &LuaScriptSystem::Impl::CallbackDispatcher, this);
     }
     return Err::Success;
-  }
-
-  bool LuaScriptSystem::HasBehaviour(ObjectHandle iHandle, Name iBehaviourName) const
-  {
-    auto behaviourReg = m_ObjectToBehaviour.find(iBehaviourName);
-    if (behaviourReg == m_ObjectToBehaviour.end())
-    {
-      return false;
-    }
-
-    auto iterScript = behaviourReg->second.m_RegisteredObjects.find(iHandle);
-    if (iterScript == behaviourReg->second.m_RegisteredObjects.end())
-    {
-      return false;
-    }
-
-    return true;
   }
 
   void LuaScriptSystem::DeleteComponent(ObjectHandle iHandle)

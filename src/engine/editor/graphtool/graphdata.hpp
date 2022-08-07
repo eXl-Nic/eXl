@@ -4,7 +4,7 @@
 #include <engine/common/world.hpp>
 #include <engine/common/gamedata.hpp>
 #include <engine/game/archetype.hpp>
-#include <engine/script/luascriptbehaviour.hpp>
+#include <engine/script/luaeventhandler.hpp>
 
 
 namespace eXl
@@ -91,7 +91,7 @@ namespace eXl
   };
 
 
-  DEFINE_TYPE_EX(GraphWrapper, GraphWrapper, );
+  DECLARE_TYPE_EX(GraphWrapper, eXl__GraphWrapper, );
 
   struct LevelMatchContext : public ES_RuleSystem::UserMatchContext
   {
@@ -115,8 +115,8 @@ namespace eXl
     GraphWrapper& m_Wrapper;
   };
 
-  DEFINE_TYPE_EX(MatchWrapper, MatchWrapper, );
-  DEFINE_TYPE_EX(RewriteWrapper, RewriteWrapper, );
+  DECLARE_TYPE_EX(MatchWrapper, eXl__MatchWrapper, );
+  DECLARE_TYPE_EX(RewriteWrapper, eXl__RewriteWrapper, );
 
   struct Rule
   {
@@ -145,7 +145,7 @@ namespace eXl
     Vector<Edge> m_CutEdge;
     Vector<NewEdge> m_NewEdge;
 
-    ResourceHandle<LuaScriptBehaviour> m_RewriteScript;
+    ResourceHandle<LuaEventHandler> m_RewriteScript;
   };
 
   struct TagDef
