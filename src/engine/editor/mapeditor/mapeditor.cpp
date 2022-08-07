@@ -70,17 +70,26 @@ namespace eXl
     MapEditor::Impl& m_EditorImpl;
   };
 
+
+
 	struct MapEditor::Impl
 	{
 		Impl(MapEditor* iEditor)
       : m_Player((Path(GetAppPath().data()).parent_path() / "eXl_Player.exe").string().c_str())
-      , m_Config(EditorState::BuildWorldConfig())
-		{
-      PropertiesManifest mapEditorManifest = EditorState::GetProjectProperties();
-      mapEditorManifest.RegisterPropertySheet<TileItemData>(TilesTool::ToolDataName(), false);
-      mapEditorManifest.RegisterPropertySheet<TerrainIslandItemData>(TerrainTool::ToolDataName(), false);
-      mapEditorManifest.RegisterPropertySheet<MapResource::ObjectHeader>(ObjectsTool::ToolDataName(), false);
+      , m_Project(EditorState::BuildWorldConfig().m_Project)
+      , m_Components(EditorState::BuildWorldConfig().m_Components)
+      , m_Events(EditorState::BuildWorldConfig().m_Events)
+      , m_BaseProperties(EditorState::GetProjectProperties())
+      , m_MapEditorProperties([this] {
+          PropertiesManifest mapEditorManifest = m_BaseProperties;
+          mapEditorManifest.RegisterPropertySheet<TileItemData>(TilesTool::ToolDataName(), false);
+          mapEditorManifest.RegisterPropertySheet<TerrainIslandItemData>(TerrainTool::ToolDataName(), false);
+          mapEditorManifest.RegisterPropertySheet<MapResource::ObjectHeader>(ObjectsTool::ToolDataName(), false);
 
+          return mapEditorManifest;
+        }())
+      , m_Config({ m_Project, m_Components, m_MapEditorProperties, m_Events })
+		{
       m_World.Init(m_Config).WithGfx();
 
       World& world = m_World.GetWorld();
@@ -292,6 +301,14 @@ namespace eXl
 
     GameWidget* m_GameWidget;
     ObjectHandle m_Handle;
+
+    Project const& m_Project;
+    ComponentManifest const& m_Components;
+    PropertiesManifest const& m_BaseProperties;
+    EventsManifest const& m_Events;
+
+    PropertiesManifest m_MapEditorProperties;
+
     WorldConfig m_Config;
     WorldState m_World;
     InputSystem m_Inputs;

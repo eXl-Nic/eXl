@@ -587,7 +587,7 @@ namespace eXl
       Vec2i imageSize = m_Tileset->GetImageSize(*m_CurrentDisplayedImage);
       float aspectRatio = float(imageSize.y) / imageSize.x;
 
-      IntrusivePtr<GeometryInfo> geom(eXl_NEW GeometryInfo);
+      IntrusivePtr<Geometry> geom(eXl_NEW Geometry);
       geom->m_Vertices = GfxSpriteData::MakeSpriteGeometry(Vec2(1.0 / aspectRatio, 1.0), true);
 
       unsigned int indexData[] = { 0, 1, 2, 2, 1, 3 };
