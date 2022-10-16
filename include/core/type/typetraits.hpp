@@ -15,7 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/corelibexp.hpp>
 
 #define DECLARE_TYPE_EX(type, friendlyname, DLL) \
-  DLL Type const* Get_##friendlyname##_NativeType(); \
+  DLL Type const* Get_##friendlyname##_Type(); \
                                            \
   template <>                              \
   struct IsNativeType<type>                \
@@ -28,7 +28,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   {                                        \
     static Type const* Get()               \
     {                                      \
-      return Get_##friendlyname##_NativeType(); \
+      return Get_##friendlyname##_Type(); \
     }                                      \
   };                                       \
                                            \
@@ -65,14 +65,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define DECLARE_BASE_TYPE(type) DECLARE_CORE_TYPE_EX(type, type)
 
 #define IMPLEMENT_TYPE_EX(type, friendlyname) \
-  Type const* Get_##friendlyname##_NativeType() \
+  Type const* Get_##friendlyname##_Type() \
   {                                             \
      static T_CoreType<type> s_Type;            \
      return &s_Type;                            \
   }
 
 #define IMPLEMENT_TAG_TYPE_EX(type, friendlyname) \
-  Type const* Get_##friendlyname##_NativeType() \
+  Type const* Get_##friendlyname##_Type() \
   {                                             \
      static T_TagType<type> s_Type;            \
      return &s_Type;                            \
@@ -306,6 +306,9 @@ namespace eXl
   DECLARE_BASE_TYPE(bool)
   DECLARE_BASE_TYPE(uint8_t)
   DECLARE_BASE_TYPE(uint16_t)
+  DECLARE_BASE_TYPE(short)
+  DECLARE_BASE_TYPE(char)
+  REDIRECT_TYPE_EX(signed char, char)
 #ifndef __ANDROID__
   //DECLARE_CORE_TYPE(WString)
 #endif

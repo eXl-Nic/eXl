@@ -34,7 +34,7 @@ namespace eXl
 
     void GarbageCollect();
 
-    using GenericHandler = void(*)(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload);
+    using GenericHandler = void(*)(World& iWorld, ObjectHandle iObject, Name iFunction, uint8_t const* const* iArgs, DynObject& oOutput, void* iPayload);
     struct HandlerEntry
     {
       GenericHandler m_Handler;
@@ -44,7 +44,7 @@ namespace eXl
     template<typename Ret, typename... Args>
     struct PureFunctionHandler
     {
-      static void Execute(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
+      static void Execute(World& iWorld, ObjectHandle iObject, Name iFunction, uint8_t const* const* iArgs, DynObject& oOutput, void* iPayload)
       {
         Invoker_RetWrapper<Ret, Args...>::Execute([&](Args... iArgs)
           {
@@ -55,7 +55,7 @@ namespace eXl
             } horribleCast;
             horribleCast.ptr = iPayload;
             return horribleCast.funPtr(iWorld, iObject, std::forward<Args>(iArgs)...);
-          }, iArgsBuffer, oOutput);
+          }, iArgs, oOutput);
       }
     };
 
@@ -84,11 +84,11 @@ namespace eXl
       eXl_ASSERT_REPAIR_RET(validSignature, Err::Error);
 
       ArgsBuffer const& buffType(desc->GetType());
-      uint8_t argsStore[ComputeArgListStorage<Args...>::size];
-      DynObject argsObj(&buffType, argsStore);
-      BufferPopulator<0, Args...>::Populate(buffType, argsObj, std::forward<Args>(iArgs)...);
+      uint8_t const* argsStore[Positional_Size<Args...>::size] = { reinterpret_cast<uint8_t const*>(&iArgs)... };
+      //DynObject argsObj(&buffType, argsStore);
+      //BufferPopulator<0, Args...>::Populate(buffType, argsObj, std::forward<Args>(iArgs)...);
       DynObject output;
-      handler->m_Handler(*m_World, iHandle, iFunction, argsObj, output, handler->m_Payload);
+      handler->m_Handler(*m_World, iHandle, iFunction, argsStore, output, handler->m_Payload);
 
       return Err::Success;
     }
@@ -102,16 +102,16 @@ namespace eXl
         return {};
       }
       FunDesc const* desc = GetFunDesc(iFunction);
-      bool validSignature = desc->ValidateSignature<void, World&, ObjectHandle, Args...>();
+      bool validSignature = desc->ValidateSignature<Ret, Args...>();
       eXl_ASSERT_REPAIR_RET(validSignature, {});
 
       ArgsBuffer const& buffType(desc->GetType());
-      uint8_t argsStore[ComputeArgListStorage<Args...>::size];
-      DynObject argsObj(&buffType, argsStore);
-      BufferPopulator<0, Args...>::Populate(buffType, argsObj, std::forward<Args>(iArgs)...);
+      uint8_t const* argsStore[Positional_Size<Args...>::size] = { reinterpret_cast<uint8_t const*>(&iArgs)... };
+      //DynObject argsObj(&buffType, argsStore);
+      //BufferPopulator<0, Args...>::Populate(buffType, argsObj, std::forward<Args>(iArgs)...);
       Ret outputStore;
       DynObject output(TypeManager::GetType<Ret>(), &outputStore);
-      handler->m_Handler(*m_World, iHandle, iFunction, argsObj, output, handler->m_Payload);
+      handler->m_Handler(*m_World, iHandle, iFunction, argsStore, output, handler->m_Payload);
 
       return outputStore;
     }

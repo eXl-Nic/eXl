@@ -16,106 +16,137 @@ namespace eXl
 {
   template <class T>
   struct LuaConverter{
-    static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
+
+    static constexpr bool s_HasNativeLuaType = false;
+
+    static KString GeNativeLuaType()
     {
-      if(iObj==nullptr || iType==nullptr)
-        return luabind::object();
-      void * buffer = iType->Alloc();
-      iType->Assign_Uninit(iType,iObj,buffer);
-      return luabind::object(iState,(T*)buffer,luabind::adopt_policy<0>());
+      return KString();
     }
 
+    static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
+    {
+      eXl_ASSERT(false);
+      return luabind::object();
+    //  //if(iObj==nullptr || iType==nullptr)
+    //  //  return luabind::object();
+    //  //void * buffer = iType->Alloc();
+    //  //iType->Assign_Uninit(iType,iObj,buffer);
+    //  //return luabind::object(iState,(T*)buffer,luabind::adopt_policy<0>());
+    }
+    
     static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex)
     {
-      if(oObj == nullptr)
-      {
-        LOG_WARNING<<"Prob with iObj"<<"\n";
-        RETURN_FAILURE;
-      }
-      else
-      {
-        luabind::object ref(luabind::from_stack(iState,ioIndex));
-        if(ref.is_valid())
-        {
-          T const* refPtr = luabind::object_cast<T const*>(ref);
-          eXl_ASSERT_MSG(refPtr!=nullptr,"Conversion failed");
-          iType->Assign_Uninit(iType,refPtr,oObj);
-        }
-        else
-        {
-          LOG_WARNING<<"Invalid reference"<<"\n";
-        }
-      }
-      ioIndex++;
-      RETURN_SUCCESS;
+      eXl_ASSERT(false);
+      return Err::Failure;
+    //  if(oObj == nullptr)
+    //  {
+    //    LOG_WARNING<<"Prob with iObj"<<"\n";
+    //    RETURN_FAILURE;
+    //  }
+    //  else
+    //  {
+    //    luabind::object ref(luabind::from_stack(iState,ioIndex));
+    //    if(ref.is_valid())
+    //    {
+    //      T const* refPtr = luabind::object_cast<T const*>(ref);
+    //      eXl_ASSERT_MSG(refPtr!=nullptr,"Conversion failed");
+    //      iType->Assign_Uninit(iType,refPtr,oObj);
+    //    }
+    //    else
+    //    {
+    //      LOG_WARNING<<"Invalid reference"<<"\n";
+    //    }
+    //  }
+    //  ioIndex++;
+    //  RETURN_SUCCESS;
     }
   };
 
-  template <class T>
-  struct LuaConverter<T*>{
-    static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
-    {
-      if(iObj==nullptr || iType==nullptr)
-        return luabind::object();
-      return luabind::object(iState,((T*)iObj));
-    }
-
-    static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex)
-    {
-      if(oObj == nullptr)
-      {
-        LOG_WARNING<<"Prob with iObj"<<"\n";
-        RETURN_FAILURE;
-      }
-      else{
-        luabind::object ref(luabind::from_stack(iState,ioIndex));
-        if(ref.is_valid())
-        {
-          T const* refPtr = luabind::object_cast<T const*>(ref);
-          eXl_ASSERT_MSG(refPtr!=nullptr,"Conversion failed");
-          iType->Assign_Uninit(iType,refPtr,oObj);
-        }
-        else
-        {
-          LOG_WARNING<<"Invalid reference"<<"\n";
-        }
-      }
-      ioIndex++;
-      RETURN_SUCCESS;
-    }
-  };
+  //template <class T>
+  //struct LuaConverter<T*>{
+  //  static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
+  //  {
+  //    if(iObj==nullptr || iType==nullptr)
+  //      return luabind::object();
+  //    return luabind::object(iState,((T*)iObj));
+  //  }
+  //
+  //  static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex)
+  //  {
+  //    if(oObj == nullptr)
+  //    {
+  //      LOG_WARNING<<"Prob with iObj"<<"\n";
+  //      RETURN_FAILURE;
+  //    }
+  //    else{
+  //      luabind::object ref(luabind::from_stack(iState,ioIndex));
+  //      if(ref.is_valid())
+  //      {
+  //        T const* refPtr = luabind::object_cast<T const*>(ref);
+  //        eXl_ASSERT_MSG(refPtr!=nullptr,"Conversion failed");
+  //        iType->Assign_Uninit(iType,refPtr,oObj);
+  //      }
+  //      else
+  //      {
+  //        LOG_WARNING<<"Invalid reference"<<"\n";
+  //      }
+  //    }
+  //    ioIndex++;
+  //    RETURN_SUCCESS;
+  //  }
+  //};
   
   template <>
   struct LuaConverter<unsigned int>{
+    static constexpr bool s_HasNativeLuaType = true;
+    EXL_CORE_API static KString GeNativeLuaType();
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };
   template <>
   struct LuaConverter<float>{
+    static constexpr bool s_HasNativeLuaType = true;
+    EXL_CORE_API static KString GeNativeLuaType();
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };
   template <>
   struct LuaConverter<int>{
+    static constexpr bool s_HasNativeLuaType = true;
+    EXL_CORE_API static KString GeNativeLuaType();
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };
   template <>
   struct LuaConverter<bool>{
+    static constexpr bool s_HasNativeLuaType = true;
+    EXL_CORE_API static KString GeNativeLuaType();
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };
   template <>
   struct LuaConverter<unsigned char>{
+    static constexpr bool s_HasNativeLuaType = true;
+    EXL_CORE_API static KString GeNativeLuaType();
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };
 
   template <>
+  struct LuaConverter<char> {
+    static constexpr bool s_HasNativeLuaType = true;
+    static KString GeNativeLuaType();
+    EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType, lua_State* iState);
+    EXL_CORE_API static Err ConvertFromLua(const Type* iType, void* oObj, lua_State* iState, unsigned int& ioIndex);
+  };
+
+  template <>
   struct LuaConverter<String>{
+    static constexpr bool s_HasNativeLuaType = true;
+    static KString GeNativeLuaType();
     EXL_CORE_API static luabind::object ConvertToLua(const void* iObj, Type const* iType,lua_State* iState);
     EXL_CORE_API static Err ConvertFromLua(const Type* iType,void* oObj,lua_State* iState,unsigned int& ioIndex);
   };
-
 }
 #endif

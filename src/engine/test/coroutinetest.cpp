@@ -5,6 +5,7 @@
 #include <engine/common/world.hpp>
 #include <engine/common/coroutine.hpp>
 #include <engine/common/gamedatabase.hpp>
+#include <engine/common/project.hpp>
 #include <engine/game/archetype.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/script/luacoroutine.hpp>
@@ -106,14 +107,17 @@ namespace eXl
 
   TEST(Coroutine, BaseTest)
   {
+    Project* proj = Project::Create("");
     ComponentManifest dummyManifest;
-    World world(dummyManifest);
+    PropertiesManifest props;
+    props.RegisterPropertySheet(GetTestProp(), TypeManager::GetType<TestStruct>());
+    EventsManifest evts;
+    WorldConfig conf = {*proj, dummyManifest, props, evts};
+    World world(conf);
 
     world.AddSystem(std::make_unique<DummyCoroutineManager>());
     DummyCoroutineManager& mgr = *world.GetSystem<DummyCoroutineManager>();
 
-    PropertiesManifest props;
-    props.RegisterPropertySheet(GetTestProp(), TypeManager::GetType<TestStruct>());
     world.AddSystem(std::make_unique<GameDatabase>(props));
     GameDatabase& db = *world.GetSystem<GameDatabase>();
 
@@ -219,18 +223,21 @@ namespace eXl
 
   TEST(Coroutine, LuaTest)
   {
+    Project* proj = Project::Create("");
     ComponentManifest dummyManifest;
-    World world(dummyManifest);
-
     PropertiesManifest props;
     props.RegisterPropertySheet(GetTestProp(), TypeManager::GetType<TestStruct>());
-    world.AddSystem(std::make_unique<GameDatabase>(props));
-    GameDatabase& db = *world.GetSystem<GameDatabase>();
+    EventsManifest evts;
+    WorldConfig conf = { *proj, dummyManifest, props, evts };
+    World world(conf);
 
     LuaManager::AddRegFun(&BindTest);
 
     world.AddSystem(std::make_unique<LuaScriptSystem>());
     LuaScriptSystem& scripts = *world.GetSystem<LuaScriptSystem>();
+
+    world.AddSystem(std::make_unique<GameDatabase>(props));
+    GameDatabase& db = *world.GetSystem<GameDatabase>();
 
     Archetype* dummyArch = Archetype::Create("", "dummy");
     TestStruct data;
@@ -361,4 +368,38 @@ return Test_routine
     ASSERT_EQ(*(obj1Val), 8);
     ASSERT_EQ(*(obj2Val), 8);
   }
+
+  TEST(Coroutine, FrfFRFs)
+  {
+    Project* proj = Project::Create("");
+    ComponentManifest dummyManifest;
+    PropertiesManifest props;
+    EventsManifest evts;
+    WorldConfig conf = { *proj, dummyManifest, props, evts };
+    World world(conf);
+
+    world.AddSystem(std::make_unique<LuaScriptSystem>());
+    LuaScriptSystem& scripts = *world.GetSystem<LuaScriptSystem>();
+
+
+    String scriptStr = R"(
+function testStuff(objArray)
+  for obj in objArray:Elements() do
+    print("Gotcha")
+  end
+end
+
+return testStuff
+)";
+    LuaWorld luaCtx = LuaManager::CreateWorld(nullptr);
+
+    luabind::object fun;
+    luaCtx.DoString(scriptStr, fun);
+
+    LuaStateHandle state = luaCtx.GetState();
+    auto callCtx = state.PrepareCall(fun);
+    callCtx.PushArgs(Vector<ObjectHandle>(3,ObjectHandle()));
+    callCtx.Call(0);
+  }
 }
+

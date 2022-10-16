@@ -4,7 +4,7 @@
 #include <math/geometrytraits.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
-class QSpinBox;
+#include <QSpinBox>
 
 namespace eXl
 {

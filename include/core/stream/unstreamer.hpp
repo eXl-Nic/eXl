@@ -138,6 +138,18 @@ namespace eXl
   }
 
   template <>
+  inline Err Unstreamer::Read<char>(char* oObj)
+  {
+    int32_t temp;
+    Err res = ReadInt(&temp);
+    if (res)
+    {
+      *oObj = temp;
+    }
+    return res;
+  }
+
+  template <>
   inline Err Unstreamer::Read<float>(float * oObj)
   {
     return ReadFloat(oObj);
@@ -187,6 +199,18 @@ namespace eXl
     unsigned int temp;
     Err err = ReadUInt(&temp);
     if(err)
+    {
+      *oObj = temp;
+    }
+    return err;
+  }
+
+  template <>
+  inline Err Unstreamer::Read<short>(short* oObj)
+  {
+    int temp;
+    Err err = ReadInt(&temp);
+    if (err)
     {
       *oObj = temp;
     }

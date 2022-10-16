@@ -30,99 +30,99 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  Type const* Get_eXl__Vec4_NativeType()
+  Type const* Get_eXl__Vec4_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Vec4>("eXl::Vec4")
-        .AddField("X", &Vec4::x)
-        .AddField("Y", &Vec4::y)
-        .AddField("Z", &Vec4::z)
-        .AddField("W", &Vec4::w)
+        .AddField("x", &Vec4::x)
+        .AddField("y", &Vec4::y)
+        .AddField("z", &Vec4::z)
+        .AddField("w", &Vec4::w)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__Vec3_NativeType()
+  Type const* Get_eXl__Vec3_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Vec3>("eXl::Vec3")
-        .AddField("X", &Vec3::x)
-        .AddField("Y", &Vec3::y)
-        .AddField("Z", &Vec3::z)
+        .AddField("x", &Vec3::x)
+        .AddField("y", &Vec3::y)
+        .AddField("z", &Vec3::z)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__Vec2_NativeType()
+  Type const* Get_eXl__Vec2_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Vec2>("eXl::Vec2")
-        .AddField("X", &Vec2::x)
-        .AddField("Y", &Vec2::y)
+        .AddField("x", &Vec2::x)
+        .AddField("y", &Vec2::y)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__Vec4i_NativeType()
+  Type const* Get_eXl__Vec4i_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Vec4i>("eXl::Vec4i")
-        .AddField("X", &Vec4i::x)
-        .AddField("Y", &Vec4i::y)
-        .AddField("Z", &Vec4i::z)
-        .AddField("W", &Vec4i::w)
+        .AddField("x", &Vec4i::x)
+        .AddField("y", &Vec4i::y)
+        .AddField("z", &Vec4i::z)
+        .AddField("w", &Vec4i::w)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__Vec3i_NativeType()
+  Type const* Get_eXl__Vec3i_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Vec3i>("eXl::Vec3i")
-        .AddField("X", &Vec3i::x)
-        .AddField("Y", &Vec3i::y)
-        .AddField("Z", &Vec3i::z)
+        .AddField("x", &Vec3i::x)
+        .AddField("y", &Vec3i::y)
+        .AddField("z", &Vec3i::z)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__Vec2i_NativeType()
+  Type const* Get_eXl__Vec2i_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Vec2i>("eXl::Vec2i")
-        .AddField("X", &Vec2i::x)
-        .AddField("Y", &Vec2i::y)
+        .AddField("x", &Vec2i::x)
+        .AddField("y", &Vec2i::y)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__Quaternion_NativeType()
+  Type const* Get_eXl__Quaternion_Type()
   {
     static Type const* s_Type = []
     {
       return TypeManager::BeginNativeTypeRegistration<Quaternion>("eXl::Quaternion")
-        .AddField("X", &Quaternion::x)
-        .AddField("Y", &Quaternion::y)
-        .AddField("Z", &Quaternion::z)
-        .AddField("W", &Quaternion::w)
+        .AddField("x", &Quaternion::x)
+        .AddField("y", &Quaternion::y)
+        .AddField("z", &Quaternion::z)
+        .AddField("w", &Quaternion::w)
         .EndRegistration();
     }();
     return s_Type;
   }
 
-  Type const* Get_eXl__AABB2Di_NativeType()
+  Type const* Get_eXl__AABB2Di_Type()
   {
     static Type const* s_Type = []
     {
@@ -134,7 +134,7 @@ namespace eXl
     return s_Type;
   }
 
-  Type const* Get_eXl__AABB2Df_NativeType()
+  Type const* Get_eXl__AABB2Df_Type()
   {
     static Type const* s_Type = []
     {

@@ -16,6 +16,12 @@ void stackDump (lua_State *L);
 
 namespace eXl
 {
+  KString LuaConverter<unsigned int>::GeNativeLuaType()
+  {
+    static const KString s_Type("int");
+    return s_Type;
+  }
+
   luabind::object LuaConverter<unsigned int>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
   {
     if (iObj == nullptr || iType == nullptr)
@@ -40,6 +46,12 @@ namespace eXl
     iType->Copy_Uninit(&tempVal,oObj);
     ioIndex++;
     RETURN_SUCCESS;
+  }
+
+  KString LuaConverter<float>::GeNativeLuaType()
+  {
+    static const KString s_Type("number");
+    return s_Type;
   }
   
   luabind::object LuaConverter<float>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
@@ -67,6 +79,12 @@ namespace eXl
     ioIndex++;
     RETURN_SUCCESS;
   }
+
+  KString LuaConverter<int>::GeNativeLuaType()
+  {
+    static const KString s_Type("int");
+    return s_Type;
+  }
   
   luabind::object LuaConverter<int>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
   {
@@ -93,6 +111,12 @@ namespace eXl
     ioIndex++;
     RETURN_SUCCESS;
   }
+
+  KString LuaConverter<bool>::GeNativeLuaType()
+  {
+    static const KString s_Type("bool");
+    return s_Type;
+  }
   
   luabind::object LuaConverter<bool>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
   {
@@ -117,6 +141,12 @@ namespace eXl
     iType->Copy_Uninit(&tempVal,oObj);
     ioIndex++;
     RETURN_SUCCESS;
+  }
+
+  KString LuaConverter<unsigned char>::GeNativeLuaType()
+  {
+    static const KString s_Type("int");
+    return s_Type;
   }
   
   luabind::object LuaConverter<unsigned char>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)
@@ -143,6 +173,44 @@ namespace eXl
     iType->Copy_Uninit(&tempVal,oObj);
     ioIndex++;
     RETURN_SUCCESS;
+  }
+
+  KString LuaConverter<char>::GeNativeLuaType()
+  {
+    static const KString s_Type("int");
+    return s_Type;
+  }
+
+  luabind::object LuaConverter<char>::ConvertToLua(const void* iObj, Type const* iType, lua_State* iState)
+  {
+    if (iObj == nullptr || iType == nullptr)
+    {
+      return luabind::object();
+    }
+    unsigned char val = *(char*)iObj;
+    lua_pushinteger(iState, val);
+    luabind::object res(luabind::from_stack(iState, -1));
+    lua_pop(iState, 1);
+    return res;
+  }
+
+  Err LuaConverter<char>::ConvertFromLua(const Type* iType, void* oObj, lua_State* iState, unsigned int& ioIndex)
+  {
+    if (!lua_isnumber(iState, ioIndex))
+    {
+      stackDump(iState);
+      eXl_ASSERT_MSG(false, "Conversion failed");
+    }
+    char tempVal = lua_tonumber(iState, ioIndex);
+    iType->Copy_Uninit(&tempVal, oObj);
+    ioIndex++;
+    RETURN_SUCCESS;
+  }
+
+  KString LuaConverter<String>::GeNativeLuaType()
+  {
+    static const KString s_Type("string");
+    return s_Type;
   }
 
   luabind::object LuaConverter<String>::ConvertToLua(const void* iObj, Type const* iType,lua_State* iState)

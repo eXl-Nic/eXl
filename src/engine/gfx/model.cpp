@@ -14,7 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
-  Model::Model(private_ctor&)
+  Model::Model(private_ctor)
   {}
 
   Model::Builder& Model::Builder::AddPart(IntrusivePtr<Material const> const& iMat, uint32_t iCount, uint32_t iStart)
@@ -74,7 +74,7 @@ namespace eXl
     return MakeRefCounted<ModelInstance>(iModel, private_ctor());
   }
 
-  ModelInstance::ModelInstance(IntrusivePtr<Model const> const& iModel, private_ctor&)
+  ModelInstance::ModelInstance(IntrusivePtr<Model const> const& iModel, private_ctor)
     : m_Model(iModel)
   {
     m_Materials.resize(iModel->GetParts().size());

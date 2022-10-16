@@ -43,8 +43,10 @@ namespace std
   typedef basic_string<wchar_t, std::char_traits<wchar_t>, eXl::Allocator<wchar_t> > eXl_WString;
 }
 
+#ifdef EXL_USE_CUSTOM_STDALLOC
 template class EXL_CORE_API std::basic_string<char, std::char_traits<char>, eXl::Allocator<char> >;
 template class EXL_CORE_API std::basic_string<wchar_t, std::char_traits<wchar_t>, eXl::Allocator<wchar_t> >;
+#endif
 
 namespace eXl
 {

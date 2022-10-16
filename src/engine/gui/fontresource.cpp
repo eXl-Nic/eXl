@@ -110,7 +110,7 @@ namespace eXl
       eXl_FORMAT("Font file %s is not contained in directory %s", iFontFilePath.c_str(), iDir.c_str()), nullptr);
 
     FontResource* newResource = FontLoader::Get().Create(iDir, iName);
-    newResource->m_FontFileName = Filesystem::relative(fontFilePath, iDir, ec).u8string();
+    newResource->m_FontFileName = Filesystem::relative(fontFilePath, iDir, ec).string();
     newResource->PostLoad();
     return newResource;
   }

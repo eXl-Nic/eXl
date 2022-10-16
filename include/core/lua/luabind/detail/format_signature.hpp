@@ -84,10 +84,10 @@ namespace luabind {
     LUABIND_TYPE_TO_STRING(x) \
     LUABIND_TYPE_TO_STRING(unsigned x)
 
-		LUABIND_INTEGRAL_TYPE_TO_STRING(char)
-			LUABIND_INTEGRAL_TYPE_TO_STRING(short)
-			LUABIND_INTEGRAL_TYPE_TO_STRING(int)
-			LUABIND_INTEGRAL_TYPE_TO_STRING(long)
+		//LUABIND_INTEGRAL_TYPE_TO_STRING(char)
+		//	LUABIND_INTEGRAL_TYPE_TO_STRING(short)
+		//	LUABIND_INTEGRAL_TYPE_TO_STRING(int)
+		//	LUABIND_INTEGRAL_TYPE_TO_STRING(long)
 
 			LUABIND_TYPE_TO_STRING(void)
 			LUABIND_TYPE_TO_STRING(bool)
@@ -126,7 +126,7 @@ namespace luabind {
 		{
 			using first = typename meta::front<Signature>::type;
 
-			type_to_string<first>::get(L);
+      type_to_string<first>::get(L);
 
 			lua_pushstring(L, " ");
 			lua_pushstring(L, function);

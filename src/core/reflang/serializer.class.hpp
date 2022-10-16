@@ -10,8 +10,8 @@ namespace eXl
   {
     namespace serializer
     {
-      void SerializeClassHeader(std::ostream& o, const Class& c, String const& iDefineDirective);
-      void SerializeClassSources(std::ostream& o, const Class& c);
+      void SerializeClassHeader(std::ostream& o, const Class& c, String const& iDefineDirective, bool iExternal);
+      void SerializeClassSources(std::ostream& o, const Class& c, bool iExternal);
     }
   }
 }

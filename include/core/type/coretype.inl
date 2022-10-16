@@ -69,14 +69,14 @@ Err T_CoreType<T>::Copy_Uninit(void const* iData, void* oData) const{
 
 template <class T>
 luabind::object T_CoreType<T>::ConvertToLua(void const* iObj,lua_State* iState)const{
-  if(iState==nullptr)
+  if(iState==nullptr || !eXl::LuaConverter<T>::s_HasNativeLuaType)
     return luabind::object();
   return eXl::LuaConverter<T>::ConvertToLua(iObj,this,iState);
 }
 
 template <class T>
 Err T_CoreType<T>::ConvertFromLua_Uninit(lua_State* iState,unsigned int& ioIndex,void* oObj)const{
-  if(iState==nullptr)
+  if(iState==nullptr || !eXl::LuaConverter<T>::s_HasNativeLuaType)
     RETURN_FAILURE;
   if(oObj==nullptr)
     RETURN_FAILURE;
@@ -87,9 +87,19 @@ Err T_CoreType<T>::ConvertFromLua_Uninit(lua_State* iState,unsigned int& ioIndex
 }
 
 template <class T>
+KString T_CoreType<T>::GetLuaNativeType() const
+{
+  if (eXl::LuaConverter<T>::s_HasNativeLuaType)
+  {
+    return eXl::LuaConverter<T>::GeNativeLuaType();
+  }
+  return KString();
+}
+
+template <class T>
 void T_CoreType<T>::RegisterLua(lua_State* iState) const
 {
-  eXl_FAIL_MSG("");
+  eXl_ASSERT(false);
 }
 
 template <class T>

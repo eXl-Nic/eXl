@@ -285,11 +285,11 @@ namespace eXl
     void Tick()
     {
       T_CoroutineManager<Coroutine>::Tick(*m_World);
-      for (auto toDelete : m_ToDelete)
+      for (auto toDelete : this->m_ToDelete)
       {
         DeleteComponent(toDelete);
       }
-      m_ToDelete.clear();
+      this->m_ToDelete.clear();
     }
 
   };

@@ -90,7 +90,9 @@ int main(int argc, char** argv)
     ("out-hpp", "Output file path to write declarations (header) to.", cxxopts::value<std::string>())
     ("out-cpp", "Output file path to write definitions to.", cxxopts::value<std::string>()->default_value(""))
     ("list-only", "Only list type names, don't generate", cxxopts::value<bool>()->default_value("false"))
-    ("internal-name", "Internal lib name, to be used with macros, etc...", cxxopts::value<std::string>());
+    ("internal-name", "Internal lib name, to be used with macros, etc...", cxxopts::value<std::string>())
+    ("reflect-external", "Reflect all structures found in given files", cxxopts::value<bool>()->default_value("false"))
+    ("additional-include", "Additional file to include, but not reflect.", cxxopts::value<std::string>()->default_value(""));
   
   options.parse_positional({ "input-file" });
 
@@ -120,6 +122,7 @@ int main(int argc, char** argv)
   parser::Options parserOptions;
   parserOptions.include = "^(" + result["include"].as<std::string>() + ")$";
   parserOptions.exclude = "^(" + result["exclude"].as<std::string>() + ")$";
+  parserOptions.reflect_external = result["reflect-external"].as<bool>();
 
   // Write a dummy file for parsing;
   if(result.count("out-hpp") > 0)
@@ -144,6 +147,12 @@ int main(int argc, char** argv)
     options.out_hpp_path = result["out-hpp"].as<std::string>().c_str();
     options.out_cpp_path = result["out-cpp"].as<std::string>().c_str();
     options.internalLibName = result["internal-name"].as<std::string>().c_str();
+    options.external = parserOptions.reflect_external;
+    if(result.count("additional-include") > 0)
+    {
+      options.include_path = result["additional-include"].as<std::string>();
+    }
+    
     serializer::Serialize(types, options);
   }
 }

@@ -168,12 +168,12 @@ ${INCLUDE_DIR}/gfx/tileset.hpp
 ${INCLUDE_DIR}/map/map.hpp
 ${INCLUDE_DIR}/common/transforms.hpp
 ${INCLUDE_DIR}/physics/physicsdef.hpp
-${INCLUDE_DIR}/common/gen_impl.hpp
+${INCLUDE_DIR}/net/network.hpp
 )
 
 SET (EXL_DEPENDENCIES eXl_Gen eXl_OGL)
 
-SETUP_EXL_LIB(eXl_Engine "ENGINE" DEPENDENCIES ${EXL_DEPENDENCIES} HEADERS_TO_PARSE "${HEADERS_TO_PARSE}")
+SETUP_EXL_LIB(eXl_Engine "ENGINE" DEPENDENCIES ${EXL_DEPENDENCIES} ADDITIONAL_INCLUDE "${INCLUDE_DIR}/common/gen_impl.hpp" HEADERS_TO_PARSE "${HEADERS_TO_PARSE}")
 
 set( PREREQS_PRIV
   BulletDynamics

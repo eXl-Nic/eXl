@@ -50,7 +50,7 @@ namespace eXl
       {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(&glDebugOutput, nullptr);
+        //glDebugMessageCallback(&glDebugOutput, nullptr);
         glDebugMessageControl(GL_DEBUG_SOURCE_API,
           GL_DEBUG_TYPE_ERROR,
           GL_DEBUG_SEVERITY_HIGH,

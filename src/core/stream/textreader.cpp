@@ -243,9 +243,11 @@ namespace eXl
     {
       Char curChar = m_CurChar;
       m_CurCharPtr = m_NextCharPtr;
-      m_CurChar = advance();
+      if (m_NextCharPtr != m_FileEnd) {
+        m_CurChar = advance();
+      }
       m_isGood = m_NextCharPtr != nullptr;
-      m_IsEof = m_NextCharPtr == m_FileEnd;
+      m_IsEof = m_CurCharPtr == m_FileEnd;
       return curChar;
     }
     else

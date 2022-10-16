@@ -16,6 +16,7 @@ namespace eXl
         String out_hpp_path;
         String out_cpp_path;
         String internalLibName;
+        bool external;
       };
 
       void Serialize(

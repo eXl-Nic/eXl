@@ -27,22 +27,22 @@ inline size_t hash_value(ObjectId const& iId)
   return static_cast<size_t>(iId.id);
 }
 
-inline Err ClientId::Stream(Streamer& iStreamer) const
-{
-  return iStreamer.WriteUInt64(&id);
-}
-inline Err ClientId::Unstream(Unstreamer& iStreamer)
-{
-  return iStreamer.ReadUInt64(&id);
-}
-inline Err ObjectId::Stream(Streamer& iStreamer) const
-{
-  return iStreamer.WriteUInt64(&id);
-}
-inline Err ObjectId::Unstream(Unstreamer& iStreamer)
-{
-  return iStreamer.ReadUInt64(&id);
-}
+//inline Err ClientId::Stream(Streamer& iStreamer) const
+//{
+//  return iStreamer.WriteUInt64(&id);
+//}
+//inline Err ClientId::Unstream(Unstreamer& iStreamer)
+//{
+//  return iStreamer.ReadUInt64(&id);
+//}
+//inline Err ObjectId::Stream(Streamer& iStreamer) const
+//{
+//  return iStreamer.WriteUInt64(&id);
+//}
+//inline Err ObjectId::Unstream(Unstreamer& iStreamer)
+//{
+//  return iStreamer.ReadUInt64(&id);
+//}
 
 inline CommandDesc::CommandDesc(FunDesc&& iDesc)
   : m_FunDesc(std::move(iDesc))

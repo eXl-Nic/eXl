@@ -1,11 +1,11 @@
 function(ADD_EXL_COMMON_DEFS TARGET_NAME)
   target_compile_options(${TARGET_NAME} PRIVATE ${EXL_COMPILER_DEFINITIONS} ${EXL_COMPILER_SYS_DEFINITIONS})
    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${TARGET_NAME} PRIVATE "-fno-rtti")
+        #target_compile_options(${TARGET_NAME} PRIVATE "-fno-rtti")
     endif()
 
     if(${MSVC}) 
-        target_compile_options(${TARGET_NAME} PRIVATE "/GR-")
+        #target_compile_options(${TARGET_NAME} PRIVATE "/GR-")
     endif()
   target_include_directories(${TARGET_NAME} PUBLIC ${EXL_DEPS_INCLUDE})
  endfunction()
@@ -40,11 +40,10 @@ endfunction()
 
 function(SETUP_EXL_TARGET TARGET_NAME)
 
-  set(options)
-  set(oneValueArgs LIB_SUFFIX)
+  set(options REFLECT_EXTERNAL)
+  set(oneValueArgs LIB_SUFFIX ADDITIONAL_INCLUDE)
   set(multiValueArgs DEPENDENCIES HEADERS_TO_PARSE)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  
   ADD_EXL_COMMON_DEFS(${TARGET_NAME})
 
   if(ARGS_DEPENDENCIES)
@@ -72,8 +71,14 @@ function(SETUP_EXL_TARGET TARGET_NAME)
     set(REFLANG_OUTPUT_HPP ${CMAKE_CURRENT_BINARY_DIR}/${LIB_SUFFIX_FILENAME}_gen.hpp)
     set(REFLANG_OUTPUT_CPP ${CMAKE_CURRENT_BINARY_DIR}/${LIB_SUFFIX_FILENAME}_gen.cpp)
 
-    set(REFLANG_COMMAND ${EXL_REFLANG_EXE_PATH} --out-hpp ${REFLANG_OUTPUT_HPP} --out-cpp ${REFLANG_OUTPUT_CPP} --internal-name ${ARGS_LIB_SUFFIX} ${ARGS_HEADERS_TO_PARSE}
-	-- ${REFLANG_INCLUDES} -DEXL_REFLANG_COMPILER -std=c++17 -Wno-undefined-var-template -Wno-inconsistent-missing-override)
+    set(REFLANG_COMMAND ${EXL_REFLANG_EXE_PATH} --out-hpp ${REFLANG_OUTPUT_HPP} --out-cpp ${REFLANG_OUTPUT_CPP} --internal-name ${ARGS_LIB_SUFFIX})
+    if(ARGS_ADDITIONAL_INCLUDE)
+        set(REFLANG_COMMAND ${REFLANG_COMMAND} --additional-include ${ARGS_ADDITIONAL_INCLUDE})
+    endif()
+    if(${ARGS_REFLECT_EXTERNAL})
+        set(REFLANG_COMMAND ${REFLANG_COMMAND} --reflect-external )
+    endif()
+    set(REFLANG_COMMAND ${REFLANG_COMMAND} ${ARGS_HEADERS_TO_PARSE} -- ${REFLANG_INCLUDES} -DEXL_REFLANG_COMPILER -std=c++20 -Wno-undefined-var-template -Wno-inconsistent-missing-override)
 
     set (DEPENDENCIES ${ARGS_HEADERS_TO_PARSE})
     if(${EXL_CAN_BUILD_REFLANG})
@@ -100,12 +105,15 @@ endfunction()
 
 function(SETUP_EXL_LIB TARGET_NAME LIB_SUFFIX)
 
-  set(options)
-  set(oneValueArgs)
-  set(multiValueArgs DEPENDENCIES HEADERS_TO_PARSE)
+  set(options REFLECT_EXTERNAL)
+  set(oneValueArgs )
+  set(multiValueArgs DEPENDENCIES HEADERS_TO_PARSE ADDITIONAL_INCLUDE)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  
-  SETUP_EXL_TARGET(${TARGET_NAME} DEPENDENCIES ${ARGS_DEPENDENCIES} HEADERS_TO_PARSE ${ARGS_HEADERS_TO_PARSE} LIB_SUFFIX ${LIB_SUFFIX})
+  if(${ARGS_REFLECT_EXTERNAL})
+    SETUP_EXL_TARGET(${TARGET_NAME} DEPENDENCIES ${ARGS_DEPENDENCIES} HEADERS_TO_PARSE ${ARGS_HEADERS_TO_PARSE} LIB_SUFFIX ${LIB_SUFFIX} ADDITIONAL_INCLUDE ${ARGS_ADDITIONAL_INCLUDE} REFLECT_EXTERNAL)
+  else()
+    SETUP_EXL_TARGET(${TARGET_NAME} DEPENDENCIES ${ARGS_DEPENDENCIES} HEADERS_TO_PARSE ${ARGS_HEADERS_TO_PARSE} LIB_SUFFIX ${LIB_SUFFIX} ADDITIONAL_INCLUDE ${ARGS_ADDITIONAL_INCLUDE})
+  endif()
 
   ADD_EXL_LIB_PROPERTIES(${TARGET_NAME} ${LIB_SUFFIX})
 

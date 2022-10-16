@@ -4,7 +4,7 @@
 #include <vector>
 #include <core/type/dynobject.hpp>
 
-class QAbstractItemView;
+#include <QAbstractItemView>
 
 namespace eXl
 {
@@ -16,10 +16,10 @@ namespace eXl
   public:
 
     static void ClearModelFromView(QAbstractItemView* iView);
-    static ObjectModel* CreateOrUpdateModel(QAbstractItemView* iView, bool iReadOnly, DynObject& iObj);
+    static ObjectModel* CreateOrUpdateModel(QAbstractItemView* iView, bool iReadOnly, const DynObject& iObj);
 
     template<typename T>
-    static ObjectModel* CreateOrUpdateModelWithDelegate(QAbstractItemView* iView, bool iReadOnly, DynObject& iObj)
+    static ObjectModel* CreateOrUpdateModelWithDelegate(QAbstractItemView* iView, bool iReadOnly, const DynObject& iObj)
     {
       T* newDelegate = nullptr;
       if (iView->model() == nullptr)
@@ -36,9 +36,9 @@ namespace eXl
       return model;
     }
 
-    ObjectModel(QObject* iParent, bool iReadOnly, DynObject& iObj);
+    ObjectModel(QObject* iParent, bool iReadOnly, const DynObject& iObj);
 
-    void UpdateModel(DynObject& iObj);
+    void UpdateModel(const DynObject& iObj);
 
     virtual ConstDynObject const& GetObjectFromIndex(QModelIndex const& iIndex) const;
     virtual QModelIndex GetField(QModelIndex const& iParent, TypeFieldName iName);

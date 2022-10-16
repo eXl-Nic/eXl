@@ -366,6 +366,7 @@ TEST(Engine, ObjectTableAlign)
 }
 
 #include <engine/common/world.hpp>
+#include <engine/common/project.hpp>
 #include <engine/common/transforms.hpp>
 #include <engine/physics/physicsys.hpp>
 #include <engine/game/character.hpp>
@@ -373,9 +374,12 @@ TEST(Engine, ObjectTableAlign)
 
 TEST(Engine, DBG)
 {
+  Project* proj = Project::Create("");
   PropertiesManifest manifest = EngineCommon::GetBaseProperties();
   ComponentManifest compManifest = EngineCommon::GetComponents();
-  World world(compManifest);
+  EventsManifest evts;
+  WorldConfig conf = { *proj, compManifest, manifest, evts };
+  World world(conf);
   
   world.AddSystem(std::make_unique<GameDatabase>(manifest));
   world.AddSystem(std::make_unique<Transforms>());

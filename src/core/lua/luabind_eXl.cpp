@@ -82,13 +82,13 @@ namespace eXl
     objRef.SetType(m_FieldHolder, res.first);
 
     DynObject fieldRef;
-    
+
     if (!objRef.GetField(m_FieldIdx, fieldRef))
     {
       lua_pushliteral(self_.interpreter(), "Invalid for field accessor");
       lua_error(self_.interpreter());
     }
-    
+
     return LuaManager::GetLuaRef(self_.interpreter(), fieldRef);
   }
 
@@ -191,7 +191,8 @@ namespace eXl
   {
     if (eXl::ArrayType::DynamicCast(iType) == nullptr)
     {
-      LOG_WARNING << "Registering type " << iType->GetName() << " on the fly to lua";
+      //LOG_WARNING << "Registering type " << iType->GetName() << " on the fly to lua";
+      return;
     }
     iType->RegisterLua(L);
   }
@@ -234,10 +235,9 @@ namespace eXl
       return 1;
     }
 
-    LuaManager::PushRefToLua(iState
+    LuaManager::PushArgToLua(iState
       , iter->m_Type->GetElementType()
-      , iter->m_Type->GetElement(iter->m_Data, iter->m_Cur)
-      , iter->m_IsConst);
+      , iter->m_Type->GetElement(iter->m_Data, iter->m_Cur));
     ++iter->m_Cur;
     return 1;
   }

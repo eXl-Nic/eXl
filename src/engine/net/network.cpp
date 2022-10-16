@@ -87,28 +87,28 @@ namespace eXl
       return str;
     }
 
-    Type const* ClientInputData::GetType()
-    {
-      static Type const* s_Type = []
-      {
-        return TypeManager::BeginNativeTypeRegistration<ClientInputData>("ClientInputData")
-          .AddField("Moving", &ClientInputData::m_Moving)
-          .AddField("Dir", &ClientInputData::m_Dir)
-          .EndRegistration();
-      }();
-      return s_Type;
-    }
-
-    Err ClientInputData::Stream(Streamer& iStreamer) const
-    {
-      return GetType()->Stream(this, &iStreamer);
-    }
-
-    Err ClientInputData::Unstream(Unstreamer& iStreamer)
-    {
-      void* This = this;
-      return GetType()->Unstream(This, &iStreamer);
-    }
+    //Type const* ClientInputData::GetType()
+    //{
+    //  static Type const* s_Type = []
+    //  {
+    //    return TypeManager::BeginNativeTypeRegistration<ClientInputData>("ClientInputData")
+    //      .AddField("Moving", &ClientInputData::m_Moving)
+    //      .AddField("Dir", &ClientInputData::m_Dir)
+    //      .EndRegistration();
+    //  }();
+    //  return s_Type;
+    //}
+    //
+    //Err ClientInputData::Stream(Streamer& iStreamer) const
+    //{
+    //  return GetType()->Stream(this, &iStreamer);
+    //}
+    //
+    //Err ClientInputData::Unstream(Unstreamer& iStreamer)
+    //{
+    //  void* This = this;
+    //  return GetType()->Unstream(This, &iStreamer);
+    //}
 
     NetDriver::NetDriver(NetCtx& iCtx)
       : m_Ctx(iCtx)

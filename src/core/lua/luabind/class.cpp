@@ -31,6 +31,8 @@
 #include <luabind/nil.hpp>
 #include <luabind/detail/debug.hpp>
 
+#include <core/type/type.hpp>
+
 #include <cstring>
 #include <iostream>
 
@@ -300,19 +302,26 @@ namespace luabind {
 
 			assert(L);
 
+      eXl::KString nativeType = i.get_id()->GetLuaNativeType();
+      if (!nativeType.empty())
+      {
+        ret = nativeType;
+        return ret;
+      }
+
 			class_registry* r = class_registry::get_registry(L);
 			class_rep* crep = r->find_class(i);
 
-      //if (crep == nullptr)
-      //{
-      //  eXl::OnTheFlyRegisterType(L, i.get_id());
-      //  crep = r->find_class(i);
-      //}
+      if (crep == nullptr)
+      {
+        eXl::OnTheFlyRegisterType(L, i.get_id());
+        crep = r->find_class(i);
+      }
 
 			if(crep == 0)
 			{
-				ret = "custom";
-				add_custom_name(i, ret);
+        ret = "custom";
+        add_custom_name(i, ret);
 			} else
 			{
 				/* TODO reimplement this?

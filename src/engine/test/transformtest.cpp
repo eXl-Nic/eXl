@@ -3,6 +3,9 @@
 
 #include <engine/common/world.hpp>
 #include <engine/common/transforms.hpp>
+#include <engine/common/project.hpp>
+#include <engine/common/gamedatabase.hpp>
+#include <engine/script/eventsystem.hpp>
 #include <math/mathtools.hpp>
 
 using namespace eXl;
@@ -36,8 +39,12 @@ void DoCheck(UnorderedMap<ObjectHandle, Vec3>& iExpected, Transforms& transforms
 
 TEST(Engine, TransformsTest)
 {
-  eXl::ComponentManifest dummy;
-  World world(dummy);
+  Project* proj = Project::Create("");
+  PropertiesManifest manifest;
+  ComponentManifest compManifest;
+  EventsManifest evts;
+  WorldConfig conf = { *proj, compManifest, manifest, evts };
+  World world(conf);
 
   Transforms* transforms;
 

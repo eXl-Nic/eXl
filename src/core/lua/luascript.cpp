@@ -101,7 +101,7 @@ namespace eXl
       newScript->Unstream_Data(unstreamer);
       unstreamer.End();
 
-      while (textReader->good() && !textReader->eof())
+      while (textReader->good())
       {
         newScript->m_Script.push_back(textReader->get());
       }

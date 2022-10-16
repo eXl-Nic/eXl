@@ -98,7 +98,7 @@ namespace eXl
       DynObject propSheet = sys->ModifyData(obj, prop);
       if (propSheet.IsValid())
       {
-        LuaManager::PushRefToLua(LuaManager::GetCurrentState().GetState(), propSheet.GetType(), propSheet.GetBuffer());
+        LuaManager::PushRefToLua(LuaManager::GetCurrentState().GetState(), propSheet.GetType(), propSheet.GetBuffer(), false);
         return 1;
       }
     }
@@ -122,6 +122,7 @@ namespace eXl
 
     if (numArgs < 2)
     {
+      lua_pop(iState, numArgs);
       lua_pushliteral(iState, "Incorrect number of arguments for TriggerEvent");
       Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
       return lua_error(iState);
@@ -130,6 +131,7 @@ namespace eXl
     luabind::default_converter<ObjectHandle> converterObject;
     if (converterObject.match(iState, luabind::by_value<ObjectHandle>(), 1) < 0)
     {
+      lua_pop(iState, numArgs);
       lua_pushliteral(iState, "Incorrect argument for object handle");
       Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
       return lua_error(iState);
@@ -138,6 +140,7 @@ namespace eXl
     luabind::default_converter<Name> converterName;
     if (converterName.match(iState, luabind::by_value<Name>(), 2) < 0)
     {
+      lua_pop(iState, numArgs);
       lua_pushliteral(iState, "Incorrect argument for property sheet name");
       Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
       return lua_error(iState);
@@ -153,6 +156,7 @@ namespace eXl
 
     if (desc == nullptr)
     {
+      lua_pop(iState, numArgs);
       lua_pushliteral(iState, "Incorrect event name");
       Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Event " << eventName << " does not exist \n" << LuaManager::StackDump(iState);
       return lua_error(iState);
@@ -160,6 +164,7 @@ namespace eXl
 
     if (desc->GetArgs().size()!= (numArgs - 2))
     {
+      lua_pop(iState, numArgs);
       lua_pushliteral(iState, "Incorrect number of arguments for event");
       Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << "Event " << eventName << " needs " << desc->GetArgs().size() << " arguments\n" 
         << LuaManager::StackDump(iState);
@@ -185,15 +190,18 @@ namespace eXl
     DynObject argsObj;
     argsObj.SetType(&buffType, buffType.Alloc(), true);
 
-    for (uint32_t i = 0; i < buffType.GetNumField(); ++i)
-    {
-      Type const* argType = nullptr;
-      void* arg = buffType.GetField(argsObj.GetBuffer(), i, argType);
-      uint32_t idx = i + 3;
-      argType->ConvertFromLua_Uninit(iState, idx, arg);
-    }
+    Vector<uint8_t const*> args;
+
+    Err res = LuaManager::ArgsFromLua(iState, 3, desc->GetArgs(), argsObj, args);
 
     lua_pop(iState, numArgs);
+    if (!res)
+    {
+      lua_pushliteral(iState, "Could not retrieve arguments");
+      Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      return lua_error(iState);
+    }
+
 
     DynObject output;
     if(desc->GetRetType() != nullptr)
@@ -201,7 +209,7 @@ namespace eXl
       output.SetType(desc->GetRetType(), desc->GetRetType()->Build(), true);
     }
 
-    entry->m_Handler(*world, obj, eventName, argsObj, output, entry->m_Payload);
+    entry->m_Handler(*world, obj, eventName, args.data(), output, entry->m_Payload);
 
     if (desc->GetRetType() == nullptr)
     {
@@ -418,13 +426,13 @@ namespace eXl
 
     int GameDatabaseIter(lua_State* iState)
     {
-      luabind::default_converter<GameDatabase*> converterSys;
-      if (converterSys.match(iState, luabind::by_pointer<GameDatabase>(), -2) < 0)
-      {
-        lua_pushliteral(iState, "Incorrect argument for archetype system");
-        Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
-        return lua_error(iState);
-      }
+      //luabind::default_converter<GameDatabase*> converterSys;
+      //if (converterSys.match(iState, luabind::by_pointer<GameDatabase>(), -2) < 0)
+      //{
+      //  lua_pushliteral(iState, "Incorrect argument for archetype system");
+      //  Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      //  return lua_error(iState);
+      //}
 
       luabind::default_converter<PropertySheetName> converterProp;
       if (converterProp.match(iState, luabind::by_value<PropertySheetName>(), -1) < 0)
@@ -434,7 +442,15 @@ namespace eXl
         return lua_error(iState);
       }
 
-      GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -2);
+      //GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -2);
+      World* world = LuaScriptSystem::GetWorld_Static();
+      if (world == nullptr)
+      {
+        lua_pushliteral(iState, "Calling lua functions outside of the script system");
+        Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+        return lua_error(iState);
+      }
+      GameDatabase* sys = world->GetSystem<GameDatabase>();
       PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
 
       LuaGameDataIter ret;
@@ -450,13 +466,13 @@ namespace eXl
 
     int GameDatabaseConstIter(lua_State* iState)
     {
-      luabind::default_converter<GameDatabase*> converterSys;
-      if (converterSys.match(iState, luabind::by_pointer<GameDatabase>(), -2) < 0)
-      {
-        lua_pushliteral(iState, "Incorrect argument for archetype system");
-        Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
-        return lua_error(iState);
-      }
+      //luabind::default_converter<GameDatabase*> converterSys;
+      //if (converterSys.match(iState, luabind::by_pointer<GameDatabase>(), -2) < 0)
+      //{
+      //  lua_pushliteral(iState, "Incorrect argument for archetype system");
+      //  Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      //  return lua_error(iState);
+      //}
 
       luabind::default_converter<PropertySheetName> converterProp;
       if (converterProp.match(iState, luabind::by_value<PropertySheetName>(), -1) < 0)
@@ -466,7 +482,15 @@ namespace eXl
         return lua_error(iState);
       }
 
-      GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -2);
+      //GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -2);
+      World* world = LuaScriptSystem::GetWorld_Static();
+      if (world == nullptr)
+      {
+        lua_pushliteral(iState, "Calling lua functions outside of the script system");
+        Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+        return lua_error(iState);
+      }
+      GameDatabase* sys = world->GetSystem<GameDatabase>();
       PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
 
       LuaGameDataConstIter ret;
@@ -576,6 +600,15 @@ namespace eXl
     _G["eXl"]["GameDatabase"]["IterateConst"] = iterConstDbFun;
     lua_pop(iState, 1);
     _G["eXl"]["PropertySheetName"] = _G["eXl"]["Name"];
+
+    World* world = LuaScriptSystem::GetWorld_Static();
+    for (auto const& name : world->GetConfig().m_Properties.GetProperties())
+    {
+      if(Type const* propType = world->GetConfig().m_Properties.GetTypeFromName(name))
+      {
+        propType->RegisterLua(iState);
+      }
+    }
 
     return 0;
   }

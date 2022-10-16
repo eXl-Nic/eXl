@@ -11,8 +11,8 @@ namespace eXl
   {
     namespace serializer
     {
-      void SerializeEnumHeader(std::ostream& o, const Enum& e);
-      void SerializeEnumSources(std::ostream& o, const Enum& e);
+      void SerializeEnumHeader(std::ostream& o, const Enum& e, bool iExternal);
+      void SerializeEnumSources(std::ostream& o, const Enum& e, bool iExternal);
     }
   }
 }

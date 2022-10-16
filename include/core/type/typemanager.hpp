@@ -70,13 +70,13 @@ namespace eXl
       friend EXL_CORE_API EnumTypeReg BeginEnumTypeRegistration(TypeName iName);
     public:
       
-      EnumTypeReg& AddValue(TypeEnumName iName);
+      EnumTypeReg& AddValue(TypeEnumName iName, uint32_t iVal);
 
       Type const* EndRegistration();
     private:
       EnumTypeReg(TypeName iName);
       TypeName m_Name;
-      Vector<TypeEnumName> m_Enums;
+      UnorderedMap<uint32_t, TypeEnumName> m_Enums;
     };
 
     EXL_CORE_API EnumTypeReg BeginEnumTypeRegistration(TypeName iName);

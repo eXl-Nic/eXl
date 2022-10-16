@@ -327,7 +327,7 @@ namespace eXl
 
   template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
   CollectionModelMapAdaptor<Key, Val, Resource, MapPtr>::CollectionModelMapAdaptor(QObject* iParent, Resource* iResource)
-    : CollectionModel(iParent, iResource)
+    : CollectionModel<Key,Val,Resource>(iParent, iResource)
   {
 
   }
@@ -335,8 +335,8 @@ namespace eXl
   template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
   bool CollectionModelMapAdaptor<Key, Val, Resource, MapPtr>::SetOnResource(Key const& iName, Val iObject)
   {
-    auto iter = (m_Resource->*MapPtr).find(iName);
-    if (iter != (m_Resource->*MapPtr).end())
+    auto iter = (this->m_Resource->*MapPtr).find(iName);
+    if (iter != (this->m_Resource->*MapPtr).end())
     {
       iter->second = std::move(iObject);
       return true;
@@ -348,7 +348,7 @@ namespace eXl
   template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
   bool CollectionModelMapAdaptor<Key, Val, Resource, MapPtr>::AddToResource(Key const& iName, Val const& iValue)
   {
-    auto insertRes = (m_Resource->*MapPtr).insert(std::make_pair(iName, iValue));
+    auto insertRes = (this->m_Resource->*MapPtr).insert(std::make_pair(iName, iValue));
 
     return insertRes.second;
   }
@@ -356,15 +356,15 @@ namespace eXl
   template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
   bool CollectionModelMapAdaptor<Key, Val, Resource, MapPtr>::RemoveFromResource(Key const& iName)
   {
-    (m_Resource->*MapPtr).erase(iName);
+    (this->m_Resource->*MapPtr).erase(iName);
     return true;
   }
 
   template <typename Key, typename Val, typename Resource, UnorderedMap<Key, Val> Resource::* MapPtr>
   Val const* CollectionModelMapAdaptor<Key, Val, Resource, MapPtr>::FindInResource(Key const& iName) const
   {
-    auto iter = (m_Resource->*MapPtr).find(iName);
-    if (iter != (m_Resource->*MapPtr).end())
+    auto iter = (this->m_Resource->*MapPtr).find(iName);
+    if (iter != (this->m_Resource->*MapPtr).end())
     {
       return &iter->second;
     }

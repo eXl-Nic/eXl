@@ -1000,6 +1000,24 @@ namespace eXl
     luabind::detail::class_id clsId = class_ids.get_local(iType);
     luabind::detail::class_rep* cls = classes.get(clsId);
 
+    if (cls == nullptr)
+    {
+      eXl::OnTheFlyRegisterType(iState, iType);
+
+      clsId = class_ids.get_local(iType);
+      cls = classes.get(clsId);
+      //if (cls)
+      //{
+      //  luabind::detail::stack_pop(iState, 1);
+      //  cls->get_table(iState);
+      //  luabind::object tableObj(luabind::from_stack(iState, -1));
+      //  for (auto iter = luabind::iterator(tableObj); iter != luabind::iterator(); ++iter)
+      //  {
+      //    LOG_INFO << luabind::to_string(iter.key());
+      //  }
+      //}
+    }
+
     return cls;
   }
 
@@ -1043,6 +1061,21 @@ namespace eXl
     PushRefToLua(iState, iType, (void*)iObject, true);
   }
 
+  void LuaManager::PushArgToLua(lua_State* iState, Type const* iType, void const* iObject)
+  {
+    luabind::detail::class_rep* cls = GetClassRepFromType(iState, iType);
+
+    if (iType->IsCoreType() && cls == nullptr)
+    {
+      luabind::object arg = iType->ConvertToLua(iObject, iState);
+      arg.push(iState);
+    }
+    else
+    {
+      PushRefToLua(iState, iType, (void*)iObject, true);
+    }
+  }
+
   void LuaManager::PushCopyToLua(lua_State* iState, Type const* iType, void const* iObject)
   {
     ConstDynObject objRef(iType, iObject);
@@ -1061,6 +1094,41 @@ namespace eXl
     dynobject_holder* holder = new (storage) dynobject_holder(DynObject(&objRef), false);
 
     instance->set_instance(holder);
+  }
+
+  Err LuaManager::ArgsFromLua(lua_State* iState, uint32_t iOffset, Vector<Type const*> iArgs, DynObject& oArgsBuffer, Vector<uint8_t const*>& oArgs)
+  {
+    for (uint32_t i = 0; i < iArgs.size(); ++i)
+    {
+      Type const* argType = iArgs[i];
+
+      luabind::detail::class_rep* cls = GetClassRepFromType(iState, argType);
+      
+      if (argType->IsCoreType() && cls == nullptr)
+      {
+        DynObject ref;
+        oArgsBuffer.GetField(i, ref);
+        uint32_t idx = i + iOffset;
+        Err res = argType->ConvertFromLua_Uninit(iState, idx, ref.GetBuffer());
+        if (!res)
+        {
+          return Err::Failure;
+        }
+        oArgs.push_back((uint8_t const*)ref.GetBuffer());
+      }
+      else
+      {
+        luabind::object arg(luabind::from_stack(iState, -int(i + iOffset)));
+        luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(arg);
+        std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(argType));
+        if (res.first == nullptr)
+        {
+          return Err::Failure;
+        }
+        oArgs.push_back((uint8_t const*)res.first);
+      }
+    }
+    return Err::Success;
   }
 
   luabind::object LuaManager::GetLuaRef(lua_State* iState, DynObject const& iObject)

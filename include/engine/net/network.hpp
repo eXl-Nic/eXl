@@ -38,18 +38,18 @@ namespace eXl
       Client
     };
 
-    struct ClientId
+    struct EXL_ENGINE_API ClientId
     {
-      EXL_REFLECT
+      EXL_REFLECT;
 
       uint64_t id;
       bool operator == (ClientId const& iOther) const;
       bool operator != (ClientId const& iOther) const;
     };
 
-    struct ObjectId
+    struct EXL_ENGINE_API ObjectId
     {
-      EXL_REFLECT
+      EXL_REFLECT;
 
       uint64_t id;
       bool operator == (ObjectId const& iOther) const;
@@ -61,7 +61,7 @@ namespace eXl
 
     struct EXL_ENGINE_API ClientInputData
     {
-      EXL_REFLECT
+      EXL_REFLECT;
 
       bool m_Moving = false;
       Vec3 m_Dir;
@@ -299,6 +299,6 @@ namespace eXl
 
 #include "network.inl"
   }
-  DECLARE_ENGINE_TYPE_EX(Network::ClientId, NetClientId);
-  DECLARE_ENGINE_TYPE_EX(Network::ObjectId, NetObjectId);
+  //DECLARE_ENGINE_TYPE_EX(Network::ClientId, NetClientId);
+  //DECLARE_ENGINE_TYPE_EX(Network::ObjectId, NetObjectId);
 }

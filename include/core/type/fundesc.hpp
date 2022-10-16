@@ -254,6 +254,12 @@ namespace eXl
     {
       return iFun(*iBuffer.GetField<typename Args::ArgType>(uint32_t(Args::ArgPos))...);
     }
+
+    template <typename RetType, typename Function>
+    static RetType Call(Function const& iFun, uint8_t const* const* iArgs)
+    {
+      return iFun(*reinterpret_cast<typename Args::ArgType const*>(iArgs[uint32_t(Args::ArgPos)])...);
+    }
   };
 
   template <typename... Args>
@@ -263,6 +269,12 @@ namespace eXl
     static RetType Call(Function const& iFun, ConstDynObject const& iBuffer)
     {
       return PositionalInvoker<typename MakePositionalList<Args...>::type>::template Call<RetType>(iFun, iBuffer);
+    }
+
+    template <typename RetType, typename Function>
+    static RetType Call(Function const& iFun, uint8_t const* const* iArgs)
+    {
+      return PositionalInvoker<typename MakePositionalList<Args...>::type>::template Call<RetType>(iFun, iArgs);
     }
   };
 
@@ -276,6 +288,14 @@ namespace eXl
       oOutput.SetType(retType, retType->Build(), true);
       *oOutput.CastBuffer<RetType>() = Invoker<Args...>:: template Call<RetType>(iFun, iArgsBuffer);
     }
+
+    template <typename Function>
+    static void Execute(Function const& iFun, uint8_t const* const* iArgs, DynObject& oOutput)
+    {
+      Type const* retType = TypeManager::GetType<RetType>();
+      oOutput.SetType(retType, retType->Build(), true);
+      *oOutput.CastBuffer<RetType>() = Invoker<Args...>:: template Call<RetType>(iFun, iArgs);
+    }
   };
 
   template<typename... Args>
@@ -285,6 +305,12 @@ namespace eXl
     static void Execute(Function const& iFun, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
     {
       Invoker<Args...>::template Call<void>(iFun, iArgsBuffer);
+    }
+
+    template <typename Function>
+    static void Execute(Function const& iFun, uint8_t const* const* iArgs, DynObject& oOutput)
+    {
+      Invoker<Args...>::template Call<void>(iFun, iArgs);
     }
   };
 }

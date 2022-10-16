@@ -9,7 +9,7 @@
 #include <gen/graphutils.hpp>
 
 using namespace eXl;
-
+#if 0
 TEST(Engine, GraphTest)
 {
   {
@@ -117,3 +117,5 @@ TEST(Engine, GraphTest)
   browseGraph(newGraph2);
   //sys.Print(std::cout, newGraph2, {}, {});
 }
+
+#endif

@@ -132,6 +132,13 @@ namespace eXl
   }
 
   template <>
+  inline Err Streamer::Write<char>(char const* iObj)
+  {
+    int32_t temp = *iObj;
+    return WriteInt(&temp);
+  }
+
+  template <>
   inline Err Streamer::Write<float>(float const* iObj)
   {
     return WriteFloat(iObj);
@@ -184,6 +191,13 @@ namespace eXl
   {
     unsigned int tempUint = *iObj;
     return WriteUInt(&tempUint);
+  }
+
+  template <>
+  inline Err Streamer::Write<short>(short const* iObj)
+  {
+    int tempUint = *iObj;
+    return WriteInt(&tempUint);
   }
 }
 

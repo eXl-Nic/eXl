@@ -104,11 +104,11 @@ SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE}
   libb64
 )
 
-if(${ENABLE_FREEIMAGE})
+#if(${ENABLE_FREEIMAGE})
   set(SOURCES ${SOURCES}
     image/imagestreamer.cpp
   )
-endif()
+#endif()
 
 set(SOURCES ${SOURCES}
     thread/event.cpp
@@ -122,13 +122,13 @@ target_compile_definitions(eXl_Core PRIVATE -DLUABIND_BUILDING)
 SET(CORE_LIBS ${CORE_LIBS} ${LUABIND_LIBRARIES} ${LUA_LIBRARIES})
 endif()
 
-if(${ENABLE_FREEIMAGE})
-  target_include_directories(eXl_Core PRIVATE ${FREEIMAGE_INCLUDE_DIR})
-  target_link_directories(eXl_Core ${LIBRARY_DEPS_VISIBILITY} ${FREEIMAGE_LIBRARY_DIR})
+#if(${ENABLE_FREEIMAGE})
+  target_include_directories(eXl_Core PRIVATE ${STB_INCLUDE_DIR})
+  #target_link_directories(eXl_Core ${LIBRARY_DEPS_VISIBILITY} ${FREEIMAGE_LIBRARY_DIR})
   
-  SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} ${FREEIMAGE_LIBRARIES})
-  add_definitions(${FREEIMAGE_DEFINES})
-endif()
+  #SET(CORE_LIBS_PRIVATE ${CORE_LIBS_PRIVATE} ${FREEIMAGE_LIBRARIES})
+  #add_definitions(${FREEIMAGE_DEFINES})
+#endif()
 
 ADD_EXL_COMMON_DEFS(eXl_Core)
 ADD_EXL_LIB_PROPERTIES(eXl_Core "CORE")

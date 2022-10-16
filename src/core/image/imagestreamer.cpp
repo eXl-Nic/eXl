@@ -13,7 +13,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <core/log.hpp>
 
-#include "FreeImage.h"
+#include <fstream>
+
+static void* reallocSized(void* oldPtr, size_t oldSize, size_t newSize)
+{
+  void* newAlloc = eXl_ALLOC(newSize);
+  memcpy(newAlloc, oldPtr, oldSize);
+  eXl_FREE(oldPtr);
+  return newAlloc;
+}
+
+
+#define STB_IMAGE_IMPLEMENTATION
+
+#define STBI_MALLOC(x) eXl_ALLOC(x)
+#define STBI_REALLOC_SIZED(x,o,n) reallocSized(x,o,n)
+#define STBI_FREE(x) eXl_FREE(x)
+
+#include <stb_image.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
+#define STBIW_MALLOC(x) eXl_ALLOC(x)
+#define STBIW_REALLOC_SIZED(x,o,n) reallocSized(x,o,n)
+#define STBIW_FREE(x) eXl_FREE(x)
+
+#include <stb_image_write.h>
 
 namespace eXl
 {
@@ -37,7 +62,7 @@ namespace eXl
       }
     }
   }
-
+#if 0
   struct FreeImageReadStruct
   {
     FreeImageReadStruct(uint8_t const* iBuffer, size_t iSize)
@@ -157,7 +182,7 @@ namespace eXl
 
     return bmp;
   }
-
+#endif
   template <class T>
   T GetMaxVal();
 
@@ -210,7 +235,7 @@ namespace eXl
     }
   }
 
-
+#if 0
 
 //#ifdef __ANDROID__
 //#define PLATFORM_RGBFORMAT Image::RGB
@@ -451,7 +476,6 @@ namespace eXl
   //    FreeImage_Unload(bmp);
   //  }
   //}
-
   FIBITMAP* ImageStreamer_Save(Image const* iImage)
   {
     if(iImage == nullptr)
@@ -522,17 +546,17 @@ namespace eXl
     }
     return bmp;
   }
+#endif
 
   namespace ImageStreamer
   {
     namespace
     {
-      class FIMInstance
+      class StreamerInstance
       {
       public:
-        FIMInstance()
+        StreamerInstance()
         {
-          FreeImage_Initialise();
         }
 
         Image* Load(AString const& iPath);
@@ -544,109 +568,193 @@ namespace eXl
 
         void Save(Image const* iImage, Codec iCodec, size_t& oSize, void*& oBuffer);
 
-        static FIMInstance& Get()
+        static StreamerInstance& Get()
         {
-          static FIMInstance s_Init;
+          static StreamerInstance s_Init;
           return s_Init;
         }
       };
     }
 
-    Image* FIMInstance::Load(AString const& iPath)
+    Image* StreamerInstance::Load(AString const& iPath)
     {
-      FIBITMAP* bmp = GetFIBitmap(iPath);
-      if (bmp != nullptr)
+      int x, y, comp;
+
+      FILE* f = fopen(iPath.c_str(), "rb");
+      if(f != nullptr)
       {
-        Image* newImage = BuildImage(bmp, Image::Copy);
-        FreeImage_Unload(bmp);
-        return newImage;
+        uint8_t* data = stbi_load_from_file(f, &x, &y, &comp, 0);
+        if (data != nullptr)
+        {
+          Image::Components imgComp;
+          switch (comp)
+          {
+          case 1:
+            imgComp = Image::R;
+            break;
+          case 2:
+            imgComp = Image::RG;
+            break;
+          case 3:
+            imgComp = Image::RGB;
+            break;
+          case 4:
+            imgComp = Image::RGBA;
+            break;
+          }
+          return eXl_NEW Image(data, Image::Size(x, y), imgComp, Image::Char, 1, Image::Adopt);
+        }
+        fclose(f);
+        f = nullptr;
       }
       return nullptr;
     }
 
-    Image* FIMInstance::Load(uint8_t const* iBuffer, size_t iSize)
+    Image* StreamerInstance::Load(uint8_t const* iBuffer, size_t iSize)
     {
-      FIBITMAP* bmp = GetFIBitmap(iBuffer, iSize);
-      if (bmp != nullptr)
+      int x, y, comp;
+
+      uint8_t* data = stbi_load_from_memory(iBuffer, iSize, &x, &y, &comp, 0);
+      if (data != nullptr)
       {
-        Image* newImage = BuildImage(bmp, Image::Copy);
-        FreeImage_Unload(bmp);
-        return newImage;
+        Image::Components imgComp;
+        switch (comp) 
+        {
+        case 1:
+          imgComp = Image::R;
+          break;
+        case 2:
+          imgComp = Image::RG;
+          break;
+        case 3:
+          imgComp = Image::RGB;
+          break;
+        case 4:
+          imgComp = Image::RGBA;
+          break;
+        }
+
+        return eXl_NEW Image(data, Image::Size(x, y), imgComp, Image::Char, 1, Image::Adopt);
       }
       return nullptr;
     }
 
-    void FIMInstance::Save(Image const* iImage, AString const& iPath)
+    void StreamerInstance::Save(Image const* iImage, AString const& iPath)
     {
-      FIBITMAP* bmp = ImageStreamer_Save(iImage);
-      if (bmp)
+      size_t bufferSize;
+      void* dataPtr = nullptr;
+      Save(iImage, Png, bufferSize, dataPtr);
       {
-        FreeImage_Save(FIF_PNG, bmp, iPath.c_str());
-        FreeImage_Unload(bmp);
+        std::ofstream outFile(iPath, std::ios::binary);
+        outFile.write((char const*)dataPtr, bufferSize);
       }
+      eXl_FREE(dataPtr);
     }
 
 
-    void FIMInstance::Save(Image const* iImage, Codec iCodec, size_t& oSize, void*& oData)
+    void StreamerInstance::Save(Image const* iImage, Codec iCodec, size_t& oSize, void*& oData)
     {
       oSize = 0;
       oData = nullptr;
-      FIBITMAP* bmp = ImageStreamer_Save(iImage);
-      if (bmp)
-      {
-        FREE_IMAGE_FORMAT fmt;
-        switch (iCodec)
-        {
-        case Jpg:
-          fmt = FIF_JPEG;
-          break;
-        case Png:
-          fmt = FIF_PNG;
-          break;
-        case Bmp:
-          fmt = FIF_BMP;
-          break;
-        default:
-          FreeImage_Unload(bmp);
-          return;
-          break;
-        }
-        FIMEMORY* hmem = FreeImage_OpenMemory();
-        FreeImage_SaveToMemory(fmt, bmp, hmem);
-        FreeImage_Unload(bmp);
-        long file_size = FreeImage_TellMemory(hmem);
+      Image::Size size = iImage->GetSize();
 
-        unsigned char* data;
-        DWORD size;
-        if (FreeImage_AcquireMemory(hmem, &data, &size))
-        {
-          oSize = size;
-          oData = malloc(size);
-          memcpy(oData, data, size);
-        }
+      iImage->GetFormat();
+      Image::Components comps = iImage->GetComponents();
 
-        FreeImage_CloseMemory(hmem);
+      Image tmpImg(nullptr, Vec2u(0,0), Image::RGBA, Image::Char, 1);
+      uint8_t const* dataBuffer = (uint8_t const*)iImage->GetImageData();
+      uint32_t stride = iImage->GetRowStride();
+      uint32_t numComps = 0;
+
+      switch (comps) {
+      case Image::R:
+        numComps = 1;
+        break;
+      case Image::RG:
+        numComps = 2;
+        break;
+      case Image::RGB:
+        numComps = 3;
+        break;
+      case Image::BGR:
+        numComps = 3;
+        tmpImg = *iImage;
+
+        SwapRB<char, 3>(size, tmpImg.GetImageData(), stride);
+        dataBuffer = (uint8_t const*)tmpImg.GetImageData();
+        break;
+      case Image::RGBA:
+        numComps = 4;
+        break;
+      case Image::BGRA:
+        numComps = 4;
+        tmpImg = *iImage;
+        SwapRB<char, 4>(size, tmpImg.GetImageData(), stride);
+        dataBuffer = (uint8_t const*)tmpImg.GetImageData();
+        break;
       }
+
+      switch (iCodec)
+       {
+       case Jpg:
+         
+         break;
+       case Png:
+         int len;
+         oData = stbi_write_png_to_mem((uint8_t*)iImage->GetImageData(), iImage->GetRowStride(), size.x, size.y, iImage->GetComponents(), &len);
+         break;
+       case Bmp:
+         
+         break;
+       default:
+         return;
+         break;
+       }
+      
+
+      //FIBITMAP* bmp = ImageStreamer_Save(iImage);
+      //if (bmp)
+      //{
+      //  FREE_IMAGE_FORMAT fmt;
+      //  
+      //
+      //
+      //  FIMEMORY* hmem = FreeImage_OpenMemory();
+      //  FreeImage_SaveToMemory(fmt, bmp, hmem);
+      //  FreeImage_Unload(bmp);
+      //  long file_size = FreeImage_TellMemory(hmem);
+      //
+      //  unsigned char* data;
+      //  DWORD size;
+      //  if (FreeImage_AcquireMemory(hmem, &data, &size))
+      //  {
+      //    oSize = size;
+      //    oData = malloc(size);
+      //    memcpy(oData, data, size);
+      //  }
+      //
+      //  FreeImage_CloseMemory(hmem);
+      //}
     }
 
     Image* Load(AString const& iPath)
     {
-      return FIMInstance::Get().Load(iPath);
+      return StreamerInstance::Get().Load(iPath);
     }
 
     Image* Load(uint8_t const* iBuffer, size_t iSize)
     {
-      return FIMInstance::Get().Load(iBuffer, iSize);
+      return StreamerInstance::Get().Load(iBuffer, iSize);
     }
 
     void Save(Image const* iImage, AString const& iPath)
     {
-      FIMInstance::Get().Save(iImage, iPath);
+      StreamerInstance::Get().Save(iImage, iPath);
     }
 
     void Save(Image const* iImage, Codec iCodec, size_t& oSize, void*& oBuffer)
     {
-      FIMInstance::Get().Save(iImage, iCodec, oSize, oBuffer);
+      StreamerInstance::Get().Save(iImage, iCodec, oSize, oBuffer);
     }
   }
 }

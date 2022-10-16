@@ -28,7 +28,7 @@ namespace eXl
     struct private_ctor;
   public:
 
-    Model(private_ctor&);
+    Model(private_ctor);
 
     class EXL_ENGINE_API Builder
     {
@@ -77,7 +77,7 @@ namespace eXl
 
     static IntrusivePtr<ModelInstance> Create(IntrusivePtr<Model const> const& iModel);
 
-    ModelInstance(IntrusivePtr<Model const> const& iModel, private_ctor&);
+    ModelInstance(IntrusivePtr<Model const> const& iModel, private_ctor);
 
     IntrusivePtr<Model const> const m_Model;
     

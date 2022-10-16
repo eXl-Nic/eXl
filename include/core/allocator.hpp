@@ -18,10 +18,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #ifdef EXL_NAMESPACE_ALLOC_INJECTION
 #undef EXL_ALLOCATOR_NAME
+#undef EXL_ALLOCATOR_NAME_IMPL
 #define EXL_ALLOCATOR_NAME(AllocName) eXl##AllocName
+#define EXL_ALLOCATOR_NAME_IMPL(AllocName) eXl##AllocName##_Impl
 #else
 #undef EXL_ALLOCATOR_NAME
+#undef EXL_ALLOCATOR_NAME_IMPL
 #define EXL_ALLOCATOR_NAME(AllocName) AllocName
+#define EXL_ALLOCATOR_NAME_IMPL(AllocName) AllocName##_Impl
 #endif
 
 #ifndef EXL_NAMESPACE_ALLOC_INJECTION
@@ -30,7 +34,7 @@ namespace eXl
 #endif
 
   template<typename T>
-  class EXL_ALLOCATOR_NAME(Allocator)
+  class EXL_ALLOCATOR_NAME_IMPL(Allocator)
 #ifndef EXL_SHARED_LIBRARY
     : public std::allocator<T>
 #endif
@@ -53,15 +57,15 @@ namespace eXl
     template<typename U>
     struct rebind
     {
-      typedef EXL_ALLOCATOR_NAME(Allocator) <U> other;
+      typedef EXL_ALLOCATOR_NAME_IMPL(Allocator) <U> other;
     };
 
   public:
-    inline EXL_ALLOCATOR_NAME(Allocator)() {}
-    inline ~EXL_ALLOCATOR_NAME(Allocator)() {}
-    inline EXL_ALLOCATOR_NAME(Allocator)(EXL_ALLOCATOR_NAME(Allocator) const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(Allocator)() {}
+    inline ~EXL_ALLOCATOR_NAME_IMPL(Allocator)() {}
+    inline EXL_ALLOCATOR_NAME_IMPL(Allocator)(EXL_ALLOCATOR_NAME_IMPL(Allocator) const&) {}
     template<typename U>
-    inline EXL_ALLOCATOR_NAME(Allocator)(EXL_ALLOCATOR_NAME(Allocator) <U> const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(Allocator)(EXL_ALLOCATOR_NAME_IMPL(Allocator) <U> const&) {}
 
     //    address
     inline pointer address(value_type& r) { return &r; }
@@ -96,13 +100,13 @@ namespace eXl
     inline void construct(pointer p, U&&... u) { new(p) T(std::forward<U>(u)...); }
     inline void destroy(pointer p) { p->~T(); }
 
-    friend void swap(EXL_ALLOCATOR_NAME(Allocator) &, EXL_ALLOCATOR_NAME(Allocator) &)
+    friend void swap(EXL_ALLOCATOR_NAME_IMPL(Allocator) &, EXL_ALLOCATOR_NAME_IMPL(Allocator) &)
     {}
-    friend bool operator==(const EXL_ALLOCATOR_NAME(Allocator) &, const EXL_ALLOCATOR_NAME(Allocator) &)
+    friend bool operator==(const EXL_ALLOCATOR_NAME_IMPL(Allocator) &, const EXL_ALLOCATOR_NAME_IMPL(Allocator) &)
     {
       return true;
     }
-    friend bool operator!=(const EXL_ALLOCATOR_NAME(Allocator) &, const EXL_ALLOCATOR_NAME(Allocator) &)
+    friend bool operator!=(const EXL_ALLOCATOR_NAME_IMPL(Allocator) &, const EXL_ALLOCATOR_NAME_IMPL(Allocator) &)
     {
       return false;
     }
@@ -110,7 +114,7 @@ namespace eXl
   };    //    end of class Allocator 
 
   template<>
-  class EXL_ALLOCATOR_NAME(Allocator) <void>
+  class EXL_ALLOCATOR_NAME_IMPL(Allocator) <void>
   {
   public:
     //    typedefs
@@ -126,23 +130,23 @@ namespace eXl
     template<typename U>
     struct rebind
     {
-      typedef EXL_ALLOCATOR_NAME(Allocator) <U> other;
+      typedef EXL_ALLOCATOR_NAME_IMPL(Allocator) <U> other;
     };
 
   public:
-    inline EXL_ALLOCATOR_NAME(Allocator)() {}
-    inline ~EXL_ALLOCATOR_NAME(Allocator)() {}
-    inline EXL_ALLOCATOR_NAME(Allocator)(EXL_ALLOCATOR_NAME(Allocator) const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(Allocator)() {}
+    inline ~EXL_ALLOCATOR_NAME_IMPL(Allocator)() {}
+    inline EXL_ALLOCATOR_NAME_IMPL(Allocator)(EXL_ALLOCATOR_NAME_IMPL(Allocator) const&) {}
     template<typename U>
-    inline EXL_ALLOCATOR_NAME(Allocator)(EXL_ALLOCATOR_NAME(Allocator) <U> const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(Allocator)(EXL_ALLOCATOR_NAME_IMPL(Allocator) <U> const&) {}
 
-    friend void swap(EXL_ALLOCATOR_NAME(Allocator) <void> &, EXL_ALLOCATOR_NAME(Allocator) <void> &)
+    friend void swap(EXL_ALLOCATOR_NAME_IMPL(Allocator) <void> &, EXL_ALLOCATOR_NAME_IMPL(Allocator) <void> &)
     {}
-    friend bool operator==(const EXL_ALLOCATOR_NAME(Allocator) <void> &, const EXL_ALLOCATOR_NAME(Allocator) <void> &)
+    friend bool operator==(const EXL_ALLOCATOR_NAME_IMPL(Allocator) <void> &, const EXL_ALLOCATOR_NAME_IMPL(Allocator) <void> &)
     {
       return true;
     }
-    friend bool operator!=(const EXL_ALLOCATOR_NAME(Allocator) <void> &, const EXL_ALLOCATOR_NAME(Allocator) <void> &)
+    friend bool operator!=(const EXL_ALLOCATOR_NAME_IMPL(Allocator) <void> &, const EXL_ALLOCATOR_NAME_IMPL(Allocator) <void> &)
     {
       return false;
     }
@@ -152,7 +156,7 @@ namespace eXl
 *  Allocator bypassing the eXl Memory Manager, for a couple of debug facilities.
 */
   template<typename T>
-  struct EXL_ALLOCATOR_NAME(RawAllocator) : public std::allocator<T>
+  struct EXL_ALLOCATOR_NAME_IMPL(RawAllocator) : public std::allocator<T>
   {
   public:
     //    typedefs
@@ -172,15 +176,15 @@ namespace eXl
     template<typename U>
     struct rebind
     {
-      typedef EXL_ALLOCATOR_NAME(RawAllocator) < U > other;
+      typedef EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < U > other;
     };
 
   public:
-    inline EXL_ALLOCATOR_NAME(RawAllocator)() {}
-    inline ~EXL_ALLOCATOR_NAME(RawAllocator)() {}
-    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(RawAllocator)() {}
+    inline ~EXL_ALLOCATOR_NAME_IMPL(RawAllocator)() {}
+    inline EXL_ALLOCATOR_NAME_IMPL(RawAllocator)(EXL_ALLOCATOR_NAME_IMPL(RawAllocator) const&) {}
     template<typename U>
-    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) <U> const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(RawAllocator)(EXL_ALLOCATOR_NAME_IMPL(RawAllocator) <U> const&) {}
 
     //    address
     inline pointer address(value_type& r) { return &r; }
@@ -207,13 +211,13 @@ namespace eXl
     inline void construct(pointer p, U&&... u) { new(p) T(std::forward<U>(u)...); }
     inline void destroy(pointer p) { p->~T(); }
 
-    friend void swap(EXL_ALLOCATOR_NAME(RawAllocator)&, EXL_ALLOCATOR_NAME(RawAllocator)&)
+    friend void swap(EXL_ALLOCATOR_NAME_IMPL(RawAllocator)&, EXL_ALLOCATOR_NAME_IMPL(RawAllocator)&)
     {}
-    friend bool operator==(const EXL_ALLOCATOR_NAME(RawAllocator)&, const EXL_ALLOCATOR_NAME(RawAllocator)&)
+    friend bool operator==(const EXL_ALLOCATOR_NAME_IMPL(RawAllocator)&, const EXL_ALLOCATOR_NAME_IMPL(RawAllocator)&)
     {
       return true;
     }
-    friend bool operator!=(const EXL_ALLOCATOR_NAME(RawAllocator)&, const EXL_ALLOCATOR_NAME(RawAllocator)&)
+    friend bool operator!=(const EXL_ALLOCATOR_NAME_IMPL(RawAllocator)&, const EXL_ALLOCATOR_NAME_IMPL(RawAllocator)&)
     {
       return false;
     }
@@ -221,7 +225,7 @@ namespace eXl
   };
 
   template<>
-  class EXL_ALLOCATOR_NAME(RawAllocator) < void >
+  class EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void >
   {
   public:
     //    typedefs
@@ -237,23 +241,23 @@ namespace eXl
     template<typename U>
     struct rebind
     {
-      typedef EXL_ALLOCATOR_NAME(RawAllocator) < U > other;
+      typedef EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < U > other;
     };
 
   public:
-    inline EXL_ALLOCATOR_NAME(RawAllocator)() {}
-    inline ~EXL_ALLOCATOR_NAME(RawAllocator)() {}
-    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(RawAllocator)() {}
+    inline ~EXL_ALLOCATOR_NAME_IMPL(RawAllocator)() {}
+    inline EXL_ALLOCATOR_NAME_IMPL(RawAllocator)(EXL_ALLOCATOR_NAME_IMPL(RawAllocator) const&) {}
     template<typename U>
-    inline EXL_ALLOCATOR_NAME(RawAllocator)(EXL_ALLOCATOR_NAME(RawAllocator) < U > const&) {}
+    inline EXL_ALLOCATOR_NAME_IMPL(RawAllocator)(EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < U > const&) {}
 
-    friend void swap(EXL_ALLOCATOR_NAME(RawAllocator) < void > &, EXL_ALLOCATOR_NAME(RawAllocator) < void > &)
+    friend void swap(EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void > &, EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void > &)
     {}
-    friend bool operator==(const EXL_ALLOCATOR_NAME(RawAllocator) < void > &, const EXL_ALLOCATOR_NAME(RawAllocator) < void > &)
+    friend bool operator==(const EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void > &, const EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void > &)
     {
       return true;
     }
-    friend bool operator!=(const EXL_ALLOCATOR_NAME(RawAllocator) < void > &, const EXL_ALLOCATOR_NAME(RawAllocator) < void > &)
+    friend bool operator!=(const EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void > &, const EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < void > &)
     {
       return false;
     }
@@ -263,117 +267,24 @@ namespace eXl
 }
 #endif
 
-
-  
-#if 0
+#ifndef EXL_NAMESPACE_ALLOC_INJECTION
 namespace eXl
 {
-  // Forgetful pool. Just keep allcoating more memory until Reset is called.
-  // Use it for small-medium algorithm than need to run on a large number of objects.
-  class EXL_CORE_API MemoryPool
-  {
-  public:
+#endif
+#ifdef EXL_USE_CUSTOM_STDALLOC
+  template <typename T>
+  using EXL_ALLOCATOR_NAME(Allocator) = EXL_ALLOCATOR_NAME_IMPL(Allocator) < T > ;
 
-    MemoryPool(size_t iPageSize);
-    ~MemoryPool();
+  template <typename T>
+  using EXL_ALLOCATOR_NAME(RawAllocator) = EXL_ALLOCATOR_NAME_IMPL(RawAllocator) < T > ;
+#else
+  template <typename T>
+  using EXL_ALLOCATOR_NAME(Allocator) = std::allocator<T>;
 
-    void* Alloc(size_t iSize);
-
-    // Drop all pages usage to 0, retain memory.
-    void Reset();
-
-  protected:
-
-    MemoryPool(MemoryPool const&) = delete;
-    MemoryPool& operator=(MemoryPool const&) = delete;
-
-    struct Page
-    {
-      char* m_Memory;
-      size_t m_PageSize;
-      uint32_t m_CurUsage;
-    };
-
-    Page* AllocPage(size_t iSize);
-
-    Page* m_Pages;
-    size_t m_NumPages;
-    size_t m_FullPages;
-    size_t m_PageCapacity;
-    const size_t m_PageSize;
-  };
-
-  template<typename T>
-  class PooledAllocator 
-  {
-  public : 
-    //    typedefs
-    typedef T value_type;
-    typedef value_type* pointer;
-    typedef const value_type* const_pointer;
-    typedef value_type& reference;
-    typedef const value_type& const_reference;
-    typedef std::size_t size_type;
-    typedef std::ptrdiff_t difference_type;
-
-  public : 
-    //    convert an allocator<T> to allocator<U>
-    template<typename U>
-    struct rebind 
-    {
-      typedef PooledAllocator<U> other;
-    };
-
-  public : 
-    inline PooledAllocator(MemoryPool& iPool)
-      : m_Pool(iPool)
-    {}
-
-    inline ~PooledAllocator() {}
-
-    inline PooledAllocator(PooledAllocator const& iOther)
-      : m_Pool(iOther.m_Pool)
-    {}
-
-    template<typename U>
-    inline PooledAllocator(PooledAllocator<U> const& iOther) 
-      : m_Pool(iOther.m_Pool)
-    {}
-
-    //    address
-    inline pointer address(reference r) { return &r; }
-    inline const_pointer address(const_reference r) { return &r; }
-
-    //    memory allocation
-    inline pointer allocate(size_type cnt, 
-      typename std::allocator<void>::const_pointer = 0) 
-    {
-      return reinterpret_cast<pointer>(m_Pool.Alloc(sizeof (T) * cnt)); 
-    }
-
-    inline void deallocate(pointer p, size_type) 
-    { 
-      
-    }
-
-    //    size
-    inline size_type max_size() const { 
-      return std::numeric_limits<size_type>::max() / sizeof(T);
-    }
-
-    //    construction/destruction
-    inline void construct(pointer p, T&& t) { new(p) T(std::move(t)); }
-    inline void construct(pointer p, const T& t) { new(p) T(t); }
-    inline void destroy(pointer p) { p->~T(); }
-
-    template<typename U>
-    inline bool operator==(Allocator<U> const&) const { return true; }
-
-    template<typename U>
-    inline bool operator!=(Allocator<U> const& a) const { return !operator==(a); }
-
-    MemoryPool& m_Pool;
-  };
+  template <typename T>
+  using EXL_ALLOCATOR_NAME(RawAllocator) = std::allocator<T> ;
+#endif
+#ifndef EXL_NAMESPACE_ALLOC_INJECTION
 }
 #endif
 

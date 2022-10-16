@@ -258,6 +258,9 @@ namespace eXl{
     eXl_ASSERT(false);
   }
 
+  KString Type::GetLuaNativeType() const
+  { return KString(); }
+
   void Type::RegisterScope(lua_State* iState, luabind::scope& iScope) const
   {
     String const& moduleName = m_ScopedName[0];

@@ -19,7 +19,7 @@ namespace eXl
   {
     static constexpr uint32_t s_Index = Index;
     MultiPropertySheetWrapper(World& iWorld, ObjectDataIndex& iIndex, DenseGameDataAllocator& iAlloc)
-      : T_DensePropertySheetAllocator(iWorld, iIndex, nullptr, &m_View)
+      : T_DensePropertySheetAllocator<T>(iWorld, iIndex, nullptr, &m_View)
       , m_View(iWorld, iAlloc, this->m_ObjectsSpec)
     {}
 

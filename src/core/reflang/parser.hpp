@@ -13,6 +13,8 @@ namespace eXl
       {
         std::regex include;
         std::regex exclude;
+
+        bool reflect_external = false;
       };
 
       Vector<String> GetSupportedTypeNames(

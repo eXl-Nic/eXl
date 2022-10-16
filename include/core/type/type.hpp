@@ -167,6 +167,9 @@ namespace eXl
 
     virtual luabind::object MakePropertyAccessor(lua_State* iState, Type const* iHolder, uint32_t iOffset) const;
     virtual luabind::object MakeElementAccessor(lua_State* iState, ArrayType const* iHolder) const;
+
+    virtual KString GetLuaNativeType() const;
+
 #endif
     virtual Err Compare(void const* iVal1, void const* iVal2, CompRes& oRes) const{return Err::Undefined;}
 

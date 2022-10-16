@@ -212,8 +212,8 @@ namespace eXl
     EventsManifest const& m_Events;
   };
 
-  static constexpr char* s_ClientInterface = "NetClient";
-  static constexpr char* s_ServerInterface = "NetServer";
+  static constexpr char const* s_ClientInterface = "NetClient";
+  static constexpr char const* s_ServerInterface = "NetServer";
 
   class EXL_ENGINE_API World
   {

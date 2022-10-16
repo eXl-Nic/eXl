@@ -11,6 +11,7 @@
 #include "projectresourcesmodel.hpp"
 
 #include <QWidget>
+#include <QFileDialog>
 
 class QSettings;
 class QMdiSubWindow;

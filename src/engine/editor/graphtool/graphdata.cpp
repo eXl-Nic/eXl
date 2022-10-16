@@ -13,6 +13,7 @@ namespace eXl
     IMPLEMENT_TAG_TYPE(GraphWrapper);
     IMPLEMENT_TAG_TYPE(MatchWrapper);
     IMPLEMENT_TAG_TYPE(RewriteWrapper);
+    IMPLEMENT_TAG_TYPE(GraphFactoryWrapper);
     
     void LevelNodeData::CopyNode(ES_RuleSystem::GraphVtx iVtx) const
     {
@@ -149,6 +150,62 @@ namespace eXl
       }
     }
 
+    ObjectHandle GraphFactoryWrapper::CreateNode(Name iTag) const 
+    {
+      auto iter = m_System.m_Tags.find(iTag);
+
+      eXl_ASSERT_REPAIR_RET(iter != m_System.m_Tags.end(), ObjectHandle());
+      eXl_ASSERT_REPAIR_RET(iter->second.m_IsNodeTag, ObjectHandle());
+
+      auto newVtx = boost::add_vertex(m_DstGraph.m_Graph);
+      ObjectHandle newObj = m_DstGraph.AddNode(newVtx);
+      LevelNodeData* node = m_DstGraph.m_NodeData.Get(newObj);
+      node->m_Tag = iTag;
+      m_DstGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(newObj, iter->second.m_Archetype.GetOrLoad(), nullptr);
+
+      return newObj;
+    }
+
+    void GraphFactoryWrapper::SetDebugString(ObjectHandle iNode, const char* iStr) const
+    {
+      if (iStr) 
+      {
+        if (LevelNodeData* node = m_DstGraph.m_NodeData.Get(iNode))
+        {
+          node->m_DebugString = iStr;
+        }
+      }
+      
+    }
+
+    ObjectHandle GraphFactoryWrapper::CreateEdge(ObjectHandle iNode1, ObjectHandle iNode2, Name iTag) const
+    {
+      auto iter = m_System.m_Tags.find(iTag);
+
+      eXl_ASSERT_REPAIR_RET(iter != m_System.m_Tags.end(), ObjectHandle());
+      eXl_ASSERT_REPAIR_RET(!iter->second.m_IsNodeTag, ObjectHandle());
+
+      LevelNodeData const* node1 = m_DstGraph.m_NodeData.Get(iNode1);
+      LevelNodeData const* node2 = m_DstGraph.m_NodeData.Get(iNode2);
+
+      eXl_ASSERT_REPAIR_RET(node1 && node2, ObjectHandle());
+
+      auto newEdge = boost::add_edge(node1->m_Vtx, node2->m_Vtx, m_DstGraph.m_Graph);
+      if(newEdge.second)
+      {
+        ObjectHandle newObj = m_DstGraph.AddEdge(newEdge.first);
+        LevelEdgeData* edge = m_DstGraph.m_EdgeData.Get(newObj);
+        edge->m_Tag = iTag; 
+        m_DstGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(newObj, iter->second.m_Archetype.GetOrLoad(), nullptr);
+
+        return newObj;
+      }
+      else 
+      {
+        return m_DstGraph.GetEdgeObject(newEdge.first);
+      }
+    }
+
     IMPLEMENT_RTTI(RewriteSystem);
 
     using RewriteSystemLoader = TResourceLoader <RewriteSystem, ResourceLoader>;
@@ -156,20 +213,25 @@ namespace eXl
     LUA_REG_FUN(BindGraphWrappers)
     {
       luabind::module(iState, "eXl")[
-        luabind::class_<GraphWrapper>("Graph")
+        luabind::class_<GraphWrapper>("GraphWrapper")
           .def("GetEdges", &GraphWrapper::GetEdges)
           .def("GetTargetNode", &GraphWrapper::GetTargetNode)
           .def("GetNodeTag", &GraphWrapper::GetNodeTag)
           .def("GetEdgeTag", &GraphWrapper::GetEdgeTag)
           ,
 
-          luabind::class_<MatchWrapper>("MatchContext")
+          luabind::class_<MatchWrapper>("MatchWrapper")
           .def("Graph", &MatchWrapper::GetGraph),
 
-          luabind::class_<RewriteWrapper>("Rewritecontext")
+          luabind::class_<RewriteWrapper>("RewriteWrapper")
           .def("SourceGraph", &RewriteWrapper::GetSrcGraph)
           .def("TargetGraph", &RewriteWrapper::GetDstGraph)
-          .def("Match", &RewriteWrapper::GetMatch)
+          .def("Match", &RewriteWrapper::GetMatch),
+
+          luabind::class_<GraphFactoryWrapper>("GraphFactoryWrapper")
+          .def("CreateNode", &GraphFactoryWrapper::CreateNode)
+          .def("CreateEdge", &GraphFactoryWrapper::CreateEdge)
+          .def("SetDebugString", &GraphFactoryWrapper::SetDebugString)
 
       ];
 
@@ -179,7 +241,6 @@ namespace eXl
     void RewriteSystem::Init()
     {
       EventsManifest::FunctionsMap functions;
-      //desc.behaviourName = "RewriteRule";
       functions.insert(std::make_pair("CheckNode", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
       functions.insert(std::make_pair("CheckEdge", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
       functions.insert(std::make_pair("CheckMatch", FunDesc::Create<bool(MatchWrapper&, Vector<ObjectHandle>)>()));
@@ -187,8 +248,8 @@ namespace eXl
       functions.insert(std::make_pair("CreateEdge", FunDesc::Create<void(RewriteWrapper&, uint32_t, ObjectHandle)>()));
       functions.insert(std::make_pair("RemoveNode", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
       functions.insert(std::make_pair("RemoveEdge", FunDesc::Create<void(RewriteWrapper&, ObjectHandle)>()));
+      functions.insert(std::make_pair("PostRewrite", FunDesc::Create<void(RewriteWrapper&, GraphFactoryWrapper)>()));
 
-      //LuaScriptSystem::AddBehaviourDesc(desc);
       EngineCommon::GetBaseEvents().m_Interfaces.insert(std::make_pair("RewriteRule", functions));
       ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystem::StaticRtti(), RewriteSystem::GetType());
 

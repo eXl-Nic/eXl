@@ -57,12 +57,13 @@ inline const Log_Manager::LogObject& Log_Manager::operator <<(const Log_Manager:
   return LM;
 }
 #endif
-
+#ifdef EXL_USE_CUSTOM_STDALLOC
 inline const Log_Manager::LogObject& Log_Manager::operator <<(const Log_Manager::LogObject& LM,const AString& tolog)
 {
   LM.write(tolog);
   return LM;
 }
+#endif
 
 inline const Log_Manager::LogObject& Log_Manager::operator <<(const Log_Manager::LogObject& LM, const KString& tolog)
 {

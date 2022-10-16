@@ -44,12 +44,18 @@ namespace eXl
       }
     }
 
-    void serializer::SerializeEnumHeader(std::ostream& o, const Enum& e)
+    void serializer::SerializeEnumHeader(std::ostream& o, const Enum& e, bool iExternal)
     {
-
+      if(iExternal)
+      {
+        String fullName = e.GetFullName();
+        String friendlyName = GetNameWithoutColons(e.GetFullName());
+        o << "DECLARE_ENUM_TYPE(" << fullName <<", " << friendlyName <<", )";
+        o << "\n";
+      }
     }
 
-    void serializer::SerializeEnumSources(std::ostream& o, const Enum& e)
+    void serializer::SerializeEnumSources(std::ostream& o, const Enum& e, bool iExternal)
     {
       String enumName = e.GetShortName();
       String fullName = e.GetFullName();
@@ -70,8 +76,7 @@ namespace eXl
       uint32_t valueCounter = 0;
       for (auto const& value : values)
       {
-        assert(valueCounter == value.first);
-        o << ".AddValue(\"" << value.second << "\")\n";
+        o << ".AddValue(\"" << value.second << "\"," << value.first <<")\n";
         ++valueCounter;
       }
 

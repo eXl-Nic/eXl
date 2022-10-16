@@ -70,6 +70,8 @@ namespace eXl
   IMPLEMENT_TYPE_EX(bool, bool)
   IMPLEMENT_TYPE_EX(uint8_t, uint8_t)
   IMPLEMENT_TYPE_EX(uint16_t, uint16_t)
+  IMPLEMENT_TYPE_EX(short, short)
+  IMPLEMENT_TYPE_EX(char, char)
 
 #ifndef __ANDROID__
   //IMPLEMENT_TYPE(WString)

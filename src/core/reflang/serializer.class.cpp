@@ -9,9 +9,20 @@ namespace eXl
 {
   namespace reflang
   {
-    void serializer::SerializeClassHeader(std::ostream& o, const Class& c, String const& iDefineDirective)
+    void serializer::SerializeClassHeader(std::ostream& o, const Class& c, String const& iDefineDirective, bool iExternal)
     {
       //o << iDefineDirective << "(" << c.GetShortName() <<")" "\n";
+      if(iExternal)
+      {
+        String fullName = c.GetFullName();
+        String friendlyName = GetNameWithoutColons(fullName);
+        o << "DECLARE_TYPE_EX(" << fullName << ", " << friendlyName << ", );\n";
+        //o << "Type const* " << friendlyName << "_GetType();\n";
+        //o << "Err " << friendlyName << "_Stream(" << fullName << " const * iObj, Streamer & iStreamer);\n";
+        //o << "Err " << friendlyName << "_Unstream(" << fullName << "* iObj, Unstreamer & iStreamer);\n";
+
+      }
+      
     }
 
     //String ConvertFullNameToFriendly(String const& iFullName)
@@ -27,7 +38,7 @@ namespace eXl
     //  return friendlyName;
     //}
 
-    void serializer::SerializeClassSources(std::ostream& o, const Class& c)
+    void serializer::SerializeClassSources(std::ostream& o, const Class& c, bool iExternal)
     {
       String className = c.GetShortName();
       String fullName = c.GetFullName();
@@ -48,10 +59,21 @@ namespace eXl
       o << ".EndRegistration();\n";
       o << "}\n";
       o << "\n";
-      o << "Type const* " << fullName << "::GetType() { return s_" << friendlyName << "_TypeStorage; }\n";
-      o << "Err " << fullName << "::Stream(Streamer& iStreamer) const { return GetType()->Stream(this, &iStreamer); }\n";
-      o << "Err " << fullName << "::Unstream(Unstreamer& iStreamer) { void* readBuffer = this; return GetType()->Unstream(readBuffer, &iStreamer); }\n";
-      o << "\n";
+      if (!iExternal) 
+      {
+        o << "Type const* " << fullName << "::GetType() { return s_" << friendlyName << "_TypeStorage; }\n";
+        o << "Err " << fullName << "::Stream(Streamer& iStreamer) const { return GetType()->Stream(this, &iStreamer); }\n";
+        o << "Err " << fullName << "::Unstream(Unstreamer& iStreamer) { void* readBuffer = this; return GetType()->Unstream(readBuffer, &iStreamer); }\n";
+        o << "\n";
+      }
+      else
+      {
+        o << "Type const* Get_" << friendlyName << "_Type() { return s_" << friendlyName << "_TypeStorage; }\n";
+        o << "Err " << friendlyName << "_Stream("<< fullName <<" const * iObj, Streamer & iStreamer) { return Get_" << friendlyName <<"_Type()->Stream(iObj, &iStreamer); }\n";
+        o << "Err " << friendlyName << "_Unstream("<< fullName <<"* iObj, Unstreamer & iStreamer) { void* readBuffer = iObj; return Get_" << friendlyName << "_Type()->Unstream(readBuffer, &iStreamer); }\n";
+        o << "\n";
+      }
+      
 
 #ifdef EXL_LUA
       o << "void Register_" << friendlyName << "_Lua(lua_State* iState)\n";

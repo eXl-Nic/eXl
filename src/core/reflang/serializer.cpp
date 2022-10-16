@@ -33,11 +33,29 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	    void BeginHeader(
 			    std::ostream& o,
-			    const serializer::Options& options)
+			    const serializer::Options& options, const Vector<std::unique_ptr<TypeBase>>& types)
 	    {
 		    AutoGenComment(o);
 
         o << "#pragma once\n";
+        if (!options.include_path.empty()) {
+          o << "#include \"" << options.include_path << "\"\n";
+        }
+        
+
+        if (options.external)
+        {
+          UnorderedSet<String> headers;
+          for (const auto& type : types)
+          {
+            headers.insert(type->GetFile().string().c_str());
+          }
+          for (const auto& header : headers)
+          {
+            o << "#include \"" << header << "\"\n";
+          }
+        }
+
 		    //o << "#include <core/type/typetraits.hpp>\n";
         //o << "#define DECLARE_"<< options.internalLibName <<"_TYPE_EX(type, friendlyname) DECLARE_TYPE_EX(type, friendlyname, EXL_" << options.internalLibName << "_API)\n";
         //o << "#define DECLARE_"<< options.internalLibName <<"_TYPE(type) DEFINE_"<< options.internalLibName <<"_TYPE_EX(type, type)\n";
@@ -61,16 +79,23 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		    AutoGenComment(o);
 
         // Generate unique list of includes.
-        UnorderedSet<String> headers;
-        for (const auto& type : types)
+        
+        if (!options.external)
         {
-          headers.insert(type->GetFile().string().c_str());
+          UnorderedSet<String> headers;
+          for (const auto& type : types)
+          {
+            headers.insert(type->GetFile().string().c_str());
+          }
+          for (const auto& header : headers)
+          {
+            o << "#include \"" << header << "\"\n";
+          }
         }
-        for (const auto& header : headers)
+        else
         {
-          o << "#include \"" << header << "\"\n";
+          o << "#include <" << options.out_hpp_path << ">\n";
         }
-
         String lowercaseLibName = options.internalLibName;
         std::transform(lowercaseLibName.begin(), lowercaseLibName.end(), lowercaseLibName.begin(),
           [](char c) { return tolower(c); });
@@ -165,6 +190,7 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   dependencies[typeIdx].insert(namesToLookFor.second);
                   dependents[namesToLookFor.second].insert(typeIdx);
                   noDependencies = false;
+                  break;
                 }
               }
             }
@@ -228,20 +254,20 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
       }
 
-	    BeginHeader(*out_hpp, options);
+	    BeginHeader(*out_hpp, options, types);
 	    for (auto typeIdx : order)
 	    {
         const auto& type = types[typeIdx];
 		    switch (type->GetType())
 		    {
 		    case TypeBase::Type::Enum:
-			    SerializeEnumHeader(*out_hpp, static_cast<const Enum&>(*type));
+			    SerializeEnumHeader(*out_hpp, static_cast<const Enum&>(*type), options.external);
 			    break;
 		    case TypeBase::Type::Function:
 			    SerializeFunctionHeader(*out_hpp, static_cast<const Function&>(*type));
 			    break;
 		    case TypeBase::Type::Class:
-			    SerializeClassHeader(*out_hpp, static_cast<const Class&>(*type), "");
+			    SerializeClassHeader(*out_hpp, static_cast<const Class&>(*type), "", options.external);
 			    break;
 		    }
 		    *out_hpp << "\n\n";
@@ -255,13 +281,13 @@ R"(// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		    switch (type->GetType())
 		    {
 		    case TypeBase::Type::Enum:
-			    SerializeEnumSources(*out_cpp, static_cast<const Enum&>(*type));
+			    SerializeEnumSources(*out_cpp, static_cast<const Enum&>(*type), options.external);
 			    break;
 		    case TypeBase::Type::Function:
 			    SerializeFunctionSources(*out_cpp, static_cast<const Function&>(*type));
 			    break;
 		    case TypeBase::Type::Class:
-			    SerializeClassSources(*out_cpp, static_cast<const Class&>(*type));
+			    SerializeClassSources(*out_cpp, static_cast<const Class&>(*type), options.external);
 			    break;
 		    }
 		    *out_cpp << "\n\n";

@@ -175,6 +175,8 @@ namespace eXl
 
     Err DeleteComponent(ObjectHandle);
 
+    void Reload();
+
     void Tick();
 
     ObjectTable<ScriptEntry> m_Scripts;
@@ -186,6 +188,8 @@ namespace eXl
       ScriptHandle m_LoadedScript;
       luabind::object m_Self;
     };
+
+    void CallInitData(ObjectHandle iObject, ObjectScript& oObj, ScriptHandle iScript);
 
     DenseGameDataStorage<UnorderedMap<Name, ObjectScript>> m_ObjectsScripts;
 
@@ -211,8 +215,8 @@ namespace eXl
     Err LoadDependencies(DependenciesStack& Deps, Resource const& iScript, Vector<ResourceHandle<LuaFunctionLibrary>> const& iDeps);
     Err LoadInterface(lua_State* state, ScriptEntry& iEntry, String const& iItfName, EventsManifest::FunctionsMap const& iFunctions);
 
-    static void CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload);
-    void DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput);
+    static void CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, uint8_t const* const*, DynObject& oOutput, void* iPayload);
+    void DispatchCallback(ObjectHandle iObject, Name iFunction, uint8_t const* const*, DynObject& oOutput);
 
     LuaScriptSystem& m_Sys;
     World& m_World;
@@ -235,6 +239,53 @@ namespace eXl
   {
     ComponentManager::Register(iWorld);
     m_Impl = std::make_unique<Impl>(*this, iWorld);
+  }
+
+  void LuaScriptSystem::Reload()
+  {
+    m_Impl->Reload();
+  }
+
+  void LuaScriptSystem::Impl::Reload()
+  {
+    UnorderedMap<Resource::UUID, ScriptHandle> temp;
+    m_LoadedScripts.swap(temp);
+
+    m_ObjectsScripts.Iterate([](ObjectHandle, UnorderedMap<Name, ObjectScript>& iMap)
+      {
+        for (auto& entry : iMap)
+        {
+          entry.second.m_Self = luabind::object();
+        }
+      });
+    m_Scripts.Reset();
+
+    m_LuaWorld.~LuaWorld();
+    new(&m_LuaWorld) LuaWorld(LuaManager::CreateWorld(&m_Sys));
+
+    
+    for (auto const& loadedScript : temp)
+    {
+      Resource const* rsc = ResourceManager::Load(loadedScript.first, nullptr);
+      if (LuaScript const* script = LuaScript::DynamicCast(rsc))
+      {
+        LoadScript(*script);
+      }
+    }
+    
+    m_ObjectsScripts.Iterate([this](ObjectHandle iObj, UnorderedMap<Name, ObjectScript>& iMap)
+      {
+        UnorderedSet<KString> itfNames;
+        for (auto& entry : iMap)
+        {
+          size_t separator = entry.first.get().find("::");
+          KString itfName = entry.first.get().substr(0, separator);
+          if (itfNames.insert(itfName).second)
+          {
+            CallInitData(iObj, entry.second, entry.second.m_LoadedScript);
+          }
+        }
+      });
   }
 
   World* LuaScriptSystem::GetWorld_Static()
@@ -453,6 +504,7 @@ namespace eXl
       luabind::object function = iEntry.m_ScriptObject[functionEntry.first.c_str()];
       if (function.is_valid())
       {
+        luabind::detail::stack_pop(state, 1);
         function.push(state);
         if (!lua_isfunction(state, -1))
         {
@@ -582,12 +634,12 @@ namespace eXl
     return entryHandle;
   }
 
-  void LuaScriptSystem::Impl::CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput, void* iPayload)
+  void LuaScriptSystem::Impl::CallbackDispatcher(World& iWorld, ObjectHandle iObject, Name iFunction, uint8_t const* const* iArgs, DynObject& oOutput, void* iPayload)
   {
-    ((LuaScriptSystem*)(iPayload))->m_Impl->DispatchCallback(iObject, iFunction, iArgsBuffer, oOutput);
+    iWorld.GetSystem<LuaScriptSystem>()->m_Impl->DispatchCallback(iObject, iFunction, iArgs, oOutput);
   }
 
-  void LuaScriptSystem::Impl::DispatchCallback(ObjectHandle iObject, Name iFunction, ConstDynObject const& iArgsBuffer, DynObject& oOutput)
+  void LuaScriptSystem::Impl::DispatchCallback(ObjectHandle iObject, Name iFunction, uint8_t const* const* iArgs, DynObject& oOutput)
   {
     EventSystem& events = *m_World.GetSystem<EventSystem>();
 
@@ -626,14 +678,14 @@ namespace eXl
       auto call = stateHandle.PrepareCall(function);
       call.Push(objScript->m_Self);
       call.PushArgs(iObject);
-      TupleType const* args = TupleType::DynamicCast(iArgsBuffer.GetType());
-      for (uint32_t i = 0; i < args->GetNumField(); ++i)
+      
+      for (uint32_t i = 0; i < desc->GetArgs().size(); ++i)
       {
-        Type const* fieldType;
-        void const* fieldPtr = args->GetField(iArgsBuffer.GetBuffer(), i, fieldType);
-        LuaManager::PushRefToLua(state, fieldType, fieldPtr);
+        Type const* fieldType = desc->GetArgs()[i];
+        LuaManager::PushArgToLua(state, fieldType, iArgs[i]);
         call.ArgPushed();
       }
+      
       auto res = call.Call(numRet);
 
       if (!res || *res != numRet)
@@ -660,23 +712,9 @@ namespace eXl
     }
   }
 
-  Err LuaScriptSystem::Impl::AddHandler(ObjectHandle iObject, const LuaEventHandler& iHandler)
+  void LuaScriptSystem::Impl::CallInitData(ObjectHandle iObject, ObjectScript& oObj, ScriptHandle iScript)
   {
-    EventSystem& events = *m_World.GetSystem<EventSystem>();
-
-    auto itfIter = events.GetManifest().m_Interfaces.find(iHandler.m_InterfaceName);
-    if (itfIter == events.GetManifest().m_Interfaces.end())
-    {
-      return Err::Failure;
-    }
-
-    ScriptHandle loadedScript = LoadScript_Handler(iHandler);
-    if (!loadedScript.IsAssigned())
-    {
-      return Err::Failure;
-    }
-
-    ScriptEntry const& scriptDesc = m_Scripts.Get(loadedScript);
+    ScriptEntry const& scriptDesc = m_Scripts.Get(iScript);
 
     luabind::object scriptData;
     {
@@ -706,13 +744,36 @@ namespace eXl
         }
       }
     }
+    oObj.m_LoadedScript = iScript;
+    oObj.m_Self = scriptData;
+  }
 
+  Err LuaScriptSystem::Impl::AddHandler(ObjectHandle iObject, const LuaEventHandler& iHandler)
+  {
+    EventSystem& events = *m_World.GetSystem<EventSystem>();
+
+    auto itfIter = events.GetManifest().m_Interfaces.find(iHandler.m_InterfaceName);
+    if (itfIter == events.GetManifest().m_Interfaces.end())
+    {
+      return Err::Failure;
+    }
+
+    ScriptHandle loadedScript = LoadScript_Handler(iHandler);
+    if (!loadedScript.IsAssigned())
+    {
+      return Err::Failure;
+    }
+
+    ObjectScript objScr;
+    CallInitData(iObject, objScr, loadedScript);
+
+    ScriptEntry const& scriptDesc = m_Scripts.Get(loadedScript);
     UnorderedMap<Name, ObjectScript>& funMap = m_ObjectsScripts.GetOrCreate(iObject);
 
     for (auto const& fun : scriptDesc.m_ScriptFunctions)
     {
-      funMap.insert(std::make_pair(fun.first, ObjectScript{ loadedScript, scriptData}));
-      events.AddEventHandlerInternal(iObject, fun.first, &LuaScriptSystem::Impl::CallbackDispatcher, this);
+      funMap.insert(std::make_pair(fun.first, objScr));
+      events.AddEventHandlerInternal(iObject, fun.first, &LuaScriptSystem::Impl::CallbackDispatcher, nullptr);
     }
     return Err::Success;
   }

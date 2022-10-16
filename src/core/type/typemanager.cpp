@@ -292,25 +292,25 @@ namespace eXl
       
     }
 
-    TypeManager::EnumTypeReg& TypeManager::EnumTypeReg::AddValue(TypeEnumName iName)
+    TypeManager::EnumTypeReg& TypeManager::EnumTypeReg::AddValue(TypeEnumName iName, uint32_t iValue)
     {
-      for(unsigned int i = 0;i<m_Enums.size();++i)
+      for(auto const& entry : m_Enums)
       {
-        if(m_Enums[i] == iName)
+        if (entry.second == iName)
         {
           LOG_WARNING<<"Enum "<<iName<<" already exists"<<"\n";
           return *this;
         }
       }
 
-      m_Enums.push_back(iName);
+      m_Enums.insert(std::make_pair(iValue, iName));
       return *this;
     }
 
     namespace detail
     {
 
-      EnumType const* _MakeEnumType(TypeName iName, Vector<TypeEnumName> & iVal)
+      EnumType const* _MakeEnumType(TypeName iName, UnorderedMap<uint32_t, TypeEnumName> & iVal)
       {
         //size_t newId = ++TMData::Get().m_IDGen;
         EnumType* newType = eXl_NEW EnumType(iName,0);

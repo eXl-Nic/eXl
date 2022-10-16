@@ -320,8 +320,8 @@ namespace eXl
 #ifdef MSVC_COMPILER
       if(!(errorFlags & NOASK_ASSERT))
       {
-        int res =0;
-      
+        int res = IDIGNORE;
+#ifndef NOMB
 #ifdef _DEBUG
         String errStr = "Assertion error in " + StringUtil::FromASCII(file)+ " at " + StringUtil::FromInt(line) + " : \n " + msg;
 #ifdef EXL_CHAR_TYPE_IS_CHAR
@@ -331,6 +331,7 @@ namespace eXl
         res = MessageBoxW(nullptr,errStr.c_str(),"Assertion Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
 #error
+#endif
 #endif
 #endif
         if(res==IDRETRY)
@@ -347,7 +348,7 @@ namespace eXl
         }
 #else
         String errStr = ("Assertion error in " + StringUtil::FromASCII(file)+ " at " + StringUtil::FromInt(line) + " : \n " + msg).c_str();
-
+#ifndef NOMB
 #ifdef EXL_CHAR_TYPE_IS_CHAR
         res = MessageBoxA(nullptr,errStr.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
@@ -356,6 +357,7 @@ namespace eXl
   #else
   #error
   #endif
+#endif
 #endif
         if(res==IDCANCEL)
         {
@@ -439,7 +441,7 @@ namespace eXl
         {
 #ifdef _DEBUG
           String errMsg = String("Unexpected error at ") + iMsg + " : \n " + msg;
-
+#ifndef NOMB
 #ifdef EXL_CHAR_TYPE_IS_CHAR
           res = MessageBoxA(nullptr,errMsg.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
@@ -447,6 +449,7 @@ namespace eXl
           res = MessageBoxW(nullptr,errMsg.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
 #error
+#endif
 #endif
 #endif
           
@@ -461,6 +464,7 @@ namespace eXl
           }
 #else
           String errMsg(String("Unexpected error at ") + iMsg + " : \n " + msg);
+#ifndef NOMB
 #ifdef EXL_CHAR_TYPE_IS_CHAR
           res = MessageBoxA(nullptr,errMsg.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
@@ -468,6 +472,7 @@ namespace eXl
           res = MessageBoxW(nullptr,errMsg.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
 #error
+#endif
 #endif
 #endif
           if(res==IDCANCEL)
@@ -519,6 +524,7 @@ namespace eXl
       
 #ifdef _DEBUG
         String errStr = String("Unexpected error in ") + StringUtil::FromASCII(file)+ " at " + StringUtil::FromInt(line) + " : \n " + msg;
+#ifndef NOMB
 #ifdef EXL_CHAR_TYPE_IS_CHAR
         res = MessageBoxA(nullptr,errStr.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
@@ -527,6 +533,7 @@ namespace eXl
 #else
 #error
 #endif
+#endif
 #endif  
         if(res==IDRETRY)
         {DebugBreak();return;}
@@ -534,6 +541,7 @@ namespace eXl
           abort();
 #else
         String errStr = String("Unexpected error in ") + StringUtil::FromASCII(file)+ " at " + StringUtil::FromInt(line) + " : \n " + msg;
+#ifndef NOMB
 #ifdef EXL_CHAR_TYPE_IS_CHAR
         res = MessageBoxA(nullptr,errStr.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
@@ -541,6 +549,7 @@ namespace eXl
         res = MessageBoxW(nullptr,errStr.c_str(),"Unexpected Err.",MB_RETRYCANCEL | MB_ICONERROR | MB_TASKMODAL);
 #else
 #error
+#endif
 #endif
 #endif
         if(res==IDCANCEL)

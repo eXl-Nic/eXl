@@ -9,11 +9,20 @@ namespace eXl
 
   void GraphPainter::paint(QPainter& iPainter) const
   {
-    iPainter.setTransform(GetWorldToScreenTransform());
+    QRect screen = iPainter.viewport();
+    QTransform const& worldToScreen = GetWorldToScreenTransform();
+    QRect worldVp = GetScreenToWorldTransform().mapRect(screen);
+    iPainter.setTransform(worldToScreen);
     QPen pen;
     pen.setWidthF(0.1);
     for (uint32_t i = 0; i < nodes.size(); ++i)
     {
+      QRect edgeRect(nodes[i].toPoint(), QSize(s_NodeSize, s_NodeSize));
+      if (!worldVp.intersects(edgeRect))
+      {
+        continue;
+      }
+
       pen.setColor(nodesColor[i]);
       iPainter.setPen(pen);
 
@@ -21,15 +30,22 @@ namespace eXl
       trans.translate(nodes[i].x(), nodes[i].y());
       trans = trans.rotate(180, Qt::ZAxis);
       trans = trans.scale(-0.1, 0.1);
-      iPainter.setTransform(trans * GetWorldToScreenTransform());
+      iPainter.setTransform(trans * worldToScreen);
       iPainter.drawText(QPointF(), nodeDesc[i]);
-      iPainter.setTransform(GetWorldToScreenTransform());
+      iPainter.setTransform(worldToScreen);
 
       iPainter.drawEllipse(nodes[i], s_NodeSize, s_NodeSize);
     }
 
     for (uint32_t i = 0; i < edges.size(); ++i)
     {
+      QRect edgeRect(edges[i].first.toPoint(), QSize(1, 1));
+      edgeRect |= QRect(edges[i].second.toPoint(), QSize(1, 1));
+      if (!worldVp.intersects(edgeRect))
+      {
+        continue;
+      }
+
       pen.setColor(edgesColor[i]);
       iPainter.setPen(pen);
 
@@ -41,9 +57,9 @@ namespace eXl
       trans.translate(middle.x(), middle.y());
       trans = trans.rotate(180, Qt::ZAxis);
       trans = trans.scale(-0.1, 0.1);
-      iPainter.setTransform(trans * GetWorldToScreenTransform());
+      iPainter.setTransform(trans * worldToScreen);
       //iPainter.drawText(QPointF(), edgeDesc[i]);
-      iPainter.setTransform(GetWorldToScreenTransform());
+      iPainter.setTransform(worldToScreen);
     }
     iPainter.setTransform(QTransform());
   }

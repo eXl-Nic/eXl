@@ -259,7 +259,7 @@ do \
 #endif
 
 #define eXl_ALLOC(bytes) (::eXl::MemoryManager::Allocate(bytes,__FILE__,__LINE__,FUN_STR))
-#define eXl_FREE(ptr) ::eXl::MemoryManager::Free(ptr,false);
+#define eXl_FREE(ptr) ::eXl::MemoryManager::Free(ptr,false)
 
 //Memory manager compliant allocator calls.
 #if defined(EXL_TRACE_LEAKS)

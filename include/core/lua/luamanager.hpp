@@ -144,7 +144,7 @@ namespace eXl
   namespace LuaManager
   {
     typedef void(*ConvertTypeFunction)(lua_State*, void*);
-    typedef void(*CoopyTypeFunction)(lua_State*, void const*);
+    typedef void(*CopyTypeFunction)(lua_State*, void const*);
 
     EXL_CORE_API void Reset();
 
@@ -154,7 +154,11 @@ namespace eXl
     EXL_CORE_API void PushRefToLua(lua_State*, Type const* iType, void* iObject, bool iIsConst);
     EXL_CORE_API void PushRefToLua(lua_State*, Type const* iType, void const* iObject);
 
+    // Passes a copy if a coretype, or a const ref if not.
+    EXL_CORE_API void PushArgToLua(lua_State*, Type const* iType, void const* iObject);
     EXL_CORE_API void PushCopyToLua(lua_State*, Type const* iType, void const* iObject);
+
+    EXL_CORE_API Err ArgsFromLua(lua_State*, uint32_t, Vector<Type const*> iArgs, DynObject& oArgsBuffer, Vector<uint8_t const*>& oArgs);
 
     EXL_CORE_API LuaStateHandle GetHandle(lua_State* iState);
 

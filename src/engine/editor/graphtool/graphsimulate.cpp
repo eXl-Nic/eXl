@@ -35,7 +35,7 @@ namespace eXl
       AllMatches,
       AllSystem
     };
-
+    WorldConfig m_Conf;
     WorldState m_World;
     InputSystem m_Inputs;
 
@@ -69,8 +69,9 @@ namespace eXl
   GraphSimulateWidget::Impl::Impl(GraphSimulateWidget* iWidget, RewriteSystem& iSys)
     : m_Widget(iWidget)
     , m_Sys(iSys)
+    , m_Conf(EditorState::BuildWorldConfig())
   {
-    m_World.Init(EditorState::BuildWorldConfig()).WithGfx();
+    m_World.Init(m_Conf).WithGfx();
 
     World& world = m_World.GetWorld();
     GfxSystem& gfx = *world.GetSystem<GfxSystem>();
@@ -156,6 +157,7 @@ namespace eXl
           GfxSystem& gfx = *world.GetSystem<GfxSystem>();
 
           m_World.GetCamera().ProcessInputs(m_World.GetWorld(), m_Inputs, CameraState::WheelZoom | CameraState::RightClickPan);
+          m_World.GetCamera().UpdateView(world);
           gameWidget->GetViewInfo().pos = m_World.GetCamera().view.pos;
           gameWidget->GetViewInfo().basis[0] = m_World.GetCamera().view.basis[0];
           gameWidget->GetViewInfo().basis[1] = m_World.GetCamera().view.basis[1];
@@ -229,6 +231,7 @@ namespace eXl
     m_GraphPainter->Clear();
 
     LuaScriptSystem& luaSys = *world.GetSystem<LuaScriptSystem>();
+    luaSys.Reload();
 
     DenseGameDataStorage<LevelNodeData> nodeData(world);
     DenseGameDataStorage<LevelEdgeData> edgeData(world);
@@ -248,12 +251,12 @@ namespace eXl
       tags.push_back(tag.first);
       tagsIdx.insert(std::make_pair(tag.first, tags.size() - 1));
     }
-
     for (auto const& ruleEntry : m_Sys.m_Rules)
     {
       IntrusivePtr<RuleData> data = MakeRefCounted<RuleData>();
       data->rewriteSys = &m_Sys;
       data->ruleObject = world.CreateObject();
+      ruleObjects.push_back(data->ruleObject);
 
       if (LuaEventHandler const* script = ruleEntry.second.m_RewriteScript.GetOrLoad())
       {
@@ -472,6 +475,15 @@ namespace eXl
 
             SimRewriteCtx rewriteCtx(srcGraphWrapper, dstGraphWrapper);
             sys.ApplyRule(curGraph, newGraph, iter->second, matchings[matchToConsider], &rewriteCtx);
+            static Name const postRewrite("RewriteRule::PostRewrite");
+            EventSystem& evtSys = *rewriteCtx.m_DestGraph.m_World.GetSystem<EventSystem>();
+            ObjectHandle ruleObj = ruleObjects[iter->second];
+            if (evtSys.GetEventHandlerInternal(ruleObj, postRewrite) != nullptr)
+            {
+              RewriteWrapper rwWrapper(srcGraphWrapper, dstGraphWrapper, matchings[matchToConsider]);
+              GraphFactoryWrapper factory(dstGraphWrapper, m_Sys);
+              evtSys.Dispatch<void>(ruleObj, postRewrite, rwWrapper, factory);
+            }
             curGraph = newGraph;
             for (auto vtx : VerticesIter(curGraph))
             {
@@ -526,10 +538,19 @@ namespace eXl
     for (auto vtx : VerticesIter(curGraph))
     {
       ObjectHandle nodeObj = graphWrapper.GetNodeObject(vtx);
-      Name nodeTag = nodeData.Get(nodeObj)->m_Tag;
+      LevelNodeData const* node = nodeData.Get(nodeObj);
+      Name nodeTag = node->m_Tag;
       m_GraphPainter->nodesColor.push_back(qRgb(0, 0, 255));
       boost::put(positionMap, vtx, defaultPos);
-      m_GraphPainter->nodeDesc[boost::get(boost::vertex_index, curGraph, vtx)] = QString::fromUtf8(nodeTag.c_str());
+      if (node->m_DebugString.empty()) 
+      {
+        m_GraphPainter->nodeDesc[boost::get(boost::vertex_index, curGraph, vtx)] = QString::fromUtf8(nodeTag.c_str());
+      }
+      else
+      {
+        m_GraphPainter->nodeDesc[boost::get(boost::vertex_index, curGraph, vtx)] = QString::fromUtf8((String(nodeTag.get()) + " : " + node->m_DebugString).c_str());
+      }
+      
     }
 
     for (auto edge : EdgesIter(curGraph))
@@ -540,7 +561,7 @@ namespace eXl
       m_GraphPainter->edgeDesc.push_back(QString::fromUtf8(edgeTag.c_str()));
     }
 
-    float dist = Mathf::Max((boost::num_vertices(curGraph) + 2) / Mathf::Sqrt(2.0), 2) * GraphPainter::s_NodeSize;
+    float dist = Mathf::Max(Mathf::Sqrt(boost::num_vertices(curGraph) + 2), 2) * 4 * GraphPainter::s_NodeSize;
 
     boost::rectangle_topology<> rectangle(-dist, -dist, dist, dist);
     if (1 || !bIsConnected)
@@ -579,7 +600,7 @@ namespace eXl
         boost::put(weightMap, edge, 1.0);
       }
       // Infinite loop
-      //boost::kamada_kawai_spring_layout(curGraph, MakeRef(positionMap), weightMap, rectangle, boost::side_length(dist * 2));
+      boost::kamada_kawai_spring_layout(curGraph, MakeRef(positionMap), weightMap, rectangle, boost::side_length(dist));
     }
 
     Transforms& trans = *world.GetSystem<Transforms>();

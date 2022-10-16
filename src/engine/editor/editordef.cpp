@@ -72,7 +72,7 @@ namespace eXl
     }
     else if(objType == TypeManager::GetType<String>())
     {
-      String localValue = iVariant.toString().toUtf8();
+      String localValue = iVariant.toString().toStdString();
       TypeTraits::Copy<String>(oObj.GetBuffer(),&localValue);
     }
     else if (objType == TypeManager::GetType<Name>())

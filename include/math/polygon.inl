@@ -162,7 +162,7 @@ namespace boost
               return t;
          }
     };
-
+#ifdef EXL_USE_CUSTOM_STDALLOC
     template <typename T>
     struct is_polygon_set_type<eXl::Vector<T> > {
       typedef typename gtl_or<
@@ -190,7 +190,7 @@ namespace boost
         ps.get(polygon_set);
       }
     };
-  
+#endif
   }
 }
 

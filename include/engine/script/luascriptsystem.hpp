@@ -36,6 +36,7 @@ namespace eXl
     ~LuaScriptSystem();
 
     void Register(World& iWorld) override;
+    void Reload();
 
     void LoadScript(const LuaScript& iScript);
 

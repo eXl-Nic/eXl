@@ -11,7 +11,7 @@ namespace eXl
     Q_OBJECT
   public:
 
-    static FunDeclEditor* FunDeclEditor::Create(QWidget* iParent, TypeName const& iRetType);
+    static FunDeclEditor* Create(QWidget* iParent, TypeName const& iRetType);
 
     TypeName GetRetType() const;
     void SetRetType(TypeName);

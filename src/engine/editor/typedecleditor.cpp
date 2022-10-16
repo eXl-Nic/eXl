@@ -35,7 +35,15 @@ namespace eXl
 
     for (auto type : types)
     {
-      m_TypeDisplayNames.append(QString::fromUtf8(type->GetDisplayName().c_str()));
+      String name = type->GetDisplayName(0);
+      if(name.starts_with("eXl"))
+      {
+        m_TypeDisplayNames.append(QString::fromUtf8(type->GetDisplayName().c_str()));
+      }
+      else 
+      {
+        m_TypeDisplayNames.append(QString::fromUtf8(name.c_str()));
+      }
     }
   }
 
@@ -109,7 +117,7 @@ namespace eXl
       {
       case 0:
       {
-        TypeFieldName newFieldName = item->text().toUtf8();
+        TypeFieldName newFieldName = item->text().toStdString();
         Project::Field& fieldData = m_Decl.m_Fields[iIndex.row()];
         fieldData.m_Name = newFieldName;
       }
@@ -117,12 +125,12 @@ namespace eXl
       case 1:
       {
         QComboBox* typeSelector = static_cast<QComboBox*>(m_PropDataView->cellWidget(iIndex.row(), iIndex.column()));
-        m_Decl.m_Fields[iIndex.row()].m_TypeName = m_TypeNames[typeSelector->currentIndex()].toUtf8();
+        m_Decl.m_Fields[iIndex.row()].m_TypeName = m_TypeNames[typeSelector->currentIndex()].toStdString();
       }
       break;
       case 2:
       {
-        TypeFieldName fieldName = item->data(Qt::UserRole).toString().toUtf8();
+        TypeFieldName fieldName = item->data(Qt::UserRole).toString().toStdString();
         m_Decl.m_Fields[iIndex.row()].m_IsArray = item->checkState() == Qt::Checked;
       }
       break;

@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <cmath>
 #include <core/type/typetraits.hpp>
 #include <math/mathexp.hpp>
+#include <iostream>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext.hpp>
@@ -571,7 +572,8 @@ namespace glm
   template<glm::length_t L, typename T, glm::qualifier Q>
   inline std::ostream& operator <<(std::ostream& oStream, glm::vec<L, T, Q> const& iVal)
   {
-    oStream << "(" << iVal[0];
+    oStream << "(";
+    oStream << iVal[0];
     for (uint32_t i = 1; i < L; ++i)
     {
       oStream << ", " << iVal[i];

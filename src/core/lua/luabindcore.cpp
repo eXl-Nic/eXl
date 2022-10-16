@@ -62,6 +62,11 @@ void stackDump (lua_State *L) {
   printf("\n");  /* end the listing */
 }
 
+const char* getStr(eXl::String const* iStr)
+{
+  return iStr->c_str();
+}
+
 namespace eXl
 {
   class LuaKeys{
@@ -89,9 +94,11 @@ namespace eXl
           .def(luabind::constructor<>())
           .def(luabind::constructor<char const*>())
           //.def("size", &String::size)
-          .def("data", (char const*(String::*)()const)&String::data)
-          .def("c_str", (char const*(String::*)()const)&String::c_str)
-          .def("__tostring", (char const* (String::*)()const)&String::c_str),
+          //.def("data", static_cast<char const* (String::*)()const>(&String::data))
+          //.def("c_str", (char const*(String::*)()const)&String::c_str)
+          .def("c_str", &getStr)
+          .def("__tostring", &getStr)
+          ,
 
       luabind::class_<ConstDynObject>("ConstDynObject")
       .def(luabind::constructor<>())
@@ -139,7 +146,7 @@ namespace eXl
         luabind::class_<Name>("Name")
           .def(luabind::constructor<>())
           .def(luabind::constructor<const char*>())
-          .def(luabind::constructor<String const&>())
+          //.def(luabind::constructor<String const&>())
           .def("__tostring", &Name::c_str)
       ];
 

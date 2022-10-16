@@ -18,6 +18,7 @@ namespace eXl
     ObjectHandle m_Object;
     mutable ES_RuleSystem::GraphVtx m_Vtx;
     Name m_Tag;
+    String m_DebugString;
   };
 
   struct LevelEdgeData : public ES_RuleSystem::EdgeData
@@ -90,8 +91,22 @@ namespace eXl
     Vector<ObjectHandle> m_Match;
   };
 
+  class RewriteSystem;
+
+  struct GraphFactoryWrapper 
+  {
+    GraphFactoryWrapper(GraphWrapper& iDstGraph, RewriteSystem const& iSystem) : m_DstGraph(iDstGraph), m_System(iSystem){}
+
+    ObjectHandle CreateNode(Name iTag) const;
+    void SetDebugString(ObjectHandle, const char* iStr) const;
+    ObjectHandle CreateEdge(ObjectHandle iNode1, ObjectHandle iNode2, Name iTag) const;
+
+    GraphWrapper& m_DstGraph;
+    RewriteSystem const& m_System;
+  };
 
   DECLARE_TYPE_EX(GraphWrapper, eXl__GraphWrapper, );
+  DECLARE_TYPE_EX(GraphFactoryWrapper, eXl__GraphFactoryWrapper, );
 
   struct LevelMatchContext : public ES_RuleSystem::UserMatchContext
   {

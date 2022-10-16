@@ -49,3 +49,6 @@
 [submodule "modules/lac"]
 	path = modules/lac
 	url = https://github.com/eXl-Nic/LuaAutoComplete
+[submodule "modules/stb"]
+	path = modules/stb
+	url = https://github.com/nothings/stb.git

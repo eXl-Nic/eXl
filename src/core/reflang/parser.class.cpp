@@ -33,11 +33,32 @@ namespace eXl
         return f;
       }
 
+      CXChildVisitResult VisitField(
+        CXCursor cursor, CXCursor parent, CXClientData client_data)
+      {
+        if (cursor.kind == CXCursor_AnnotateAttr)
+        {
+          String* outStr = reinterpret_cast<String*>(client_data);
+          *outStr = parser::Convert(clang_getCursorSpelling(cursor));
+        }
+        return CXChildVisit_Continue;
+      }
+
       NamedObject GetFieldFromCursor(CXCursor cursor)
       {
         NamedObject field;
         field.name = parser::Convert(clang_getCursorSpelling(cursor));
         field.type = parser::GetName(clang_getCursorType(cursor));
+        if(clang_Cursor_hasAttrs(cursor))
+        {
+          String outAttr;
+          clang_visitChildren(cursor, VisitField, &outAttr);
+          if (!outAttr.empty())
+          {
+            printf("%s : %s\n", field.name, outAttr.c_str());
+          }
+        }
+        
         return field;
       }
 

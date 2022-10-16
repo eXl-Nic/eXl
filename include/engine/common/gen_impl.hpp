@@ -12,11 +12,3 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 //Header added to the list of reflected headers just to provide additional definitions for implementation purposes
 #include <engine/script/luaeventhandler.hpp>
-
-namespace eXl
-{
-  struct Dummy_ForceInclude
-  {
-    EXL_REFLECT;
-  };
-}

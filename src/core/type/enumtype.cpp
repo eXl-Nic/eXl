@@ -91,11 +91,11 @@ namespace eXl
 #endif
   Err EnumType::GetEnumValue(TypeEnumName iName,unsigned int& oVal)const
   {
-    for(unsigned int i = 0;i<m_Enums.size();++i)
+    for(auto const& entry : m_Enums)
     {
-      if(m_Enums[i] == iName)
+      if(entry.second == iName)
       {
-        oVal = i;
+        oVal = entry.first;
         RETURN_SUCCESS;
       }
     }
@@ -123,14 +123,11 @@ namespace eXl
     {
       TypeEnumName enumName(StringUtil::ToASCII(str));
       err = Err::Failure;
-      for(unsigned int i = 0; i<m_Enums.size(); ++i)
+      uint32_t val;
+      if (GetEnumValue(enumName, val))
       {
-        if(m_Enums[i] == enumName)
-        {
-          *reinterpret_cast<unsigned int*>(oData) = i;
-          err = Err::Success;
-          break;
-        }
+        *reinterpret_cast<unsigned int*>(oData) = val;
+        err = Err::Success;
       }
       if(!err)
       {
@@ -150,9 +147,10 @@ namespace eXl
     if(iData && iStreamer)
     {
       unsigned int val = *reinterpret_cast<unsigned int const*>(iData);
-      if(val < m_Enums.size())
+      TypeEnumName name;
+      if(GetEnumName(val, name))
       {
-        err = iStreamer->WriteString(StringUtil::FromASCII(m_Enums[val]));
+        err = iStreamer->WriteString(StringUtil::FromASCII(name));
       }
       else
       {

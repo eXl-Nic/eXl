@@ -22,14 +22,14 @@ namespace eXl
   {
     namespace detail
     {
-      EnumType const* _MakeEnumType(TypeName iName, Vector<TypeEnumName>& iVal);
+      EnumType const* _MakeEnumType(TypeName iName, UnorderedMap<uint32_t, TypeEnumName>& iVal);
     }
   }
 
   class EXL_CORE_API EnumType : public Type
   {
     DECLARE_RTTI(EnumType,Type);
-    friend EnumType const* TypeManager::detail::_MakeEnumType(TypeName iName, Vector<TypeEnumName>& iVal);
+    friend EnumType const* TypeManager::detail::_MakeEnumType(TypeName iName, UnorderedMap<uint32_t, TypeEnumName>& iVal);
   public:
 
     static ClassType const* StaticClassType();
@@ -52,9 +52,10 @@ namespace eXl
 
     inline bool GetEnumName(unsigned int iVal, TypeEnumName& oName) const
     {
-      if(iVal < m_Enums.size())
+      auto iter = m_Enums.find(iVal);
+      if(iter != m_Enums.end())
       {
-        oName = m_Enums[iVal];
+        oName = iter->second;
         return true;
       }
       return false;
@@ -72,7 +73,7 @@ namespace eXl
 
     EnumType(TypeName iName,size_t iTypeId);
 
-    Vector<TypeEnumName> m_Enums;
+    UnorderedMap<uint32_t, TypeEnumName> m_Enums;
   };
 
 }

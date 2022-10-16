@@ -36,7 +36,7 @@ namespace eXl
     }
   }
 
-  ObjectModel* ObjectModel::CreateOrUpdateModel(QAbstractItemView* iView, bool iReadOnly, DynObject& iObj)
+  ObjectModel* ObjectModel::CreateOrUpdateModel(QAbstractItemView* iView, bool iReadOnly, const DynObject& iObj)
   {
     ObjectModel* model = qobject_cast<ObjectModel*>(iView->model());
     if (iView->model() == nullptr)
@@ -56,14 +56,14 @@ namespace eXl
     return model;
   }
 
-  ObjectModel::ObjectModel(QObject* iParent, bool iReadOnly, DynObject& iObj)
+  ObjectModel::ObjectModel(QObject* iParent, bool iReadOnly, const DynObject& iObj)
     : QAbstractItemModel(iParent)
     , m_ReadOnly(iReadOnly)
   {
     UpdateModel(iObj);
   }
 
-  void ObjectModel::UpdateModel(DynObject& iObj)
+  void ObjectModel::UpdateModel(const DynObject& iObj)
   {
     //emit layoutAboutToBeChanged();
     emit beginResetModel();

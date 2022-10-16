@@ -98,28 +98,28 @@ namespace eXl
 
   template<typename Key, typename Value, typename ResourceType>
   MapCollectionModel<Key, Value, ResourceType>::MapCollectionModel(QObject* iParent, ResourceType* iRes)
-    : CollectionModel(iParent, iRes)
+    : CollectionModel<Key,Value,ResourceType>(iParent, iRes)
   {
   }
 
   template<typename Key, typename Value, typename ResourceType>
   bool MapCollectionModel<Key, Value, ResourceType>::AddToResource(Key const& iName, Value const& iObject)
   {
-    return (m_Resource->*m_MapPtr).insert(std::make_pair(iName, iObject)).second;
+    return (this->m_Resource->*m_MapPtr).insert(std::make_pair(iName, iObject)).second;
   }
 
   template<typename Key, typename Value, typename ResourceType>
   bool MapCollectionModel<Key, Value, ResourceType>::RemoveFromResource(Key const& iName)
   {
-    (m_Resource->*m_MapPtr).erase(iName);
+    (this->m_Resource->*m_MapPtr).erase(iName);
     return true;
   }
 
   template<typename Key, typename Value, typename ResourceType>
   Value const* MapCollectionModel<Key, Value, ResourceType>::FindInResource(Key const& iName) const
   {
-    auto iter = (m_Resource->*m_MapPtr).find(iName);
-    if (iter != (m_Resource->*m_MapPtr).end())
+    auto iter = (this->m_Resource->*m_MapPtr).find(iName);
+    if (iter != (this->m_Resource->*m_MapPtr).end())
     {
       return &iter->second;
     }

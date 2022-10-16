@@ -60,6 +60,8 @@ namespace eXl
 
     luabind::object MakePropertyAccessor(lua_State* iState, Type const* iHolder, uint32_t iOffset) const override;
     luabind::object MakeElementAccessor(lua_State* iState, ArrayType const* iHolder) const override;
+
+    KString GetLuaNativeType() const override;
 #endif
 
     Err Compare(void const* iVal1, void const* iVal2, CompRes& oRes) const override;
