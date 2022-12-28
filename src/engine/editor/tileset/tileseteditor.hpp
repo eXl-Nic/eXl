@@ -2,8 +2,6 @@
 
 #include <QWidget>
 
-#include <engine/common/world.hpp>
-
 #include <editor/editorstate.hpp>
 
 namespace eXl

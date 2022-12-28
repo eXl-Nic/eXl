@@ -104,6 +104,7 @@ common/gamedatabase.cpp
 script/eventsystem.cpp
 
 gfx/tileset.cpp
+gfx/modelrsc.cpp
 
 physics/physicsys.cpp
 physics/physicsys_impl.cpp

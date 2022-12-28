@@ -210,11 +210,31 @@ namespace eXl
     return m_Type->GetArraySize(res.first);
   }
 
+  void array_resize::operator()(luabind::argument const& self_, int iIndex) const
+  {
+    luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(self_);
+    std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(m_Type));
+    if (res.first == nullptr)
+    {
+      lua_pushliteral(self_.interpreter(), "Incorrect argument for array length");
+      lua_error(self_.interpreter());
+    }
+
+    m_Type->SetArraySize(res.first, iIndex);
+  }
+
   void array_length_registration::register_(lua_State* iState) const
   {
-    using signature_type = luabind::meta::type_list<uint32_t, luabind::argument const&>;
-    luabind::object fn = luabind::make_function(iState, array_length(m_Type), signature_type(), luabind::no_policies());
-    luabind::detail::add_overload(luabind::object(luabind::from_stack(iState, -1)), "__len", fn);
+    {
+      using signature_type = luabind::meta::type_list<uint32_t, luabind::argument const&>;
+      luabind::object fn = luabind::make_function(iState, array_length(m_Type), signature_type(), luabind::no_policies());
+      luabind::detail::add_overload(luabind::object(luabind::from_stack(iState, -1)), "__len", fn);
+    }
+    {
+      using signature_type = luabind::meta::type_list<void, luabind::argument const&, int32_t>;
+      luabind::object fn = luabind::make_function(iState, array_resize(m_Type), signature_type(), luabind::no_policies());
+      luabind::detail::add_overload(luabind::object(luabind::from_stack(iState, -1)), "Resize", fn);
+    }
   }
 
   int array_iter::Iterate(lua_State* iState)

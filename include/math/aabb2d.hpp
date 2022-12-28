@@ -39,6 +39,14 @@ namespace eXl
       m_Data[1] = glm::vec<2,Real>(iMaxX,iMaxY);
     }
 
+    static AABB2D FromMinMax(glm::vec<2, Real> iMin, glm::vec<2, Real> iMax)
+    {
+      AABB2D ret;
+      ret.m_Data[0] = iMin;
+      ret.m_Data[1] = iMax;
+      return ret;
+    }
+
     static AABB2D FromCenterAndSize(glm::vec<2,Real> iCenter,glm::vec<2,Real> iSize)
     {
       AABB2D ret;
@@ -180,6 +188,12 @@ namespace eXl
     Real& MinY(){return m_Data[0].y;}
     Real& MaxX(){return m_Data[1].x;}
     Real& MaxY(){return m_Data[1].y;}
+
+    glm::vec<2, Real> Min() const { return m_Data[0]; }
+    glm::vec<2, Real> Max() const { return m_Data[1]; }
+
+    glm::vec<2, Real>& Min() { return m_Data[0]; }
+    glm::vec<2, Real>& Max() { return m_Data[1]; }
 
     bool operator ==(AABB2D const& iOther) const
     {

@@ -34,7 +34,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
   LuaCoroutine* LuaCoroutine::Create(Path const& iPath, String const& iName)
   {
-    return LuaCoroutineLoader::Get().Create(iPath, iName);
+    return LuaCoroutineLoader::Get().CreateAt(iPath, iName);
   }
 #endif
 

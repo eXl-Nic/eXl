@@ -77,7 +77,7 @@ namespace eXl
 		float elapsed = m_Clock.GetTime();
 		if (m_GfxSystem)
 		{
-      if (m_Tick)
+      if (m_Tick && m_GfxSystem->GetRenderNode(m_GfxSystem->GetDebugDrawerHandle())->IsInitialized())
       {
         m_Tick(elapsed);
       }

@@ -701,7 +701,11 @@ namespace eXl
          break;
        case Png:
          int len;
-         oData = stbi_write_png_to_mem((uint8_t*)iImage->GetImageData(), iImage->GetRowStride(), size.x, size.y, iImage->GetComponents(), &len);
+         oData = stbi_write_png_to_mem((uint8_t*)iImage->GetImageData(), iImage->GetRowStride(), size.x, size.y, numComps, &len);
+         if(oData != nullptr)
+         {
+           oSize = len;
+         }
          break;
        case Bmp:
          

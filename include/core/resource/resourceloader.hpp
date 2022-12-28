@@ -41,6 +41,11 @@ namespace eXl
       return Create_Impl(iName); 
     }
 
+    virtual Resource* CreateAt(Path const& iDir, String const& iName) const
+    {
+      return nullptr;
+    }
+
     virtual Err Save(Resource* iRsc, Writer& iStreamer) const;
     virtual Resource* Load(Resource::Header const& iHeader, ResourceMetaData* iMetaData, Reader& iStreamer) const;
 
@@ -67,7 +72,7 @@ namespace eXl
     uint32_t const m_Version;
   };
 
-  template <typename T, typename BaseLoader>
+  template <typename T, typename BaseLoader = ResourceLoader>
   class TResourceLoader : public BaseLoader
   {
   public:
@@ -85,7 +90,7 @@ namespace eXl
     }
 
 #ifdef EXL_RSC_HAS_FILESYSTEM
-    T* Create(Path const& iDir, String const& iName) const
+    T* CreateAt(Path const& iDir, String const& iName) const override
     {
       ResourceMetaData* metaData = BaseLoader::CreateNewMetaData(iName);
 

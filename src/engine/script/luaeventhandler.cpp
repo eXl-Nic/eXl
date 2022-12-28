@@ -34,7 +34,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
   LuaEventHandler* LuaEventHandler::Create(Path const& iPath, String const& iName)
   {
-    return LuaEventHandlerLoader::Get().Create(iPath, iName);
+    return LuaEventHandlerLoader::Get().CreateAt(iPath, iName);
   }
 #endif
 

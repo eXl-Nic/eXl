@@ -391,7 +391,7 @@ end
 
 return testStuff
 )";
-    LuaWorld luaCtx = LuaManager::CreateWorld(nullptr);
+    LuaWorld luaCtx = LuaManager::CreateWorld(&scripts, nullptr);
 
     luabind::object fun;
     luaCtx.DoString(scriptStr, fun);

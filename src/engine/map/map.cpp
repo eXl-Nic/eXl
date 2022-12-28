@@ -169,7 +169,7 @@ namespace eXl
 #ifndef EXL_IS_BAKED_PLATFORM
   MapResource* MapResource::Create(Path const& iDir, String const& iName)
   {
-    return MapLoader::Get().Create(iDir, iName);
+    return MapLoader::Get().CreateAt(iDir, iName);
   }
 #endif
 

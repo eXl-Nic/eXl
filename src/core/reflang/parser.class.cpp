@@ -55,7 +55,7 @@ namespace eXl
           clang_visitChildren(cursor, VisitField, &outAttr);
           if (!outAttr.empty())
           {
-            printf("%s : %s\n", field.name, outAttr.c_str());
+            printf("%s : %s\n", field.name.c_str(), outAttr.c_str());
           }
         }
         

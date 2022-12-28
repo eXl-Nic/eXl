@@ -36,4 +36,5 @@ namespace eXl
     OGLCompiledProgram const* m_EnvBRDFProgram;
 
   };
+
 }

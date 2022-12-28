@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/gfx/gfxsystem.hpp>
+#include <engine/gfx/bounds3d.hpp>
 
 namespace eXl
 {
@@ -31,5 +32,24 @@ namespace eXl
   protected:
     GfxSystem* m_Sys = nullptr;
     GfxRenderNodeHandle m_Handle;
+  };
+
+  class EXL_ENGINE_API OrbitCamera
+  {
+  public:
+    OrbitCamera();
+    OrbitCamera(GfxSystem::ViewInfo& ioInfo, Vec3 const& iPos, Vec3 const& iFocus, Vec3 iUpDir);
+
+    // Moves camera alongside its local axis.
+    void Update(GfxSystem::ViewInfo& ioInfo, Vec3 const& iLocalMovement);
+
+    // Set the camera's focus on the given object
+    void Reframe(GfxSystem::ViewInfo& ioInfo, BoundingSphere const& iSph);
+
+    Vec3 const& GetFocus() const { return m_Focus; }
+
+  protected:
+    Vec3 m_Focus;
+    Vec3 m_UpDir;
   };
 }

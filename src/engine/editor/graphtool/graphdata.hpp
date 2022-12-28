@@ -5,7 +5,8 @@
 #include <engine/common/gamedata.hpp>
 #include <engine/game/archetype.hpp>
 #include <engine/script/luaeventhandler.hpp>
-
+#include <core/lua/luabind/object.hpp>
+#include <engine/game/commondef.hpp>
 
 namespace eXl
 {
@@ -49,6 +50,7 @@ namespace eXl
 
     Vector<ObjectHandle> GetEdges(ObjectHandle iNode) const;
     ObjectHandle GetTargetNode(ObjectHandle iSource, ObjectHandle iEdge) const;
+    Vector<ObjectHandle> FindPath(ObjectHandle iStart, ObjectHandle iGoal, luabind::object iNodeFilter, luabind::object iEdgeFilter) const;
 
     Name GetEdgeTag(ObjectHandle iEdge) const;
     Name GetNodeTag(ObjectHandle iNode) const;
@@ -170,6 +172,21 @@ namespace eXl
     bool m_IsNodeTag;
   };
 
+  struct RoomLayoutInfo 
+  {
+    EXL_REFLECT_PROPERTY;
+    bool m_CollapseNode;
+    String m_TerrainType;
+    Vector<Vec2i> m_RoomSizes;
+    AABB2Di m_Layout;
+  };
+
+  enum class RuleApplication 
+  {
+    OneMatch,
+    AllMatch
+  };
+  
   class RewriteSystem : public Resource
   {
     DECLARE_RTTI(RewriteSystem, Resource);
@@ -189,6 +206,14 @@ namespace eXl
     UnorderedMap<String, Rule> m_Rules;
     UnorderedMap<Name, TagDef> m_Tags;
 
+    struct SeqItem {
+      EXL_REFLECT;
+      String m_Rule;
+      RuleApplication m_Appl;
+    };
+
+    Vector<SeqItem> m_CurSequence;
+
     static Name GetAnyTag();
 
   protected:
@@ -200,4 +225,7 @@ namespace eXl
     Err Unstream_Data(Unstreamer& iStreamer) override;
     Err Serialize(Serializer iStreamer);
   };
+
+  EXL_REFLECT_ENUM(RuleApplication, eXl__RuleApplication, );
 }
+

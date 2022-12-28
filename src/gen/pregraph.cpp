@@ -1539,16 +1539,16 @@ namespace eXl
     MatchCtx mCtx(iGraph, iMCtx);
     
     Rule const& rule = m_Rules[iRule];
-
-    matches.push_back(FindRuleMatch(rule, iGraph, mCtx));
+    matches.resize(m_Rules.size());
+    matches[iRule] = FindRuleMatch(rule, iGraph, mCtx);
 
     //PrintPreGraph(std::cout, iGraph, pg, matches);
 
     //Should try to detect conflicts, if any.
     
-    for (uint32_t i = 0; i < matches[0].size(); ++i)
+    for (uint32_t i = 0; i < matches[iRule].size(); ++i)
     {
-      ApplyRule(iGraph, rule, matches[0][i], i, pg, iRCtx);
+      ApplyRule(iGraph, rule, matches[iRule][i], i, pg, iRCtx);
     }
 
     return ComputeFinalGraph(iGraph, oGraph, pg, matches, iRCtx);

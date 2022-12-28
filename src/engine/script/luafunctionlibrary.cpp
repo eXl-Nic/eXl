@@ -33,7 +33,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
   LuaFunctionLibrary* LuaFunctionLibrary::Create(Path const& iPath, String const& iName)
   {
-    return LuaFunctionLibraryLoader::Get().Create(iPath, iName);
+    return LuaFunctionLibraryLoader::Get().CreateAt(iPath, iName);
   }
 #endif
 

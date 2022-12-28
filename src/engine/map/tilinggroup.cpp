@@ -32,7 +32,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
   TilingGroup* TilingGroup::Create(Path const& iDir, String const& iName)
   {
-    TilingGroup* newGroup = TilingGroupLoader::Get().Create(iDir, iName);
+    TilingGroup* newGroup = TilingGroupLoader::Get().CreateAt(iDir, iName);
 
     return newGroup;
   }

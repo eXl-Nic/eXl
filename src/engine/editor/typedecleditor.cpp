@@ -36,7 +36,7 @@ namespace eXl
     for (auto type : types)
     {
       String name = type->GetDisplayName(0);
-      if(name.starts_with("eXl"))
+      if(name.find("eXl") == 0)
       {
         m_TypeDisplayNames.append(QString::fromUtf8(type->GetDisplayName().c_str()));
       }

@@ -22,6 +22,58 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  OrbitCamera::OrbitCamera()
+    : m_Focus(0.0, 0.0, 0.0)
+    , m_UpDir(0.0, 1.0, 0.0)
+  {
+  }
+
+  static void UpdateFromViewMat(GfxSystem::ViewInfo& ioInfo, Mat4 const& iViewMat)
+  {
+    Mat4 camMat = glm::inverse(iViewMat);
+    ioInfo.basis[0] = camMat[0];
+    ioInfo.basis[1] = camMat[1];
+    ioInfo.basis[2] = camMat[2];
+    ioInfo.pos = camMat[3];
+  }
+
+  OrbitCamera::OrbitCamera(GfxSystem::ViewInfo& ioInfo, Vec3 const& iPos, Vec3 const& iFocus, Vec3 iUpDir)
+  {
+    m_UpDir = iUpDir;
+    m_Focus = iFocus;
+    UpdateFromViewMat(ioInfo, glm::lookAt(iPos, iFocus, iUpDir));
+  }
+
+  void OrbitCamera::Reframe(GfxSystem::ViewInfo& ioInfo, BoundingSphere const& iSph)
+  {
+    m_Focus = iSph.m_Center;
+    Vec3 viewDir = ioInfo.basis[2];
+    Vec3 viewPos(m_Focus - viewDir * iSph.m_Radius * 2.0f);
+
+    UpdateFromViewMat(ioInfo, glm::lookAt(viewPos, m_Focus, ioInfo.basis[1]));
+  }
+
+  void OrbitCamera::Update(GfxSystem::ViewInfo& ioInfo, Vec3 const& iLocalMovement)
+  {
+    float dist = glm::length(m_Focus - Vec3(ioInfo.pos));
+    Vec3 scaledMovement = iLocalMovement * dist * 0.25f;
+
+    ioInfo.pos += scaledMovement.x * ioInfo.basis[0]
+      + scaledMovement.y * ioInfo.basis[1];
+
+    Vec3 viewDir = m_Focus - Vec3(ioInfo.pos);
+    viewDir = glm::normalize(viewDir);
+    Vec3 viewPos(m_Focus - (dist + scaledMovement.z) * viewDir);
+
+    Vec3 upDir = m_UpDir;
+    if (abs(dot(viewDir, upDir)) > (1 - Mathf::ZeroTolerance()))
+    {
+      upDir = ioInfo.basis[1];
+    }
+
+    UpdateFromViewMat(ioInfo, glm::lookAt(viewPos, m_Focus, upDir));
+  }
+
   struct Gfx3DSceneEntry 
   {
     IntrusivePtr<Model> m_Model;
@@ -63,7 +115,6 @@ namespace eXl
 
     Vector<IntrusivePtr<Geometry>> m_Geoms;
     Vector<uint32_t> m_Draws;
-
 
     OGLCompiledProgram const* m_MeshProg;
     OGLCompiledProgram const* m_MeshNormalProg;

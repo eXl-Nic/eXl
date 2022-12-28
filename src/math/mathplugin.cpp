@@ -193,13 +193,20 @@ namespace eXl
         .def(luabind::constructor<int, int>())
         .def_readwrite("x", &Vec2i::x)
         .def_readwrite("y", &Vec2i::y)
+        .def(luabind::self == Vec2i())
         .def(luabind::self + Vec2i())
         .def(luabind::self - Vec2i())
+        .def(luabind::self * int())
+        .def(luabind::self / int())
         ,
 
         luabind::class_<AABB2Df>("AABB2Df")
-        .def("FromMinAndSize", AABB2Df::FromMinAndSize)
-        .def("FromCenterAndSize", AABB2Df::FromCenterAndSize)
+        .scope
+        [
+          luabind::def("FromMinMax", AABB2Df::FromMinMax),
+          luabind::def("FromMinAndSize", AABB2Df::FromMinAndSize),
+          luabind::def("FromCenterAndSize", AABB2Df::FromCenterAndSize)
+        ]
         .def(luabind::constructor<float, float, float, float>())
         .def("AbsorbPoint", (void (AABB2Df::*)(AABB2Df const&))(&AABB2Df::Absorb))
         .def("AbsorbBox", (void (AABB2Df::*)(Vec2 const&))(&AABB2Df::Absorb))
@@ -209,6 +216,9 @@ namespace eXl
         .def("Intersect", &AABB2Df::Intersect)
         .def("IsInside", &AABB2Df::IsInside)
         .def("SetCommonBox", &AABB2Df::SetCommonBox)
+        .def("Touch", &AABB2Df::Touch)
+        .def("Min", (Vec2 (AABB2Df::*)()const)(&AABB2Df::Min))
+        .def("Max", (Vec2 (AABB2Df::*)()const)(&AABB2Df::Max))
         .def("MinX", (float (AABB2Df::*)()const)(&AABB2Df::MinX))
         .def("MinY", (float (AABB2Df::*)()const)(&AABB2Df::MinY))
         .def("MaxX", (float (AABB2Df::*)()const)(&AABB2Df::MaxX))
@@ -216,8 +226,12 @@ namespace eXl
         ,
 
         luabind::class_<AABB2Di>("AABB2Di")
-        .def("FromMinAndSize", AABB2Di::FromMinAndSize)
-        .def("FromCenterAndSize", AABB2Di::FromCenterAndSize)
+        .scope
+        [
+          luabind::def("FromMinMax", AABB2Di::FromMinMax),
+          luabind::def("FromMinAndSize", AABB2Di::FromMinAndSize),
+          luabind::def("FromCenterAndSize", AABB2Di::FromCenterAndSize)
+        ]
         .def(luabind::constructor<int, int, int, int>())
         .def("AbsorbPoint", (void (AABB2Di::*)(AABB2Di const&))(&AABB2Di::Absorb))
         .def("AbsorbBox", (void (AABB2Di::*)(Vec2i const&))(&AABB2Di::Absorb))
@@ -227,6 +241,9 @@ namespace eXl
         .def("Intersect", &AABB2Di::Intersect)
         .def("IsInside", &AABB2Di::IsInside)
         .def("SetCommonBox", &AABB2Di::SetCommonBox)
+        .def("Touch", &AABB2Di::Touch)
+        .def("Min", (Vec2i (AABB2Di::*)()const)(&AABB2Di::Min))
+        .def("Max", (Vec2i (AABB2Di::*)()const)(&AABB2Di::Max))
         .def("MinX", (int (AABB2Di::*)()const)(&AABB2Di::MinX))
         .def("MinY", (int (AABB2Di::*)()const)(&AABB2Di::MinY))
         .def("MaxX", (int (AABB2Di::*)()const)(&AABB2Di::MaxX))

@@ -148,6 +148,7 @@ namespace eXl
           .def(luabind::constructor<const char*>())
           //.def(luabind::constructor<String const&>())
           .def("__tostring", &Name::c_str)
+          .def(luabind::const_self == Name())
       ];
 
     TypeManager::GetArrayType<uint64_t>()->RegisterLua(iState);

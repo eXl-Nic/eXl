@@ -11,20 +11,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <engine/enginelib.hpp>
-#include "dungeongraph.hpp"
+#include <gen/pregraph.hpp>
 #include <math/aabb2d.hpp>
 
 namespace eXl
 {
+  class Random;
    struct Room
    {
      AABB2Di m_Box;
-     DungeonGraph::Graph::vertex_descriptor m_Node;
+     ES_RuleSystem::GraphVtx m_Node;
+   };
+
+   struct EXL_ENGINE_API NodeLayoutData : public ES_RuleSystem::NodeData
+   {
+     DECLARE_RTTI(NodeLayoutData, ES_RuleSystem::NodeData);
+
+     Vector<Vec2i> m_PossibleRoomSize;
+     bool m_Ignore = false;
+   };
+
+   struct EXL_ENGINE_API EdgeLayoutData : public ES_RuleSystem::EdgeData
+   {
+     DECLARE_RTTI(EdgeLayoutData, ES_RuleSystem::EdgeData);
+
+     bool m_Ignore = false;
    };
 
    typedef Vector<Room> Layout;
    typedef Vector<Layout> LayoutCollection;
 
-   EXL_ENGINE_API LayoutCollection LayoutGraph(DungeonGraph const& iGraph, Random& iRand);
+   EXL_ENGINE_API LayoutCollection LayoutGraph(ES_RuleSystem::Graph const& iGraph, Random& iRand);
 }
 

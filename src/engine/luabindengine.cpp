@@ -47,14 +47,6 @@ namespace eXl
 
   static int GetPropertyData(lua_State* iState, bool iConst)
   {
-    //luabind::default_converter<GameDatabase*> converterSys;
-    //if (converterSys.match(iState, luabind::by_pointer<GameDatabase>(), -3) < 0)
-    //{
-    //  lua_pushliteral(iState, "Incorrect argument for archetype system");
-    //  Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
-    //  return lua_error(iState);
-    //}
-    
     luabind::default_converter<ObjectHandle> converterObject;
     if (converterObject.match(iState, luabind::by_value<ObjectHandle>(), -2) < 0)
     {
@@ -83,7 +75,7 @@ namespace eXl
     ObjectHandle obj = converterObject.to_cpp(iState, luabind::by_value<ObjectHandle>(), -2);
     PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
 
-    lua_pop(iState, 3);
+    lua_pop(iState, 2);
     if (iConst)
     {
       ConstDynObject propSheet = sys->GetData(obj, prop);
@@ -593,11 +585,11 @@ namespace eXl
 
     lua_pushcfunction(iState, &GameDatabaseIter);
     luabind::object iterDbFun(luabind::from_stack(iState, -1));
-    _G["eXl"]["GameDatabase"]["Iterate"] = iterDbFun;
+    _G["eXl"]["GameDatabase"]["IterateMutable"] = iterDbFun;
     lua_pop(iState, 1);
     lua_pushcfunction(iState, &GameDatabaseConstIter);
     luabind::object iterConstDbFun(luabind::from_stack(iState, -1));
-    _G["eXl"]["GameDatabase"]["IterateConst"] = iterConstDbFun;
+    _G["eXl"]["GameDatabase"]["Iterate"] = iterConstDbFun;
     lua_pop(iState, 1);
     _G["eXl"]["PropertySheetName"] = _G["eXl"]["Name"];
 
@@ -606,7 +598,10 @@ namespace eXl
     {
       if(Type const* propType = world->GetConfig().m_Properties.GetTypeFromName(name))
       {
-        propType->RegisterLua(iState);
+        if(!propType->IsCoreType())
+        {
+          propType->RegisterLua(iState);
+        }
       }
     }
 

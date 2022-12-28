@@ -834,6 +834,23 @@ namespace eXl
       return Path();
     }
 
+    Resource::UUID GetResourceAt(Path const& iPath)
+    {
+      std::error_code ec;
+      Path sanitizedPath = Filesystem::absolute(Filesystem::canonical(iPath));
+      if (sanitizedPath.empty())
+      {
+        return Resource::UUID();
+      }
+
+      auto iter = GetImpl().m_PathToEntry.find(ToString(sanitizedPath));
+      if( iter != GetImpl().m_PathToEntry.end())
+      {
+        return iter->second->m_Header.m_ResourceId;
+      }
+      return Resource::UUID();
+    }
+
     Err SetPath(Resource* iRsc, Path const& iPath)
     {
       if (!iRsc)

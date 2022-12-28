@@ -68,6 +68,7 @@ namespace eXl
     EXL_CORE_API Resource* LoadExpectedType(Path const& iPath, const ResourceLoaderName& iExpectedLoader);
     EXL_CORE_API Resource* Load(const char* iPath, ResourceLoaderName* oLoader = nullptr);
     EXL_CORE_API Path GetPath(Resource::UUID const& iUUID);
+    EXL_CORE_API Resource::UUID GetResourceAt(Path const& iPath);
     EXL_CORE_API Err SetPath(Resource* iRsc, Path const& iPath);
     EXL_CORE_API Err SaveTo(Resource* iRsc, Path const& iPath);
     EXL_CORE_API Err Save(Resource* iRsc);

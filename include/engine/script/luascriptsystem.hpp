@@ -35,6 +35,8 @@ namespace eXl
     LuaScriptSystem();
     ~LuaScriptSystem();
 
+    void SetExternalState(lua_State* iExternal);
+
     void Register(World& iWorld) override;
     void Reload();
 

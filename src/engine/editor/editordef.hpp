@@ -4,6 +4,7 @@
 #include <core/resource/resource.hpp>
 #include <core/type/dynobject.hpp>
 #include <core/type/typetraits.hpp>
+#include <core/resource/resource.hpp>
 
 #define DEFINE_EDITOR_TYPE(Type) DECLARE_TYPE_EX(eXl::Type, eXl__##Type, )
 

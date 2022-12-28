@@ -221,12 +221,59 @@ namespace eXl
     return false;
   }
 
-  DocumentState* ResourceEditorHandler::CreateNewDocument()
+  DocumentState* ResourceEditorHandler::OpenOrCreateDocument()
+  {
+    QString resourceLoaderName = m_Loader.c_str();
+    QString title("Save as ");
+    title.append(resourceLoaderName);
+
+    QString file = QFileDialog::getSaveFileName(nullptr, title,
+      QString::fromStdString(EditorState::GetProjectDirectory().string()),
+      "Resource file (*.eXlAsset)");
+
+    Path newResourcePath(file.toStdString());
+    if (Filesystem::exists(newResourcePath))
+    {
+      Resource::UUID rsc = ResourceManager::GetResourceAt(newResourcePath);
+      if (rsc.IsValid()) 
+      {
+        if (ResourceManager::GetHeader(rsc)->m_LoaderName == m_Loader)
+        {
+          return EditorState::OpenDocument(rsc);
+        }
+        else
+        {
+          LOG_ERROR << "Path " << newResourcePath.string() << " is not of type " << m_Loader << "\n";
+          return nullptr;
+        }
+      }
+    }
+
+    return CreateDocumentAt(newResourcePath);
+  }
+
+  DocumentState* ResourceEditorHandler::CreateDocumentAt(Path const& newResourcePath)
   {
     ResourceLoader* loader = ResourceManager::GetLoader(m_Loader);
     eXl_ASSERT(loader != nullptr);
-    eXl_ASSERT(loader->CanCreateDefaultResource());
+    if (!IsInProjectFolder(newResourcePath))
+    {
+      LOG_ERROR << "Path " << newResourcePath.string() << " is not contained in the project folder" << "\n";
+      return nullptr;
+    }
 
+    Path newResourceDir = Filesystem::absolute(Filesystem::canonical(newResourcePath.parent_path()));
+    Path resourceName = newResourcePath.filename();
+    resourceName.replace_extension();
+
+    Resource* newResource = loader->CreateAt(newResourceDir, ToString(resourceName));
+    DocumentState* document = new DocumentState(*newResource);
+
+    return document;
+  }
+
+  DocumentState* ResourceEditorHandler::CreateNewDocument()
+  {
     QString resourceLoaderName = m_Loader.c_str();
     QString title("New ");
     title.append(resourceLoaderName);
@@ -242,20 +289,7 @@ namespace eXl
       return nullptr;
     }
 
-    if (!IsInProjectFolder(newResourcePath))
-    {
-      LOG_ERROR << "Path " << newResourcePath.string() << " is not contained in the project folder" << "\n";
-      return nullptr;
-    }
-
-    Path fileName = newResourcePath.filename();
-    fileName.replace_extension();
-
-    String resourceName(fileName.string().c_str());
-    Resource* newResource = loader->Create(resourceName);
-    DocumentState* document = new DocumentState(*newResource);
-
-    return document;
+    return CreateDocumentAt(newResourcePath);
   }
 
   bool EditorState::SaveProject()
@@ -408,6 +442,31 @@ namespace eXl
     }
 
     return newDoc;
+  }
+
+  DocumentState* EditorState::OpenSaveResource(ResourceLoaderName iName)
+  {
+    auto iter = s_ResourHandlers.find(iName);
+    if (iter == s_ResourHandlers.end())
+    {
+      LOG_ERROR << "Unknown resource kind : " << iName.get() << "\n";
+      return nullptr;
+    }
+
+    ResourceEditorHandler* handler = iter->second;
+    DocumentState* openedDoc = handler->OpenOrCreateDocument();
+    if (openedDoc == nullptr)
+    {
+      return nullptr;
+    }
+    Resource::UUID rsc = openedDoc->GetResource()->GetHeader().m_ResourceId;
+    if (openedDoc && s_OpenedDocuments.count(rsc) == 0)
+    {
+      s_OpenedDocuments.insert(std::make_pair(rsc, openedDoc));
+      s_ProjectResources->OnResourceCreated(openedDoc->GetResource());
+    }
+
+    return openedDoc;
   }
 
   DocumentState* EditorState::GetOpenedDocument(Resource::UUID const& iUUID)

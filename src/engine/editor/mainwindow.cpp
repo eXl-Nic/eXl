@@ -44,9 +44,10 @@
 #include <editor/archetypeeditor.hpp>
 #include <editor/mapeditor/mapeditor.hpp>
 #include <editor/projecteditor.hpp>
-#include <editor/scripteditor.hpp>
-#include <editor/functionlibraryeditor.hpp>
-#include <editor/coroutineeditor.hpp>
+#include <editor/script/scripteditor.hpp>
+#include <editor/script/functionlibraryeditor.hpp>
+#include <editor/script/coroutineeditor.hpp>
+#include <editor/model/modeleditor.hpp>
 #include <editor/mcmcmodeleditor.hpp>
 #include <engine/gfx/tileset.hpp>
 
@@ -268,6 +269,7 @@ namespace eXl
     EditorState::AddResourceHandler(&LuaCoroutineEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&MCMCModelEditor::GetEditorHandler());
     EditorState::AddResourceHandler(&GraphEditor::GetEditorHandler());
+    EditorState::AddResourceHandler(&ModelEditor::GetEditorHandler());
 
     connect(ui->actionNewProject, &QAction::triggered, this, &MainWindow::newProject);
     connect(ui->actionOpenProject, &QAction::triggered, this, &MainWindow::openProject);

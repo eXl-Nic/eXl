@@ -19,9 +19,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+  class Archetype;
+
   struct ObjectInfo
   {
     String m_DisplayName;
+    Archetype const* m_Archetype = nullptr;
     uint64_t m_PersistentId;
     uint32_t m_Components = 0;
     bool m_PendingDeletion = false;
@@ -290,6 +293,11 @@ namespace eXl
     uint64_t GetElapsedTime() const { return m_ElapsedTimestamp; }
 
     ProfilingState const& GetProfilingState() const { return m_Profiling; }
+
+    template <typename Functor>
+    void ForEachObject(Functor&& iFun) const {
+      m_Objects.Iterate(iFun);
+    }
 
   protected:
     void FlushObjectsToDelete();

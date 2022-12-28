@@ -5,10 +5,11 @@
 
 namespace eXl
 {
+  class GraphEditor;
   class GraphSimulateWidget : public QWidget
   {
   public:
-    GraphSimulateWidget(QWidget* iParent, RewriteSystem& iSys);
+    GraphSimulateWidget(GraphEditor* iParent, RewriteSystem& iSys);
     ~GraphSimulateWidget();
     void SetSelectedRule(String const&);
 

@@ -51,6 +51,7 @@ namespace eXl
     AbilitySystem* abilities;
     ProjectileSystem* projectiles;
     TimerHandle initTimer;
+    lua_State* externalState = nullptr;
 
     double lastRenderTime = 0;
 
@@ -251,6 +252,15 @@ namespace eXl
     m_Impl->gfxSys = m_Impl->world.AddSystem(std::make_unique<GfxSystem>(*m_Impl->transforms));
     m_Impl->world.AddSystem(std::make_unique<GUISystem>());
 #endif
+    return *this;
+  }
+
+  WorldState& WorldState::WithLuaState(lua_State* iState)
+  {
+#ifdef EXL_LUA
+    m_Impl->world.GetSystem<LuaScriptSystem>()->SetExternalState(iState);
+#endif
+
     return *this;
   }
 

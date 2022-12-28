@@ -35,7 +35,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
   Archetype* Archetype::Create(Path const& iDir, String const& iName)
   {
-    return ArchetypeLoader::Get().Create(iDir, iName);
+    return ArchetypeLoader::Get().CreateAt(iDir, iName);
   }
 #endif
 

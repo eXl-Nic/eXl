@@ -3,6 +3,8 @@
 #include <engine/script/luascriptsystem.hpp>
 #include <core/type/tagtype.hpp>
 #include <engine/game/commondef.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/property_map/function_property_map.hpp>
 
 namespace eXl
 {
@@ -14,6 +16,11 @@ namespace eXl
     IMPLEMENT_TAG_TYPE(MatchWrapper);
     IMPLEMENT_TAG_TYPE(RewriteWrapper);
     IMPLEMENT_TAG_TYPE(GraphFactoryWrapper);
+
+    PropertySheetName RoomLayoutInfo::PropertyName() {
+      static PropertySheetName s_Name("RoomLayoutInfo");
+      return s_Name;
+    }
     
     void LevelNodeData::CopyNode(ES_RuleSystem::GraphVtx iVtx) const
     {
@@ -59,6 +66,137 @@ namespace eXl
       }
 
       return edges;
+    }
+
+    struct GraphFilter
+    {
+      GraphFilter()
+      {}
+
+      bool operator()(const ES_RuleSystem::GraphVtx& e) const
+      {
+        return m_ValidVtx ? m_ValidVtx->count(e) > 0 : true;
+      }
+
+      bool operator()(const ES_RuleSystem::GraphEdge& e) const
+      {
+        return m_ValidEdge ? m_ValidEdge->count(e) > 0 : true;
+      }
+      
+      UnorderedSet<ES_RuleSystem::GraphVtx> const* m_ValidVtx = nullptr;
+      UnorderedSet<ES_RuleSystem::GraphEdge> const* m_ValidEdge = nullptr;
+    };
+
+    Vector<ObjectHandle> GraphWrapper::FindPath(ObjectHandle iStart, ObjectHandle iGoal, luabind::object iNodeFilter, luabind::object iEdgeFilter) const
+    {
+      auto dummyWhFunc = [](ES_RuleSystem::GraphEdge) { return 1.0; };
+
+      LevelNodeData const* startData = m_NodeData.Get(iStart);
+      eXl_ASSERT_REPAIR_RET(startData != nullptr, Vector<ObjectHandle>());
+
+      LevelNodeData const* goalData = m_NodeData.Get(iGoal);
+      eXl_ASSERT_REPAIR_RET(goalData != nullptr, Vector<ObjectHandle>());
+
+      Vector<ES_RuleSystem::GraphVtx> p(boost::num_vertices(m_Graph), startData->m_Vtx);
+      Vector<float> d(boost::num_vertices(m_Graph));
+      Vector<ObjectHandle> path;
+      ES_RuleSystem::GraphVtx curVtx = goalData->m_Vtx;
+      ES_RuleSystem::GraphVtx prevVtx = curVtx;
+
+      if (iNodeFilter.is_valid() || iEdgeFilter.is_valid()) 
+      {
+        GraphFilter filter;
+        UnorderedSet<ES_RuleSystem::GraphVtx> validVtx;
+        UnorderedSet<ES_RuleSystem::GraphEdge> validEdge;
+        
+        if (iNodeFilter)
+        {
+          LuaStateHandle curState = LuaManager::GetCurrentState();
+          eXl_ASSERT(curState.GetState() != nullptr);
+          m_NodeData.Iterate([&](ObjectHandle iHandle, const LevelNodeData& iNodeData) {
+              auto callCtx = curState.PrepareCall(iNodeFilter);
+              callCtx.PushArgs(iHandle);
+              auto callRes = callCtx.Call(1);
+              if (callRes && *callRes == 1) {
+                lua_State* state = curState.GetState();
+                unsigned int boolVal = lua_toboolean(state, lua_gettop(state));
+                if (boolVal != 0) {
+                  validVtx.insert(iNodeData.m_Vtx);
+                }
+              }
+            }
+          );
+          filter.m_ValidVtx = &validVtx;
+        }
+        if (iEdgeFilter)
+        {
+          LuaStateHandle curState = LuaManager::GetCurrentState();
+          eXl_ASSERT(curState.GetState() != nullptr);
+          m_EdgeData.Iterate([&](ObjectHandle iHandle, const LevelEdgeData& iEdgeData) {
+            auto callCtx = curState.PrepareCall(iEdgeFilter);
+            callCtx.PushArgs(iHandle);
+            auto callRes = callCtx.Call(1);
+            if (callRes && *callRes == 1) {
+              lua_State* state = curState.GetState();
+              unsigned int boolVal = lua_toboolean(state, lua_gettop(state));
+              if (boolVal != 0) {
+                validEdge.insert(iEdgeData.m_Edge);
+              }
+            }
+            });
+          filter.m_ValidEdge = &validEdge;
+        }
+
+        if (filter.m_ValidVtx) {
+          if (validVtx.count(startData->m_Vtx) == 0
+            || validVtx.count(goalData->m_Vtx) == 0) {
+            return Vector<ObjectHandle>();
+          }
+        }
+        
+        boost::filtered_graph<ES_RuleSystem::Graph, GraphFilter, GraphFilter> filteredGr(m_Graph, filter, filter);
+        auto filteredIndexMap = MakeIndexMap(filteredGr);
+        boost::dijkstra_shortest_paths(filteredGr, startData->m_Vtx,
+          boost::make_iterator_property_map(p.begin(), filteredIndexMap),
+          boost::make_iterator_property_map(d.begin(), filteredIndexMap),
+          boost::make_function_property_map<ES_RuleSystem::GraphEdge>(dummyWhFunc),
+          filteredIndexMap,
+          std::less<float>(), boost::closed_plus<float>(), Mathf::MaxReal(), 0.0, boost::dijkstra_visitor<boost::null_visitor>());
+
+        do
+        {
+          LevelNodeData const* targetNodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_Graph, curVtx));
+          path.push_back(targetNodeData->m_Object);
+          prevVtx = curVtx;
+          curVtx = p[filteredIndexMap[curVtx]];
+        } while (prevVtx != curVtx);
+      }
+      else
+      {
+        auto const& idxMap = boost::get(boost::vertex_index, m_Graph);
+        boost::dijkstra_shortest_paths(m_Graph, startData->m_Vtx,
+          boost::make_iterator_property_map(p.begin(), idxMap),
+          boost::make_iterator_property_map(d.begin(), idxMap),
+          boost::make_function_property_map<ES_RuleSystem::GraphEdge>(dummyWhFunc),
+          idxMap,
+          std::less<float>(), boost::closed_plus<float>(), Mathf::MaxReal(), 0.0, boost::dijkstra_visitor<boost::null_visitor>());
+
+        do
+        {
+          LevelNodeData const* targetNodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_Graph, curVtx));
+          path.push_back(targetNodeData->m_Object);
+          prevVtx = curVtx;
+          curVtx = p[idxMap[curVtx]];
+        } while (prevVtx != curVtx);
+      }
+      
+      if (path.empty() || path.back() != iStart)
+      {
+        return Vector<ObjectHandle>();
+      }
+
+      std::reverse(path.begin(), path.end());
+      return path;
     }
 
     ObjectHandle GraphWrapper::GetTargetNode(ObjectHandle iSource, ObjectHandle iEdge) const
@@ -218,6 +356,7 @@ namespace eXl
           .def("GetTargetNode", &GraphWrapper::GetTargetNode)
           .def("GetNodeTag", &GraphWrapper::GetNodeTag)
           .def("GetEdgeTag", &GraphWrapper::GetEdgeTag)
+          .def("FindPath", &GraphWrapper::FindPath)
           ,
 
           luabind::class_<MatchWrapper>("MatchWrapper")
@@ -251,7 +390,14 @@ namespace eXl
       functions.insert(std::make_pair("PostRewrite", FunDesc::Create<void(RewriteWrapper&, GraphFactoryWrapper)>()));
 
       EngineCommon::GetBaseEvents().m_Interfaces.insert(std::make_pair("RewriteRule", functions));
+
+      functions.clear();
+      functions.insert(std::make_pair("ProcessRoom", FunDesc::Create<Vector<AABB2Di>(ObjectHandle, Vector<AABB2Di>)>()));
+
+      EngineCommon::GetBaseEvents().m_Interfaces.insert(std::make_pair("LayoutPostProcess", functions));
+
       ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystem::StaticRtti(), RewriteSystem::GetType());
+      EngineCommon::GetBaseProperties().RegisterPropertySheet<RoomLayoutInfo>("RoomLayoutInfo", true);
 
       LuaManager::AddRegFun(&BindGraphWrappers);
     }
@@ -259,7 +405,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
     RewriteSystem* RewriteSystem::Create(Path const& iDir, String const& iName)
     {
-      return RewriteSystemLoader::Get().Create(iDir, iName);
+      return RewriteSystemLoader::Get().CreateAt(iDir, iName);
     }
 #endif
 
@@ -305,6 +451,10 @@ namespace eXl
 
       iStreamer.PushKey("Rules");
       iStreamer.HandleMapSorted(m_Rules);
+      iStreamer.PopKey();
+
+      iStreamer.PushKey("CurrentSequence");
+      iStreamer &= m_CurSequence;
       iStreamer.PopKey();
 
       iStreamer.EndStruct();

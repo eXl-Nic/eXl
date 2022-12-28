@@ -152,7 +152,7 @@ namespace eXl
     Impl(LuaScriptSystem& iSys, World& iWorld)
       : m_Sys(iSys)
       , m_World(iWorld)
-      , m_LuaWorld(LuaManager::CreateWorld(&iSys))
+      , m_LuaWorld(LuaManager::CreateWorld(&iSys, nullptr))
       , m_ObjectsScripts(iWorld)
     {
 
@@ -221,6 +221,7 @@ namespace eXl
     LuaScriptSystem& m_Sys;
     World& m_World;
     LuaWorld m_LuaWorld;
+    lua_State* m_ExtState = nullptr;
 
     T_CoroutineManager<LuaCoroutineHandler> m_Coroutines;
   };
@@ -233,6 +234,12 @@ namespace eXl
   LuaScriptSystem::~LuaScriptSystem()
   {
     m_Impl.reset();
+  }
+
+  void LuaScriptSystem::SetExternalState(lua_State* iExternal)
+  {
+    m_Impl->m_ExtState = iExternal;
+    Reload();
   }
 
   void LuaScriptSystem::Register(World& iWorld)
@@ -261,7 +268,7 @@ namespace eXl
     m_Scripts.Reset();
 
     m_LuaWorld.~LuaWorld();
-    new(&m_LuaWorld) LuaWorld(LuaManager::CreateWorld(&m_Sys));
+    new(&m_LuaWorld) LuaWorld(LuaManager::CreateWorld(&m_Sys, m_ExtState));
 
     
     for (auto const& loadedScript : temp)
@@ -445,20 +452,21 @@ namespace eXl
       return ScriptHandle();
     }
 
-    if (!scriptObject["namespace"])
+    luabind::object libNamespaceRef = scriptObject["namespace"];
+    luabind::object functionsTable = scriptObject["functions"];
+    
+    if (!libNamespaceRef.is_valid())
     {
       LOG_ERROR << "Library " << iLibrary.GetName() << " missing a namespace in the returned table" << "\n";
       return ScriptHandle();
     }
 
-    if (!scriptObject["functions"])
+    if (!functionsTable.is_valid())
     {
       LOG_ERROR << "Library " << iLibrary.GetName() << " missing a function table" << "\n";
       return ScriptHandle();
     }
 
-    luabind::object libNamespaceRef = scriptObject["namespace"];
-    luabind::object functionsTable = scriptObject["functions"];
     String libNamespace = luabind::to_string(libNamespaceRef).c_str();
     
     luabind::object libScope = luabind::globals(scriptObject.interpreter());
@@ -695,9 +703,14 @@ namespace eXl
 
       if (numRet == 1)
       {
-        oOutput.SetType(desc->GetRetType(), desc->GetRetType()->Alloc(), true);
+        if(!oOutput.IsValid())
+        {
+          oOutput.SetType(desc->GetRetType(), desc->GetRetType()->Alloc(), true);
+        }
         uint32_t index = lua_gettop(state);
-        Err conversion = desc->GetRetType()->ConvertFromLua_Uninit(state, index, oOutput.GetBuffer());
+        //Err conversion = desc->GetRetType()->ConvertFromLua_Uninit(state, index, oOutput.GetBuffer());
+        uint8_t const* arg;
+        Err conversion = LuaManager::ArgFromLua(state, index, desc->GetRetType(), oOutput, arg);
         eXl_ASSERT_REPAIR_RET(conversion, void());
       }
     }

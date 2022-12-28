@@ -29,6 +29,7 @@ namespace eXl
   public:
 
     virtual DocumentState* CreateNewDocument();
+    virtual DocumentState* OpenOrCreateDocument();
     virtual ResourceEditor* CreateEditor(QWidget* iParent, DocumentState* iDoc) = 0;
 
     ResourceLoaderName GetLoaderName() const { return m_Loader; }
@@ -36,6 +37,9 @@ namespace eXl
     static bool IsInProjectFolder(Path const& iPath);
 
   protected:
+
+    virtual DocumentState* CreateDocumentAt(Path const&);
+
     ResourceEditorHandler(ResourceLoaderName iName)
       : m_Loader(iName)
     {}
@@ -135,6 +139,7 @@ namespace eXl
     static Vector<ResourceLoaderName> GetAllRegisteredHandlers();
 
     static DocumentState* CreateResource(ResourceLoaderName iName, QWidget* iParent = nullptr);
+    static DocumentState* OpenSaveResource(ResourceLoaderName iName);
     static DocumentState* GetOpenedDocument(Resource::UUID const& iUUID);
     static DocumentState* OpenDocument(Resource::UUID const& iUUID);
 
@@ -163,46 +168,6 @@ signals:
     EditorHandler_T()
       : ResourceEditorHandler(Resource::StaticLoaderName())
     {}
-
-    DocumentState* CreateNewDocument() override
-    {
-      QString resourceLoaderName = m_Loader.c_str();
-      QString title("New ");
-      title.append(QString::fromUtf8(Resource::StaticLoaderName().c_str()));
-
-      QString file = QFileDialog::getSaveFileName(nullptr, title,
-        QString::fromStdString(EditorState::GetProjectDirectory().string()),
-        "Resource file (*.eXlAsset)");
-
-      if (file.isEmpty())
-      {
-        return nullptr;
-      }
-
-      Path newResourcePath(file.toStdString());
-      if (Filesystem::exists(newResourcePath))
-      {
-        LOG_ERROR << "Cannot create new resource over already exising one" << "\n";
-        return nullptr;
-      }
-
-      if (!IsInProjectFolder(newResourcePath))
-      {
-        LOG_ERROR << "Path " << newResourcePath.string() << " is not contained in the project folder" << "\n";
-        return nullptr;
-      }
-
-      Path newResourceDir = Filesystem::absolute(Filesystem::canonical(newResourcePath.parent_path()));
-      Path resourceName = newResourcePath.filename();
-      resourceName.replace_extension();
-      Resource* newResource = Resource::Create(newResourceDir, resourceName.string().c_str());
-      if (newResource)
-      {
-        DocumentState* document = new DocumentState(*newResource);
-        return document;
-      }
-      return nullptr;
-    }
 
     ResourceEditor* CreateEditor(QWidget* iParent, DocumentState* iDoc) override
     {

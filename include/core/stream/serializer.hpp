@@ -247,13 +247,12 @@ private: \
         {
           return iPred(*iVal1, *iVal2);
         });
-
+      Err SequenceStarted = m_Streamer->BeginSequence();
       for (T const* value : sortedValues)
       {
         m_Streamer->Write(value);
       }
-
-      return Err::Success;
+      return m_Streamer->EndSequence();
     }
 
     template <typename T,

@@ -148,7 +148,7 @@ namespace eXl
 
     EXL_CORE_API void Reset();
 
-    EXL_CORE_API LuaWorld CreateWorld(RttiObject* iUserPtr);
+    EXL_CORE_API LuaWorld CreateWorld(RttiObject* iUserPtr, lua_State* iExtState);
 
     EXL_CORE_API luabind::detail::class_rep* GetClassRepFromType(lua_State* iState, Type const* iType);
     EXL_CORE_API void PushRefToLua(lua_State*, Type const* iType, void* iObject, bool iIsConst);
@@ -158,7 +158,8 @@ namespace eXl
     EXL_CORE_API void PushArgToLua(lua_State*, Type const* iType, void const* iObject);
     EXL_CORE_API void PushCopyToLua(lua_State*, Type const* iType, void const* iObject);
 
-    EXL_CORE_API Err ArgsFromLua(lua_State*, uint32_t, Vector<Type const*> iArgs, DynObject& oArgsBuffer, Vector<uint8_t const*>& oArgs);
+    EXL_CORE_API Err ArgFromLua(lua_State*, int32_t, Type const* iArg, DynObject& oBuffer, uint8_t const*& oArg);
+    EXL_CORE_API Err ArgsFromLua(lua_State*, int32_t, Vector<Type const*> iArgs, DynObject& oArgsBuffer, Vector<uint8_t const*>& oArgs);
 
     EXL_CORE_API LuaStateHandle GetHandle(lua_State* iState);
 

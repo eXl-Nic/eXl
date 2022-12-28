@@ -40,8 +40,8 @@ namespace eXl
       }
     }
 
-    template <typename T>
-    void RegisterPropertySheet() { return RegisterPropertySheet(T::PropertyName(), TypeManager::GetType<T>()); }
+    //template <typename T>
+    //void RegisterPropertySheet() { return RegisterPropertySheet(T::PropertyName(), TypeManager::GetType<T>()); }
     void RegisterPropertySheet(PropertySheetName, Type const*);
     void RegisterPropertySheet(PropertySheetName, Type const*, std::function<SparseGameDataAllocator* (World&)> iFactory);
     void RegisterPropertySheet(PropertySheetName, Type const*, std::function<DenseGameDataAllocator* (World&)> iFactory);
@@ -89,6 +89,7 @@ namespace eXl
     void ForgetArchetype(Archetype const&);
     DynObject ModifyData(ObjectHandle iObject, PropertySheetName iName);
     ConstDynObject GetData(ObjectHandle iObject, PropertySheetName iName);
+    ObjectTableHandle_Base GetDataHandle(ObjectHandle iObject, PropertySheetName iName) const;
 
     using ConstIterRange = std::pair<GameDataAllocatorBase::ConstIterator, GameDataAllocatorBase::ConstIterator>;
     using IterRange = std::pair<GameDataAllocatorBase::Iterator, GameDataAllocatorBase::Iterator>;
@@ -110,8 +111,6 @@ namespace eXl
       return static_cast<T const*>(ModifyData(iObject, iName).CastBuffer<T>());
     }
 
-  protected:
-
     struct ArchetypeData
     {
       ArchetypeData();
@@ -127,6 +126,9 @@ namespace eXl
       UnorderedMap<PropertySheetName, PropEntry> m_Data;
     };
 
+    ArchetypeData const* TryGetArchetypeData(Archetype const&);
+
+  protected:
     ArchetypeData const& GetOrCreateArchetypeData(Archetype const&);
 
   public:

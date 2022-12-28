@@ -24,6 +24,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/game/characteranimation.hpp>
 #include <engine/pathfinding/navigator.hpp>
 #include <engine/gui/fontresource.hpp>
+#include <engine/gfx/modelrsc.hpp>
 
 #include <engine/gfx/gfxsystem.hpp>
 #include <engine/gfx/gfxcomponent.hpp>
@@ -301,6 +302,7 @@ namespace eXl
       LuaFunctionLibrary::Init();
       LuaEventHandler::Init();
       LuaCoroutine::Init();
+      ModelResource::Init();
 
       Register_ENGINE_Types();
 #ifdef EXL_LUA

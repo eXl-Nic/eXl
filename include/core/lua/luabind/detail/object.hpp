@@ -111,7 +111,7 @@ namespace luabind {
 
 		inline bool object::is_valid() const
 		{
-			return m_handle.interpreter() != 0;
+			return m_handle.interpreter() != 0 ;
 		}
 
 	} // namespace adl

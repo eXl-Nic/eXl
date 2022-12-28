@@ -116,7 +116,7 @@ namespace eXl
 
     ~LuaImplState()
     {
-      if (m_State != nullptr)
+      if (m_State != nullptr && !IsExternalState())
       {
         lua_close(m_State);
       }
@@ -124,7 +124,7 @@ namespace eXl
 
     void CloseState()
     {
-      if (m_State != nullptr)
+      if (m_State != nullptr && !IsExternalState())
       {
         lua_close(m_State);
         m_State = nullptr;
@@ -139,6 +139,7 @@ namespace eXl
     //ConversionMap& GetConversionMap() { return m_ConvertMap; }
 
     RttiObject* GetUserPtr() const { return m_UserPtr; }
+    bool IsExternalState() const { return m_ExternalState; }
 
     AString m_PrintOutput;
     AString m_ErrOutput;
@@ -147,10 +148,11 @@ namespace eXl
 
   private:
 
-    friend LuaWorld LuaManager::CreateWorld(RttiObject*);
+    friend LuaWorld LuaManager::CreateWorld(RttiObject*, lua_State*);
 
     unsigned int m_InLua;
     lua_State* m_State;
+    bool m_ExternalState;
 
     RttiObject* m_UserPtr;
     
@@ -330,14 +332,19 @@ namespace eXl
       void BuildState(LuaStateHandle iStateHandle)
       {
         lua_State* iState = iStateHandle.GetState();
-        luaL_openlibs(iState);
+        if (!iStateHandle.GetImpl()->IsExternalState())
+        {
+          luaL_openlibs(iState);
+        }
         luabind::open(iState);
         luabind::bind_class_info(iState);
         luabind::set_pcall_callback(&pushErrorHandler);
-
-        lua_getglobal(iState, "_G");
-        luaL_setfuncs(iState, printlib, 0);
-        lua_pop(iState, 1);
+        if (!iStateHandle.GetImpl()->IsExternalState())
+        {
+          lua_getglobal(iState, "_G");
+          luaL_setfuncs(iState, printlib, 0);
+          lua_pop(iState, 1);
+        }
 
         lua_pushcfunction(iState, &onError);
         unsigned int stackTop = lua_gettop(iState);
@@ -657,49 +664,6 @@ namespace eXl
 
     }
 
-    namespace detail
-    {
-
-      //void DoFile(LuaFile* iFile,lua_State* iState)
-      //{
-      //  lua_State* myState = nullptr;
-      //  if(iState==nullptr)
-      //    myState = GetLocalState_Impl();
-      //  else
-      //    myState = iState;
-      //  {
-      //    std::vector<DataVault*>::iterator iter = sources.begin();
-      //    std::vector<DataVault*>::iterator iterEnd = sources.end();
-      //  
-      //    bool found = false;
-      //    for(;iter!=iterEnd;iter++)
-      //    {
-      //      StorageInfo info;
-      //      found = (*iter)->GetStorage(iFile->GetPath(),info);
-      //      if(found)break;
-      //    }
-      //    InputStream* stream = (*iter)->OpenStorage(iFile->GetPath());
-      //    size_t size = stream->GetSize();
-      //    char* source = (char*)eXl_ALLOC(size+1);
-      //    stream->Read(0,size,source);
-      //    source[size]='\0';
-      //    //int res = luaL_dofile(iState,iFile.c_str());
-      //    //int res = luaL_dostring(myState,source);
-      //    lua_pushcfunction(myState,&onError);
-      //    int res = luaL_loadstring(myState,source);
-      //    if(res == 0)
-      //      res = lua_pcall(myState,0,LUA_MULTRET,-2);
-      //    else
-      //      Lua_Error(myState,res,std::string("executing ")+iFile->GetName());
-      //    lua_pop(myState,1);
-      //    eXl_FREE(source);
-      //    eXl_DELETE stream;
-      //  }
-      //  if(iState == nullptr)
-      //  //  EndLocalState();
-      //}
-    }
-
     Err DoString(AString const& iCode, AString& oStr,LuaStateHandle& iStat, luabind::object& oRet)
     {
       oStr.clear();
@@ -845,14 +809,22 @@ namespace eXl
   }
 
 
-  LuaWorld LuaManager::CreateWorld(RttiObject* iUserPtr)
+  LuaWorld LuaManager::CreateWorld(RttiObject* iUserPtr, lua_State* iExtState)
   {
     auto newState = std::make_unique<LuaImplState>(iUserPtr);
-
-    newState->m_State = lua_newstate(&LuaManager::l_alloc, nullptr);
+    if (iExtState == nullptr) 
+    {
+      newState->m_State = luaL_newstate();
+      newState->m_ExternalState = false;
+    }
+    else
+    {
+      newState->m_State = iExtState;
+      newState->m_ExternalState = true;
+    }
     
     LuaWorld newWorld(std::move(newState));
-
+    
     BuildState(LuaStateHandle(newWorld.GetState()));
 
     return newWorld;
@@ -1096,37 +1068,46 @@ namespace eXl
     instance->set_instance(holder);
   }
 
-  Err LuaManager::ArgsFromLua(lua_State* iState, uint32_t iOffset, Vector<Type const*> iArgs, DynObject& oArgsBuffer, Vector<uint8_t const*>& oArgs)
+  Err LuaManager::ArgFromLua(lua_State* iState, int32_t iIndex, Type const* iArg, DynObject& oBuffer, uint8_t const*& oArg)
+  {
+    luabind::detail::class_rep* cls = GetClassRepFromType(iState, iArg);
+
+    if (iArg->IsCoreType() && cls == nullptr)
+    {
+      uint32_t idx = iIndex;
+      Err res = iArg->ConvertFromLua_Uninit(iState, idx, oBuffer.GetBuffer());
+      if (!res)
+      {
+        return Err::Failure;
+      }
+      oArg = (uint8_t const*)oBuffer.GetBuffer();
+      return Err::Success;
+    }
+    else
+    {
+      luabind::object arg(luabind::from_stack(iState, iIndex));
+      luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(arg);
+      std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(iArg));
+      if (res.first == nullptr)
+      {
+        return Err::Failure;
+      }
+      oArg = (uint8_t const*)res.first;
+      void* destBuffer = oBuffer.GetBuffer();
+      return iArg->Copy(oArg, destBuffer);
+    }
+  }
+
+  Err LuaManager::ArgsFromLua(lua_State* iState, int32_t iOffset, Vector<Type const*> iArgs, DynObject& oArgsBuffer, Vector<uint8_t const*>& oArgs)
   {
     for (uint32_t i = 0; i < iArgs.size(); ++i)
     {
       Type const* argType = iArgs[i];
-
-      luabind::detail::class_rep* cls = GetClassRepFromType(iState, argType);
-      
-      if (argType->IsCoreType() && cls == nullptr)
-      {
-        DynObject ref;
-        oArgsBuffer.GetField(i, ref);
-        uint32_t idx = i + iOffset;
-        Err res = argType->ConvertFromLua_Uninit(iState, idx, ref.GetBuffer());
-        if (!res)
-        {
-          return Err::Failure;
-        }
-        oArgs.push_back((uint8_t const*)ref.GetBuffer());
-      }
-      else
-      {
-        luabind::object arg(luabind::from_stack(iState, -int(i + iOffset)));
-        luabind::detail::object_rep* self = luabind::touserdata<luabind::detail::object_rep>(arg);
-        std::pair<void*, int> res = self->get_instance(luabind::detail::allocate_class_id(argType));
-        if (res.first == nullptr)
-        {
-          return Err::Failure;
-        }
-        oArgs.push_back((uint8_t const*)res.first);
-      }
+      DynObject ref;
+      oArgsBuffer.GetField(i, ref);
+      uint8_t const* arg;
+      ArgFromLua(iState, -iOffset + i, argType, ref, arg);
+      oArgs.push_back(arg);
     }
     return Err::Success;
   }

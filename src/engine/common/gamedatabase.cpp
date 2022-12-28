@@ -161,6 +161,17 @@ namespace eXl
       return;
     }
 
+    ObjectInfo* info = m_World->TryGetObjectInfo(iObject);
+
+    if (info == nullptr) 
+    {
+      return;
+    }
+
+    eXl_ASSERT_REPAIR_RET(info->m_Archetype == nullptr, void())
+
+    m_World->GetObjectInfo(iObject).m_Archetype = iArchetype;
+
     ArchetypeData const& data = GetOrCreateArchetypeData(*iArchetype);
     for (auto const& entry : data.m_Data)
     {
@@ -264,6 +275,25 @@ namespace eXl
     return DynObject(alloc->m_Type, sheetData);
   }
 
+  ObjectTableHandle_Base GameDatabase::GetDataHandle(ObjectHandle iObject, PropertySheetName iName) const
+  {
+    auto iter = m_AllocatorSlot.find(iName);
+    if (iter == m_AllocatorSlot.end()
+      || !GetWorld().IsObjectValid(iObject))
+    {
+      return ObjectTableHandle_Base();
+    }
+
+    GameDataAllocatorBase const* alloc = m_Allocators[iter->second].GetAlloc();
+    uint32_t slot = alloc->GetSlot(iObject);
+    if (slot == -1)
+    {
+      return ObjectTableHandle_Base();
+    }
+
+    return alloc->GetDataFromSlot(slot);
+  }
+
   ConstDynObject GameDatabase::GetData(ObjectHandle iObject, PropertySheetName iName)
   {
     auto iter = m_AllocatorSlot.find(iName);
@@ -298,6 +328,16 @@ namespace eXl
 
     void* sheetData = dataTable->Get(dataHandle);
     return ConstDynObject(alloc->m_Type, sheetData);
+  }
+
+  GameDatabase::ArchetypeData const* GameDatabase::TryGetArchetypeData(Archetype const& iArchetype)
+  {
+    auto iter = m_ArchetypeData.find(&iArchetype);
+    if (iter == m_ArchetypeData.end())
+    {
+      return nullptr;
+    }
+    return &iter->second;
   }
 
   GameDatabase::ArchetypeData const& GameDatabase::GetOrCreateArchetypeData(Archetype const& iArchetype)

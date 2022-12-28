@@ -27,7 +27,7 @@ namespace eXl
 #ifdef EXL_RSC_HAS_FILESYSTEM
   MCMCModelRsc* MCMCModelRsc::Create(Path const& iDir, String const& iName)
   {
-    MCMCModelRsc* newModel = MCMCModelLoader::Get().Create(iDir, iName);
+    MCMCModelRsc* newModel = MCMCModelLoader::Get().CreateAt(iDir, iName);
 
     return newModel;
   }

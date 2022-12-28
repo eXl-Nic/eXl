@@ -256,6 +256,17 @@ namespace eXl
     uint32_t operator()(luabind::argument const& self_) const;
   };
 
+  struct array_resize
+  {
+    array_resize(ArrayType const* iType)
+      : m_Type(iType)
+    {}
+
+    ArrayType const* m_Type;
+
+    void operator()(luabind::argument const& self_, int iIndex) const;
+  };
+
   struct array_length_registration : luabind::detail::registration
   {
     array_length_registration(ArrayType const* iType)

@@ -2,22 +2,20 @@
 
 #include <QWidget>
 
-#include <engine/common/world.hpp>
-
-#include "editorstate.hpp"
+#include <editor/editorstate.hpp>
 
 namespace eXl
 {
-  class LuaEventHandler;
+  class LuaFunctionLibrary;
 
-  class LuaScriptEditor : public ResourceEditor
+  class LuaFunctionLibraryEditor : public ResourceEditor
   {
     Q_OBJECT
   public:
 
     static ResourceEditorHandler& GetEditorHandler();
 
-    LuaScriptEditor(QWidget* iParent, DocumentState* iArchetypeDoc);
+    LuaFunctionLibraryEditor(QWidget* iParent, DocumentState* iArchetypeDoc);
 
     void Cleanup() override;
 

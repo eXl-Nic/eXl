@@ -31,14 +31,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/polygon_def.hpp>
 
 #include <gen/graphutils.hpp>
+#include <core/random.hpp>
+
+
 namespace eXl
 {
+  IMPLEMENT_RTTI(NodeLayoutData);
+  IMPLEMENT_RTTI(EdgeLayoutData);
+
   using RoomIndexEntry = std::pair<AABB2Di, uint32_t>;
   using RoomIndex = boost::geometry::index::rtree<RoomIndexEntry, boost::geometry::index::linear<16, 4>>;
 
-  typedef DungeonGraph::Graph Graph;
-  typedef Graph::vertex_descriptor Vertex;
-  typedef Graph::edge_descriptor Edge;
+  
+  typedef ES_RuleSystem::Graph::vertex_descriptor LayoutVertex;
+  typedef ES_RuleSystem::Graph::edge_descriptor LayoutEdge;
 
   //struct NodeWithDegree
   //{
@@ -76,22 +82,23 @@ namespace eXl
     PhysicalNodesFilter()
     {}
 
-    PhysicalNodesFilter(DungeonGraph const& iGraph)
+    PhysicalNodesFilter(ES_RuleSystem::Graph const& iGraph)
       : m_Graph(&iGraph)
     {}
 
-    bool operator()(const DungeonGraph::GraphVtx& e) const
+    bool operator()(const LayoutVertex& e) const
     {
-      DungeonGraph::NodeProperties const* props = m_Graph->GetProperties(e);
-      return props->IsPhysical() && props->GetSize() > 0;
+      NodeLayoutData const* data = NodeLayoutData::DynamicCast(boost::get(boost::vertex_name, *m_Graph, e));
+      return data != nullptr && !data->m_Ignore && !data->m_PossibleRoomSize.empty();
     }
 
-    bool operator()(const DungeonGraph::GraphEdge& e) const
+    bool operator()(const LayoutEdge& e) const
     {
-      return m_Graph->GetProperties(e)->m_PhysicalConnection;
+      EdgeLayoutData const* data = EdgeLayoutData::DynamicCast(boost::get(boost::edge_name, *m_Graph, e));
+      return data != nullptr && data->m_Ignore == false;
     }
 
-    DungeonGraph const* m_Graph;
+    ES_RuleSystem::Graph const* m_Graph;
   };
 
   struct MSTFilter
@@ -99,7 +106,7 @@ namespace eXl
     MSTFilter()
     {}
 
-    MSTFilter(Set<Edge> const& iEdges)
+    MSTFilter(Set<LayoutEdge> const& iEdges)
       :m_Edges(&iEdges)
     {}
 
@@ -108,7 +115,7 @@ namespace eXl
     {
       return m_Edges->count(e) > 0;
     }
-    Set<Edge> const* m_Edges;
+    Set<LayoutEdge> const* m_Edges;
   };
 
   struct GraphFilter
@@ -116,46 +123,26 @@ namespace eXl
     GraphFilter()
     {}
 
-    GraphFilter(Set<Vertex> const& iVtx)
+    GraphFilter(Set<LayoutVertex> const& iVtx)
       :m_Vtx(&iVtx)
     {}
 
-    bool operator()(const Vertex& vtx) const
+    bool operator()(const LayoutVertex& vtx) const
     {
       return m_Vtx->count(vtx) > 0;
     }
-    Set<Vertex> const* m_Vtx;
+    Set<LayoutVertex> const* m_Vtx;
   };
 
   namespace
   {
 
-    int const s_DoorSize = 4;
-    int const s_MaxRoomSize = 5;
+    int const s_DoorSize = 1;
 
-    Vec2i SampleRoom(DungeonGraph const& iGraph, Vertex iVtx, Random& iRand)
+    Vec2i SampleRoom(ES_RuleSystem::Graph const& iGraph, LayoutVertex iVtx, Random& iRand)
     {
-      DungeonGraph::NodeProperties const* props = iGraph.GetProperties(iVtx);
-
-      Vec2i baseSize = Vec2i(iRand() % 10 + 4, iRand() % 10 + 4);
-
-      //uint32_t const roomSize = Mathi::Min(s_MaxRoomSize, props != nullptr ? props->GetSize() : 1);
-      //
-      //Vec2i baseSize = One<Vec2i>() * 2 * (roomSize + 1);
-      //
-      //switch(iRand() % 3)
-      //{
-      //case 0:
-      //  baseSize += One<Vec2i>() * Mathi::Max(roomSize / 4, 1);
-      //  break;
-      //case 1:
-      //  baseSize.m_Data[0] += roomSize / 2;
-      //  break;
-      //case 2:
-      //  baseSize.m_Data[1] += roomSize / 2;
-      //  break;
-      //}
-      return baseSize;
+      NodeLayoutData const* data = NodeLayoutData::DynamicCast(boost::get(boost::vertex_name, iGraph, iVtx));
+      return data->m_PossibleRoomSize[iRand.Generate() % data->m_PossibleRoomSize.size()];
     };
 
     void AddRoomConfSpace(Vec2i const& iBoxToLayoutSize, AABB2Di const& iBox, Vector<Segmenti>& oSegs) 
@@ -436,9 +423,9 @@ namespace eXl
 
   //Insert the room and compute its energy regarding collision against other rooms.
   template <typename FilteredGraph>
-  void InsertRoomAndUpdateViolations(Vertex iVtx, uint32_t const iRoomIdx, AABB2Di const& iRoom, 
+  void InsertRoomAndUpdateViolations(LayoutVertex iVtx, uint32_t const iRoomIdx, AABB2Di const& iRoom, 
     RoomIndex& iRoomIndex, Map<uint32_t, RoomViolation>& oMap, 
-    FilteredGraph const& iGraph, Map<Vertex, uint32_t> const& iVtxToRoom, Layout const& iCurLayout)
+    FilteredGraph const& iGraph, Map<LayoutVertex, uint32_t> const& iVtxToRoom, Layout const& iCurLayout)
   {
     Vector<RoomIndexEntry> results;
     Set<uint32_t> touchingRooms;
@@ -491,7 +478,7 @@ namespace eXl
 
     for(auto edge : OutEdgesIter(iGraph, iVtx))
     {
-      Vertex target = GetTarget(iVtx, edge);
+      LayoutVertex target = GetTarget(iVtx, edge);
       uint32_t neighIdx = iVtxToRoom.find(target)->second;
 
       auto const& neightRoom = iCurLayout[neighIdx].m_Box;
@@ -593,38 +580,38 @@ namespace eXl
     return sampledPos.begin()->second;
   }
 
-  using PhysicalGraph = boost::filtered_graph<Graph, PhysicalNodesFilter, PhysicalNodesFilter>;
+  using PhysicalGraph = boost::filtered_graph<ES_RuleSystem::Graph, PhysicalNodesFilter, PhysicalNodesFilter>;
 
-  Vector<Vector<Vertex>> GetChainList(/*DungeonGraph const& iGraph, */PhysicalGraph const& graph)
+  Vector<Vector< LayoutVertex> > GetChainList(PhysicalGraph const& graph)
   {
     auto const& idxMap = boost::get(boost::vertex_index, graph);
 
-    //Test if the graph can be layout.
+    //Test if the graph can be laid out.
     if (!boost::boyer_myrvold_planarity_test(graph))
     {
-      return Vector<Vector<Vertex>>();
+      return Vector<Vector<LayoutVertex>>();
     }
-    Vector<Vector<Vertex>> cycles;
-    Vector<Vector<Vertex>> chains;
+    Vector<Vector<LayoutVertex>> cycles;
+    Vector<Vector<LayoutVertex>> chains;
 
-    Set<Edge> origEdges;
+    Set<LayoutEdge> origEdges;
     for (auto edges = boost::edges(graph); edges.first != edges.second; ++edges.first)
     {
       origEdges.insert(*edges.first);
     }
 
-    auto dummyWhFunc = [](Edge) {return 1.0; };
+    auto dummyWhFunc = [](LayoutEdge) {return 1.0; };
 
-    Set<Edge> mstEdges;
+    Set<LayoutEdge> mstEdges;
     boost::kruskal_minimum_spanning_tree(graph, std::inserter(mstEdges, mstEdges.begin()),
-      boost::weight_map(boost::make_function_property_map<Edge>(dummyWhFunc)).vertex_index_map(idxMap));
+      boost::weight_map(boost::make_function_property_map<LayoutEdge>(dummyWhFunc)).vertex_index_map(idxMap));
 
     //--> Could replace it with a planar embedding and process faces.
-    Set<Edge> cycleEdges;
+    Set<LayoutEdge> cycleEdges;
     std::set_difference(origEdges.begin(), origEdges.end(), mstEdges.begin(), mstEdges.end(), std::inserter(cycleEdges, cycleEdges.begin()));
 
     //NodeDegreeMap nodeDegreeMap;
-    Map<Vertex, uint32_t> nodeDegreeMap;
+    Map<LayoutVertex, uint32_t> nodeDegreeMap;
     for (auto vtx : VerticesIter(graph))
     {
       nodeDegreeMap.insert({ vtx, uint32_t(boost::degree(vtx, graph)) });
@@ -636,25 +623,25 @@ namespace eXl
 
     for (auto edge : cycleEdges)
     {
-      Vector<Vertex> newCycle;
-      Vertex ext1 = edge.m_source;
-      Vertex ext2 = edge.m_target;
+      Vector<LayoutVertex> newCycle;
+      LayoutVertex ext1 = edge.m_source;
+      LayoutVertex ext2 = edge.m_target;
 
-      Vector<Vertex> p(boost::num_vertices(filteredGr), ext1);
+      Vector<LayoutVertex> p(boost::num_vertices(filteredGr), ext1);
       Vector<float> d(boost::num_vertices(filteredGr));
 
       boost::dijkstra_shortest_paths(filteredGr, ext1,
         boost::make_iterator_property_map(p.begin(), idxMap),
         boost::make_iterator_property_map(d.begin(), idxMap),
-        boost::make_function_property_map<Edge>(dummyWhFunc),
+        boost::make_function_property_map<LayoutEdge>(dummyWhFunc),
         idxMap,
         std::less<float>(), boost::closed_plus<float>(), Mathf::MaxReal(), 0.0, boost::dijkstra_visitor<boost::null_visitor>());
 
       float dist1 = d[idxMap[ext1]];
       float dist2 = d[idxMap[ext2]];
 
-      Vertex farthestVtx = dist1 > dist2 ? ext1 : ext2;
-      Vertex nearestVtx = dist1 > dist2 ? ext2 : ext1;
+      LayoutVertex farthestVtx = dist1 > dist2 ? ext1 : ext2;
+      LayoutVertex nearestVtx = dist1 > dist2 ? ext2 : ext1;
 
       do
       {
@@ -668,7 +655,7 @@ namespace eXl
     }
 
     std::sort(cycles.begin(), cycles.end(),
-      [](Vector<Vertex> const& iCycle1, Vector<Vertex> const& iCycle2)
+      [](Vector<LayoutVertex> const& iCycle1, Vector<LayoutVertex> const& iCycle2)
     {
       return iCycle1.size() < iCycle2.size();
     });
@@ -698,7 +685,7 @@ namespace eXl
         if (nodeDegreeMap.count(vtx) == 0)
         {
           cycleNested = true;
-          vtx = Graph::null_vertex();
+          vtx = ES_RuleSystem::Graph::null_vertex();
         }
         else
         {
@@ -709,13 +696,13 @@ namespace eXl
       //Consecutive sequences of non-null vertices are chains to add.
       if (cycleNested)
       {
-        Vector<Vertex> newChain;
+        Vector<LayoutVertex> newChain;
         for (int i = -1; i < (int)curCycle.size(); ++i)
         {
           int loopedIdx = i >= 0 ? i : curCycle.size() - 1;
-          Vertex vtx = curCycle[loopedIdx];
+          LayoutVertex vtx = curCycle[loopedIdx];
 
-          if (vtx != Graph::null_vertex())
+          if (vtx != ES_RuleSystem::Graph::null_vertex())
           {
             newChain.push_back(vtx);
           }
@@ -741,7 +728,7 @@ namespace eXl
       }
     }
 
-    Vertex pathSearchStartVtx = Graph::null_vertex();
+    LayoutVertex pathSearchStartVtx = ES_RuleSystem::Graph::null_vertex();
     for (auto vtx : VerticesIter(filteredGr))
     {
       auto edges = boost::out_edges(vtx, filteredGr);
@@ -752,22 +739,22 @@ namespace eXl
       }
     }
 
-    if (pathSearchStartVtx != Graph::null_vertex())
+    if (pathSearchStartVtx != ES_RuleSystem::Graph::null_vertex())
     {
-      Vector<Vertex> p(boost::num_vertices(filteredGr), pathSearchStartVtx);
+      Vector<LayoutVertex> p(boost::num_vertices(filteredGr), pathSearchStartVtx);
       Vector<float> d(boost::num_vertices(filteredGr));
 
       boost::dijkstra_shortest_paths(filteredGr, pathSearchStartVtx,
         boost::make_iterator_property_map(p.begin(), idxMap),
         boost::make_iterator_property_map(d.begin(), idxMap),
-        boost::make_function_property_map<Edge>(dummyWhFunc), idxMap,
+        boost::make_function_property_map<LayoutEdge>(dummyWhFunc), idxMap,
         std::less<float>(), boost::closed_plus<float>(), Mathf::MaxReal(), 0.0, boost::dijkstra_visitor<boost::null_visitor>());
 
       while (!nodeDegreeMap.empty())
       {
         //auto chainExtremityEntry = nodeDegreeMap.get<1>().begin();
         auto chainExtremityEntry = std::min_element(nodeDegreeMap.begin(), nodeDegreeMap.end(),
-          [](std::pair<Vertex, uint32_t> const& iElem1, std::pair<Vertex, uint32_t> const& iElem2)
+          [](std::pair<LayoutVertex, uint32_t> const& iElem1, std::pair<LayoutVertex, uint32_t> const& iElem2)
         {
           return iElem1.second < iElem2.second;
         });
@@ -776,11 +763,17 @@ namespace eXl
         if (chainExtremityEntry->first == pathSearchStartVtx)
         {
           nodeDegreeMap.erase(chainExtremityEntry);
+          if (nodeDegreeMap.empty()) 
+          {
+            Vector<LayoutVertex> newChain;
+            newChain.push_back(pathSearchStartVtx);
+            chains.emplace_back(std::move(newChain));
+          }
           continue;
         }
 
-        Vector<Vertex> newChain;
-        Vertex chainExtremity = chainExtremityEntry->first;
+        Vector<LayoutVertex> newChain;
+        LayoutVertex chainExtremity = chainExtremityEntry->first;
         if (chainExtremityEntry->second == 0)
         {
           nodeDegreeMap.erase(chainExtremityEntry);
@@ -852,13 +845,13 @@ namespace eXl
 
     if (cycles.empty() && chains.empty())
     {
-      return Vector<Vector<Vertex>>();
+      return Vector<Vector<LayoutVertex>>();
     }
 
     //First process smaller cycle.
     //Next order all chain through a BFS exploration.
 
-    Vector<Vector<Vertex>> orderedChains;
+    Vector<Vector<LayoutVertex>> orderedChains;
     orderedChains.reserve(cycles.size() + chains.size());
     if (!cycles.empty())
     {
@@ -878,7 +871,7 @@ namespace eXl
       chains.pop_back();
     }
 
-    Map<Vertex, Set<uint32_t>> vtxChains;
+    Map<LayoutVertex, Set<uint32_t>> vtxChains;
 
     for (uint32_t i = 0; i < chains.size(); ++i)
     {
@@ -921,21 +914,19 @@ namespace eXl
           }
         }
       }
-      eXl_ASSERT_REPAIR_RET(curChainEnd != nextChainEnd, Vector<Vector<Vertex>>());
+      eXl_ASSERT_REPAIR_RET(curChainEnd != nextChainEnd, Vector<Vector<LayoutVertex>>());
       curChainEnd = nextChainEnd;
     }
 
     return orderedChains;
   }
 
-  LayoutCollection LayoutGraph(DungeonGraph const& iGraph, Random& iRand)
+  LayoutCollection LayoutGraph(ES_RuleSystem::Graph const& iGraph, Random& iRand)
   {
-    auto const& fullGraph = iGraph.GetGraph();
-    
-    PhysicalNodesFilter phFilter;
-    PhysicalGraph graph(fullGraph, phFilter, phFilter);
+    PhysicalNodesFilter phFilter(iGraph);
+    PhysicalGraph graph(iGraph, phFilter, phFilter);
 
-    Vector<Vector<Vertex>> orderedChains = GetChainList(graph);
+    Vector<Vector<LayoutVertex>> orderedChains = GetChainList(graph);
 
     if (orderedChains.empty())
     {
@@ -964,11 +955,11 @@ namespace eXl
       {
         Layout const& baseLayout = baseLayoutCol[attempt % baseLayoutCol.size()];
         Layout curLayout = baseLayout;
-        Set<Vertex> vtxToConsider;
+        Set<LayoutVertex> vtxToConsider;
         // Copy chain to layout because vtx might not be sorted in connection order.
-        Vector<Vertex> chainToLayout = orderedChains[chainToLayoutIdx];
+        Vector<LayoutVertex> chainToLayout = orderedChains[chainToLayoutIdx];
 
-        Map<Vertex, uint32_t> vtxToRoom;
+        Map<LayoutVertex, uint32_t> vtxToRoom;
 
         Vector<RoomIndexEntry> roomEntries;
         for(unsigned int i = 0; i<curLayout.size(); ++i)
@@ -1083,7 +1074,6 @@ namespace eXl
             RoomIndex wkIndex = roomIndex;
             Layout wkLayout = curLayout;
 
-            // Block area is between (3*3) and (6*6), so let's just take 15 as an average for now.
             float const s_AreaFactor = 15 * 100;
             uint32_t s_MaxTrials = 500;
 

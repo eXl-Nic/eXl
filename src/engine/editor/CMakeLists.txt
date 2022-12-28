@@ -5,6 +5,8 @@ SOURCE_GROUP("Editor" REGULAR_EXPRESSION ".*(h|hpp|inl|cpp)")
 SOURCE_GROUP("Widgets" REGULAR_EXPRESSION "eXl_Editor/.*(h|hpp|inl|cpp)")
 SOURCE_GROUP("MapEditor" REGULAR_EXPRESSION "mapeditor/.*(hpp|inl|cpp)")
 SOURCE_GROUP("Tileset" REGULAR_EXPRESSION "tileset/.*(hpp|inl|cpp)")
+SOURCE_GROUP("Model" REGULAR_EXPRESSION "model/.*(hpp|inl|cpp)")
+SOURCE_GROUP("Script" REGULAR_EXPRESSION "script/.*(hpp|inl|cpp)")
 SOURCE_GROUP("MocFiles" REGULAR_EXPRESSION "moc_.*cpp")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
@@ -44,13 +46,15 @@ projectresourcesmodel.cpp
 projecteditor.cpp
 typedecleditor.cpp
 fundecleditor.cpp
-luahighlighter.cpp
-scripteditor.cpp
-coroutineeditor.cpp
-functionlibraryeditor.cpp
-scripteditor.cpp
 mcmcmodeleditor.cpp
 miniaturecache.cpp
+
+script/luahighlighter.cpp
+script/functionlibraryeditor.cpp
+script/scriptwidget.cpp
+script/scripteditor.cpp
+script/coroutineeditor.cpp
+script/functionlibwidget.cpp
 
 tileset/tileselectionwidget.cpp
 tileset/tileseteditor.cpp
@@ -72,6 +76,8 @@ graphtool/graphsimulate.cpp
 graphtool/grapheditor.cpp
 graphtool/graphdata.cpp
 graphtool/graphpainter.cpp
+
+model/modeleditor.cpp
 
 ${CMAKE_CURRENT_BINARY_DIR}/editor_gen.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/editor_gen.hpp
@@ -110,12 +116,15 @@ projectresourcesmodel.hpp
 projecteditor.hpp
 typedecleditor.hpp
 fundecleditor.hpp
-luahighlighter.hpp
-scripteditor.hpp
-coroutineeditor.hpp
-functionlibraryeditor.hpp
 mcmcmodeleditor.hpp
 miniaturecache.hpp
+
+script/luahighlighter.hpp
+script/scriptwidget.hpp
+script/scripteditor.hpp
+script/coroutineeditor.hpp
+script/functionlibraryeditor.hpp
+script/functionlibwidget.hpp
 
 tileset/tileseteditor.hpp
 tileset/tilinggroupeditor.hpp
@@ -139,6 +148,8 @@ graphtool/graphsimulate.hpp
 graphtool/grapheditor.hpp
 graphtool/graphdata.hpp
 graphtool/graphpainter.hpp
+
+model/modeleditor.hpp
 )
 
 QT5_WRAP_CPP(QTAppl_MOC_SRC 
@@ -169,8 +180,28 @@ add_custom_command(
       TARGET eXl_Editor
 	  POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:eXl_Editor>/editor_rsc)
+      
+add_custom_command(
+      TARGET eXl_Editor
+	  POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:eXl_Editor>/editor_rsc/skybox)
 
 add_custom_command(
       TARGET eXl_Editor
 	  POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/editor_icons.png $<TARGET_FILE_DIR:eXl_Editor>/editor_rsc)
+      
+SET(SKYBOX_FILES 
+${CMAKE_CURRENT_SOURCE_DIR}/model/clouds1/clouds1_down.png
+${CMAKE_CURRENT_SOURCE_DIR}/model/clouds1/clouds1_east.png
+${CMAKE_CURRENT_SOURCE_DIR}/model/clouds1/clouds1_north.png
+${CMAKE_CURRENT_SOURCE_DIR}/model/clouds1/clouds1_south.png
+${CMAKE_CURRENT_SOURCE_DIR}/model/clouds1/clouds1_up.png
+${CMAKE_CURRENT_SOURCE_DIR}/model/clouds1/clouds1_west.png
+)
+      
+      
+add_custom_command(
+      TARGET eXl_Editor
+	  POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SKYBOX_FILES} $<TARGET_FILE_DIR:eXl_Editor>/editor_rsc/skybox)

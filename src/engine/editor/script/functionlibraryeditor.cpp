@@ -1,7 +1,8 @@
 #include "functionlibraryeditor.hpp"
-#include "editordef.hpp"
-#include "editorstate.hpp"
-#include "luahighlighter.hpp"
+#include <editor/editordef.hpp>
+#include <editor/editorstate.hpp>
+#include "scriptwidget.hpp"
+#include "functionlibwidget.hpp"
 
 #include <engine/game/commondef.hpp>
 #include <engine/script/luafunctionlibrary.hpp>
@@ -13,6 +14,7 @@
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 #include <QTextEdit>
+#include <QSplitter>
 
 namespace eXl
 {
@@ -35,7 +37,7 @@ namespace eXl
     LuaFunctionLibrary* m_Script;
 
     QComboBox* m_BehaviourSelector;
-    QTextEdit* m_ScriptSrc;
+    ScriptEditorWidget* m_ScriptSrc;
     Vector<String> m_Behaviours;
   };
 
@@ -52,21 +54,38 @@ namespace eXl
     m_Impl->m_Editor = this;
     m_Impl->m_Script = LuaFunctionLibrary::DynamicCast(iDoc->GetResource());
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QSplitter* rootSplitter = new QSplitter(this);
 
-    m_Impl->m_ScriptSrc = new QTextEdit(this);
-    m_Impl->m_ScriptSrc->setTabStopWidth(m_Impl->m_ScriptSrc->tabStopWidth() / 2);
-    new LuaHighlighter(m_Impl->m_ScriptSrc->document());
-    m_Impl->m_ScriptSrc->setText(QString::fromUtf8(m_Impl->m_Script->m_Script.c_str()));
+    LuaFunctionLibrarySelector* libSel = new LuaFunctionLibrarySelector(this, m_Impl->m_Script->m_Dependencies);
+    rootSplitter->addWidget(libSel);
 
-    layout->addWidget(m_Impl->m_ScriptSrc);
-
-    QObject::connect(m_Impl->m_ScriptSrc, &QTextEdit::textChanged, [this]
+    QWidget* editorWidget = new QWidget(this);
     {
-      m_Impl->m_Script->m_Script = m_Impl->m_ScriptSrc->toPlainText().toUtf8().data();
-      m_Impl->m_Editor->ModifyResource();
-    });
+      QVBoxLayout* layout = new QVBoxLayout(editorWidget);
+      m_Impl->m_ScriptSrc = new ScriptEditorWidget(editorWidget);
+      
+      m_Impl->m_ScriptSrc->setPlainText(QString::fromUtf8(m_Impl->m_Script->m_Script.c_str()));
 
+      QObject::connect(libSel, &LuaFunctionLibrarySelector::onListChanged, [this, libSel]()
+        {
+          m_Impl->m_Script->m_Dependencies = libSel->GetList();
+          m_Impl->m_ScriptSrc->SetEngineFunctions(m_Impl->m_Script->m_Dependencies);
+          m_Impl->m_Editor->ModifyResource();
+        });
+
+      layout->addWidget(m_Impl->m_ScriptSrc);
+
+      QObject::connect(m_Impl->m_ScriptSrc, &QPlainTextEdit::textChanged, [this]
+        {
+          m_Impl->m_Script->m_Script = m_Impl->m_ScriptSrc->toPlainText().toUtf8().data();
+          m_Impl->m_Editor->ModifyResource();
+        });
+    }
+
+    rootSplitter->addWidget(editorWidget);
+    rootSplitter->setSizes(QList<int>({ 200, 1000 }));
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->addWidget(rootSplitter);
     setLayout(layout);
 
     if (m_Impl->m_Script->m_Script.empty())
@@ -92,6 +111,6 @@ namespace eXl
     defaultScript.append("}\n");
 
     m_Script->m_Script = std::move(defaultScript);
-    m_ScriptSrc->setText(QString::fromUtf8(m_Script->m_Script.c_str()));
+    m_ScriptSrc->setPlainText(QString::fromUtf8(m_Script->m_Script.c_str()));
   }
 }

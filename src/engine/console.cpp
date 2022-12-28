@@ -7,7 +7,7 @@
 namespace eXl
 {
   LuaConsole::LuaConsole()
-    : LuaCtx(LuaManager::CreateWorld(nullptr))
+    : LuaCtx(LuaManager::CreateWorld(nullptr, nullptr))
   {
     ClearLog();
     memset(InputBuf, 0, sizeof(InputBuf));
