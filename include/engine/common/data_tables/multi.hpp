@@ -123,29 +123,29 @@ namespace eXl
     template <uint32_t iNum>
     MultiPropertySheetWrapper<typename Positional_Get<iNum, Args...>::type, iNum>& GetWrapper()
     {
-      return m_Alloc.GetWrapper<typename Positional_Get<iNum, Args...>::type, iNum>();
+      return m_Alloc.template GetWrapper<typename Positional_Get<iNum, Args...>::type, iNum>();
     }
 
-    template <typename... Args>
+    template <typename... UArgs>
     struct PositionalUnwrapper;
 
-    template <typename... Args>
-    struct PositionalUnwrapper<PositionalList<Args...>>
+    template <typename... UArgs>
+    struct PositionalUnwrapper<PositionalList<UArgs...>>
     {
       template <typename Function>
       static void Call(ObjectHandle iObject, Function const& iFun, ObjectTable_Data::Page** iPages, uint32_t iIdx)
       {
-        return iFun(iObject, *(reinterpret_cast<typename Args::ArgType*>(iPages[Args::ArgPos]->m_Objects) + iIdx)...);
+        return iFun(iObject, *(reinterpret_cast<typename UArgs::ArgType*>(iPages[UArgs::ArgPos]->m_Objects) + iIdx)...);
       }
 
-      static std::tuple<typename Args::ArgType&...> GetDummy()
+      static std::tuple<typename UArgs::ArgType&...> GetDummy()
       {
-        return std::tuple<typename Args::ArgType&...>(Dummy<Args::ArgPos>()...);
+        return std::tuple<typename UArgs::ArgType&...>(Dummy<UArgs::ArgPos>()...);
       }
 
-      static std::tuple<typename Args::ArgType&...> GetData(MultiPropertySheetBuilder<PositionalList<Args...>>& iAlloc, ObjectTableHandle_Base iHandle)
+      static std::tuple<typename UArgs::ArgType&...> GetData(MultiPropertySheetBuilder<PositionalList<UArgs...>>& iAlloc, ObjectTableHandle_Base iHandle)
       {
-        return std::tuple<typename Args::ArgType&...>(iAlloc.template GetWrapper<typename Args::ArgType, Args::ArgPos>().m_ObjectsSpec.Get(ObjectTableHandle<typename Args::ArgType>(iHandle))...);
+        return std::tuple<typename UArgs::ArgType&...>(iAlloc.template GetWrapper<typename UArgs::ArgType, UArgs::ArgPos>().m_ObjectsSpec.Get(ObjectTableHandle<typename UArgs::ArgType>(iHandle))...);
       }
     };
 
@@ -246,7 +246,7 @@ namespace eXl
     template <typename Functor>
     void Iterate(Functor const& iFn) const
     {
-      const_cast<MultiDataStorage<Args...>*>(this)->Iterate([&iFn](ObjectHandle iObject, Args& iData...)
+      const_cast<MultiDataStorage<Args...>*>(this)->Iterate([&iFn](ObjectHandle iObject, Args&... iData)
         {
           iFn(iObject, const_cast<Args const&>(iData)...);
         });

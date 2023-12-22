@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
-
+#ifdef EXL_TYPE_ENABLED
 #include <core/type/typemanager_get.hpp>
 #include <core/type/arraytype.hpp>
 #include <core/type/tupletypestruct.hpp>
@@ -168,3 +168,4 @@ namespace eXl
   }
 }
 
+#endif

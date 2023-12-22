@@ -70,7 +70,7 @@ namespace eXl
       OGLInternalTextureFormat internalFormat;
       GLuint dataType = GL_UNSIGNED_BYTE;
       GLuint dataComponents;
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
       switch(iFormat)
       {
       case R8:
@@ -140,7 +140,7 @@ namespace eXl
       glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       if(!iGenMipMap)
       {
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,0);
@@ -176,7 +176,7 @@ namespace eXl
     }
   }
 
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
 #define GL_BGR 0x80E0
 #define GL_BGRA 0x80E1
 #endif
@@ -406,7 +406,7 @@ namespace eXl
 
     if (iTextureType == GL_TEXTURE_2D
       || iTextureType == GL_TEXTURE_CUBE_MAP
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       || iTextureType == GL_TEXTURE_1D_ARRAY
 #endif
       )
@@ -434,7 +434,7 @@ namespace eXl
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
 
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     if(!iGenMipMap)
     {
       glTexParameteri(iTextureType, GL_TEXTURE_BASE_LEVEL,0);
@@ -455,7 +455,7 @@ namespace eXl
   Err OGLTextureLoader::ReadTexture(OGLTexture* iTexture, Image*& oImage, int iFace)
   {
 #ifdef EXL_WITH_OGL
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
     return Err::Failure;
 #endif
 
@@ -566,7 +566,7 @@ namespace eXl
         glPixelStorei(GL_PACK_ALIGNMENT,1);
 
       glBindTexture(textureTarget, iTexture->GetId());
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       glGetTexImage(textureFaceTarget, 0, GetGLTextureFormat(imgDataComponents), GetGLTextureElementType(imgDataType), oImage->GetPixel(0,0));
 #endif
 

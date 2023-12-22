@@ -40,7 +40,7 @@ namespace eXl
 
   uint32_t GetGLAccess(OGLBufferAccess iAccess)
   {
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
       return 0;
 #else
 
@@ -149,7 +149,7 @@ namespace eXl
     case GL_FLOAT_MAT4:
       return OGLType::MAT4;
       break;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case GL_SAMPLER_1D:
       return OGLType::SAMPLER_1D;
       break;
@@ -172,7 +172,7 @@ namespace eXl
     case GL_SAMPLER_BUFFER:
       return OGLType::SAMPLER_BUFFER;
       break;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case GL_INT_SAMPLER_1D:
       return OGLType::INT_SAMPLER_1D;
       break;
@@ -352,7 +352,7 @@ namespace eXl
     case OGLBlend::SRC_ALPHA_SATURATE:
       return GL_SRC_ALPHA_SATURATE;
       break;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case OGLBlend::SRC1_COLOR:
       return GL_SRC1_COLOR;
       break;
@@ -379,7 +379,7 @@ namespace eXl
     switch (iTex)
     {
 #ifdef EXL_WITH_OGL
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case OGLTextureType::TEXTURE_1D:
       return GL_TEXTURE_1D;
       break;
@@ -399,9 +399,11 @@ namespace eXl
     case OGLTextureType::TEXTURE_CUBE_MAP:
       return GL_TEXTURE_CUBE_MAP;
       break;
+#if EXL_DESKTOP_PLATFORM
     case OGLTextureType::TEXTURE_BUFFER:
       return GL_TEXTURE_BUFFER;
       break;
+#endif
 #endif
     default:
       eXl_ASSERT_MSG(false, "Unrecognized GL constant");
@@ -506,7 +508,7 @@ namespace eXl
       case OGLTextureElementType::FLOAT:
         return GL_FLOAT;
         break;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       case OGLTextureElementType::UNSIGNED_SHORT_5_6_5:
         return GL_UNSIGNED_SHORT_5_6_5;
         break;
@@ -548,7 +550,7 @@ namespace eXl
     case OGLTextureFormat::RGBA:
       return GL_RGBA;
       break;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case OGLTextureFormat::BGR:
       return GL_BGR;
       break;
@@ -568,7 +570,7 @@ namespace eXl
     case OGLTextureFormat::RGBA_INTEGER:
       return GL_RGBA_INTEGER;
       break;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case OGLTextureFormat::BGR_INTEGER:
       return GL_BGR_INTEGER;
       break;
@@ -635,7 +637,7 @@ namespace eXl
   {
     switch (iType)
     {
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case OGLType::SAMPLER_1D:
     case OGLType::INT_SAMPLER_1D:
       return OGLTextureType::TEXTURE_1D;
@@ -661,10 +663,12 @@ namespace eXl
     case OGLType::INT_SAMPLER_CUBE:
       return OGLTextureType::TEXTURE_CUBE_MAP;
       break;
+#if EXL_DESKTOP_PLATFORM
     case OGLType::SAMPLER_BUFFER:
     case OGLType::INT_SAMPLER_BUFFER:
       return OGLTextureType::TEXTURE_BUFFER;
       break;
+#endif
     default:
       eXl_FAIL_MSG_RET("Invalid type constant, expected a sampler", OGLTextureType::TEXTURE_2D);
       break;

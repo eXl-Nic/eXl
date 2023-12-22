@@ -49,12 +49,20 @@ namespace eXl
     SPrintfWrapper(buffer, "%i", iVal);
     return AString(buffer);
   }
+
   AString StringUtil::AFromInt(unsigned int iVal)
   {
     char buffer[64];
     SPrintfWrapper(buffer, "%u", iVal);
     return AString(buffer);
   }
+
+  AString StringUtil::AFromInt(uint64_t iVal) {
+    char buffer[64];
+    SPrintfWrapper(buffer, "%llu", iVal);
+    return AString(buffer);
+  }
+
   AString StringUtil::AFromSizeT(size_t iVal)
   {
     char buffer[64];

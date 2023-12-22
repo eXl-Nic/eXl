@@ -7,7 +7,7 @@
 
 #include <engine/pathfinding/navmesh.hpp>
 #include <engine/pathfinding/navigator.hpp>
-#include <engine/map/dungeonlayout.hpp>
+#include <gen/graphlayout.hpp>
 #include <math/mathtools.hpp>
 
 namespace eXl

@@ -21,7 +21,7 @@ namespace boost
     struct geometry_concept<eXl::AABB2DPolygon<Real> >{ typedef polygon_90_with_holes_concept /*polygon_90_concept*/ type; };
 
     template <typename Real>
-    struct geometry_concept<eXl::Vector<glm::vec<2, Real> > >{ typedef polygon_90_concept type; };
+    struct geometry_concept<eXl::AABB2DPolygonPtList<Real> >{ typedef polygon_90_concept type; };
 
     template <typename Real>
     struct geometry_concept<eXl::Vector<eXl::AABB2DPolygon<Real> > >{ typedef polygon_90_set_concept type; };
@@ -29,19 +29,19 @@ namespace boost
     template <typename Real>
     struct polygon_90_traits<eXl::AABB2DPolygon<Real> > {
       typedef Real coordinate_type;
-      typedef iterator_points_to_compact<typename eXl::Vector<glm::vec<2,Real> >::const_iterator,glm::vec<2,Real> > compact_iterator_type;
+      typedef iterator_points_to_compact<typename eXl::AABB2DPolygonPtList<Real>::const_iterator,glm::vec<2,Real> > compact_iterator_type;
       typedef glm::vec<2,Real> point_type;
 
       static inline compact_iterator_type begin_compact(eXl::AABB2DPolygon<Real> const& t) {
-          return compact_iterator_type (t.Border().begin(),t.Border().end());
+          return compact_iterator_type (t.BorderT().begin(),t.BorderT().end());
       }
       static inline compact_iterator_type end_compact(eXl::AABB2DPolygon<Real> const& t) {
-          return compact_iterator_type (t.Border().end(),t.Border().end());
+          return compact_iterator_type (t.BorderT().end(),t.BorderT().end());
       }
 
       // Get the number of sides of the polygon
       static inline std::size_t size(eXl::AABB2DPolygon<Real> const& t) {
-        return t.Border().size();
+        return t.BorderT().size();
       }
 
       // Get the winding direction of the polygon
@@ -71,43 +71,43 @@ namespace boost
     };
 
     template <typename Real>
-    struct polygon_90_traits<eXl::Vector<glm::vec<2,Real> > > {
+    struct polygon_90_traits< eXl::AABB2DPolygonPtList<Real> > {
       typedef Real coordinate_type;
-      typedef iterator_points_to_compact<typename eXl::Vector<glm::vec<2,Real> >::const_iterator,glm::vec<2,Real> > compact_iterator_type;
+      typedef iterator_points_to_compact<typename eXl::AABB2DPolygonPtList<Real>::const_iterator,glm::vec<2,Real> > compact_iterator_type;
       typedef glm::vec<2,Real> point_type;
-
-      static inline compact_iterator_type begin_compact(typename eXl::AABB2DPolygon<Real>::PtList const& t) {
+    
+      static inline compact_iterator_type begin_compact(eXl::AABB2DPolygonPtList<Real> const& t) {
           return compact_iterator_type (t.begin(),t.end());
       }
-      static inline compact_iterator_type end_compact(typename eXl::AABB2DPolygon<Real>::PtList const& t) {
+      static inline compact_iterator_type end_compact(eXl::AABB2DPolygonPtList<Real> const& t) {
           return compact_iterator_type (t.end(),t.end());
       }
-
+    
       // Get the number of sides of the polygon
-      static inline std::size_t size(typename eXl::AABB2DPolygon<Real>::PtList const& t) {
+      static inline std::size_t size(eXl::AABB2DPolygonPtList<Real> const& t) {
         return t.size();
       }
-
+    
       // Get the winding direction of the polygon
-      static inline winding_direction winding(typename eXl::AABB2DPolygon<Real>::PtList const& t) {
+      static inline winding_direction winding(eXl::AABB2DPolygonPtList<Real> const& t) {
         return unknown_winding;
       }
     };
-
+    
     template <typename Real>
-    struct polygon_90_mutable_traits<eXl::Vector<glm::vec<2,Real> > > {
-
+    struct polygon_90_mutable_traits< eXl::AABB2DPolygonPtList<Real> > {
+    
       template <typename iT>
-      static inline typename eXl::AABB2DPolygon<Real>::PtList& set_compact(typename eXl::AABB2DPolygon<Real>::PtList & t, 
+      static inline eXl::AABB2DPolygonPtList<Real>& set_compact(eXl::AABB2DPolygonPtList<Real>& t,
                                          iT input_begin, iT input_end) {
-
+    
         iterator_compact_to_points<iT,glm::vec<2,Real> > iterBegin(input_begin,input_end);
         iterator_compact_to_points<iT,glm::vec<2,Real> > iterEnd(input_end,input_end);
         t.assign(iterBegin,iterEnd);
-
+    
         return t;
       }
-
+    
     };
 
     template <typename Real,typename enable>
@@ -115,13 +115,13 @@ namespace boost
          typedef typename eXl::AABB2DPolygon<Real>::PtLists::const_iterator iterator_holes_type;
          typedef typename eXl::AABB2DPolygon<Real>::PtList hole_type;
          static inline iterator_holes_type begin_holes(const eXl::AABB2DPolygon<Real>& t) {
-              return t.Holes().begin();
+              return t.HolesT().begin();
          }
          static inline iterator_holes_type end_holes(const eXl::AABB2DPolygon<Real>& t) {
-              return t.Holes().end();
+              return t.HolesT().end();
          }
          static inline Real size_holes(const eXl::AABB2DPolygon<Real>& t) {
-              return t.Holes().size();
+              return t.HolesT().size();
          }
     };
 
@@ -303,7 +303,7 @@ namespace eXl
     
     if(iPoints.size()>=4)
     {
-      m_Ext = iPoints;
+      m_Ext.insert(m_Ext.end(), iPoints.begin(), iPoints.end());
       if((m_Ext[0]-m_Ext[1]).y != 0)
       {
         glm::vec<2,Real> tempPt = m_Ext[0];
@@ -700,11 +700,22 @@ namespace eXl
   template <typename PolygonType>
   Err Stream_T(PolygonType& iPoly, Serializer iStreamer)
   {
+    static_assert(sizeof(AABB2DPolygonPtList<typename PolygonType::RealType>) == sizeof(Vector<glm::vec<2, typename PolygonType::RealType>>), "");
     iStreamer.BeginStruct();
     iStreamer.PushKey("Border");
+    //iStreamer &= static_cast<typename std::conditional < std::is_const<PolygonType>::value
+    //  , Vector<glm::vec<2, typename PolygonType::RealType>> const &
+    //  , Vector<glm::vec<2, typename PolygonType::RealType>> &
+    //  >::type>
+    //  (iPoly.Border());
     iStreamer &= iPoly.Border();
     iStreamer.PopKey();
     iStreamer.PushKey("Holes");
+    //iStreamer &= reinterpret_cast<typename std::conditional < std::is_const<PolygonType>::value
+    //  , Vector<Vector<glm::vec<2, typename PolygonType::RealType>>> const&
+    //  , Vector<Vector<glm::vec<2, typename PolygonType::RealType>>>&
+    //>::type>
+    //  (iPoly.Holes());
     iStreamer &= iPoly.Holes();
     iStreamer.PopKey();
     iStreamer.EndStruct();

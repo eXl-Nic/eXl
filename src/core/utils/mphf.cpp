@@ -15,6 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <intrin.h>
 #elif defined(__ANDROID__)
 
+#elif defined(__EMSCRIPTEN__)
 #else
 #include <x86intrin.h>
 #endif
@@ -252,7 +253,7 @@ namespace eXl
 
   uint32_t StringMPH::RandomInit()
   {
-#ifdef __ANDROID__
+#if defined (__ANDROID__) || defined(__EMSCRIPTEN__)
     return 0;
 #else
     return __rdtsc();

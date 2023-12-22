@@ -378,7 +378,7 @@ namespace eXl
           float sign = dirIdx >= 2 ? -1.0: 1.0;
           int32_t axis = dirIdx % 2;
           
-          Vec2 dir;
+          Vec2 dir = Zero<Vec2>();
           dir[axis] = sign;
 
           openings.Start(faceCenter, 0.0, dir, length2(faceDim));

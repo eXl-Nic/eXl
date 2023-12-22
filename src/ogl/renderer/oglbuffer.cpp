@@ -16,7 +16,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   IMPLEMENT_RefC(OGLBuffer);
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
   static void*  s_TempBuffer = NULL;
   static size_t s_TempBufferSize = 0;
 #endif
@@ -64,7 +64,7 @@ namespace eXl
 #ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(m_Usage);
     GLenum glAccess = GetGLAccess(iAccess);
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     glBindBuffer(glUsage,GetBufferId());
     return glMapBuffer(glUsage,glAccess);
 #else
@@ -84,7 +84,7 @@ namespace eXl
   {
 #ifdef EXL_WITH_OGL
     GLenum glUsage = GetGLUsage(m_Usage);
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     glBindBuffer(glUsage,m_Id);
     glUnmapBuffer(glUsage);
 #else

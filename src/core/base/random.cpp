@@ -56,7 +56,8 @@ namespace eXl
     boost::uuids::uuid newuuid = s_UUIDGen();
     uint32_t* dwords = reinterpret_cast<uint32_t*>(newuuid.data);
 
-    static_assert (sizeof(size_t) == sizeof(uint64_t), "");
+    //static_assert (sizeof(size_t) == sizeof(uint64_t), "");
+#if EXL_64
     {
       uint64_t objId[2] = { dwords[0], dwords[2] };
       objId[0] <<= 32;
@@ -66,5 +67,14 @@ namespace eXl
       boost::hash_combine(objId[0], objId[1]);
       return objId[0];
     }
+#else
+    {
+      size_t seed = dwords[0];
+      boost::hash_combine(seed, dwords[1]);
+      boost::hash_combine(seed, dwords[2]);
+      boost::hash_combine(seed, dwords[3]);
+      return seed;
+    }
+#endif
   }
 }

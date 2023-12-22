@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QWidget>
-#include "graphdata.hpp"
+#include <engine/map/graphdata.hpp>
 
 namespace eXl
 {
@@ -9,7 +9,7 @@ namespace eXl
   class GraphSimulateWidget : public QWidget
   {
   public:
-    GraphSimulateWidget(GraphEditor* iParent, RewriteSystem& iSys);
+    GraphSimulateWidget(GraphEditor* iParent, RewriteSystemRsc& iSys);
     ~GraphSimulateWidget();
     void SetSelectedRule(String const&);
 

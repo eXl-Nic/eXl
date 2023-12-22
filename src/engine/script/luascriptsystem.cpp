@@ -340,7 +340,7 @@ namespace eXl
       LoadScript_FunctionLib(deps, *library);
       return;
     }
-    eXl_FAIL_MSG(eXl_FORMAT("Script %s is not of a supported type", iScript.GetName()));
+    eXl_FAIL_MSG(eXl_FORMAT("Script %s is not of a supported type", iScript.GetName().c_str()));
   }
 
   static luabind::object LoadScriptAsTable(LuaWorld& iWorld, const LuaScript& iScript)

@@ -254,20 +254,24 @@ namespace eXl
         ResourceTypeEntry newType;
         newType.loader = iLoader;
         newType.rtti = &iRtti;
+#ifdef EXL_TYPE_ENABLED
         newType.handleType = new ResourceHandleType(iRtti, iResourceType);
         TypeManager::RegisterType(newType.handleType);
         TypeManager::RegisterArrayType(new CoreArrayType<ResourceHandle<Resource>>(newType.handleType));
-
+#else
+        newType.handleType = nullptr;
+#endif
         GetImpl().m_Loaders.emplace(std::make_pair(loaderName, std::move(newType)));
         GetImpl().m_RttiToLoader.emplace(std::make_pair(&iRtti, loaderName));
       }
     }
-
     int RegisterHandles(lua_State* iState)
     {
       for (auto const& entry : GetImpl().m_Loaders)
       {
+#ifdef EXL_TYPE_ENABLED
         entry.second.handleType->RegisterLua(iState);
+#endif
       }
       return 0;
     }
@@ -397,8 +401,9 @@ namespace eXl
 
     String ExtractHeader(TextReader& iReader)
     {
-      KString luaHeader(LuaScriptLoader::s_HeaderSection);
       String header;
+#ifdef EXL_LUA
+      KString luaHeader(LuaScriptLoader::s_HeaderSection);
       {
         bool isLuaHeader = true;
         EXPECT_STRING(luaHeader, isLuaHeader = false);
@@ -413,7 +418,7 @@ namespace eXl
           return header;
         }
       }
-
+#endif
       EXPECT_CHAR('{');
 
       CLEAR_WHITESPACES;
@@ -744,7 +749,7 @@ namespace eXl
         }
         else if (metaData->m_Path == GetSystemResourcePath())
         {
-          eXl_FAIL_MSG_RET(eXl_FORMAT("Cannot save system resource %s", iRsc->GetName()), Err::Failure);
+          eXl_FAIL_MSG_RET(eXl_FORMAT("Cannot save system resource %s", iRsc->GetName().c_str()), Err::Failure);
         }
         else
         {
@@ -894,7 +899,7 @@ namespace eXl
       }
       else if (metaData->m_Path == GetSystemResourcePath())
       {
-        eXl_FAIL_MSG_RET(eXl_FORMAT("Cannot set path of system resource %s", iRsc->GetName()), Err::Failure);
+        eXl_FAIL_MSG_RET(eXl_FORMAT("Cannot set path of system resource %s", iRsc->GetName().c_str()), Err::Failure);
       }
       else
       {

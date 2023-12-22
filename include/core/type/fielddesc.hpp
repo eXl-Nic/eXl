@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
-
+#ifdef EXL_TYPE_ENABLED
 #include <core/type/typedefs.hpp>
 
 namespace eXl
@@ -37,3 +37,4 @@ namespace eXl
     const Type* m_Type;
   };
 }
+#endif

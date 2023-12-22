@@ -282,16 +282,16 @@ namespace eXl
     static Err Do(Streamer& iStreamer, glm::vec<4,Real> const* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Write(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Write(&iObj->y);
       iStreamer.PopKey();
-      iStreamer.PushKey("Z");
+      iStreamer.PushKey("z");
       iStreamer.Write(&iObj->z);
       iStreamer.PopKey();
-      iStreamer.PushKey("W");
+      iStreamer.PushKey("w");
       iStreamer.Write(&iObj->w);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -305,13 +305,13 @@ namespace eXl
     static Err Do(Streamer& iStreamer, glm::vec<3,Real> const* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Write(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Write(&iObj->y);
       iStreamer.PopKey();
-      iStreamer.PushKey("Z");
+      iStreamer.PushKey("z");
       iStreamer.Write(&iObj->z);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -325,10 +325,10 @@ namespace eXl
     static Err Do(Streamer& iStreamer, glm::vec<2,Real> const* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Write(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Write(&iObj->y);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -342,16 +342,16 @@ namespace eXl
     static Err Do(Unstreamer& iStreamer, glm::vec<4,Real>* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Read(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Read(&iObj->y);
       iStreamer.PopKey();
-      iStreamer.PushKey("Z");
+      iStreamer.PushKey("z");
       iStreamer.Read(&iObj->z);
       iStreamer.PopKey();
-      iStreamer.PushKey("W");
+      iStreamer.PushKey("w");
       iStreamer.Read(&iObj->w);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -365,13 +365,13 @@ namespace eXl
     static Err Do(Unstreamer& iStreamer, glm::vec<3,Real>* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Read(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Read(&iObj->y);
       iStreamer.PopKey();
-      iStreamer.PushKey("Z");
+      iStreamer.PushKey("z");
       iStreamer.Read(&iObj->z);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -385,10 +385,10 @@ namespace eXl
     static Err Do(Unstreamer& iStreamer, glm::vec<2,Real>* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Read(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Read(&iObj->y);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -402,16 +402,16 @@ namespace eXl
     static inline Err Do(Streamer& iStreamer, Quaternion const* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("W");
+      iStreamer.PushKey("w");
       iStreamer.Write(&iObj->w);
       iStreamer.PopKey();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Write(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Write(&iObj->y);
       iStreamer.PopKey();
-      iStreamer.PushKey("Z");
+      iStreamer.PushKey("z");
       iStreamer.Write(&iObj->z);
       iStreamer.PopKey();
       iStreamer.EndStruct();
@@ -425,16 +425,16 @@ namespace eXl
     static inline Err Do(Unstreamer& iStreamer, Quaternion* iObj)
     {
       iStreamer.BeginStruct();
-      iStreamer.PushKey("W");
+      iStreamer.PushKey("w");
       iStreamer.Read(&iObj->w);
       iStreamer.PopKey();
-      iStreamer.PushKey("X");
+      iStreamer.PushKey("x");
       iStreamer.Read(&iObj->x);
       iStreamer.PopKey();
-      iStreamer.PushKey("Y");
+      iStreamer.PushKey("y");
       iStreamer.Read(&iObj->y);
       iStreamer.PopKey();
-      iStreamer.PushKey("Z");
+      iStreamer.PushKey("z");
       iStreamer.Read(&iObj->z);
       iStreamer.PopKey();
       iStreamer.EndStruct();

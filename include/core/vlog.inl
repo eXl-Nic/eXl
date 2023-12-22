@@ -19,10 +19,17 @@ inline const Log_Manager::LogObject& Log_Manager::operator << (const Log_Manager
   LM.write(StringUtil::FromInt(tolog).c_str());
   return LM;
 }
-#if defined(_WIN64) || defined (__LP64__)
+
 inline const Log_Manager::LogObject& Log_Manager::operator << (const Log_Manager::LogObject& LM,const size_t tolog)
 {
   LM.write(StringUtil::FromSizeT(tolog).c_str());
+  return LM;
+}
+
+#if EXL_32
+inline const Log_Manager::LogObject& Log_Manager::operator << (const Log_Manager::LogObject& LM, const uint64_t tolog)
+{
+  LM.write(StringUtil::FromInt(tolog).c_str());
   return LM;
 }
 #endif
@@ -50,7 +57,7 @@ inline const Log_Manager::LogObject& Log_Manager::operator << (const Log_Manager
 //  LM.write(tolog);
 //  return LM;
 //}
-#ifdef EXL_SHARED_LIBRARY
+#if defined(EXL_SHARED_LIBRARY) || !defined(EXL_USE_CUSTOM_STDALLOC)
 inline const Log_Manager::LogObject& Log_Manager::operator <<(const Log_Manager::LogObject& LM, const std::string& tolog)
 {
   LM.write(tolog.c_str());

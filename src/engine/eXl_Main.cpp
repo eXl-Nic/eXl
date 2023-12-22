@@ -37,7 +37,7 @@
 
 //#define USE_BAKED
 
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
 extern "C"
 FILE* __iob_func()
 {
@@ -75,6 +75,15 @@ extern "C"
 #include <engine/pathfinding/navigator.hpp>
 #include <engine/common/project.hpp>
 #include <engine/game/scenariobase.hpp>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
+#ifndef EXL_MAIN_ADDITONAL_PLUGINS
+#define EXL_MAIN_ADDITONAL_PLUGINS
+#endif
 
 #ifndef EXL_SHARED_LIBRARY
 
@@ -158,6 +167,63 @@ protected:
   size_t m_Size = 0;
   size_t m_CurPos = 0;
 };
+
+#ifdef __EMSCRIPTEN__
+
+class EMFileInputStream : public InputStream
+{
+public:
+
+  EMFileInputStream(char const* iPath)
+  {
+    m_File = fopen(iPath, "rb");
+    if (m_File)
+    {
+      fseek(m_File, 0, SEEK_END);
+      m_Size = ftell(m_File);
+      fseek(m_File, 0, SEEK_SET);
+    }
+    else
+    {
+      LOG_ERROR << "Could not open " << iPath << "\n";
+    }
+  }
+
+  ~EMFileInputStream()
+  {
+    if (m_File)
+    {
+      fclose(m_File);
+    }
+  }
+
+  size_t Read(size_t iOffset, size_t iSize, void* oData) override
+  {
+    if (m_CurPos != iOffset)
+    {
+      fseek(m_File, iOffset, SEEK_SET);
+      m_CurPos = iOffset;
+    }
+    size_t numRead = fread(oData, iSize, 1, m_File);
+    if (numRead != 0)
+    {
+      m_CurPos += iSize;
+    }
+
+    return numRead * iSize;
+  }
+
+  size_t GetSize() const override
+  {
+    return m_Size;
+  }
+protected:
+  FILE* m_File = nullptr;
+  size_t m_Size = 0;
+  size_t m_CurPos = 0;
+};
+
+#endif
 
 class LogPanel : public MenuManager::Panel
 {
@@ -256,7 +322,7 @@ namespace eXl
 
     WorldState* m_World = nullptr;
     Project* m_Project = nullptr;
-    WorldConfig const* m_Conf = nullptr;
+    Optional<WorldConfig> m_Conf;
     bool m_DisplayDebugUI = false;
 
     void InitOGL()
@@ -299,19 +365,21 @@ namespace eXl
       SDL_Init(SDL_INIT_VIDEO);
 
       Vec2i viewportSize(m_Width, m_Height);
-      uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-#ifdef __ANDROID__
+      uint32_t windowFlags = SDL_WINDOW_OPENGL;
+#if EXL_PLAY_PLATFORM
       SDL_DisplayMode mode;
       SDL_GetDisplayMode(0, 0, &mode);
-      viewportSize.X() = mode.w;
-      viewportSize.Y() = mode.h;
-      //windowFlags |= SDL_WINDOW_FULLSCREEN;
+      viewportSize.x = mode.w;
+      viewportSize.y = mode.h;
+#endif
+#ifdef EXL_DESKTOP_PLATFORM
+      windowFlags |= SDL_WINDOW_RESIZABLE;
 #endif
 
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
       SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
       SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
       SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -605,6 +673,10 @@ namespace eXl
       worldCtor.emplace();
       m_World = &(*worldCtor);
       Engine_Application::Start();
+
+      appManifest = EngineCommon::GetBaseProperties();
+      events = EngineCommon::GetBaseEvents();
+      component = EngineCommon::GetComponents();
     }
 
     void Terminated() override
@@ -620,6 +692,11 @@ namespace eXl
     Optional<LuaConsole> m_Console;
     DebugVisualizerState m_DebugVisState;
     Vec2i m_MousePos;
+
+    Project::ProjectTypes types;
+    PropertiesManifest appManifest;
+    EventsManifest events;
+    ComponentManifest component;
   };
 }
 
@@ -636,6 +713,24 @@ eXl_Main::eXl_Main()
 {
   GetApp();
 }
+
+#ifdef __EMSCRIPTEN__
+EM_BOOL EM_OneTick(double time, void* userData) {
+
+  static Clock clock;
+  uint64_t curTimestamp = Clock::GetTimestamp();
+  //uint64_t afterTickTimestamp = Clock::GetTimestamp();
+  //uint64_t nextTimestamp = curTimestamp + minFrameTime * Clock::GetTicksPerSecond();
+  //  
+  //uint64_t sleepTimeInTicks = nextTimestamp - afterTickTimestamp;
+  //uint64_t sleepTimeInMs = 1000.0 * double(sleepTimeInTicks) / Clock::GetTicksPerSecond();
+  float delta = clock.GetTime();
+  SDL_Application& app = GetApp();
+  app.Tick(delta);
+
+  return EM_TRUE;
+}
+#endif
 
 int eXl_Main::Start(int argc, char const* const argv[])
 {
@@ -671,14 +766,21 @@ int eXl_Main::Start(int argc, char const* const argv[])
     });
 #endif
 
-  Project::ProjectTypes types;
-  PropertiesManifest appManifest = EngineCommon::GetBaseProperties();
-  EventsManifest events = EngineCommon::GetBaseEvents();
-  ComponentManifest component = EngineCommon::GetComponents();
+#if defined(__EMSCRIPTEN__)
+  ResourceManager::SetTextFileReadFactory([](char const* iFilePath) -> std::unique_ptr<TextReader>
+    {
+      std::unique_ptr<EMFileInputStream> stream = std::make_unique<EMFileInputStream>(iFilePath);
+      if (stream->GetSize() > 0)
+      {
+        return std::make_unique<InputStreamTextReader>(iFilePath, std::move(stream));
+      }
+      return std::unique_ptr<TextReader>();
+    });
+#endif
   
   app.m_Project = nullptr;
 
-#if defined(__ANDROID__)
+#if EXL_PLAY_PLATFORM
   ResourceManager::BootstrapAssetsFromManifest(String());
 #else
   if (!projectPath.empty())
@@ -710,14 +812,14 @@ int eXl_Main::Start(int argc, char const* const argv[])
     eXl_ASSERT_REPAIR_RET(gamePlugin != nullptr, -1);
   }
   
-  app.m_Project->FillProperties(types, appManifest);
-  app.m_Project->FillEvents(events);
+  app.m_Project->FillProperties(app.types, app.appManifest);
+  app.m_Project->FillEvents(app.events);
+  WorldConfig conf = { *app.m_Project, app.component, app.appManifest, app.events };
+  app.m_Conf.emplace(conf);
 
-  WorldConfig conf = { *app.m_Project, component, appManifest, events };
-  app.m_Conf = &conf;
 
   ResourceManager::AddManifest(EngineCommon::GetComponents());
-  ResourceManager::AddManifest(appManifest);
+  ResourceManager::AddManifest(app.appManifest);
 
 
 #if defined(WIN32) && !defined(USE_BAKED)
@@ -737,7 +839,7 @@ int eXl_Main::Start(int argc, char const* const argv[])
 
   if (Scenario_Base* scenario = Scenario_Base::DynamicCast(app.GetScenario()))
   {
-#if !defined(__ANDROID__)
+#if EXL_DESKTOP_PLATFORM
     if (!app.GetMapPath().empty() && !scenario->GetMapHandle().GetUUID().IsValid())
     {
       MapResource const* mapRsc = ResourceManager::Load<MapResource>(app.GetMapPath());
@@ -761,8 +863,11 @@ int eXl_Main::Start(int argc, char const* const argv[])
   }
 
   app.Start_SDLApp();
-
+#ifndef __EMSCRIPTEN__
   app.DefaultLoop();
+#else
+  emscripten_request_animation_frame_loop(EM_OneTick, 0);
+#endif
   
   return 0;
 }

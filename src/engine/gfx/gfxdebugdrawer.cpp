@@ -172,7 +172,7 @@ namespace eXl
 
           auto const& linesDL = m_Lines[matEntry.second];
 
-          iList.PushDraw(0x1000, OGLDraw::LineList, linesDL.size(), lineNums[matEntry.second], 0);
+          iList.PushDraw(0x1000, OGLDraw::LineList, linesDL.size(), lineNums[matEntry.second]);
 
           iList.PopData();
         }
@@ -260,11 +260,11 @@ namespace eXl
           if (m_Boxes.size() > matEntry.second)
           {
             auto const& boxDL = m_Boxes[matEntry.second];
-            iList.PushDraw(0x1000, OGLDraw::TriangleList, boxDL.size() * 6, boxNums[matEntry.second] * 6, 0);
+            iList.PushDraw(0x1000, OGLDraw::TriangleList, boxDL.size() * 6, boxNums[matEntry.second] * 6);
           }
           if (m_Convex.size() > matEntry.second)
           {
-            iList.PushDraw(0x1000, OGLDraw::TriangleList, convexNumPts[matEntry.second], convexOffset[matEntry.second], 0);
+            iList.PushDraw(0x1000, OGLDraw::TriangleList, convexNumPts[matEntry.second], convexOffset[matEntry.second]);
           }
           iList.PopData();
         }

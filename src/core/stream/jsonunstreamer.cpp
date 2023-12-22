@@ -614,4 +614,12 @@ namespace eXl
 
     return Err::Success;
   }
+
+  const JSONUnstreamer::ElementDesc& JSONUnstreamer::GetCurrentElement() 
+  {
+    static const ElementDesc s_dummyElement;
+    eXl_ASSERT_REPAIR_RET(!m_Stack.empty(), s_dummyElement);
+
+    return *m_Stack.back().elem;
+  }
 }

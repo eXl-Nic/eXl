@@ -29,9 +29,10 @@ namespace eXl
     friend class OGLTextureLoader;
     DECLARE_RefC;
   public:
-
+#if EXL_DESKTOP_PLATFORM
     OGLTexture(OGLBuffer* iBuffer, OGLInternalTextureFormat iFormat);
     OGLTexture(IntrusivePtr<OGLBuffer> const& iBuffer, OGLInternalTextureFormat iFormat);
+#endif
     OGLTexture(Image::Size const& iSize, OGLTextureType iTextureType, OGLInternalTextureFormat iFormat, uint32_t iNumSlices = 0);
 
     void AllocateTexture();

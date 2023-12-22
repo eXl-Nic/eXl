@@ -18,6 +18,11 @@ namespace eXl
   template <class Real>
   struct Segment
   {
+    Segment() = default;
+    Segment(glm::vec<2, Real> const& iExt1, glm::vec<2, Real> const& iExt2) 
+    : m_Ext1(iExt1)
+    , m_Ext2(iExt2){}
+
     glm::vec<2,Real> m_Ext1;
     glm::vec<2,Real> m_Ext2;
 

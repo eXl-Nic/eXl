@@ -23,7 +23,9 @@ namespace eXl
     typedef RttiObject TheRttiClass;
     typedef RttiObject TheRttiParentClass;
     virtual const Rtti& GetRtti() const;
+#ifdef EXL_TYPE_ENABLED
     static Type const* GetType();
+#endif
 
     static inline const RttiObject* DynamicCast(const RttiObject* ptr)
     {

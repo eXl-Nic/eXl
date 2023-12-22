@@ -10,6 +10,7 @@
 #include <engine/gfx/gfxcomponent.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <engine/map/map.hpp>
+#include <engine/map/graphrunner.hpp>
 
 #include <editor/editorstate.hpp>
 #include <editor/resourceselectionwidget.hpp>
@@ -31,7 +32,7 @@ namespace eXl
 {
   struct GraphSimulateWidget::Impl : public QObject
   {
-    Impl(GraphEditor* iEditor, GraphSimulateWidget* iWidget, RewriteSystem& iSys);
+    Impl(GraphEditor* iEditor, GraphSimulateWidget* iWidget, RewriteSystemRsc& iSys);
 
     bool eventFilter(QObject* object, QEvent* event) override;
 
@@ -48,22 +49,22 @@ namespace eXl
 
     GraphEditor* m_Editor;
     GraphSimulateWidget* m_Widget;
+    RewriteSystemRsc& m_SysRsc;
     RewriteSystem& m_Sys;
 
     ResourceSelectionWidget* m_LayoutScriptSelection;
 
     ES_RuleSystem::Graph m_CurGraph;
+    Optional<GraphRunner::NodeData> m_NodeData;
+    Optional<GraphRunner::EdgeData> m_EdgeData;
     bool m_Init = false;
-
-    Optional<DenseGameDataStorage<LevelNodeData>> m_NodeData;
-    Optional<DenseGameDataStorage<LevelEdgeData>> m_EdgeData;
 
     void UdpdateResultGraph();
     void SaveWorld(MapResource& oMap);
     void AddRule(RewriteSystem::SeqItem iItem);
   };
 
-  GraphSimulateWidget::GraphSimulateWidget(GraphEditor* iEditor, RewriteSystem& iSys)
+  GraphSimulateWidget::GraphSimulateWidget(GraphEditor* iEditor, RewriteSystemRsc& iSys)
     : QWidget(iEditor)
     , m_Impl(std::make_unique<Impl>(iEditor, this, iSys))
   {
@@ -112,11 +113,12 @@ namespace eXl
     UdpdateResultGraph();
   };
 
-  GraphSimulateWidget::Impl::Impl(GraphEditor* iEditor, GraphSimulateWidget* iWidget, RewriteSystem& iSys)
+  GraphSimulateWidget::Impl::Impl(GraphEditor* iEditor, GraphSimulateWidget* iWidget, RewriteSystemRsc& iSys)
     : QObject(iWidget)
     , m_Editor(iEditor)
     , m_Widget(iWidget)
-    , m_Sys(iSys)
+    , m_SysRsc(iSys)
+    , m_Sys(iSys.m_Sys)
     , m_Conf(EditorState::BuildWorldConfig())
   {
     m_World.Init(m_Conf).WithGfx();
@@ -248,43 +250,7 @@ namespace eXl
     m_Widget->setLayout(layout);
   }
 
-  class RuleData : public HeapObject
-  {
-    DECLARE_RefC;
-  public:
-    RewriteSystem const* rewriteSys;
-    ObjectHandle ruleObject;
-    Vector<Name> nodeTags;
-    Vector<Name> newNodeTags;
-    Vector<Name> edgeTags;
-    Vector<Name> newEdgeTags;
-  };
-  IMPLEMENT_RefC(RuleData);
-
-  struct SimMatchCtx : ES_RuleSystem::UserMatchContext
-  {
-    DECLARE_RTTI(SimMatchCtx, ES_RuleSystem::UserMatchContext);
-
-    SimMatchCtx(GraphWrapper const& iSrc)
-      : m_SourceGraph(iSrc)
-    {}
-    GraphWrapper const& m_SourceGraph;
-  };
-
-  struct SimRewriteCtx : ES_RuleSystem::UserRewriteContext
-  {
-    DECLARE_RTTI(SimRewriteCtx, ES_RuleSystem::UserRewriteContext);
-
-    SimRewriteCtx(GraphWrapper const& iSrc, GraphWrapper& iDst)
-      : m_SourceGraph(iSrc)
-      , m_DestGraph(iDst)
-    {}
-    GraphWrapper const& m_SourceGraph;
-    GraphWrapper& m_DestGraph;
-  };
-
-  IMPLEMENT_RTTI(SimMatchCtx);
-  IMPLEMENT_RTTI(SimRewriteCtx);
+  
 
   void GraphSimulateWidget::Impl::UdpdateResultGraph()
   {
@@ -299,321 +265,23 @@ namespace eXl
     LuaScriptSystem& luaSys = *world.GetSystem<LuaScriptSystem>();
     luaSys.Reload();
 
-    ES_RuleSystem sys;
-    Vector<String> rules;
-    UnorderedMap<String, uint32_t> rulesIdx;
-
-    Vector<Name> tags;
-    UnorderedMap<Name, uint32_t> tagsIdx;
-    tagsIdx.insert(std::make_pair(RewriteSystem::GetAnyTag(), UINT32_MAX));
-
-    Vector<ObjectHandle> ruleObjects;
-
-    for (auto const& tag : m_Sys.m_Tags)
+    GraphRunner runner(m_SysRsc, world, *m_NodeData, *m_EdgeData);
+    std::unique_ptr<Random> rand(Random::CreateDefaultRNG(0));
+    
+    Vector<GraphRunner::RuleItem> rules;
+    for (int i = 0; i < m_Rules->count(); ++i) 
     {
-      tags.push_back(tag.first);
-      tagsIdx.insert(std::make_pair(tag.first, tags.size() - 1));
-    }
-    for (auto const& ruleEntry : m_Sys.m_Rules)
-    {
-      IntrusivePtr<RuleData> data = MakeRefCounted<RuleData>();
-      data->rewriteSys = &m_Sys;
-      data->ruleObject = world.CreateObject();
-      ruleObjects.push_back(data->ruleObject);
-
-      if (LuaEventHandler const* script = ruleEntry.second.m_RewriteScript.GetOrLoad())
+      if (QListWidgetItem* item = m_Rules->item(i))
       {
-        if (script->m_InterfaceName == "RewriteRule")
-        {
-          luaSys.AddHandler(data->ruleObject, *script);
-        }
+        GraphRunner::RuleItem ruleItem;
+        ruleItem.ruleName = item->text().toUtf8().data();
+        int data = item->data(Qt::UserRole).toInt();
+        ruleItem.application = (RuleApplication)data == RuleApplication::OneMatch ? 1 : 0;
+        rules.push_back(ruleItem);
       }
-
-      auto checkNodeTag = [data](ES_RuleSystem::MatchCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphVtx iVtx)
-      {
-        SimMatchCtx const& ctx = *SimMatchCtx::DynamicCast(iCtx.userCtx);
-        ObjectHandle nodeObj = ctx.m_SourceGraph.GetNodeObject(iVtx);
-        Name nodeTag = ctx.m_SourceGraph.m_NodeData.Get(nodeObj)->m_Tag;
-        if (data->nodeTags[iIdx] == RewriteSystem::GetAnyTag()
-          || data->nodeTags[iIdx] == nodeTag)
-        {
-          static Name const checkNodeEvt("RewriteRule::CheckNode");
-          EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
-          if (evtSys.GetEventHandlerInternal(data->ruleObject, checkNodeEvt) == nullptr)
-          {
-            return true;
-          }
-
-          MatchWrapper wrapper(ctx.m_SourceGraph);
-          Optional<bool> ret = evtSys.Dispatch<bool>(data->ruleObject, checkNodeEvt, wrapper, iIdx, nodeObj);
-
-          eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckNode function", false);
-
-          return *ret;
-        }
-
-        return false;
-      };
-
-      auto checkEdgeTag = [data](ES_RuleSystem::MatchCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphEdge iEdge)
-      {
-        SimMatchCtx const& ctx = *SimMatchCtx::DynamicCast(iCtx.userCtx);
-        ObjectHandle edgeObj = ctx.m_SourceGraph.GetEdgeObject(iEdge);
-        Name edgeTag = ctx.m_SourceGraph.m_EdgeData.Get(edgeObj)->m_Tag;
-        if (data->edgeTags[iIdx] == RewriteSystem::GetAnyTag()
-          || data->edgeTags[iIdx] == edgeTag)
-        {
-          static Name const checkEdgeEvt("RewriteRule::CheckEdge");
-          EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
-          if (evtSys.GetEventHandlerInternal(data->ruleObject, checkEdgeEvt) == nullptr)
-          {
-            return true;
-          }
-
-          MatchWrapper wrapper(ctx.m_SourceGraph);
-          Optional<bool> ret = evtSys.Dispatch<bool>(data->ruleObject, checkEdgeEvt, wrapper, iIdx, edgeObj);
-
-          eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckEdge function", false);
-
-          return *ret;
-        }
-
-        return false;
-      };
-
-      auto checkMatch = [data](ES_RuleSystem::MatchCtx& iCtx, Vector<ES_RuleSystem::GraphVtx> const& iMatch)
-      {
-        SimMatchCtx const& ctx = *SimMatchCtx::DynamicCast(iCtx.userCtx);
-
-        static Name const checkMatchEvt("RewriteRule::CheckMatch");
-        EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
-        if (evtSys.GetEventHandlerInternal(data->ruleObject, checkMatchEvt) == nullptr)
-        {
-          return true;
-        }
-
-        Vector<ObjectHandle> nodeObjects;
-
-        for (auto vtx : iMatch)
-        {
-          nodeObjects.push_back(ctx.m_SourceGraph.GetNodeObject(vtx));
-        }
-
-        MatchWrapper wrapper(ctx.m_SourceGraph);
-        Optional<bool> ret = evtSys.Dispatch<bool>(data->ruleObject, checkMatchEvt, wrapper, nodeObjects);
-
-        eXl_ASSERT_MSG_REPAIR_RET(ret, "Invalid return type for CheckMatch function", false);
-
-        return *ret;
-      };
-
-      auto createNode = [data](ES_RuleSystem::RewriteCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphVtx iVtx)
-      {
-        SimRewriteCtx& ctx = *SimRewriteCtx::DynamicCast(iCtx.userCtx);
-        ObjectHandle nodeObj = ctx.m_DestGraph.AddNode(iVtx);
-        Name tag = data->newNodeTags[iIdx];
-        ctx.m_DestGraph.m_NodeData.Get(nodeObj)->m_Tag = tag;
-        auto iter = data->rewriteSys->m_Tags.find(tag);
-        if (iter != data->rewriteSys->m_Tags.end()
-          && iter->second.m_Archetype.GetUUID().IsValid())
-        {
-          Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
-          ctx.m_DestGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(nodeObj, arch, nullptr);
-        }
-
-        static Name const createNodeEvt("RewriteRule::CreateNode");
-        EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
-        RewriteWrapper wrapper(ctx.m_SourceGraph, ctx.m_DestGraph, iCtx.match);
-        evtSys.Dispatch<void>(data->ruleObject, createNodeEvt, wrapper, iIdx, nodeObj);
-
-      };
-
-      auto createEdge = [data](ES_RuleSystem::RewriteCtx& iCtx, uint32_t iIdx, ES_RuleSystem::GraphEdge iEdge)
-      {
-        SimRewriteCtx& ctx = *SimRewriteCtx::DynamicCast(iCtx.userCtx);
-        ObjectHandle edgeObj = ctx.m_DestGraph.AddEdge(iEdge);
-        Name tag = data->newEdgeTags[iIdx];
-        ctx.m_DestGraph.m_EdgeData.Get(edgeObj)->m_Tag = tag;
-        auto iter = data->rewriteSys->m_Tags.find(tag);
-        if (iter != data->rewriteSys->m_Tags.end()
-          && iter->second.m_Archetype.GetUUID().IsValid())
-        {
-          Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
-          ctx.m_DestGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(edgeObj, arch, nullptr);
-        }
-
-        static Name const createEdgeEvt("RewriteRule::CreateEdge");
-        EventSystem& evtSys = *ctx.m_SourceGraph.m_World.GetSystem<EventSystem>();
-        RewriteWrapper wrapper(ctx.m_SourceGraph, ctx.m_DestGraph, iCtx.match);
-        evtSys.Dispatch<void>(data->ruleObject, createEdgeEvt, wrapper, iIdx, edgeObj);
-      };
-
-      auto removeNode = [data](ES_RuleSystem::RewriteCtx& iCtx, ES_RuleSystem::GraphVtx iVtx)
-      {
-        SimRewriteCtx& ctx = *SimRewriteCtx::DynamicCast(iCtx.userCtx);
-        ctx.m_DestGraph.RemoveNode(iVtx);
-      };
-
-      auto removeEdge = [data](ES_RuleSystem::RewriteCtx& iCtx, ES_RuleSystem::GraphEdge iEdge)
-      {
-        SimRewriteCtx& ctx = *SimRewriteCtx::DynamicCast(iCtx.userCtx);
-        ctx.m_DestGraph.RemoveEdge(iEdge);
-      };
-
-      rules.push_back(ruleEntry.first);
-      rulesIdx.insert(std::make_pair(ruleEntry.first, rules.size() - 1));
-      auto const& rule = ruleEntry.second;
-
-      ES_RuleSystem::RuleBuilder builder;
-
-      for (auto const& node : rule.m_ContextNodes)
-      {
-        auto iter = tagsIdx.find(node);
-        eXl_ASSERT_MSG_REPAIR_RET(iter != tagsIdx.end(), eXl_FORMAT("Tag %s not found", node.c_str()), void());
-
-        builder.AddNode(iter->second, checkNodeTag);
-        data->nodeTags.push_back(node);
-      }
-
-      for (auto const& node : rule.m_CutNodes)
-      {
-        auto iter = tagsIdx.find(node);
-        eXl_ASSERT_MSG_REPAIR_RET(iter != tagsIdx.end(), eXl_FORMAT("Tag %s not found", node.c_str()), void());
-
-        builder.AddCutNode(iter->second, checkNodeTag, removeNode);
-        data->nodeTags.push_back(node);
-      }
-
-      for (auto const& node : rule.m_CreateNodes)
-      {
-        auto iter = tagsIdx.find(node);
-        eXl_ASSERT_MSG_REPAIR_RET(iter != tagsIdx.end(), eXl_FORMAT("Tag %s not found", node.c_str()), void());
-
-        builder.AddNewNode(iter->second, createNode);
-        data->newNodeTags.push_back(node);
-      }
-
-      for (auto const& edgeDesc : rule.m_ContextEdges)
-      {
-        auto iter = tagsIdx.find(edgeDesc.tag);
-        eXl_ASSERT_MSG_REPAIR_RET(iter != tagsIdx.end(), eXl_FORMAT("Tag %s not found", edgeDesc.tag.c_str()), void());
-
-        builder.AddConnection(edgeDesc.nodes[0], edgeDesc.nodes[1], iter->second, checkEdgeTag);
-        data->edgeTags.push_back(edgeDesc.tag);
-      }
-
-      for (auto const& edgeDesc : rule.m_CutEdge)
-      {
-        auto iter = tagsIdx.find(edgeDesc.tag);
-        eXl_ASSERT_MSG_REPAIR_RET(iter != tagsIdx.end(), eXl_FORMAT("Tag %s not found", edgeDesc.tag.c_str()), void());
-
-        builder.AddCutConnection(edgeDesc.nodes[0], edgeDesc.nodes[1], iter->second, checkEdgeTag, removeEdge);
-        data->edgeTags.push_back(edgeDesc.tag);
-      }
-
-      for (auto const& edgeDesc : rule.m_NewEdge)
-      {
-        auto iter = tagsIdx.find(edgeDesc.tag);
-        eXl_ASSERT_MSG_REPAIR_RET(iter != tagsIdx.end(), eXl_FORMAT("Tag %s not found", edgeDesc.tag.c_str()), void());
-
-        builder.AddNewConnection(edgeDesc.nodes[0], edgeDesc.nodes[1], edgeDesc.port[0], edgeDesc.port[1], iter->second, createEdge);
-        data->newEdgeTags.push_back(edgeDesc.tag);
-      }
-      builder.End(sys, checkMatch);
     }
 
-    m_CurGraph.clear();
-    m_NodeData->Clear();
-    m_EdgeData->Clear();
-    UniquePtr<Random> rand(Random::CreateDefaultRNG(0));
-
-    Vector<ObjectHandle> oldNodes;
-
-    for (uint32_t i = 0; i < m_Rules->count(); ++i)
-    {
-      oldNodes.clear();
-
-      for (auto vtx : VerticesIter(m_CurGraph))
-      {
-        LevelNodeData const* data = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_CurGraph, vtx));
-        oldNodes.push_back(data->m_Object);
-      }
-      for (auto edge : EdgesIter(m_CurGraph))
-      {
-        LevelEdgeData const* data = LevelEdgeData::DynamicCast(boost::get(boost::edge_name, m_CurGraph, edge));
-        oldNodes.push_back(data->m_Object);
-      }
-
-      QListWidgetItem* item = m_Rules->item(i);
-      String ruleName(item->text().toUtf8().data());
-      RuleApplication application = (RuleApplication)item->data(Qt::UserRole).toInt();
-
-      auto iter = rulesIdx.find(ruleName);
-      if (iter != rulesIdx.end())
-      {
-        GraphWrapper srcGraphWrapper(world, m_CurGraph, *m_NodeData, *m_EdgeData);
-
-        SimMatchCtx matchCtx(srcGraphWrapper);
-        if (application == RuleApplication::OneMatch)
-        {
-          auto matchings = sys.FindRuleMatch(iter->second, m_CurGraph, &matchCtx);
-          if (matchings.size() > 0)
-          {
-            uint32_t matchToConsider = rand->Generate() % matchings.size();
-
-            ES_RuleSystem::Graph newGraph;
-            GraphWrapper dstGraphWrapper(world, newGraph, *m_NodeData, *m_EdgeData);
-
-            SimRewriteCtx rewriteCtx(srcGraphWrapper, dstGraphWrapper);
-            sys.ApplyRule(m_CurGraph, newGraph, iter->second, matchings[matchToConsider], &rewriteCtx);
-            static Name const postRewrite("RewriteRule::PostRewrite");
-            EventSystem& evtSys = *rewriteCtx.m_DestGraph.m_World.GetSystem<EventSystem>();
-            ObjectHandle ruleObj = ruleObjects[iter->second];
-            if (evtSys.GetEventHandlerInternal(ruleObj, postRewrite) != nullptr)
-            {
-              RewriteWrapper rwWrapper(srcGraphWrapper, dstGraphWrapper, matchings[matchToConsider]);
-              GraphFactoryWrapper factory(dstGraphWrapper, m_Sys);
-              evtSys.Dispatch<void>(ruleObj, postRewrite, rwWrapper, factory);
-            }
-            m_CurGraph = newGraph;
-            for (auto vtx : VerticesIter(m_CurGraph))
-            {
-              ES_RuleSystem::NodeData const* data = boost::get(boost::vertex_name, m_CurGraph, vtx);
-              data->CopyNode(vtx);
-            }
-            for (auto edge : EdgesIter(m_CurGraph))
-            {
-              ES_RuleSystem::EdgeData const* data = boost::get(boost::edge_name, m_CurGraph, edge);
-              data->CopyEdge(edge);
-            }
-          }
-        }
-        else if (application == RuleApplication::AllMatch)
-        {
-          ES_RuleSystem::Graph newGraph;
-          GraphWrapper dstGraphWrapper(world, newGraph, *m_NodeData, *m_EdgeData);
-
-          SimRewriteCtx rewriteCtx(srcGraphWrapper, dstGraphWrapper);
-          sys.ApplyRuleParallel(m_CurGraph, newGraph, iter->second, &matchCtx, &rewriteCtx);
-          m_CurGraph = newGraph;
-          for (auto vtx : VerticesIter(m_CurGraph))
-          {
-            ES_RuleSystem::NodeData const* data = boost::get(boost::vertex_name, m_CurGraph, vtx);
-            data->CopyNode(vtx);
-          }
-          for (auto edge : EdgesIter(m_CurGraph))
-          {
-            ES_RuleSystem::EdgeData const* data = boost::get(boost::edge_name, m_CurGraph, edge);
-            data->CopyEdge(edge);
-          }
-        }
-        uint32_t nodeIdx = 0;
-        for (auto vtx : VerticesIter(m_CurGraph))
-        {
-          boost::put(boost::vertex_index, m_CurGraph, vtx, nodeIdx++);
-        }
-      }
-    }
+    runner.RunRules(*rand, rules, m_CurGraph);
 
     TGraphMap < ES_RuleSystem::Graph, boost::rectangle_topology<>::point_type> positionMap;
     TGraphMap < ES_RuleSystem::Graph, int> componentsMap;
@@ -623,13 +291,13 @@ namespace eXl
     defaultPos[0] = 0;
     defaultPos[1] = 0;
 
-    GraphWrapper graphWrapper(world, m_CurGraph, *m_NodeData, *m_EdgeData);
+    GraphWrapper graphWrapper(world, m_CurGraph, runner.m_NodeData, runner.m_EdgeData);
     m_GraphPainter->nodes.resize(boost::num_vertices(m_CurGraph));
     m_GraphPainter->nodeDesc.resize(boost::num_vertices(m_CurGraph));
     for (auto vtx : VerticesIter(m_CurGraph))
     {
       ObjectHandle nodeObj = graphWrapper.GetNodeObject(vtx);
-      LevelNodeData const* node = m_NodeData->Get(nodeObj);
+      LevelNodeData const* node = runner.m_NodeData.Get(nodeObj);
       Name nodeTag = node->m_Tag;
       m_GraphPainter->nodesColor.push_back(qRgb(0, 0, 255));
       boost::put(positionMap, vtx, defaultPos);
@@ -647,7 +315,7 @@ namespace eXl
     for (auto edge : EdgesIter(m_CurGraph))
     {
       ObjectHandle edgeObj = graphWrapper.GetEdgeObject(edge);
-      Name edgeTag = m_EdgeData->Get(edgeObj)->m_Tag;
+      Name edgeTag = runner.m_EdgeData.Get(edgeObj)->m_Tag;
       m_GraphPainter->edgesColor.push_back(qRgb(0, 0, 255));
       m_GraphPainter->edgeDesc.push_back(QString::fromUtf8(edgeTag.c_str()));
     }
@@ -705,13 +373,13 @@ namespace eXl
 
     GameDataView<GfxSpriteComponent::Desc> const* spriteDescView = GetSpriteComponentView(world);
 
-    m_NodeData->Iterate([&](ObjectHandle iObj, LevelNodeData const& iData)
+    runner.m_NodeData.Iterate([&](ObjectHandle iObj, LevelNodeData const& iData)
       {
         auto pos = boost::get(positionMap, iData.m_Vtx);
         m_GraphPainter->nodes[boost::get(boost::vertex_index, m_CurGraph, iData.m_Vtx)] = QPointF(pos[0], pos[1]);
 
-        auto iter = m_Sys.m_Tags.find(iData.m_Tag);
-        if (iter != m_Sys.m_Tags.end()
+        auto iter = m_SysRsc.m_Tags.find(iData.m_Tag);
+        if (iter != m_SysRsc.m_Tags.end()
           && iter->second.m_Archetype.GetUUID().IsValid())
         {
           Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
@@ -738,126 +406,10 @@ namespace eXl
   }
 }
 
-#include <engine/map/dungeonlayout.hpp>
-
 namespace eXl
 {
 
-  void FindVtxToConnect(GameDataView<RoomLayoutInfo>& iLayoutData,
-    ES_RuleSystem::Graph const & iGraph, 
-    ES_RuleSystem::GraphVtx iCollapseVtx, 
-    SmallVector<ES_RuleSystem::GraphVtx, 2>& oVtxToConnect, 
-    UnorderedSet<ES_RuleSystem::GraphVtx>& oCollapsed)
-  {
-    if(oCollapsed.count(iCollapseVtx) != 0)
-    {
-      return;
-    }
-    oCollapsed.insert(iCollapseVtx);
-    for (auto edge : OutEdgesIter(iGraph, iCollapseVtx))
-    {
-      ES_RuleSystem::GraphVtx target = GetTarget(iCollapseVtx, edge);
-      LevelNodeData const* nodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, iGraph, target));
-      ObjectHandle nodeObj = nodeData->m_Object;
-      if (auto layoutInfo = iLayoutData.Get(nodeObj))
-      {
-        if (layoutInfo->m_CollapseNode)
-        {
-          FindVtxToConnect(iLayoutData, iGraph, target, oVtxToConnect, oCollapsed);
-        }
-        else if(!layoutInfo->m_CollapseNode && !layoutInfo->m_RoomSizes.empty())
-        {
-          auto iter = std::find(oVtxToConnect.begin(), oVtxToConnect.end(), iCollapseVtx);
-          if( iter == oVtxToConnect.end())
-          {
-            oVtxToConnect.push_back(target);
-          }
-        }
-      }
-    }
-  }
-
-  using VtxMapping = UnorderedMap<ES_RuleSystem::GraphVtx, ES_RuleSystem::GraphVtx>;
-
-  void MakeEdge(
-    ES_RuleSystem::Graph& oGraph,
-    VtxMapping const& iGraphMap,
-    UnorderedSet<std::pair<ES_RuleSystem::GraphVtx, ES_RuleSystem::GraphVtx>>& iHandledPairs,
-    VtxMapping::iterator iVtx1, VtxMapping::iterator iVtx2
-    )
-  {
-    auto pair = std::make_pair(iVtx1->first, iVtx2->first);
-    if (pair.first > pair.second)
-    {
-      std::swap(pair.first, pair.second);
-    }
-    if (iHandledPairs.count(pair) == 0)
-    {
-      auto newEdge = boost::add_edge(iVtx1->second, iVtx2->second, oGraph).first;
-      EdgeLayoutData* layoutData = new EdgeLayoutData;
-      layoutData->m_Ignore = false;
-      boost::put(boost::edge_name, oGraph, newEdge, layoutData);
-      iHandledPairs.insert(pair);
-    }
-  }
-
-  void FillTerrain(ES_RuleSystem::Graph const& iGraph,
-    //Layout const& iRooms,
-    Vector<AABB2Di>& iRooms,
-    Vector<AABB2DPolygoni>& oRooms,
-    Vector<AABB2DPolygoni>& oWalls)
-  {
-    //uint32_t scaleFactor = 4;
-    for (auto const& room : iRooms)
-    {
-      if (iRooms.size() != 1)
-      {
-        //AABB2Di scaledRoom = room;
-        //scaledRoom.m_Min *= scaleFactor;
-        //scaledRoom.m_Max *= scaleFactor;
-        AABB2DPolygoni tempRoom(room);
-        Vector<AABB2DPolygoni> tempShrink;
-        //tempRoom.Shrink(2, tempShrink);
-        //oRooms.insert(oRooms.end(), tempShrink.begin(), tempShrink.end());
-        // 
-        oRooms.push_back(room);
-        
-      }
-      else
-      {
-        oRooms.push_back(room);
-        //oRooms[0].Scale(scaleFactor);
-      }
-    }
-
-    AABB2Di enclosingBox = oRooms[0].GetAABB();
-    for (uint32_t i = 1; i < oRooms.size(); ++i)
-    {
-      enclosingBox.Absorb(oRooms[i].GetAABB());
-    }
-
-    AABB2Di fullSpace = enclosingBox;
-    fullSpace.m_Data[0] -= One<Vec2i>() * 5;
-    fullSpace.m_Data[1] += One<Vec2i>() * 5;
-
-    AABB2DPolygoni::Merge(oRooms);
-
-    oWalls.push_back(AABB2DPolygoni(fullSpace));
-    Vector<AABB2DPolygoni> wallsTemp;
-
-    for (auto& poly : oRooms)
-    {
-      for (auto& wall : oWalls)
-      {
-        Vector<AABB2DPolygoni> wallsOut;
-        wall.Difference(poly, wallsOut);
-        wallsTemp.insert(wallsTemp.end(), wallsOut.begin(), wallsOut.end());
-      }
-      AABB2DPolygoni::Merge(wallsTemp);
-      oWalls = std::move(wallsTemp);
-    }
-  }
-
+#if 0
   void FillTerrain_Old(ES_RuleSystem::Graph const& iGraph, 
     Layout const& iRooms, 
     Vector<AABB2DPolygoni>& oRooms,
@@ -940,88 +492,14 @@ namespace eXl
       }
     }
   }
+#endif
 
   void GraphSimulateWidget::Impl::SaveWorld(MapResource& oMap)
   {
     World& world = m_World.GetWorld();
     GameDatabase& db = *world.GetSystem<GameDatabase>();
-
-    auto layoutInfoView = db.GetView<RoomLayoutInfo>();
-
-    ES_RuleSystem::Graph layoutGraph;
-    UnorderedMap<ES_RuleSystem::GraphVtx, ES_RuleSystem::GraphVtx> graphMap;
-    for (auto vtx : VerticesIter(m_CurGraph)) 
-    {
-      LevelNodeData const* nodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_CurGraph, vtx));
-      ObjectHandle nodeObj = nodeData->m_Object;
-      if (auto layoutInfo = layoutInfoView->Get(nodeObj)) 
-      {
-        if(!layoutInfo->m_CollapseNode && !layoutInfo->m_RoomSizes.empty())
-        {
-          auto iter = graphMap.insert(std::make_pair( vtx, boost::add_vertex(layoutGraph))).first;
-          NodeLayoutData* layoutData = new NodeLayoutData;
-          layoutData->m_PossibleRoomSize = layoutInfo->m_RoomSizes;
-          layoutData->m_Ignore = false;
-          boost::put(boost::vertex_name, layoutGraph, iter->second, layoutData);
-          boost::put(boost::vertex_index, layoutGraph, iter->second, graphMap.size() - 1);
-        }
-      }
-    }
-
-    UnorderedSet<ES_RuleSystem::GraphVtx> collapsed;
-    UnorderedSet<std::pair<ES_RuleSystem::GraphVtx, ES_RuleSystem::GraphVtx>> handledPairs;
-    for (auto vtx : VerticesIter(m_CurGraph))
-    {
-      auto iter = graphMap.find(vtx);
-      if (iter != graphMap.end())
-      {
-        for (auto edge : OutEdgesIter(m_CurGraph, vtx))
-        {
-          ES_RuleSystem::GraphVtx target = GetTarget(vtx, edge);
-          auto iter2 = graphMap.find(target);
-          if(iter2 != graphMap.end())
-          {
-            MakeEdge(layoutGraph, graphMap, handledPairs, iter, iter2);
-          }
-        }
-        continue;
-      }
-      
-      LevelNodeData const* nodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_CurGraph, vtx));
-      ObjectHandle nodeObj = nodeData->m_Object;
-      if (auto layoutInfo = layoutInfoView->Get(nodeObj))
-      {
-        if(layoutInfo->m_CollapseNode)
-        {
-          SmallVector<ES_RuleSystem::GraphVtx, 2> vtxToConnect;
-          FindVtxToConnect(*layoutInfoView, m_CurGraph, vtx, vtxToConnect, collapsed);
-          for(uint32_t i = 0; i<vtxToConnect.size(); ++i)
-          {
-            auto iter = graphMap.find(vtxToConnect[i]);
-            if (iter != graphMap.end())
-            {
-              for (uint32_t j = i + 1; j < vtxToConnect.size(); ++j)
-              {
-                auto iter2 = graphMap.find(vtxToConnect[j]);
-                if (iter2 != graphMap.end())
-                {
-                  MakeEdge(layoutGraph, graphMap, handledPairs, iter, iter2);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    UnorderedMap<ES_RuleSystem::GraphVtx, ES_RuleSystem::GraphVtx> revMap;
-    for (auto const& entry : graphMap) 
-    {
-      revMap.insert(std::make_pair(entry.second, entry.first));
-    }
-
+    
     UniquePtr<Random> rand(Random::CreateDefaultRNG(0));
-    LayoutCollection col = LayoutGraph(layoutGraph, *rand);
 
     int terrainFloorIdx = -1;
     int terrainWallIdx = -1;
@@ -1054,73 +532,26 @@ namespace eXl
     MapResource::Terrain& terrainWall = oMap.m_Terrains[terrainWallIdx];
     terrainRoom.m_Blocks.clear();
     terrainWall.m_Blocks.clear();
-    if (!col.empty())
+
+    Resource::UUID scriptId = m_LayoutScriptSelection->GetSelectedResourceId();
+    ResourceHandle<LuaEventHandler> layoutScript;
+    layoutScript.SetUUID(scriptId);
+    
+    Vector<AABB2DPolygoni> oRooms;
+    Vector<AABB2DPolygoni> oWalls;
+    GraphRunner::LayoutGraph(world, *rand, m_CurGraph, oRooms, oWalls, layoutScript.GetOrLoad());
+
+    terrainRoom.m_Blocks.resize(oRooms.size());
+    for (uint32_t i = 0; i < oRooms.size(); ++i)
     {
-      Name ppFun("LayoutPostProcess::ProcessRoom");
-
-      ObjectHandle scriptObj = world.CreateObject();
-      EventSystem& evtSys = *world.GetSystem<EventSystem>();
-      LuaScriptSystem& luaSys = *world.GetSystem<LuaScriptSystem>();
-      Resource::UUID id = m_LayoutScriptSelection->GetSelectedResourceId();
-      Resource const * rsc = ResourceManager::LoadExpectedType(id, LuaEventHandler::StaticLoaderName());
-      if( rsc != nullptr)
-      {
-        luaSys.AddHandler(scriptObj, *static_cast<LuaEventHandler const *>(rsc));
-      }
-      
-      Layout lay = col[0];
-      Vector<AABB2Di> boxes;
-      UnorderedMap<ES_RuleSystem::GraphVtx, uint32_t> roomMap;
-      for (auto const& room : lay)
-      {
-        roomMap.insert(std::make_pair(room.m_Node, roomMap.size()));
-      }
-
-      for (auto room : lay)
-      {
-        auto iter = revMap.find(room.m_Node);
-        if (iter != revMap.end())
-        {
-          LevelNodeData const* nodeData = LevelNodeData::DynamicCast(boost::get(boost::vertex_name, m_CurGraph, iter->second));
-          ObjectHandle nodeObj = nodeData->m_Object;
-          if (auto layoutInfo = layoutInfoView->Get(nodeObj))
-          {
-            Vector<AABB2Di> doors;
-            for (auto edge : OutEdgesIter(layoutGraph, iter->first))
-            {
-              auto vtx1 = edge.m_source;
-              auto vtx2 = edge.m_target;
-
-              AABB2Di doorPlace;
-              doorPlace.SetCommonBox(lay[roomMap[vtx1]].m_Box, lay[roomMap[vtx2]].m_Box);
-              doors.push_back(doorPlace);
-            }
-
-            layoutInfo->m_Layout = room.m_Box;
-            if(Optional<Vector<AABB2Di>> newBoxes = evtSys.Dispatch<Vector<AABB2Di>>(scriptObj, ppFun, nodeObj, doors))
-            {
-              boxes.insert(boxes.end(), newBoxes->begin(), newBoxes->end());
-            }
-          }
-        }
-      }
-
-      Vector<AABB2DPolygoni> oRooms;
-      Vector<AABB2DPolygoni> oWalls;
-      FillTerrain(layoutGraph, boxes, oRooms, oWalls);
-
-      terrainRoom.m_Blocks.resize(oRooms.size());
-      for (uint32_t i = 0; i < oRooms.size(); ++i)
-      {
-        terrainRoom.m_Blocks[i].m_Shape = oRooms[i];
-        terrainRoom.m_Blocks[i].m_Layer = 0;
-      }
-      terrainWall.m_Blocks.resize(oWalls.size());
-      for (uint32_t i = 0; i < oWalls.size(); ++i)
-      {
-        terrainWall.m_Blocks[i].m_Shape = oWalls[i];
-        terrainWall.m_Blocks[i].m_Layer = 0;
-      }
+      terrainRoom.m_Blocks[i].m_Shape = oRooms[i];
+      terrainRoom.m_Blocks[i].m_Layer = 0;
+    }
+    terrainWall.m_Blocks.resize(oWalls.size());
+    for (uint32_t i = 0; i < oWalls.size(); ++i)
+    {
+      terrainWall.m_Blocks[i].m_Shape = oWalls[i];
+      terrainWall.m_Blocks[i].m_Layer = 0;
     }
 
     for (auto vtx : VerticesIter(m_CurGraph))

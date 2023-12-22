@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
-
+#ifdef EXL_TYPE_ENABLED
 #include <core/coredef.hpp>
 #include <core/type/typetraits.hpp>
 #include <core/type/fielddesc.hpp>
@@ -173,3 +173,4 @@ namespace eXl
     }
   }
 }
+#endif

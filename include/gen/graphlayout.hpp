@@ -10,27 +10,37 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
-#include <core/stream/textreader.hpp>
+#include <engine/enginelib.hpp>
+#include <gen/pregraph.hpp>
+#include <math/aabb2d.hpp>
 
 namespace eXl
 {
-  class EXL_CORE_API FileTextReader : public StringViewReader
+  class Random;
+  struct Room
   {
-  public:
-
-    static FileTextReader* Create(const char* path);
-    ~FileTextReader();
-
-  protected:
-
-    FileTextReader(String const& iIdent, void* iFile, void* iMapping, char const* iFileBegin, char const* iFileEnd)
-      : StringViewReader(iIdent, iFileBegin, iFileEnd)
-      , m_File(iFile)
-      , m_Mapping(iMapping)
-    {
-    }
-
-    void* m_File;
-    void* m_Mapping;
+    AABB2Di m_Box;
+    ES_RuleSystem::GraphVtx m_Node;
   };
+
+  struct EXL_GEN_API NodeLayoutData : public ES_RuleSystem::NodeData
+  {
+    DECLARE_RTTI(NodeLayoutData, ES_RuleSystem::NodeData);
+
+    Vector<Vec2i> m_PossibleRoomSize;
+    bool m_Ignore = false;
+  };
+
+  struct EXL_GEN_API EdgeLayoutData : public ES_RuleSystem::EdgeData
+  {
+    DECLARE_RTTI(EdgeLayoutData, ES_RuleSystem::EdgeData);
+
+    bool m_Ignore = false;
+  };
+
+  typedef Vector<Room> Layout;
+  typedef Vector<Layout> LayoutCollection;
+
+  EXL_GEN_API LayoutCollection LayoutGraph(ES_RuleSystem::Graph const& iGraph, Random& iRand);
 }
+

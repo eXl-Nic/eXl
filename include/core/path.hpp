@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <core/coredef.hpp>
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
 #define EXL_RSC_HAS_FILESYSTEM
 #endif
 #include <filesystem>

@@ -284,7 +284,7 @@ namespace eXl
     {
       String const& itfName = itf.first;
       auto insertRet = oManifest.m_Interfaces.insert(std::make_pair(itfName, EventsManifest::FunctionsMap()));
-      eXl_ASSERT_MSG(insertRet.second, eXl_FORMAT("Duplicated interface name %s", itfName));
+      eXl_ASSERT_MSG(insertRet.second, eXl_FORMAT("Duplicated interface name %s", itfName.c_str()));
       auto& funMap = insertRet.first->second;
 
       for (auto const& funDesc : itf.second)

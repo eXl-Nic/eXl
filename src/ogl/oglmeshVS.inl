@@ -1,5 +1,5 @@
 char const* meshVS =
-#ifdef __ANDROID__
+#ifdef EXL_PLAY_PLATFORM
 "precision mediump float;\n"
 #else
 "#version 140\n"

@@ -200,7 +200,7 @@ namespace eXl
     iList.PushData(&m_RndData.skyCam);
     iList.SetVAssembly(&m_SkyBoxVtx);
     iList.SetProgram(m_SkyBoxProg);
-    iList.PushDraw(1, OGLDraw::TriangleList, 36, 0, 0);
+    iList.PushDraw(1, OGLDraw::TriangleList, 36, 0);
     iList.PopData();
 
     iList.SetDepth(true, true);

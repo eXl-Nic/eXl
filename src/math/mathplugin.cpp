@@ -30,6 +30,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace eXl
 {
+
+#if EXL_TYPE_ENABLED
+
   Type const* Get_eXl__Vec4_Type()
   {
     static Type const* s_Type = []
@@ -148,6 +151,8 @@ namespace eXl
 
   IMPLEMENT_TYPE(Mat4)
   IMPLEMENT_TYPE(AABB2DPolygoni)
+
+#endif
 
   void DeclareMath()
   {

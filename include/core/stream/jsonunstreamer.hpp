@@ -27,6 +27,51 @@ namespace eXl
     typedef size_t StreamOffset;
     typedef TextReader IStream;
 
+    enum ElementKind
+    {
+      Invalid = 0,
+      ValueKind = 1,
+      StructKind = 2,
+      SequenceKind = 3
+    };
+
+    struct ElementDesc : public HeapObject
+    {
+      ElementDesc() : kind(Invalid)
+        , elemBegin(0)
+        , elemEnd(0)
+      {}
+      virtual ~ElementDesc() {}
+
+      ElementKind  kind;
+      StreamOffset elemBegin;
+      StreamOffset elemEnd;
+    };
+
+    struct ElemStruct : ElementDesc
+    {
+      ~ElemStruct()
+      {
+        for (auto elem : m_Fields)
+        {
+          eXl_DELETE elem.second;
+        }
+      }
+      UnorderedMap<KString, ElementDesc*> m_Fields;
+    };
+
+    struct ElemSequence : ElementDesc
+    {
+      ~ElemSequence()
+      {
+        for (auto elem : m_Elements)
+        {
+          eXl_DELETE elem;
+        }
+      }
+      Vector<ElementDesc*> m_Elements;
+    };
+
     JSONUnstreamer(IStream* iInStream);
 
     Err Begin();
@@ -50,14 +95,9 @@ namespace eXl
     Err ReadString(String* oStr);
     Err ReadBinary(Vector<uint8_t>* oData);
 
-  protected:
+    const ElementDesc& GetCurrentElement();
 
-    enum ElementKind
-    {
-      ValueKind    = 1,
-      StructKind   = 2,
-      SequenceKind = 3
-    };
+  protected:
 
     Err ClearWhiteSpaces();
 
@@ -66,39 +106,6 @@ namespace eXl
     Err GetValueEnd(StreamOffset& oPos);
 
     //Err NextSequence();
-
-    struct ElementDesc : public HeapObject
-    {
-      virtual ~ElementDesc(){}
-
-      ElementKind  kind;
-      StreamOffset elemBegin;
-      StreamOffset elemEnd;
-    };
-
-    struct ElemStruct : ElementDesc
-    {
-      ~ElemStruct()
-      {
-        for(auto elem : m_Fields)
-        {
-          eXl_DELETE elem.second;
-        }
-      }
-      UnorderedMap<KString, ElementDesc*> m_Fields;
-    };
-
-    struct ElemSequence : ElementDesc
-    {
-      ~ElemSequence()
-      {
-        for(auto elem : m_Elements)
-        {
-          eXl_DELETE elem;
-        }
-      }
-      Vector<ElementDesc*> m_Elements;
-    };
 
     JSONUnstreamer::ElementDesc* GetNextElement();
 

@@ -37,14 +37,12 @@ namespace eXl
     if (!s_Initialized)
     {
 #ifdef EXL_WITH_OGL
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       glewInit();
-#endif
-#endif
 
       //LOG_INFO << "GL version : " << (char*)glGetString(GL_VERSION) << "\n";
 
-      int flags; 
+      int flags;
       glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
       if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
       {
@@ -56,6 +54,10 @@ namespace eXl
           GL_DEBUG_SEVERITY_HIGH,
           0, nullptr, GL_TRUE);
       }
+#endif
+#endif
+
+      
 
       s_Initialized = true;
     }

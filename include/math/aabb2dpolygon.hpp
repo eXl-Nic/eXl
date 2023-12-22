@@ -26,6 +26,9 @@ namespace boost
 namespace eXl
 {
   template <typename Real>
+  class AABB2DPolygonPtList : public Vector<glm::vec<2, Real>> {};
+
+  template <typename Real>
   class AABB2DPolygon
   {
     template <class T,typename enable>
@@ -33,8 +36,8 @@ namespace eXl
     template <class T,typename enable>
     friend struct boost::polygon::polygon_with_holes_mutable_traits;
   public:
-
-    typedef Vector<glm::vec<2,Real> > PtList;
+    typedef Real RealType;
+    typedef AABB2DPolygonPtList<Real> PtList;
     typedef Vector<PtList> PtLists;
 
     AABB2DPolygon();
@@ -80,14 +83,19 @@ namespace eXl
 
     inline AABB2D<Real> const& GetAABB()const{return m_AABB;}
 
-    inline PtList const& Border() const{return m_Ext;}
+    inline Vector<glm::vec<2, Real>> const& Border() const { return m_Ext; }
 
-    inline PtLists const& Holes() const{return m_Holes;}
+    inline Vector < Vector<glm::vec<2, Real>>> const& Holes() const { return reinterpret_cast<Vector<Vector<glm::vec<2, Real>>> const&>(m_Holes); }
 
-    inline PtList& Border() {return m_Ext;}
+    inline Vector<glm::vec<2, Real>>& Border() { return m_Ext; }
 
-    inline PtLists& Holes() {return m_Holes;}
+    inline Vector < Vector<glm::vec<2, Real>>>& Holes() { return reinterpret_cast<Vector<Vector<glm::vec<2, Real>>>&>(m_Holes); }
 
+    inline PtList const& BorderT() const { return m_Ext; }
+    inline const PtLists& HolesT() const { return m_Holes; }
+    inline PtList& BorderT() { return m_Ext; }
+    inline PtLists& HolesT() { return m_Holes; }
+    
     int AddBox(AABB2D<Real> const& iBox);
 
     void RemoveUselessPoints();

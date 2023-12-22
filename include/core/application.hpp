@@ -44,6 +44,8 @@ namespace eXl
 
     void DefaultLoop();
 
+    void SingleTick();
+
     virtual void Tick(float iDelta)
     {
       PumpMessages(iDelta);

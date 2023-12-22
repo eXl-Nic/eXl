@@ -63,7 +63,7 @@ namespace eXl
 
 #define DYNAMIC_CAST(a) DynamicCast(a)
 
-#define DECLARE_RTTI(ClassName,TheParentRttiClass)                         \
+#define DECLARE_RTTI_IMPL(ClassName,TheParentRttiClass)                         \
   public:                                                           \
   typedef ClassName TheRttiClass;                                       \
   typedef TheParentRttiClass ParentRttiClass;                               \
@@ -76,8 +76,7 @@ namespace eXl
     if(ptr==nullptr) return nullptr;                                      \
     return (TheRttiClass*)ptr;                                          \
   }                                                                 \
-  static const Rtti& StaticRtti();                                  \
-  static ::eXl::Type const* GetType();
+  static const Rtti& StaticRtti();
   
 #else
 
@@ -85,7 +84,7 @@ namespace eXl
 
 #define DYNAMIC_CAST(a) DynamicCast(a,__FILE__,__LINE__)
 
-#define DECLARE_RTTI(ClassName,TheParentRttiClass)                             \
+#define DECLARE_RTTI_IMPL(ClassName,TheParentRttiClass)                             \
   public:                                                               \
   typedef ClassName TheRttiClass;                                           \
   typedef TheParentRttiClass ParentRttiClass;                                   \
@@ -110,14 +109,13 @@ namespace eXl
       throw eXl::Exception(eXl::Exception::BadCast,String("Bad cast from")+ ptr->GetRtti().GetName() +" to "+String(#ClassName),iFile,iLine); \
     return ((TheRttiClass*)(ptr));                                          \
   }                                                                     \
-  static ::eXl::Rtti const& StaticRtti();                               \
-  static ::eXl::Type const* GetType();
+  static ::eXl::Rtti const& StaticRtti();
   
 #else
   
 #define DYNAMIC_CAST(a) DynamicCast(a)
   
-#define DECLARE_RTTI(ClassName,TheParentRttiClass)                          \
+#define DECLARE_RTTI_IMPL(ClassName,TheParentRttiClass)                          \
   public:                                                               \
   typedef ClassName TheRttiClass;                                           \
   typedef TheParentRttiClass ParentRttiClass;                                   \
@@ -130,13 +128,20 @@ namespace eXl
     if(ptr==nullptr) return nullptr;                                          \
     return (ptr->GetRtti().IsKindOf(TheRttiClass::StaticRtti())?(const TheRttiClass*)(ptr):nullptr); \
   }                                                                     \
-  static ::eXl::Rtti const& StaticRtti(); \
-  static ::eXl::Type const* GetType();
+  static ::eXl::Rtti const& StaticRtti();
   
 #endif
 #endif
 
-#define DECLARE_RTTI_OBJECT(ClassName,ParentRttiClass)          \
+#ifdef EXL_TYPE_ENABLED
+#define DECLARE_RTTI(ClassName,TheParentRttiClass) \
+  DECLARE_RTTI_IMPL(ClassName,TheParentRttiClass) \
+  static ::eXl::Type const* GetType();
+#else
+  #define DECLARE_RTTI(ClassName,TheParentRttiClass) DECLARE_RTTI_IMPL(ClassName,TheParentRttiClass)
+#endif
+
+#define DECLARE_RTTI_OBJECT(ClassName,ParentRttiClass)      \
   public:                                                   \
   static RttiObject* CreateInstance();                      \
   virtual ClassName* Duplicate() const;                     \
@@ -145,7 +150,7 @@ namespace eXl
   
   
 
-  
+#ifdef EXL_TYPE_ENABLED
 #define IMPLEMENT_RTTI(ClassName)            \
   const ::eXl::Rtti& ClassName::StaticRtti() \
   { \
@@ -157,7 +162,14 @@ namespace eXl
     static ::eXl::ClassType s_Type(#ClassName, ClassName::StaticRtti(), ::eXl::ClassType::DynamicCast(ClassName::ParentRttiClass::GetType())); \
     return &s_Type; \
   }
-
+#else
+#define IMPLEMENT_RTTI(ClassName)            \
+  const ::eXl::Rtti& ClassName::StaticRtti() \
+  { \
+    static ::eXl::Rtti s_Rtti(#ClassName,&ClassName::ParentRttiClass::StaticRtti()); \
+    return s_Rtti; \
+  }
+#endif
 
 #define IMPLEMENT_RTTI_OBJECT(ClassName)                    \
   IMPLEMENT_RTTI(ClassName)                                 \
@@ -179,3 +191,5 @@ namespace eXl
                                                             \
                                                             */
 }
+
+#include <core/rttiobject.hpp>

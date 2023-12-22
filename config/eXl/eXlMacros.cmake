@@ -78,7 +78,7 @@ function(SETUP_EXL_TARGET TARGET_NAME)
     if(${ARGS_REFLECT_EXTERNAL})
         set(REFLANG_COMMAND ${REFLANG_COMMAND} --reflect-external )
     endif()
-    set(REFLANG_COMMAND ${REFLANG_COMMAND} ${ARGS_HEADERS_TO_PARSE} -- ${REFLANG_INCLUDES} -DEXL_REFLANG_COMPILER -std=c++20 -Wno-undefined-var-template -Wno-inconsistent-missing-override)
+    set(REFLANG_COMMAND ${REFLANG_COMMAND} ${ARGS_HEADERS_TO_PARSE} -- ${REFLANG_INCLUDES} ${EXL_COMPILER_DEFINITIONS} -DEXL_REFLANG_COMPILER -std=c++20 -Wno-undefined-var-template -Wno-inconsistent-missing-override)
 
     set (DEPENDENCIES ${ARGS_HEADERS_TO_PARSE})
     if(${EXL_CAN_BUILD_REFLANG})

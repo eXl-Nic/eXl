@@ -1,7 +1,7 @@
 
 char const* defaultPS = 
-#ifdef __ANDROID__
-"#version 320 es\n"
+#ifdef EXL_PLAY_PLATFORM
+"#version 300 es\n"
 "precision mediump float;\n"
 #else
 "#version 140\n"
@@ -35,8 +35,8 @@ char const* defaultPS =
 ;
 
 char const* defaultUPS = 
-#ifdef __ANDROID__
-"#version 320 es\n"
+#ifdef EXL_PLAY_PLATFORM
+"#version 300 es\n"
 "precision mediump float;\n"
 #else
 "#version 140\n"
@@ -63,8 +63,8 @@ char const* defaultUPS =
 
 char const* fontPS = 
 
-#ifdef __ANDROID__
-"#version 320 es\n"
+#ifdef EXL_PLAY_PLATFORM
+"#version 300 es\n"
 "precision mediump float;\n"
 #else
 "#version 140\n"
@@ -78,7 +78,7 @@ char const* fontPS =
 "\n"
 "void main()\n"
 "{\n"
-"  float alpha = texture2D(iUnfilteredTexture,texCoord,0.0).x;\n"
+"  float alpha = texture(iUnfilteredTexture,texCoord).x;\n"
 //Do not discard on mobile, set alpha to zero instead ?
 //"  if(alpha <= 0.01)\n"
 //"    discard;\n"

@@ -149,8 +149,9 @@ namespace eXl
     const LogObject& operator <<(const LogObject& , const AString& );
     const LogObject& operator <<(const LogObject& , const KString& );
     const LogObject& operator << (const LogObject& , const char* );
-#if defined(_WIN64) || defined (__LP64__)
-    const LogObject& operator << (const LogObject& , const size_t tolog);
+    const LogObject& operator << (const LogObject&, const size_t tolog);
+#if EXL_32
+    const LogObject& operator << (const LogObject&, const uint64_t tolog);
 #endif
 #ifdef EXL_SHARED_LIBRARY
     const LogObject& operator <<(const LogObject& , const std::string& tolog);

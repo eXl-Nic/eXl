@@ -47,7 +47,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #endif
 
+#ifdef EXL_NETWORK_ENABLED
 #include <yojimbo.h>
+#endif
 
 namespace eXl
 {
@@ -536,13 +538,16 @@ namespace eXl
 #endif
       s_EngineCommonManifest->RegisterComponent(CharacterComponentName(), createCharacterFactory, { ObjectShapeData::PropertyName(), CharacterDesc::PropertyName() });
       
-
+#ifdef EXL_NETWORK_ENABLED
       InitializeYojimbo();
+#endif
     }
 
     void _Unload()
     {
+#ifdef EXL_NETWORK_ENABLED
       ShutdownYojimbo();
+#endif
       CharacterAnimation_StaticDestroy();
       s_NameRegistry.reset();
       s_EngineCommonManifest.reset();

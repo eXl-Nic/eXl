@@ -48,7 +48,7 @@ namespace eXl
     iList.SetVAssembly(&m_Geometry->m_Assembly);
     for (auto& draw : m_Parts)
     {
-      iList.PushDraw(2, OGLDraw::TriangleList, draw.m_Num, draw.m_Start, 0);
+      iList.PushDraw(2, OGLDraw::TriangleList, draw.m_Num, draw.m_Start);
     }
     //DrawCommand cmd;
     //cmd.m_Connectivity = Connectivity::Triangles;
@@ -86,7 +86,7 @@ namespace eXl
     for (uint32_t i = 0; i < m_Materials.size(); ++i)
     {
       Model::Part const& part = m_Model->GetParts()[i];
-      iList.PushDraw(0, OGLDraw::TriangleList, part.m_Num, part.m_Start, 0);
+      iList.PushDraw(0, OGLDraw::TriangleList, part.m_Num, part.m_Start);
     }
     //DrawCommand cmd;
     //cmd.m_Connectivity = Connectivity::Triangles;

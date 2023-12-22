@@ -66,6 +66,7 @@ namespace eXl
 
     inline static String FromInt(int);
     inline static String FromInt(unsigned int);
+    inline static String FromInt(uint64_t);
     inline static String FromSizeT(size_t);
     inline static String FromFloat(float);
     inline static String FromFloat(double);
@@ -73,6 +74,7 @@ namespace eXl
 
     static AString AFromInt(int);
     static AString AFromInt(unsigned int);
+    static AString AFromInt(uint64_t);
     static AString AFromSizeT(size_t);
     static AString AFromFloat(float);
     static AString AFromFloat(double);
@@ -136,6 +138,10 @@ namespace eXl
   inline String StringUtil::FromSizeT(size_t iVal)
   {
     return StringUtil::AFromSizeT(iVal);
+  }
+  inline String StringUtil::FromInt(uint64_t iVal)
+  {
+    return StringUtil::AFromInt(iVal);
   }
   inline String StringUtil::FromFloat(float iVal)
   {

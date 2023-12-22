@@ -24,7 +24,7 @@ namespace eXl
   void OGLDepthCommand::Apply()
   {
 #ifdef EXL_WITH_OGL
-    if(m_Flag & ReadZ)
+    if (m_Flag & ReadZ)
     {
       glEnable(GL_DEPTH_TEST);
       glDepthFunc(GL_LEQUAL);
@@ -34,7 +34,7 @@ namespace eXl
       glDisable(GL_DEPTH_TEST);
     }
 
-    if(m_Flag & WriteZ)
+    if (m_Flag & WriteZ)
     {
       glDepthMask(GL_TRUE);
     }
@@ -48,10 +48,10 @@ namespace eXl
   void OGLScissorCommand::Apply()
   {
 #ifdef EXL_WITH_OGL
-    if(m_Flag & EnableScissor)
+    if (m_Flag & EnableScissor)
     {
       glEnable(GL_SCISSOR_TEST);
-      glScissor(m_ScissorCoord[0],m_ScissorCoord[1],m_ScissorCoord[2],m_ScissorCoord[3]);
+      glScissor(m_ScissorCoord[0], m_ScissorCoord[1], m_ScissorCoord[2], m_ScissorCoord[3]);
     }
     else
     {
@@ -63,7 +63,7 @@ namespace eXl
   void OGLViewportCommand::Apply()
   {
 #ifdef EXL_WITH_OGL
-    glViewport(m_Orig.x,m_Orig.y, m_Size.x,m_Size.y);
+    glViewport(m_Orig.x, m_Orig.y, m_Size.x, m_Size.y);
 #endif
   }
 
@@ -114,14 +114,14 @@ namespace eXl
   void OGLDisplayList::SetDefaultDepth(bool iWriteZ, bool iReadZ)
   {
     OGLDepthCommand defCommand;
-    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::DepthCommand | (iWriteZ ? OGLDepthCommand::WriteZ:0) | (iReadZ ? OGLDepthCommand::ReadZ:0);
+    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::DepthCommand | (iWriteZ ? OGLDepthCommand::WriteZ : 0) | (iReadZ ? OGLDepthCommand::ReadZ : 0);
     m_States.SetDefaultCommand(defCommand);
   }
 
   void OGLDisplayList::SetDefaultScissor(Vec2i const& iScissorOrig, Vec2i const& iScissorSize)
   {
     OGLScissorCommand defCommand;
-    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.x > 0 && iScissorSize.y > 0 ? OGLScissorCommand::EnableScissor:0);
+    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.x > 0 && iScissorSize.y > 0 ? OGLScissorCommand::EnableScissor : 0);
     defCommand.m_ScissorCoord[0] = iScissorOrig.x;
     defCommand.m_ScissorCoord[1] = iScissorOrig.y;
     defCommand.m_ScissorCoord[2] = iScissorSize.x;
@@ -154,7 +154,7 @@ namespace eXl
   {
     FlushDraws();
     OGLScissorCommand defCommand;
-    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.x > 0 && iScissorSize.y > 0 ? OGLScissorCommand::EnableScissor:0);
+    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::ScissorCommand | (iScissorSize.x > 0 && iScissorSize.y > 0 ? OGLScissorCommand::EnableScissor : 0);
     defCommand.m_ScissorCoord[0] = iScissorOrig.x;
     defCommand.m_ScissorCoord[1] = iScissorOrig.y;
     defCommand.m_ScissorCoord[2] = iScissorSize.x;
@@ -166,7 +166,7 @@ namespace eXl
   {
     FlushDraws();
     OGLDepthCommand defCommand;
-    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::DepthCommand | (iWriteZ ? OGLDepthCommand::WriteZ:0) | (iReadZ ? OGLDepthCommand::ReadZ:0);
+    defCommand.m_Flag = OGLRenderCommand::StateCommand | OGLStateCommand::DepthCommand | (iWriteZ ? OGLDepthCommand::WriteZ : 0) | (iReadZ ? OGLDepthCommand::ReadZ : 0);
     m_States.SetCommand(defCommand);
   }
 
@@ -206,7 +206,7 @@ namespace eXl
     OGLShaderDataSet const* prevSet = m_CurDataSet != -1 ? &m_DataSetStore[m_CurDataSet] : nullptr;
     OGLShaderDataSet curSet(iData, prevSet, static_cast<uint32_t>(m_DataSetStore.size()));
     auto iter = m_DataSetSeek.find(curSet);
-    if(iter == m_DataSetSeek.end())
+    if (iter == m_DataSetSeek.end())
     {
       auto res = m_DataSetSeek.insert(curSet);
       m_DataSetStore.push_back(curSet);
@@ -218,7 +218,7 @@ namespace eXl
   void OGLDisplayList::PopData()
   {
     //FlushDraws();
-    if(m_CurDataSet != -1)
+    if (m_CurDataSet != -1)
     {
       m_CurDataSet = m_DataSetStore[m_CurDataSet].m_PrevSet;
     }
@@ -237,7 +237,9 @@ namespace eXl
     iGeom.m_Mat = iDraw.data;
     iGeom.m_Num = iDraw.num;
     iGeom.m_Offset = iDraw.offset;
+#if EXL_DESKTOP_PLATFORM
     iGeom.m_BaseVertex = iDraw.baseVertex;
+#endif
   }
 
   void OGLDisplayList::FillinstancedGeom(OGLInstancedGeometry& iGeom, PendingDraw const& iDraw)
@@ -245,9 +247,9 @@ namespace eXl
     iGeom.m_Mat = iDraw.data;
     iGeom.m_Num = iDraw.num;
     iGeom.m_Offset = iDraw.offset;
-    iGeom.m_BaseVertex = iDraw.baseVertex;
     iGeom.m_Instances = iDraw.instances;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
+    iGeom.m_BaseVertex = iDraw.baseVertex;
     iGeom.m_BaseInstance = iDraw.baseInstance;
 #endif
   }
@@ -290,7 +292,7 @@ namespace eXl
 
       m_PendingDraws.clear();
     }
-    else if(m_PendingDraws.size() > 1)
+    else if (m_PendingDraws.size() > 1)
     {
       uint8_t curState = m_States.GetStateId();
 
@@ -367,7 +369,17 @@ namespace eXl
     m_Keys.push_back(newKey);
   }
 
+#if EXL_DESKTOP_PLATFORM
+
+  void OGLDisplayList::PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset)
+  {
+    PushDraw(iKey, iTopo, iNum, iOffset, 0);
+  }
+
   void OGLDisplayList::PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex)
+#else
+  void OGLDisplayList::PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset)
+#endif
   {
     switch(iTopo)
     {
@@ -393,23 +405,33 @@ namespace eXl
     {
       FlushDraws();  
     }
-    PendingDraw newDraw = {m_CurDataSet, iNum, iOffset, iBaseVertex, 0
-#ifndef __ANDROID__
-      , 0
+    PendingDraw newDraw = {m_CurDataSet, iNum, iOffset, 0
+#if EXL_DESKTOP_PLATFORM
+      , iBaseVertex, 0
 #endif
       , iKey, iTopo};
     m_PendingDraws.push_back(newDraw);
   }
 
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
+
+  void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iNumInstances)
+  {
+    PushDrawInstanced(iKey, iTopo, iNum, iOffset, iNumInstances);
+  }
+
   void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance)
 #else
-  void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances)
+  void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iNumInstances)
 #endif
   {
     if (iNumInstances == 0)
     {
+#if EXL_DESKTOP_PLATFORM
       PushDraw(iKey, iTopo, iNum, iOffset, iBaseVertex);
+#else
+      PushDraw(iKey, iTopo, iNum, iOffset);
+#endif
     }
 
     switch (iTopo)
@@ -437,9 +459,9 @@ namespace eXl
       FlushDraws();
     }
 
-    PendingDraw newDraw = { m_CurDataSet, iNum, iOffset, iBaseVertex, iNumInstances
-#ifndef __ANDROID__
-      , iBaseInstance
+    PendingDraw newDraw = { m_CurDataSet, iNum, iOffset, iNumInstances
+#if EXL_DESKTOP_PLATFORM
+      , iBaseVertex, iBaseInstance
 #endif
       , iKey, iTopo };
     m_PendingDraws.push_back(newDraw);
@@ -626,7 +648,11 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
+#if EXL_DESKTOP_PLATFORM
                       iCtx->DrawIndexed(idxBuff, topo, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
+#else
+                      iCtx->DrawIndexed(idxBuff, topo, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_Num);
+#endif
                       ++geom;
                     }
                   }
@@ -674,10 +700,10 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
                       iCtx->DrawIndexedInstanced(idxBuff, topo, geom->m_Instances, geom->m_BaseInstance, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
 #else
-                      iCtx->DrawIndexedInstanced(idxBuff, topo, geom->m_Instances, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_BaseVertex, geom->m_Num);
+                      iCtx->DrawIndexedInstanced(idxBuff, topo, geom->m_Instances, idxOffset + geom->m_Offset * sizeof(uint32_t), geom->m_Num);
 #endif
                       ++geom;
                     }
@@ -694,7 +720,7 @@ namespace eXl
                         }
                         m_CurDataSet = geom->m_Mat;
                       }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
                       iCtx->DrawInstanced(topo, geom->m_Instances, geom->m_BaseInstance, geom->m_Offset, geom->m_Num);
 #else
                       iCtx->DrawInstanced(topo, geom->m_Instances, geom->m_Offset, geom->m_Num);

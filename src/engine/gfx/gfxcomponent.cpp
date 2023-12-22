@@ -86,14 +86,18 @@ namespace eXl
         iList.PushData(&m_PositionData);
         if (draw.m_NumInstances == 0)
         {
+#if EXL_DESKTOP_PLATFORM
           iList.PushDraw(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0);
+#else
+          iList.PushDraw(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset);
+#endif
         }
         else
         {
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
           iList.PushDrawInstanced(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0, draw.m_NumInstances, draw.m_BaseInstance);
 #else
-          iList.PushDrawInstanced(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, 0, draw.m_NumInstances);
+          iList.PushDrawInstanced(0x0100 | draw.m_Layer, m_Geometry->m_Command, draw.m_NumElements, draw.m_Offset, draw.m_NumInstances);
 #endif
         }
 
@@ -152,7 +156,11 @@ namespace eXl
     iList.SetVAssembly(&m_Geometry->m_Assembly);
     iList.PushData(&m_TextureData);
 		iList.PushData(&m_PositionData);
+#if EXL_DESKTOP_PLATFORM
 		iList.PushDraw(iKey + m_Layer, OGLDraw::TriangleList, 6, 0, 0);
+#else
+    iList.PushDraw(iKey + m_Layer, OGLDraw::TriangleList, 6, 0);
+#endif
 		iList.PopData();
 		iList.PopData();
 	}

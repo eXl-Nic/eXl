@@ -10,11 +10,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <core/coredef.hpp>
+
 #ifdef EXL_WITH_OGL
 
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
 #include <GLES3/gl32.h>
-#else
+#elif EXL_DESKTOP_PLATFORM
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif

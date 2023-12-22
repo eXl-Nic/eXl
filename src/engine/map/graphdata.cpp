@@ -1,10 +1,14 @@
-#include "graphdata.hpp"
+#include <engine/map/graphdata.hpp>
 #include <gen/graphutils.hpp>
 #include <engine/script/luascriptsystem.hpp>
 #include <core/type/tagtype.hpp>
 #include <engine/game/commondef.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/property_map/function_property_map.hpp>
+
+#include <core/stream/textreader.hpp>
+#include <core/stream/jsonstreamer.hpp>
+#include <core/stream/jsonunstreamer.hpp>
 
 namespace eXl
 {
@@ -16,11 +20,13 @@ namespace eXl
     IMPLEMENT_TAG_TYPE(MatchWrapper);
     IMPLEMENT_TAG_TYPE(RewriteWrapper);
     IMPLEMENT_TAG_TYPE(GraphFactoryWrapper);
+    IMPLEMENT_SERIALIZE_METHODS(RewriteSystemRsc::RuleAdditionalData)
+    IMPLEMENT_SERIALIZE_METHODS(RewriteSystemRsc::TagAdditionalData)
 
-    PropertySheetName RoomLayoutInfo::PropertyName() {
-      static PropertySheetName s_Name("RoomLayoutInfo");
-      return s_Name;
-    }
+    //PropertySheetName RoomLayoutInfo::PropertyName() {
+    //  static PropertySheetName s_Name("RoomLayoutInfo");
+    //  return s_Name;
+    //}
     
     void LevelNodeData::CopyNode(ES_RuleSystem::GraphVtx iVtx) const
     {
@@ -288,22 +294,6 @@ namespace eXl
       }
     }
 
-    ObjectHandle GraphFactoryWrapper::CreateNode(Name iTag) const 
-    {
-      auto iter = m_System.m_Tags.find(iTag);
-
-      eXl_ASSERT_REPAIR_RET(iter != m_System.m_Tags.end(), ObjectHandle());
-      eXl_ASSERT_REPAIR_RET(iter->second.m_IsNodeTag, ObjectHandle());
-
-      auto newVtx = boost::add_vertex(m_DstGraph.m_Graph);
-      ObjectHandle newObj = m_DstGraph.AddNode(newVtx);
-      LevelNodeData* node = m_DstGraph.m_NodeData.Get(newObj);
-      node->m_Tag = iTag;
-      m_DstGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(newObj, iter->second.m_Archetype.GetOrLoad(), nullptr);
-
-      return newObj;
-    }
-
     void GraphFactoryWrapper::SetDebugString(ObjectHandle iNode, const char* iStr) const
     {
       if (iStr) 
@@ -315,41 +305,14 @@ namespace eXl
       }
       
     }
+    IMPLEMENT_RTTI(RewriteSystemRsc);
 
-    ObjectHandle GraphFactoryWrapper::CreateEdge(ObjectHandle iNode1, ObjectHandle iNode2, Name iTag) const
-    {
-      auto iter = m_System.m_Tags.find(iTag);
-
-      eXl_ASSERT_REPAIR_RET(iter != m_System.m_Tags.end(), ObjectHandle());
-      eXl_ASSERT_REPAIR_RET(!iter->second.m_IsNodeTag, ObjectHandle());
-
-      LevelNodeData const* node1 = m_DstGraph.m_NodeData.Get(iNode1);
-      LevelNodeData const* node2 = m_DstGraph.m_NodeData.Get(iNode2);
-
-      eXl_ASSERT_REPAIR_RET(node1 && node2, ObjectHandle());
-
-      auto newEdge = boost::add_edge(node1->m_Vtx, node2->m_Vtx, m_DstGraph.m_Graph);
-      if(newEdge.second)
-      {
-        ObjectHandle newObj = m_DstGraph.AddEdge(newEdge.first);
-        LevelEdgeData* edge = m_DstGraph.m_EdgeData.Get(newObj);
-        edge->m_Tag = iTag; 
-        m_DstGraph.m_World.GetSystem<GameDatabase>()->InstantiateArchetype(newObj, iter->second.m_Archetype.GetOrLoad(), nullptr);
-
-        return newObj;
-      }
-      else 
-      {
-        return m_DstGraph.GetEdgeObject(newEdge.first);
-      }
-    }
-
-    IMPLEMENT_RTTI(RewriteSystem);
-
-    using RewriteSystemLoader = TResourceLoader <RewriteSystem, ResourceLoader>;
+    using RewriteSystemLoader = TResourceLoader <RewriteSystemRsc, ResourceLoader>;
 
     LUA_REG_FUN(BindGraphWrappers)
     {
+      TypeManager::GetType<RoomLayoutInfo>()->RegisterLua(iState);
+
       luabind::module(iState, "eXl")[
         luabind::class_<GraphWrapper>("GraphWrapper")
           .def("GetEdges", &GraphWrapper::GetEdges)
@@ -368,16 +331,25 @@ namespace eXl
           .def("Match", &RewriteWrapper::GetMatch),
 
           luabind::class_<GraphFactoryWrapper>("GraphFactoryWrapper")
-          .def("CreateNode", &GraphFactoryWrapper::CreateNode)
-          .def("CreateEdge", &GraphFactoryWrapper::CreateEdge)
           .def("SetDebugString", &GraphFactoryWrapper::SetDebugString)
 
       ];
-
       return 0;
     }
 
-    void RewriteSystem::Init()
+    Type const* Get_eXl__RoomLayoutInfo_Type() 
+    {
+      static TupleType const* layoutInfoType = TypeManager::BeginNativeTypeRegistration<RoomLayoutInfo>("RoomLayoutInfo")
+        .AddField("m_CollapseNode", &RoomLayoutInfo::m_CollapseNode)
+        .AddField("m_Layout", &RoomLayoutInfo::m_Layout)
+        .AddField("m_RoomSizes", &RoomLayoutInfo::m_RoomSizes)
+        .AddField("m_TerrainType", &RoomLayoutInfo::m_TerrainType)
+        .EndRegistration();
+
+      return layoutInfoType;
+    }
+
+    void RewriteSystemRsc::Init()
     {
       EventsManifest::FunctionsMap functions;
       functions.insert(std::make_pair("CheckNode", FunDesc::Create<bool(MatchWrapper&, uint32_t, ObjectHandle)>()));
@@ -396,69 +368,227 @@ namespace eXl
 
       EngineCommon::GetBaseEvents().m_Interfaces.insert(std::make_pair("LayoutPostProcess", functions));
 
-      ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystem::StaticRtti(), RewriteSystem::GetType());
+      ResourceManager::AddLoader(&RewriteSystemLoader::Get(), RewriteSystemRsc::StaticRtti(), RewriteSystemRsc::GetType());
+
       EngineCommon::GetBaseProperties().RegisterPropertySheet<RoomLayoutInfo>("RoomLayoutInfo", true);
 
       LuaManager::AddRegFun(&BindGraphWrappers);
     }
 
 #ifdef EXL_RSC_HAS_FILESYSTEM
-    RewriteSystem* RewriteSystem::Create(Path const& iDir, String const& iName)
+    RewriteSystemRsc* RewriteSystemRsc::Create(Path const& iDir, String const& iName)
     {
       return RewriteSystemLoader::Get().CreateAt(iDir, iName);
     }
 #endif
 
-    RewriteSystem::RewriteSystem(ResourceMetaData& iMeta)
+    RewriteSystemRsc::RewriteSystemRsc(ResourceMetaData& iMeta)
       : Resource(iMeta)
     {}
 
-    RewriteSystem::~RewriteSystem() = default;
+    RewriteSystemRsc::~RewriteSystemRsc() = default;
 
-    Name RewriteSystem::GetAnyTag()
-    {
-      static Name s_Tag("<Any>");
-      return s_Tag;
-    }
-
-    uint32_t RewriteSystem::ComputeHash()
+    uint32_t RewriteSystemRsc::ComputeHash()
     {
       return 0;
     }
 
-    ResourceLoaderName RewriteSystem::StaticLoaderName()
+    ResourceLoaderName RewriteSystemRsc::StaticLoaderName()
     {
       return ResourceLoaderName("RewriteSystem");
     }
 
-    Err RewriteSystem::Stream_Data(Streamer& iStreamer) const
+    void FindCustomData(String const& customData, JSONUnstreamer::ElementDesc& eXlCustomData, uint32_t& numCustomElems, bool fullEntry)
     {
-      return const_cast<RewriteSystem*>(this)->Serialize(Serializer(iStreamer));
+      numCustomElems = 0;
+      eXlCustomData.elemBegin = eXlCustomData.elemEnd = 0;
+      if(customData.empty())
+      {
+        return;
+      }
+
+      StringViewReader strReader(String(), &(*customData.begin()), &customData.back() + 1);
+      JSONUnstreamer unstreamer(&strReader);
+      if (unstreamer.Begin())
+      {
+        if (unstreamer.BeginStruct())
+        {
+          numCustomElems = reinterpret_cast<JSONUnstreamer::ElemStruct const&>(unstreamer.GetCurrentElement()).m_Fields.size();
+          if (unstreamer.PushKey("eXl_Data"))
+          {
+            eXlCustomData = unstreamer.GetCurrentElement();
+            if (fullEntry) {
+              size_t off = customData.rfind(",", eXlCustomData.elemBegin - 1);
+              if (off == String::npos)
+              {
+                off = customData.rfind("{", eXlCustomData.elemBegin - 1);
+              }
+              eXl_ASSERT(off != String::npos);
+              ++off;
+              eXlCustomData.elemBegin = off;
+            }
+            unstreamer.PopKey();
+          }
+          unstreamer.End();
+        }
+        unstreamer.End();
+      }
     }
 
-    Err RewriteSystem::Unstream_Data(Unstreamer& iStreamer)
+    void PatchCustomData(String& customData, String const& curData, JSONUnstreamer::ElementDesc& eXlCustomData, uint32_t& numCustomElems)
     {
-      return Serialize(Serializer(iStreamer));
+      if (eXlCustomData.elemEnd > eXlCustomData.elemBegin)
+      {
+        if (!curData.empty()) 
+        {
+          customData.replace(eXlCustomData.elemBegin, eXlCustomData.elemEnd - eXlCustomData.elemBegin, "\"eXl_Data\" : " + curData);
+        }
+        else
+        {
+          customData.erase(eXlCustomData.elemBegin, eXlCustomData.elemEnd - eXlCustomData.elemBegin);
+        }
+      }
+      else if(!curData.empty())
+      {
+        if(customData.empty())
+        {
+          customData = "{}";
+        }
+        eXl_ASSERT(customData.back() == '}');
+        if (numCustomElems > 0)
+        {
+          customData.replace(customData.end() - 1, customData.end(), ",}");
+        }
+        customData.replace(customData.end() - 1, customData.end(), "\"eXl_Data\" : " + curData + "}");
+      }
     }
 
-    Err RewriteSystem::Serialize(Serializer iStreamer)
+    Err RewriteSystemRsc::RuleAdditionalData::Serialize(Serializer serializer) 
     {
-      iStreamer.BeginStruct();
-
-      iStreamer.PushKey("Tags");
-      iStreamer.HandleMapSorted(m_Tags);
-      iStreamer.PopKey();
-
-      iStreamer.PushKey("Rules");
-      iStreamer.HandleMapSorted(m_Rules);
-      iStreamer.PopKey();
-
-      iStreamer.PushKey("CurrentSequence");
-      iStreamer &= m_CurSequence;
-      iStreamer.PopKey();
-
-      iStreamer.EndStruct();
+      Err err = serializer.BeginStruct();
+      err &= serializer.PushKey("Script");
+      err &= serializer &= m_Script;
+      err &= serializer.PopKey();
+      err &= serializer.EndStruct();
 
       return Err::Success;
+    }
+
+    Err RewriteSystemRsc::TagAdditionalData::Serialize(Serializer serializer)
+    {
+      Err err = serializer.BeginStruct();
+      err &= serializer.PushKey("Archetype");
+      err &= (serializer &= m_Archetype);
+      err &= serializer.PopKey();
+      err &= serializer.EndStruct();
+
+      return err;
+    }
+
+    Err RewriteSystemRsc::Stream_Data(Streamer& iStreamer) const
+    {
+      RewriteSystem& sys = const_cast<RewriteSystem&>(m_Sys);
+      for (auto& rule : sys.m_Rules)
+      {
+        String& customData = rule.second.m_RuleCustomData;
+        
+        JSONUnstreamer::ElementDesc eXlCustomData;
+        uint32_t numCustomElems;
+        FindCustomData(customData, eXlCustomData, numCustomElems, true);
+
+        String curData;
+        auto ruleAddData = m_Rules.find(rule.first);
+        if (ruleAddData != m_Rules.end()) 
+        {
+          std::stringstream sstream;
+          JSONStreamer streamer(&sstream);
+          Err res = streamer.Begin();
+          ruleAddData->second.Stream(streamer);
+          res = streamer.End();
+          curData.append( sstream.str() );
+        }
+
+        PatchCustomData(customData, curData, eXlCustomData, numCustomElems);
+      }
+
+      for (auto& tag : sys.m_Tags)
+      {
+        String& customData = tag.second.m_TagCustomData;
+        JSONUnstreamer::ElementDesc eXlCustomData;
+        uint32_t numCustomElems;
+        FindCustomData(customData, eXlCustomData, numCustomElems, true);
+
+        String curData;
+        auto tagAddData = m_Tags.find(tag.first);
+        if (tagAddData != m_Tags.end())
+        {
+          std::stringstream sstream;
+          JSONStreamer streamer(&sstream);
+          Err res = streamer.Begin();
+          tagAddData->second.Stream(streamer);
+          res = streamer.End();
+          curData = sstream.str();
+        }
+
+        PatchCustomData(customData, curData, eXlCustomData, numCustomElems);
+      }
+
+      return m_Sys.Stream(iStreamer);
+    }
+
+    Err RewriteSystemRsc::Unstream_Data(Unstreamer& iStreamer)
+    {
+      Err err = m_Sys.Unstream(iStreamer);
+      if ( err ) 
+      {
+        for (auto const& rule : m_Sys.m_Rules)
+        {
+          String const& customData = rule.second.m_RuleCustomData;
+
+          JSONUnstreamer::ElementDesc eXlCustomData;
+          uint32_t numCustomElems;
+          FindCustomData(customData, eXlCustomData, numCustomElems, false);
+          if (eXlCustomData.elemEnd <= eXlCustomData.elemBegin) {
+            continue;
+          }
+          StringViewReader strReader(String(), &(*customData.begin()) + eXlCustomData.elemBegin, &(*customData.begin()) + eXlCustomData.elemEnd);
+          JSONUnstreamer unstreamer(&strReader);
+          if (unstreamer.Begin())
+          {
+            RuleAdditionalData addData;
+            Err err = addData.Unstream(unstreamer);
+            if (err) 
+            {
+              m_Rules.insert(std::make_pair(rule.first, addData));
+            }
+            unstreamer.End();
+          }
+        }
+        for (auto const& tag : m_Sys.m_Tags)
+        {
+          String const& customData = tag.second.m_TagCustomData;
+
+          JSONUnstreamer::ElementDesc eXlCustomData;
+          uint32_t numCustomElems;
+          FindCustomData(customData, eXlCustomData, numCustomElems, false);
+          if (eXlCustomData.elemEnd <= eXlCustomData.elemBegin) {
+            continue;
+          }
+          StringViewReader strReader(String(), &(*customData.begin()) + eXlCustomData.elemBegin, &(*customData.begin()) + eXlCustomData.elemEnd);
+          JSONUnstreamer unstreamer(&strReader);
+          if (unstreamer.Begin())
+          {
+            TagAdditionalData addData;
+            Err err = addData.Unstream(unstreamer);
+            if (err)
+            {
+              m_Tags.insert(std::make_pair(tag.first, addData));
+            }
+            unstreamer.End();
+          }
+        }
+      }
+
+      return err;
     }
 }

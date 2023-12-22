@@ -41,7 +41,7 @@ namespace eXl
       IntrusivePtr<Model> m_Model;
     };
 
-    static [[nodiscard]] Builder Create(IntrusivePtr<Geometry> iGeom, Box3D const& iBox);
+    [[nodiscard]] static Builder Create(IntrusivePtr<Geometry> iGeom, Box3D const& iBox);
 
     struct Part
     {

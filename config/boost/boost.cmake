@@ -1,5 +1,5 @@
 
-if(${ANDROID})  
+if(DEFINED ANDROID OR DEFINED EMSCRIPTEN)  
   SET(Boost_INCLUDE_DIR ${BOOST_ROOT})
   
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
@@ -13,8 +13,9 @@ endif()
 link_directories(${Boost_LIBRARY_DIR})
   
 else()
+  message (${BOOST_ROOT})
   SET(Boost_USE_STATIC_LIBS TRUE)
-  find_package(Boost 1.47.0 )
+  find_package(Boost )
 endif()
 
 set(EXL_DEPS_INCLUDE ${EXL_DEPS_INCLUDE} ${Boost_INCLUDE_DIR})

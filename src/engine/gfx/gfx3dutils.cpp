@@ -86,7 +86,7 @@ namespace eXl
         tempList.PushData(&skyData);
         tempList.SetVAssembly(&emptyAss);
         tempList.SetProgram(m_IrradianceMapProgram);
-        tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0, 0);
+        tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0);
         tempList.PopData();
 
         tempList.Render(&ctx, &framebuffer);
@@ -199,7 +199,7 @@ namespace eXl
           tempList.PushData(&skyData);
           tempList.SetVAssembly(&emptyAss);
           tempList.SetProgram(m_SpecularMapProgram);
-          tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0, 0);
+          tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0);
           tempList.PopData();
 
           tempList.Render(&ctx, &framebuffer);
@@ -288,7 +288,7 @@ namespace eXl
     tempList.PushData(&skyData);
     tempList.SetVAssembly(&emptyAss);
     tempList.SetProgram(m_EnvBRDFProgram);
-    tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0, 0);
+    tempList.PushDraw(1, OGLDraw::TriangleStrip, 4, 0);
     tempList.PopData();
 
     tempList.Render(&ctx, &framebuffer);

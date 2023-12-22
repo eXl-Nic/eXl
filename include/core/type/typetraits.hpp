@@ -9,10 +9,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
-
 #include <core/coredef.hpp>
 #include <core/type/typedefs.hpp>
 #include <core/corelibexp.hpp>
+
+#ifdef EXL_TYPE_ENABLED
 
 #define DECLARE_TYPE_EX(type, friendlyname, DLL) \
   DLL Type const* Get_##friendlyname##_Type(); \
@@ -59,10 +60,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   {                                        \
     return TypeName(#type);                \
   }
-
+#else
+#define DECLARE_TYPE_EX(type, friendlyname, DLL)
+#define REDIRECT_TYPE_EX(type, baseType)
+#endif
 #define DECLARE_CORE_TYPE_EX(type, friendlyname) DECLARE_TYPE_EX(type, friendlyname, EXL_CORE_API)
 #define DECLARE_CORE_TYPE(type) DECLARE_CORE_TYPE_EX(eXl::type, eXl__##type)
 #define DECLARE_BASE_TYPE(type) DECLARE_CORE_TYPE_EX(type, type)
+
+#ifdef EXL_TYPE_ENABLED
 
 #define IMPLEMENT_TYPE_EX(type, friendlyname) \
   Type const* Get_##friendlyname##_Type() \
@@ -77,6 +83,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
      static T_TagType<type> s_Type;            \
      return &s_Type;                            \
   }
+#endif
+
+#ifdef EXL_TYPE_ENABLED
 
 #define DECLARE_ENUM_TYPE(Enum, friendlyName, DLL)      \
 template <>                              \
@@ -98,6 +107,10 @@ inline TypeName GetTypeName<Enum>()      \
 {                                        \
 return TypeName(#Enum);                \
 }
+
+#else
+#define DECLARE_ENUM_TYPE(Enum, friendlyName, DLL)
+#endif
 
 #define IMPLEMENT_TYPE(type) IMPLEMENT_TYPE_EX(eXl::type, eXl__##type)
 #define IMPLEMENT_TAG_TYPE(type) IMPLEMENT_TAG_TYPE_EX(eXl::type, eXl__##type)
@@ -342,4 +355,3 @@ namespace eXl
     }
   }
 }
-

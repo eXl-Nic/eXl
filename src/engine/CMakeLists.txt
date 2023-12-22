@@ -16,6 +16,8 @@ SOURCE_GROUP("Network\\Src" REGULAR_EXPRESSION "net/.*cpp")
 SOURCE_GROUP("Network\\Header" REGULAR_EXPRESSION "net/.*(hpp|inl)")
 SOURCE_GROUP("GUI\\Src" REGULAR_EXPRESSION "gui/.*cpp")
 SOURCE_GROUP("GUI\\Header" REGULAR_EXPRESSION "gui/.*(hpp|inl)")
+SOURCE_GROUP("NativeEdit\\Src" REGULAR_EXPRESSION "nativeedit/.*cpp")
+SOURCE_GROUP("NativeEdit\\Header" REGULAR_EXPRESSION "nativeedit/.*(hpp|inl)")
 
 FILE(GLOB_RECURSE EXL_ENGINE_HEADER_FILES LIST_DIRECTORIES false ${INCLUDE_DIR}/*.hpp ${INCLUDE_DIR}/*.inl)
 
@@ -54,8 +56,6 @@ game/scenariobase.cpp
 game/scripttrigger.cpp
 )
 
-SET(GFX_SRC)
-
 SET(GFX_SRC
 
 gfx/gfxsystem.cpp
@@ -82,14 +82,21 @@ script/luafunctionlibrary.cpp
 luabindengine.cpp
 )
 
-add_library(eXl_Engine ${LIBRARY_TYPE}
+set (NET_SRC
+net/network.cpp
+net/network_internal.hpp
+net/yojimbo/network_yojimbo.hpp
+net/yojimbo/streamer_yojimbo.cpp
+net/yojimbo/streamer_yojimbo.hpp
+net/yojimbo/client_yojimbo.cpp
+net/yojimbo/server_yojimbo.cpp
+net/yojimbo/protocol_yojimbo.cpp
+net/dispatcher.cpp
+)
 
-${EXL_ENGINE_HEADER_FILES}
-
+set (ENGINE_SRC
 ${GAME_SRC}
-${LUA_SRC}
 ${GFX_SRC}
-${EXL_DOC_SRC}
 
 common/app.cpp
 common/transformanim.cpp
@@ -123,21 +130,12 @@ map/maptiler.cpp
 map/dungeongraph.cpp
 map/dungeongraph_res.cpp
 map/dungeongraph_z.cpp
-map/dungeonlayout.cpp
 map/tilinggroup.cpp
 map/map.cpp
 map/map_instantiate.cpp
 map/mcmcmodelrsc.cpp
-
-net/network.cpp
-net/network_internal.hpp
-net/yojimbo/network_yojimbo.hpp
-net/yojimbo/streamer_yojimbo.cpp
-net/yojimbo/streamer_yojimbo.hpp
-net/yojimbo/client_yojimbo.cpp
-net/yojimbo/server_yojimbo.cpp
-net/yojimbo/protocol_yojimbo.cpp
-net/dispatcher.cpp
+map/graphdata.cpp
+map/graphrunner.cpp
 
 gui/fontresource.cpp
 gui/guisystem.cpp
@@ -147,6 +145,23 @@ engineplugin.cpp
 
 ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.hpp
+
+nativeedit/graphed.hpp
+nativeedit/graphed.cpp
+
+)
+
+if (EXL_BUILD_WITH_LUA)
+set (ENGINE_SRC ${ENGINE_SRC} ${LUA_SRC})
+endif()
+
+if (EXL_BUILD_WITH_NETWORK)
+set (ENGINE_SRC ${ENGINE_SRC} ${NET_SRC})
+endif()
+
+add_library(eXl_Engine ${LIBRARY_TYPE}
+${EXL_ENGINE_HEADER_FILES}
+${ENGINE_SRC}
 )
 
 target_include_directories(eXl_Engine PRIVATE 
@@ -180,9 +195,15 @@ set( PREREQS_PRIV
   BulletDynamics
   BulletCollision
   LinearMath
-  yojimbo
   assimp
 )
+
+if (EXL_BUILD_WITH_NETWORK)
+set( PREREQS_PRIV
+  ${PREREQS_PRIV}
+  yojimbo
+  )
+endif()
 
 if(${EXL_BUILD_OGL})
 set( PREREQS_PRIV
@@ -230,7 +251,7 @@ if(${MSVC})
 	SDL2)
 endif()
 
-if(${ANDROID})
+if(DEFINED ANDROID OR DEFINED EMSCRIPTEN )
 set( PRIVATE_LIBRARIES  
 	${PRIVATE_LIBRARIES}
 	 SDL2-static)

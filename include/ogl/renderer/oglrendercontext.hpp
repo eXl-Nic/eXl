@@ -49,13 +49,14 @@ namespace eXl
 
     void Draw(OGLConnectivity iTopo, uint32_t iFirstVertex, uint32_t iNumVertices);
 
+#if EXL_DESKTOP_PLATFORM
     void DrawIndexed(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices);
-#ifndef __ANDROID__
     void DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseInstance, uint32_t iFirstVertex, uint32_t iNumVertices);
     void DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseInstance, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumVertices);
 #else
+    void DrawIndexed(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iOffset, uint32_t iNumIndices);
     void DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iFirstVertex, uint32_t iNumVertices);
-    void DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumVertices);
+    void DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iOffset, uint32_t iNumVertices);
 #endif
 
   protected:

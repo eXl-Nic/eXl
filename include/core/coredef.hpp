@@ -56,6 +56,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma comment(linker, "/nodefaultlib:libcd.lib")
 #endif
 
+#if defined(__ANDROID__) || defined (__EMSCRIPTEN__)
+#define EXL_PLAY_PLATFORM 1
+#define EXL_DESKTOP_PLATFORM 0
+#else
+#define EXL_PLAY_PLATFORM 0
+#define EXL_DESKTOP_PLATFORM 1
+#endif
+
+#if _WIN32 || _WIN64
+#if _WIN64
+#define EXL_64 1
+#define EXL_32 0
+#else
+#define EXL_64 0
+#define EXL_32 1
+#endif
+#endif
+
+#if __GNUC__
+#if __x86_64__ || __ppc64__
+#define EXL_64 1
+#define EXL_32 0
+#else
+#define EXL_64 0
+#define EXL_32 1
+#endif
+#endif
+
+
 #include <core/corenew.hpp>
 
 #include <glm/glm.hpp>
@@ -122,6 +151,11 @@ namespace eXl
       : m_code(err)
     {
 
+    }
+
+    Err operator &= (Err iRhs) 
+    {
+      return (static_cast<bool>(*this) && iRhs) ? Success : (*this) ? iRhs : (*this);
     }
 
     bool operator == (Code const iOtherCode) const
@@ -258,11 +292,11 @@ do \
 #define FUN_STR __func__
 #endif
 
-#define eXl_ALLOC(bytes) (::eXl::MemoryManager::Allocate(bytes,__FILE__,__LINE__,FUN_STR))
-#define eXl_FREE(ptr) ::eXl::MemoryManager::Free(ptr,false)
-
 //Memory manager compliant allocator calls.
 #if defined(EXL_TRACE_LEAKS)
+
+#define eXl_ALLOC(bytes) (::eXl::MemoryManager::Allocate(bytes,__FILE__,__LINE__,FUN_STR))
+#define eXl_FREE(ptr) ::eXl::MemoryManager::Free(ptr,false)
 
 #define eXl_NEW new(__FILE__,__LINE__,FUN_STR)
 #define eXl_NEW_DATA(Type) new(::eXl::MemoryManager::Allocate(sizeof(Type),__FILE__,__LINE__,FUN_STR)) Type
@@ -277,6 +311,9 @@ do \
 #define eXl_DELETE_ARRAY(Class,Obj) eXl_DELETE_DATA_ARRAY(Class,Obj)
 
 #else
+
+#define eXl_ALLOC(bytes) (malloc(bytes))
+#define eXl_FREE(ptr) free(ptr)
 
 #define eXl_NEW new
 #define eXl_NEW_DATA(Type) new Type

@@ -3,11 +3,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
 
+message(${CMAKE_CXX_COMPILER_ID})
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 add_compile_options(-Wno-undefined-var-template)
 add_compile_options(-Wno-inconsistent-missing-override)
+add_compile_options(-Wno-enum-constexpr-conversion)
+endif()
+
+if(${EMSCRIPTEN})
+  set(CMAKE_EXECUTABLE_SUFFIX ".html")
+  add_compile_options(-fwasm-exceptions)
+  add_link_options(-fwasm-exceptions --profiling-funcs --preload-file D:/eXlBakedProject@/)
 endif()
 
 if(${MSVC}) 
@@ -88,7 +97,12 @@ include(${EXL_ROOT}/config/gtest/gtest.cmake)
 include(${EXL_ROOT}/config/bullet/bullet.cmake)
 include(${EXL_ROOT}/config/freetype/freetype.cmake)
 include(${EXL_ROOT}/config/utf8/utf8.cmake)
-include(${EXL_ROOT}/config/yojimbo/yojimbo.cmake)
+if( ${EXL_BUILD_WITH_NETWORK})
+  include(${EXL_ROOT}/config/yojimbo/yojimbo.cmake)
+  
+  set(EXL_COMPILER_DEFINITIONS ${EXL_COMPILER_DEFINITIONS} -DEXL_NETWORK_ENABLED)
+endif()
+
 include(${EXL_ROOT}/config/assimp/assimp.cmake)
 
 include(${EXL_ROOT}/config/Qt5/qt5.cmake)

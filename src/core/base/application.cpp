@@ -37,7 +37,7 @@ namespace eXl
     {
       LOG_INFO<<"Started Core lib"<<"\n";
     }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     SetAppPath(Path(::eXl::GetAppPath()));
 #endif
     running = false;

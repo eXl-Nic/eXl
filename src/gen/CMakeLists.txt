@@ -22,6 +22,8 @@ set (SOURCES
   mcmcdiskmodel.cpp
   mcmcsvmmodel.cpp
   pregraph.cpp
+  graphrules.cpp
+  graphlayout.cpp
 ) 
 
 if(${ENABLE_ARMADILLO})

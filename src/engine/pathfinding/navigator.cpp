@@ -189,7 +189,7 @@ namespace eXl
               agentObs.m_ImmobilityFactor = score;
             }
 
-            Vec3 linVel;
+            Vec3 linVel = Zero<Vec3>() ;
             bool nearDest = false;
 
             if(agent.m_HasDest)

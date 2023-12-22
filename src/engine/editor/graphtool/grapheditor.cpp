@@ -1,5 +1,5 @@
 #include "grapheditor.hpp"
-#include "graphdata.hpp"
+#include <engine/map/graphdata.hpp>
 #include "graphpainter.hpp"
 #include "graphsimulate.hpp"
 
@@ -36,7 +36,7 @@ namespace eXl
 
   ResourceEditorHandler& GraphEditor::GetEditorHandler()
   {
-    static EditorHandler_T<RewriteSystem, GraphEditor> s_Handler;
+    static EditorHandler_T<RewriteSystemRsc, GraphEditor> s_Handler;
     return s_Handler;
   }
 
@@ -54,6 +54,7 @@ namespace eXl
 
     String m_CurrentEditedRuleName;
     Rule* m_CurrentEditedRule = nullptr;
+    RewriteSystemRsc::RuleAdditionalData* m_RuleAddData = nullptr;
 
     int m_RuleTabIdx;
 
@@ -64,6 +65,7 @@ namespace eXl
     
     Name m_CurrentEditedTagName;
     TagDef* m_CurrentEditedTag = nullptr;
+    RewriteSystemRsc::TagAdditionalData* m_TagAdditionalData = nullptr;
 
     int m_TagTabIdx;
 
@@ -97,6 +99,7 @@ namespace eXl
 
     GraphEditor* m_Editor;
     RewriteSystem* m_Sys;
+    RewriteSystemRsc* m_SysRsc;
 
     GraphPainter* m_GraphPainter;
     Vector<ObjectHandle> m_DisplayNodes;
@@ -144,6 +147,7 @@ namespace eXl
         {
           m_CurrentEditedRuleName = String();
           m_CurrentEditedRule = nullptr;
+          m_RuleAddData = nullptr;
           
         }
         else
@@ -155,6 +159,15 @@ namespace eXl
             {
               m_CurrentEditedRuleName = *ruleName;
               m_CurrentEditedRule = &m_Sys->m_Rules[m_CurrentEditedRuleName];
+              auto iter = m_SysRsc->m_Rules.find(m_CurrentEditedRuleName);
+              if (iter != m_SysRsc->m_Rules.end()) 
+              {
+                m_RuleAddData = &iter->second;
+              }
+              else
+              {
+                m_RuleAddData = nullptr;
+              }
             }
             else
             {
@@ -222,7 +235,10 @@ namespace eXl
       {
         if (m_CurrentEditedRule)
         {
-          m_CurrentEditedRule->m_RewriteScript.SetUUID(m_RuleScriptSelection->GetSelectedResourceId());
+          if (m_RuleAddData == nullptr) {
+            m_RuleAddData = &m_SysRsc->m_Rules.insert(std::make_pair(m_CurrentEditedRuleName, RewriteSystemRsc::RuleAdditionalData())).first->second;
+          }
+          m_RuleAddData->m_Script.SetUUID(m_RuleScriptSelection->GetSelectedResourceId());
           m_Editor->ModifyResource();
         }
       });
@@ -248,6 +264,7 @@ namespace eXl
         {
           m_CurrentEditedTagName = Name();
           m_CurrentEditedTag = nullptr;
+          m_TagAdditionalData = nullptr;
           UpdateCurTag();
         }
         else
@@ -259,6 +276,16 @@ namespace eXl
             {
               m_CurrentEditedTagName = *tagName;
               m_CurrentEditedTag = &m_Sys->m_Tags[m_CurrentEditedTagName];
+              auto iter = m_SysRsc->m_Tags.find(m_CurrentEditedTagName);
+              if (iter != m_SysRsc->m_Tags.end()) 
+              {
+                m_TagAdditionalData = &iter->second;
+              }
+              else
+              {
+                m_TagAdditionalData = nullptr;
+              }
+              
               UpdateCurTag();
             }
           }
@@ -317,7 +344,11 @@ namespace eXl
       {
         if (m_CurrentEditedTag)
         {
-          m_CurrentEditedTag->m_Archetype.SetUUID(m_TagArchetypeSelection->GetSelectedResourceId());
+          if(m_TagAdditionalData == nullptr)
+          {
+            m_TagAdditionalData = &m_SysRsc->m_Tags.insert(std::make_pair(m_CurrentEditedTagName, RewriteSystemRsc::TagAdditionalData())).first->second;
+          }
+          m_TagAdditionalData->m_Archetype.SetUUID(m_TagArchetypeSelection->GetSelectedResourceId());
           m_Editor->ModifyResource();
         }
       });
@@ -844,7 +875,8 @@ namespace eXl
     World& world = m_World.GetWorld();
     GfxSystem& gfx = *world.GetSystem<GfxSystem>();
 
-    m_Sys = RewriteSystem::DynamicCast(iEditor->GetDocument()->GetResource());
+    m_SysRsc = RewriteSystemRsc::DynamicCast(iEditor->GetDocument()->GetResource());
+    m_Sys = &m_SysRsc->m_Sys;
 
     m_RulesCollectionModel = MakeMapCollectionModel(m_Editor, m_Sys, &RewriteSystem::m_Rules);
     m_TagsCollectionModel = MakeMapCollectionModel(m_Editor, m_Sys, &RewriteSystem::m_Tags);
@@ -919,7 +951,7 @@ namespace eXl
       m_RuleDispTab = displayArea->addTab(gameWidget, "CurrentRule");
     }
     
-    m_Simulate = new GraphSimulateWidget(m_Editor, *m_Sys);
+    m_Simulate = new GraphSimulateWidget(m_Editor, *m_SysRsc);
     m_Simulate->setEnabled(false);
 
     m_SimulateTab = displayArea->addTab(m_Simulate, "Simulate");
@@ -1024,7 +1056,15 @@ namespace eXl
     {
       m_RuleScriptSelection->setEnabled(true);
       QSignalBlocker blocker(m_RuleScriptSelection);
-      m_RuleScriptSelection->ForceSelection(m_CurrentEditedRule->m_RewriteScript.GetUUID());
+      if (m_RuleAddData) 
+      {
+        m_RuleScriptSelection->ForceSelection(m_RuleAddData->m_Script.GetUUID());
+      }
+      else 
+      {
+        m_RuleScriptSelection->ForceSelection(Resource::UUID());
+      }
+      
       m_ObjPanel->setTabEnabled(m_NodesIdx, true);
       m_ObjPanel->setTabEnabled(m_EdgesIdx, true);
 
@@ -1045,7 +1085,15 @@ namespace eXl
     {
       m_TagTypeSelection->setEnabled(true);
       m_TagArchetypeSelection->setEnabled(true);
-      m_TagArchetypeSelection->ForceSelection(m_CurrentEditedTag->m_Archetype.GetUUID());
+      if (m_TagAdditionalData != nullptr)
+      {
+        m_TagArchetypeSelection->ForceSelection(m_TagAdditionalData->m_Archetype.GetUUID());
+      }
+      else 
+      {
+        m_TagArchetypeSelection->ForceSelection(Resource::UUID());
+      }
+      
       m_TagTypeSelection->setCurrentIndex(m_CurrentEditedTag->m_IsNodeTag ? 0 : 1);
     }
   }
@@ -1241,17 +1289,20 @@ namespace eXl
 
       Name tag = nodeTags[i];
       auto iter = m_Sys->m_Tags.find(tag);
-      if (iter != m_Sys->m_Tags.end()
-        && iter->second.m_Archetype.GetUUID().IsValid())
+      if (iter != m_Sys->m_Tags.end())
       {
-        Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
-        if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
+        auto iterAdd = m_SysRsc->m_Tags.find(tag);
+        if (iterAdd != m_SysRsc->m_Tags.end() && iterAdd->second.m_Archetype.GetUUID().IsValid())
         {
-          ObjectHandle obj = world.CreateObject();
-          database.InstantiateArchetype(obj, arch, nullptr);
-          trans.AddTransform(obj, glm::translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
-          gfx.CreateSpriteComponent(obj);
-          m_DisplayNodes.push_back(obj);
+          Archetype const* arch = iterAdd->second.m_Archetype.GetOrLoad();
+          if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
+          {
+            ObjectHandle obj = world.CreateObject();
+            database.InstantiateArchetype(obj, arch, nullptr);
+            trans.AddTransform(obj, glm::translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
+            gfx.CreateSpriteComponent(obj);
+            m_DisplayNodes.push_back(obj);
+          }
         }
       }
     }
@@ -1332,17 +1383,20 @@ namespace eXl
 
       Name tag = nodeTags[i];
       auto iter = m_Sys->m_Tags.find(tag);
-      if (iter != m_Sys->m_Tags.end()
-        && iter->second.m_Archetype.GetUUID().IsValid())
+      if (iter != m_Sys->m_Tags.end())
       {
-        Archetype const* arch = iter->second.m_Archetype.GetOrLoad();
-        if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
+        auto iterAdd = m_SysRsc->m_Tags.find(tag);
+        if (iterAdd != m_SysRsc->m_Tags.end() && iterAdd->second.m_Archetype.GetUUID().IsValid())
         {
-          ObjectHandle obj = world.CreateObject();
-          database.InstantiateArchetype(obj, arch, nullptr);
-          trans.AddTransform(obj, translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
-          gfx.CreateSpriteComponent(obj);
-          m_DisplayNodes.push_back(obj);
+          Archetype const* arch = iterAdd->second.m_Archetype.GetOrLoad();
+          if (arch && arch->GetProperties().count(EngineCommon::GfxSpriteDescName()) > 0)
+          {
+            ObjectHandle obj = world.CreateObject();
+            database.InstantiateArchetype(obj, arch, nullptr);
+            trans.AddTransform(obj, translate(Identity<Mat4>(), Vec3(pos[0], pos[1], 0.0)));
+            gfx.CreateSpriteComponent(obj);
+            m_DisplayNodes.push_back(obj);
+          }
         }
       }
     }

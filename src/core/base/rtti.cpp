@@ -17,13 +17,14 @@ namespace eXl
     static Rtti s_Rtti("RttiObject", nullptr);
     return s_Rtti;
   }
-
+#ifdef EXL_TYPE_ENABLED
   Type const* RttiObject::GetType()
   {
     static ClassType s_Class("RttiObject", StaticRtti(), nullptr);
 
     return &s_Class;
   }
+#endif
 
   const Rtti& RttiObject::GetRtti() const
   {

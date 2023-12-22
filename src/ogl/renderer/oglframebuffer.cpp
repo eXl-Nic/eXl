@@ -18,7 +18,7 @@ namespace eXl
     : m_Size(iSize)
   {
 #ifdef EXL_WITH_OGL
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     glGenFramebuffers(1, &m_Id);
 #endif
 #endif
@@ -27,7 +27,7 @@ namespace eXl
   OGLFramebuffer::~OGLFramebuffer()
   {
 #ifdef EXL_WITH_OGL
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     glDeleteFramebuffers(1, &m_Id);
     if(!m_DepthStencilAttachement.m_IsTexture)
       glDeleteRenderbuffers(1, &m_DepthStencilAttachement.m_RenderBuffer);
@@ -44,7 +44,7 @@ namespace eXl
   void OGLFramebuffer::AddColorAttachement(OGLTexture* iTexture)
   {
 #ifdef EXL_WITH_OGL
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     if(iTexture)
     {
       eXl_ASSERT(iTexture->GetSize() == m_Size 
@@ -80,7 +80,7 @@ namespace eXl
   void OGLFramebuffer::AddDepthStencilAttachement(OGLTexture* iTexture)
   {
 #ifdef EXL_WITH_OGL
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     if(m_DepthStencilAttachement.m_Texture == NULL)
     {
       if(iTexture)

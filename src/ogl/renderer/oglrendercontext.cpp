@@ -310,7 +310,7 @@ namespace eXl
           m_Cur.reset();
           return;
         }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
         m_Cur = _tzcnt_u32(m_Flags);
 #else
         m_Cur = 31 - __builtin_clz(m_Flags);
@@ -508,8 +508,11 @@ namespace eXl
     glDrawArrays(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices);
 #endif
   }
-
+#if EXL_DESKTOP_PLATFORM
   void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer,OGLConnectivity iTopo, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
+#else 
+  void OGLRenderContext::DrawIndexed(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iOffset, uint32_t iNumIndices)
+#endif
   {
 #ifdef EXL_WITH_OGL
     if(iBuffer == nullptr || iBuffer->GetBufferUsage() != OGLBufferUsage::ELEMENT_ARRAY_BUFFER)
@@ -523,11 +526,14 @@ namespace eXl
       m_Impl->m_CurrentIndexBuffer = iBuffer;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,iBuffer->GetBufferId());
     }
-
+#if EXL_DESKTOP_PLATFORM
     glDrawElementsBaseVertex(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iBaseVertex);
+#else
+    glDrawElements(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset);
+#endif
 #endif
   }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
   void OGLRenderContext::DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseInstance, uint32_t iFirstVertex, uint32_t iNumVertices)
 #else
   void OGLRenderContext::DrawInstanced(OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iFirstVertex, uint32_t iNumVertices)
@@ -540,7 +546,7 @@ namespace eXl
       m_Impl->m_CurrentIndexBuffer = nullptr;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     glDrawArraysInstancedBaseInstance(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices, iNumInstances, iBaseInstance);
 #else
     glDrawArraysInstanced(GetGLConnectivity(iTopo), iFirstVertex, iNumVertices, iNumInstances);
@@ -548,10 +554,10 @@ namespace eXl
 #endif
   }
 
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
   void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iBaseinstance, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
 #else
-  void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumIndices)
+  void OGLRenderContext::DrawIndexedInstanced(OGLBuffer const* iBuffer, OGLConnectivity iTopo, uint32_t iNumInstances, uint32_t iOffset, uint32_t iNumIndices)
 #endif
   {
 #ifdef EXL_WITH_OGL
@@ -566,10 +572,10 @@ namespace eXl
       m_Impl->m_CurrentIndexBuffer = iBuffer;
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBuffer->GetBufferId());
     }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     glDrawElementsInstancedBaseVertexBaseInstance(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances, iBaseVertex, iBaseinstance);
 #else
-    glDrawElementsInstancedBaseVertex(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances, iBaseVertex);
+    glDrawElementsInstanced(GetGLConnectivity(iTopo), iNumIndices, GL_UNSIGNED_INT, ((uint8_t*)0) + iOffset, iNumInstances);
 #endif
 #endif
   }

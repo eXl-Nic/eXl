@@ -13,8 +13,9 @@ SET(IMGUI_SOURCES
 )
 
 
-if(${ANDROID})
+if(DEFINED ANDROID OR DEFINED EMSCRIPTEN)
 SET(IMGUI_SOURCES ${IMGUI_SOURCES} ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
+
 else()
 	add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLEW)
   
@@ -36,7 +37,7 @@ endif()
 add_library(imgui ${LIBRARY_TYPE} ${IMGUI_SOURCES})
 target_link_libraries(imgui LINK_PRIVATE ${PREREQS_PRIV})
 
-if(${ANDROID})
+if(DEFINED ANDROID OR DEFINED EMSCRIPTEN)
 else()
 add_dependencies(imgui glew)
 endif()

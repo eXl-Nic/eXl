@@ -58,7 +58,7 @@ add_definitions(${GLEW_DEFINES})
 SETUP_EXL_LIB(eXl_OGL "OGL" DEPENDENCIES eXl_Core eXl_Math HEADERS_TO_PARSE ${REFLECTED_HEADERS})
 
 target_link_libraries(eXl_OGL LINK_PRIVATE ${PREREQS_PRIV})
-if(${ANDROID})
+if(DEFINED ANDROID OR DEFINED EMSCRIPTEN)
 else()
 if(${EXL_BUILD_OGL})
 add_dependencies(eXl_OGL glew)

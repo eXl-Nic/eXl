@@ -74,7 +74,6 @@ mapeditor/mcmclearntool.cpp
 
 graphtool/graphsimulate.cpp
 graphtool/grapheditor.cpp
-graphtool/graphdata.cpp
 graphtool/graphpainter.cpp
 
 model/modeleditor.cpp
@@ -146,7 +145,6 @@ mapeditor/mapitemdata.hpp
 
 graphtool/graphsimulate.hpp
 graphtool/grapheditor.hpp
-graphtool/graphdata.hpp
 graphtool/graphpainter.hpp
 
 model/modeleditor.hpp
@@ -161,7 +159,6 @@ add_dependencies(eXl_Editor eXl_Player)
 
 set(HEADERS_TO_PARSE 
   ${CMAKE_CURRENT_SOURCE_DIR}/mapeditor/mapitemdata.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/graphtool/graphdata.hpp
 )
 
 SETUP_EXL_TARGET(eXl_Editor DEPENDENCIES eXl_Engine HEADERS_TO_PARSE ${HEADERS_TO_PARSE} LIB_SUFFIX "EDITOR")

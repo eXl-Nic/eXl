@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-Copyright 2009-2021 Nicolas Colombe
+Copyright 2009-2023 Nicolas Colombe
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -8,39 +10,36 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
-
-#include <engine/enginelib.hpp>
+#include <engine/common/world.hpp>
+#include <gen/graphrules.hpp>
 #include <gen/pregraph.hpp>
-#include <math/aabb2d.hpp>
+#include <engine/map/graphdata.hpp>
+#include <engine/common/data_tables/dense.hpp>
 
-namespace eXl
+namespace eXl 
 {
   class Random;
-   struct Room
-   {
-     AABB2Di m_Box;
-     ES_RuleSystem::GraphVtx m_Node;
-   };
+  class RewriteSystemRsc;
+  struct EXL_ENGINE_API GraphRunner
+  {
+    using NodeData = DenseGameDataStorage<LevelNodeData>;
+    using EdgeData = DenseGameDataStorage<LevelEdgeData>;
 
-   struct EXL_ENGINE_API NodeLayoutData : public ES_RuleSystem::NodeData
-   {
-     DECLARE_RTTI(NodeLayoutData, ES_RuleSystem::NodeData);
+    GraphRunner(RewriteSystemRsc const & iSys, World & iWorld, NodeData& iNodeData, EdgeData& iEdgeData);
 
-     Vector<Vec2i> m_PossibleRoomSize;
-     bool m_Ignore = false;
-   };
+    World& m_World;
+    const RewriteSystemRsc& m_SysRsc;
+    const RewriteSystem& m_Sys;
 
-   struct EXL_ENGINE_API EdgeLayoutData : public ES_RuleSystem::EdgeData
-   {
-     DECLARE_RTTI(EdgeLayoutData, ES_RuleSystem::EdgeData);
+    struct RuleItem {
+      String ruleName;
+      int application;
+    };
 
-     bool m_Ignore = false;
-   };
+    NodeData& m_NodeData;
+    EdgeData& m_EdgeData;
 
-   typedef Vector<Room> Layout;
-   typedef Vector<Layout> LayoutCollection;
-
-   EXL_ENGINE_API LayoutCollection LayoutGraph(ES_RuleSystem::Graph const& iGraph, Random& iRand);
+    void RunRules(Random& iRand, Vector<RuleItem> const& iRules, ES_RuleSystem::Graph& oGraph);
+    static void LayoutGraph(World& iWorld, Random& iRand, ES_RuleSystem::Graph const& iGraph, Vector<AABB2DPolygoni>& oRooms, Vector<AABB2DPolygoni>& oWalls, LuaEventHandler const* iLayoutScript);
+  };
 }
-

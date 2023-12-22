@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
-
+#ifdef EXL_TYPE_ENABLED
 #include <core/type/fielddesc.hpp>
 #include <core/type/tupletype.hpp>
 
@@ -190,3 +190,4 @@ namespace eXl
 #include "tupletypestruct.inl"
 
 }
+#endif

@@ -1,6 +1,6 @@
 char const* meshPS = 
 
-#ifdef __ANDROID__
+#ifdef EXL_PLAY_PLATFORM
 "precision mediump float;"
 #else
 "#version 140"

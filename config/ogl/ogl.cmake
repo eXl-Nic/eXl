@@ -3,6 +3,10 @@ if(${EXL_BUILD_OGL})
 	if(${ANDROID})
 		SET(OGL_LIBRARIES GLESv2 GLESv3)
 	endif()
+  
+  if (${EMSCRIPTEN})
+    add_link_options(-sUSE_WEBGL2=1 -sFULL_ES3=1 -sUSE_GLFW=3)
+  endif()
 	
 	if(${WIN32})
         include(${EXL_ROOT}/config/glew/glew.cmake)

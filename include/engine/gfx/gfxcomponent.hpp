@@ -95,7 +95,7 @@ namespace eXl
       uint32_t m_NumElements = 0;
       uint32_t m_Offset = 0;
       uint32_t m_NumInstances = 0;
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       uint32_t m_BaseInstance = 0;
 #endif
       uint8_t m_Layer = 0;
@@ -119,7 +119,7 @@ namespace eXl
       [[nodiscard]] DrawBuilder& NumElements(uint32_t iElems) { m_Draw.m_NumElements = iElems; return *this; }
       [[nodiscard]] DrawBuilder& Offset(uint32_t iOffset) { m_Draw.m_Offset = iOffset; return *this; }
       [[nodiscard]] DrawBuilder& NumInstances(uint32_t iNum) { m_Draw.m_NumInstances = iNum; return *this; }
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       [[nodiscard]] DrawBuilder& BaseInstance(uint32_t iBase) { m_Draw.m_BaseInstance = iBase; return *this; }
 #endif
       [[nodiscard]] DrawBuilder& Layer(uint32_t iLayer) { m_Draw.m_Layer = iLayer; return *this; }

@@ -113,7 +113,7 @@ namespace eXl
 
   enum class OGLTextureType
   {
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     TEXTURE_1D,
     TEXTURE_1D_ARRAY,
 #endif
@@ -121,7 +121,9 @@ namespace eXl
     TEXTURE_2D_ARRAY,
     TEXTURE_3D,
     TEXTURE_CUBE_MAP,
+#if EXL_DESKTOP_PLATFORM
     TEXTURE_BUFFER
+#endif
   };
 
   enum class OGLInternalTextureFormat
@@ -223,7 +225,7 @@ namespace eXl
     INT,
     HALF_FLOAT,
     FLOAT,
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     UNSIGNED_SHORT_5_6_5,
     UNSIGNED_SHORT_5_6_5_REV,
 #endif

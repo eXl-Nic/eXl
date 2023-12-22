@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <gen/pregraph.hpp>
 #include <engine/common/world.hpp>
 #include <engine/common/gamedata.hpp>
@@ -7,10 +8,13 @@
 #include <engine/script/luaeventhandler.hpp>
 #include <core/lua/luabind/object.hpp>
 #include <engine/game/commondef.hpp>
+#include <gen/graphrules.hpp>
 
 namespace eXl
 {
-  struct LevelNodeData : public ES_RuleSystem::NodeData
+  DECLARE_ENGINE_TYPE(RoomLayoutInfo);
+
+  struct EXL_ENGINE_API LevelNodeData : public ES_RuleSystem::NodeData
   {
     DECLARE_RTTI(LevelNodeData, ES_RuleSystem::NodeData);
 
@@ -22,7 +26,7 @@ namespace eXl
     String m_DebugString;
   };
 
-  struct LevelEdgeData : public ES_RuleSystem::EdgeData
+  struct EXL_ENGINE_API LevelEdgeData : public ES_RuleSystem::EdgeData
   {
     DECLARE_RTTI(LevelEdgeData, ES_RuleSystem::EdgeData);
 
@@ -33,7 +37,7 @@ namespace eXl
     Name m_Tag;
   };
 
-  struct GraphWrapper
+  struct EXL_ENGINE_API GraphWrapper
   {
     GraphWrapper(World& iWorld
       , ES_RuleSystem::Graph& iGraph
@@ -68,7 +72,7 @@ namespace eXl
     DenseGameDataStorage<LevelEdgeData>& m_EdgeData;
   };
 
-  struct MatchWrapper
+  struct EXL_ENGINE_API MatchWrapper
   {
     MatchWrapper(GraphWrapper const& iGraph)
       : m_Graph(iGraph)
@@ -79,7 +83,7 @@ namespace eXl
     GraphWrapper const& m_Graph;
   };
 
-  struct RewriteWrapper
+  struct EXL_ENGINE_API RewriteWrapper
   {
     RewriteWrapper(GraphWrapper const& iSrcGraph
       , GraphWrapper const& iDstGraph
@@ -95,22 +99,20 @@ namespace eXl
 
   class RewriteSystem;
 
-  struct GraphFactoryWrapper 
+  struct EXL_ENGINE_API GraphFactoryWrapper
   {
     GraphFactoryWrapper(GraphWrapper& iDstGraph, RewriteSystem const& iSystem) : m_DstGraph(iDstGraph), m_System(iSystem){}
 
-    ObjectHandle CreateNode(Name iTag) const;
     void SetDebugString(ObjectHandle, const char* iStr) const;
-    ObjectHandle CreateEdge(ObjectHandle iNode1, ObjectHandle iNode2, Name iTag) const;
 
     GraphWrapper& m_DstGraph;
     RewriteSystem const& m_System;
   };
 
-  DECLARE_TYPE_EX(GraphWrapper, eXl__GraphWrapper, );
-  DECLARE_TYPE_EX(GraphFactoryWrapper, eXl__GraphFactoryWrapper, );
+  DECLARE_ENGINE_TYPE(GraphWrapper);
+  DECLARE_ENGINE_TYPE(GraphFactoryWrapper);
 
-  struct LevelMatchContext : public ES_RuleSystem::UserMatchContext
+  struct EXL_ENGINE_API LevelMatchContext : public ES_RuleSystem::UserMatchContext
   {
     DECLARE_RTTI(LevelMatchContext, ES_RuleSystem::UserMatchContext);
 
@@ -121,7 +123,7 @@ namespace eXl
     GraphWrapper& m_Wrapper;
   };
 
-  struct LevelRewriteContext : public ES_RuleSystem::UserRewriteContext
+  struct EXL_ENGINE_API LevelRewriteContext : public ES_RuleSystem::UserRewriteContext
   {
     DECLARE_RTTI(LevelRewriteContext, ES_RuleSystem::UserRewriteContext);
 
@@ -132,100 +134,48 @@ namespace eXl
     GraphWrapper& m_Wrapper;
   };
 
-  DECLARE_TYPE_EX(MatchWrapper, eXl__MatchWrapper, );
-  DECLARE_TYPE_EX(RewriteWrapper, eXl__RewriteWrapper, );
+  DECLARE_ENGINE_TYPE(MatchWrapper);
+  DECLARE_ENGINE_TYPE(RewriteWrapper);
 
-  struct Rule
+  class EXL_ENGINE_API RewriteSystemRsc : public Resource
   {
-    EXL_REFLECT;
-
-    Vector<Name> m_ContextNodes;
-    Vector<Name> m_CreateNodes;
-    Vector<Name> m_CutNodes;
-
-    struct Edge
-    {
-      EXL_REFLECT;
-      Name tag;
-      uint32_t nodes[2];
-    };
-
-    struct NewEdge
-    {
-      EXL_REFLECT;
-      Name tag;
-      uint32_t nodes[2];
-      uint32_t port[2];
-    };
-
-    Vector<Edge> m_ContextEdges;
-    Vector<Edge> m_CutEdge;
-    Vector<NewEdge> m_NewEdge;
-
-    ResourceHandle<LuaEventHandler> m_RewriteScript;
-  };
-
-  struct TagDef
-  {
-    EXL_REFLECT;
-    ResourceHandle<Archetype> m_Archetype;
-    bool m_IsNodeTag;
-  };
-
-  struct RoomLayoutInfo 
-  {
-    EXL_REFLECT_PROPERTY;
-    bool m_CollapseNode;
-    String m_TerrainType;
-    Vector<Vec2i> m_RoomSizes;
-    AABB2Di m_Layout;
-  };
-
-  enum class RuleApplication 
-  {
-    OneMatch,
-    AllMatch
-  };
-  
-  class RewriteSystem : public Resource
-  {
-    DECLARE_RTTI(RewriteSystem, Resource);
+    DECLARE_RTTI(RewriteSystemRsc, Resource);
   public:
 
     static void Init();
 
 #ifndef EXL_IS_BAKED_PLATFORM
-    static RewriteSystem* Create(Path const& iDir, String const& iName);
+    static RewriteSystemRsc* Create(Path const& iDir, String const& iName);
 #endif
 
-    ~RewriteSystem();
+    ~RewriteSystemRsc();
 
     static ResourceLoaderName StaticLoaderName();
     uint32_t ComputeHash() override;
 
-    UnorderedMap<String, Rule> m_Rules;
-    UnorderedMap<Name, TagDef> m_Tags;
+    RewriteSystem m_Sys;
 
-    struct SeqItem {
-      EXL_REFLECT;
-      String m_Rule;
-      RuleApplication m_Appl;
+    struct RuleAdditionalData {
+      ResourceHandle<LuaEventHandler> m_Script;
+      SERIALIZE_METHODS;
     };
 
-    Vector<SeqItem> m_CurSequence;
+    struct TagAdditionalData {
+      ResourceHandle<Archetype> m_Archetype;
+      SERIALIZE_METHODS;
+    };
 
-    static Name GetAnyTag();
+    UnorderedMap<String, RuleAdditionalData> m_Rules;
+    UnorderedMap<Name, TagAdditionalData> m_Tags;
 
   protected:
-    friend TResourceLoader <RewriteSystem, ResourceLoader>;
+    friend TResourceLoader <RewriteSystemRsc, ResourceLoader>;
 
-    RewriteSystem(ResourceMetaData&);
+    RewriteSystemRsc(ResourceMetaData&);
 
     Err Stream_Data(Streamer& iStreamer) const override;
     Err Unstream_Data(Unstreamer& iStreamer) override;
     Err Serialize(Serializer iStreamer);
   };
-
-  EXL_REFLECT_ENUM(RuleApplication, eXl__RuleApplication, );
 }
 

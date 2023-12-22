@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/refcobject.hpp>
 #include <boost/uuid/uuid.hpp>
 
-#ifdef __ANDROID__
+#if EXL_PLAY_PLATFORM
 #define EXL_IS_BAKED_PLATFORM
 #endif
 

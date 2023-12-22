@@ -339,7 +339,7 @@ namespace eXl
         else
         {
           //sprintf(buffer,"Leak at %p of size %i",iter->ptr,iter->size);
-          LOG_INFO<<"Leak at "<<iter->ptr<<" of size "<<iter->size<<"\n";
+          LOG_INFO<<"Leak at "<<iter->ptr<<" of size "<<static_cast<uint32_t>(iter->size)<<"\n";
         } 
       }
     }
@@ -354,7 +354,7 @@ namespace eXl
         //free((void*)iter->first);
       }
     }
-    LOG_INFO<<"Total memory leaks : "<<totalLeak<<"\n";
+    LOG_INFO<<"Total memory leaks : "<< static_cast<uint32_t>(totalLeak)<<"\n";
   }
   
   unsigned int MemoryManager::GetNum(void* iPtr,size_t& oStride,const char* file,unsigned int line,const char* iFun)

@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include <core/corelib.hpp>
-#include <core/vlog.hpp>
+#include <core/log.hpp>
 
 #include <core/plugin.hpp>
 
@@ -62,7 +62,7 @@ namespace eXl
     std::string_view exePathView;
   }
 
-
+#ifdef EXL_TYPE_ENABLED
   IMPLEMENT_TYPE_EX(uint64_t, uint64_t)
   IMPLEMENT_TYPE_EX(uint32_t, uint32_t)
   IMPLEMENT_TYPE_EX(int32_t, int32_t)
@@ -72,6 +72,7 @@ namespace eXl
   IMPLEMENT_TYPE_EX(uint16_t, uint16_t)
   IMPLEMENT_TYPE_EX(short, short)
   IMPLEMENT_TYPE_EX(char, char)
+
 
 #ifndef __ANDROID__
   //IMPLEMENT_TYPE(WString)
@@ -84,6 +85,7 @@ namespace eXl
   IMPLEMENT_TAG_TYPE(DynObject)
   IMPLEMENT_TAG_TYPE(Rtti)
   IMPLEMENT_TAG_TYPE(Err)
+#endif
 
   std::string_view GetAppPath()
   {
@@ -178,11 +180,10 @@ namespace eXl
     }
     
     LOG_INFO << "Start eXl initialization";
-
+    Name_Init();
 #ifdef EXL_TYPE_ENABLED
 
     LOG_INFO << "Name initialization";
-    Name_Init();
     //TypeName::init();
     //TypeFieldName::init();
     //TypeEnumName::init();

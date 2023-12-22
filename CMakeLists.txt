@@ -17,6 +17,7 @@ set(EXL_BUILD_EDITOR ON CACHE BOOL "Build the eXl editor")
 set(EXL_BUILD_WITH_LUA ON CACHE BOOL "Enable eXl lua integration")
 set(EXL_BUILD_FOR_UE4 OFF CACHE BOOL "Make a dll compatible with UE4")
 set(EXL_BUILD_WITH_FREEIMAGE ON CACHE BOOL "Enable eXl Freeimage integration")
+set(EXL_BUILD_WITH_NETWORK ON CACHE BOOL "Enable eXl Network integration")
 
 set(EXL_BUILD_TESTS OFF CACHE BOOL "Build eXl tests")
 

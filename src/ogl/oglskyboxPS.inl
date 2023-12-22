@@ -1,5 +1,5 @@
 char const* skyBoxPS = 
-#ifdef __ANDROID__
+#ifdef EXL_PLAY_PLATFORM
 "precision mediump float;\n"
 #endif
 "varying vec3 texCoord;\n"

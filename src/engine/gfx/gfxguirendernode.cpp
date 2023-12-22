@@ -607,7 +607,7 @@ namespace eXl
         iList.PushData(iText.m_TextureData);
         iList.PushData(&iText.m_ShaderData);
         iList.SetVAssembly(&iText.m_Assembly);
-        iList.PushDraw(0x1000 + iText.m_Depth, OGLDraw::TriangleList, iText.m_NumElems, 0, 0);
+        iList.PushDraw(0x1000 + iText.m_Depth, OGLDraw::TriangleList, iText.m_NumElems, 0);
         iList.PopData();
         iList.PopData();
       });
@@ -632,7 +632,7 @@ namespace eXl
         iList.PushData(iText.m_TextureData);
         iList.PushData(&iText.m_ShaderData);
         iList.SetVAssembly(&iText.m_Assembly);
-        iList.PushDraw(0x2000 + iText.m_Depth, OGLDraw::TriangleList, iText.m_NumElems, 0, 0);
+        iList.PushDraw(0x2000 + iText.m_Depth, OGLDraw::TriangleList, iText.m_NumElems, 0);
         iList.PopData();
         iList.PopData();
       });

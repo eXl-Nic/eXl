@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #pragma once
-
+#ifdef EXL_TYPE_ENABLED
 #include <core/type/coretype.hpp>
 #include <core/resource/resource.hpp>
 
@@ -67,3 +67,4 @@ namespace eXl
     Type const* m_ResourceType;
   };
 }
+#endif

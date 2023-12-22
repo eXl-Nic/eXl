@@ -21,7 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "ogltypes.hpp"
 #include "oglstatecollection.hpp"
 
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
 #include <emmintrin.h>
 #endif
 
@@ -66,12 +66,12 @@ namespace eXl
 
     void PopData();
 
+#if EXL_DESKTOP_PLATFORM
     void PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex);
-#ifndef __ANDROID__
     void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance);
-#else
-    void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances);
 #endif
+    void PushDraw(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset);
+    void PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iNumInstances);
 
     void Clear(uint16_t iKey, bool iClearColor, bool iClearDepth, Vec4 const& iColor = Zero<Vec4>(), float iDepth = 1.0);
 
@@ -90,9 +90,10 @@ namespace eXl
       uint32_t data;
       uint32_t num;
       uint32_t offset;
-      uint32_t baseVertex;
       uint32_t instances;
-#ifndef __ANDROID__
+
+#if EXL_DESKTOP_PLATFORM
+      uint32_t baseVertex;
       uint32_t baseInstance;
 #endif
       uint16_t key;
@@ -120,9 +121,7 @@ namespace eXl
     {
       inline bool operator<(CommandKey const& iOther)const
       {
-#if defined(__ANDROID__)
-        return memcmp(m_KeyBytes, iOther.m_KeyBytes, sizeof(m_KeyBytes)) < 0;
-#else
+#if EXL_DESKTOP_PLATFORM
         const __m128i signBits = _mm_set1_epi8((char)0x80);
         __m128i a = _mm_xor_si128(m_SSEVal, signBits);
         __m128i b = _mm_xor_si128(iOther.m_SSEVal, signBits);
@@ -132,6 +131,8 @@ namespace eXl
         //const int less = _mm_movemask_epi8(_mm_cmplt_epi8(m_SSEVal, iOther.m_SSEVal));
         //const int greater = _mm_movemask_epi8(_mm_cmpgt_epi8(m_SSEVal, iOther.m_SSEVal));
         return less > greater;
+#else
+        return memcmp(m_KeyBytes, iOther.m_KeyBytes, sizeof(m_KeyBytes)) < 0;
 #endif
       }
       //High level + Low level
@@ -151,7 +152,7 @@ namespace eXl
           uint16_t m_StateKey;
           uint16_t m_UserKey;
         };
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
         __m128i m_SSEVal;
 #endif
       };

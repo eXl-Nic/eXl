@@ -51,7 +51,7 @@
 #include <editor/mcmcmodeleditor.hpp>
 #include <engine/gfx/tileset.hpp>
 
-#include <editor/graphtool/graphdata.hpp>
+#include <engine/map/graphdata.hpp>
 #include <editor/graphtool/grapheditor.hpp>
 
 namespace eXl
@@ -256,7 +256,7 @@ namespace eXl
   {
     ui->setupUi(this);
 
-    RewriteSystem::Init();
+    RewriteSystemRsc::Init();
     EditorState::BuildState(this);
 
     EditorState::AddResourceHandler(&TilesetEditor::GetEditorHandler());

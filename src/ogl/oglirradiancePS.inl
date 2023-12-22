@@ -1,6 +1,6 @@
 char const* irradianceMapPS = 
 //"#version 140\n"
-#ifdef __ANDROID__
+#ifdef EXL_PLAY_PLATFORM
 "precision mediump float;\n"
 #endif
 

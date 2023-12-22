@@ -69,7 +69,7 @@ namespace eXl
         , m_SigmaSquared(iKernel.m_SigmaSquared)
       {}
 
-      template <unsigned int VectorDim1, unsigned int VectorDim2>
+      template <int VectorDim1, int VectorDim2>
       double operator()(glm::vec<VectorDim1, double> const& iVec1, glm::vec<VectorDim2, double> const& iVec2) const
       {
         static_assert(VectorDim1 == VectorDim2, "Incompatible vectors");

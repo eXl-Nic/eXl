@@ -4,8 +4,8 @@
 #endif
 
 char const* hq2xVS =
-#ifdef __ANDROID__
-"#version 320 es\n"
+#ifdef EXL_PLAY_PLATFORM
+"#version 300 es\n"
 #else
 "#version 140\n"
 #endif
@@ -51,8 +51,8 @@ void main()
 )";
 
 char const* hq2xPS =
-#ifdef __ANDROID__
-"#version 320 es\n"
+#ifdef EXL_PLAY_PLATFORM
+"#version 300 es\n"
 "precision mediump float\n"
 #else
 "#version 140\n"

@@ -20,6 +20,7 @@ namespace eXl
 {
   IMPLEMENT_RefC(OGLTexture);
 
+#if EXL_DESKTOP_PLATFORM
   OGLTexture::OGLTexture(OGLBuffer* iBuffer, OGLInternalTextureFormat iFormat)
     : m_Buffer(iBuffer)
     , m_InternalFormat(iFormat)
@@ -33,6 +34,7 @@ namespace eXl
   {
 
   }
+#endif
 
   OGLTexture::OGLTexture(Image::Size const& iSize, OGLTextureType iTextureType, OGLInternalTextureFormat iFormat, uint32_t iNumSlices)
     : m_Size(iSize)
@@ -48,7 +50,9 @@ namespace eXl
   void OGLTexture::AllocateTexture()
   {
 #ifdef EXL_WITH_OGL
+#if EXL_DESKTOP_PLATFORM
     eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER || m_Buffer != nullptr, void());
+#endif
     
     if (m_TexId != 0)
     {
@@ -59,7 +63,7 @@ namespace eXl
     glBindTexture(textureTarget, m_TexId);
     switch (m_TextureType)
     {
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
     case OGLTextureType::TEXTURE_1D:
       glTexImage1D(textureTarget, 0, GetGLInternalTextureFormat(m_InternalFormat), 
         m_Size.x, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
@@ -82,9 +86,11 @@ namespace eXl
           m_Size.x, m_Size.y, 0, GetGLElementFormat(), GetGLElementType(), nullptr);
       }
       break;
+#if EXL_DESKTOP_PLATFORM
     case OGLTextureType::TEXTURE_BUFFER:
       glTexBuffer(textureTarget, GetGLInternalTextureFormat(m_InternalFormat), m_Buffer->GetBufferId());
       break;
+#endif
     }
 #endif
   }
@@ -181,13 +187,13 @@ namespace eXl
       {
         GLenum textureTarget = GetGLTextureType(m_TextureType);
 
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
         if (m_TextureType == OGLTextureType::TEXTURE_1D)
         {
         }
 #endif
         if (m_TextureType == OGLTextureType::TEXTURE_2D
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
           || m_TextureType == OGLTextureType::TEXTURE_1D_ARRAY
 #endif
           )
@@ -248,7 +254,9 @@ namespace eXl
   void OGLTexture::Update(AABB2Di iBox, OGLTextureElementType iType, OGLTextureFormat iFormat, void const* iData, uint32_t iMip, uint32_t iSlice)
   {
 #ifdef EXL_WITH_OGL
+#if EXL_DESKTOP_PLATFORM
     eXl_ASSERT_REPAIR_RET(m_TextureType != OGLTextureType::TEXTURE_BUFFER, void());
+#endif
 
     GLUnpackSave save;
     
@@ -258,7 +266,7 @@ namespace eXl
       
       GLenum inputType = GetGLTextureElementType(iType);
       GLenum inputFormat = GetGLTextureFormat(iFormat);
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
       if (m_TextureType == OGLTextureType::TEXTURE_1D)
       {
         Vec2i boxSize = iBox.GetSize();
@@ -276,7 +284,7 @@ namespace eXl
 #endif
       if (m_TextureType == OGLTextureType::TEXTURE_2D
         || m_TextureType == OGLTextureType::TEXTURE_CUBE_MAP
-#ifndef __ANDROID__
+#if EXL_DESKTOP_PLATFORM
         ||m_TextureType == OGLTextureType::TEXTURE_1D_ARRAY
 #endif
         )

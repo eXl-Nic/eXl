@@ -107,6 +107,7 @@ namespace boost
       };
 
       template<typename Real> struct tag<eXl::Vector<glm::vec<2,Real> > > { typedef ring_tag type; };
+      template<typename Real> struct tag<eXl::AABB2DPolygonPtList<Real> > { typedef ring_tag type; };
 
       template <typename Real>
       struct tag<eXl::Polygon<Real> >
@@ -210,12 +211,12 @@ namespace boost
 
         static inline ring_type& get(polygon_type& p)
         {
-          return p.Border();
+          return p.BorderT();
         }
 
         static inline ring_type const& get(polygon_type const& p)
         {
-          return p.Border();
+          return p.BorderT();
         }
       };
 
@@ -227,12 +228,12 @@ namespace boost
 
         static inline inner_container_type& get(polygon_type& p)
         {
-          return p.Holes();
+          return p.HolesT();
         }
 
         static inline inner_container_type const& get(polygon_type const& p)
         {
-          return p.Holes();
+          return p.HolesT();
         }
       };
     }
