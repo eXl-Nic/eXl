@@ -4,7 +4,7 @@
 #endif
 
 char const* hq2xVS =
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 #else
 "#version 140\n"
@@ -51,7 +51,7 @@ void main()
 )";
 
 char const* hq2xPS =
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 "precision mediump float\n"
 #else

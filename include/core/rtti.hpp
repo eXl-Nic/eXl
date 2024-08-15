@@ -159,7 +159,7 @@ namespace eXl
   } \
   ::eXl::Type const* ClassName::GetType() \
   { \
-    static ::eXl::ClassType s_Type(#ClassName, ClassName::StaticRtti(), ::eXl::ClassType::DynamicCast(ClassName::ParentRttiClass::GetType())); \
+    static ::eXl::ClassType s_Type(eXl_TO_STR( eXl_CONCAT(eXl::,ClassName) ), ClassName::StaticRtti(), ::eXl::ClassType::DynamicCast(ClassName::ParentRttiClass::GetType())); \
     return &s_Type; \
   }
 #else

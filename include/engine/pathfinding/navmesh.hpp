@@ -81,7 +81,7 @@ namespace eXl
 
     struct FoundFace
     {
-      bool operator == (FoundFace const& iOther)
+      bool operator == (FoundFace const& iOther) const
       {
         return m_Component == iOther.m_Component && m_Face == iOther.m_Face;
       }

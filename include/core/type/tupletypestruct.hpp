@@ -25,7 +25,7 @@ namespace eXl
 
   namespace TypeManager
   {
-    EXL_CORE_API const TupleType* MakeTuple(TypeName ,const List<FieldDesc>&,size_t*);
+    EXL_CORE_API const TupleType* MakeTuple(TypeName ,const List<FieldDesc>&,size_t*, uint32_t);
 
     template <class T>
     class NativeTypeReg;
@@ -77,12 +77,12 @@ namespace eXl
     DECLARE_RTTI(TupleTypeStruct,TupleType);
     friend class TupleTypeStructClassType;
     friend class TypeManager::SignTypeReg;
-    friend const TupleType* TypeManager::MakeTuple(TypeName ,const List<FieldDesc>&,size_t*);
+    friend const TupleType* TypeManager::MakeTuple(TypeName ,const List<FieldDesc>&,size_t*, uint32_t);
     template <class T>
     friend const TupleType* TypeManager::detail::RegisterSignature(size_t iId,const List<FieldDesc>& iFields);
   public:
 
-    static TupleType* Create(const List<FieldDesc>& iList, TypeName name = TypeName(""));
+    static TupleType* Create(const List<FieldDesc>& iList, TypeName name = TypeName(""), uint32_t iFlags = 0);
 
     size_t GetNumField()const override;
 
@@ -122,9 +122,9 @@ namespace eXl
 
     void FillFields(const List<FieldDesc>& iList);
 
-    static TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId);
+    static TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId, uint32_t iFlags);
 
-    TupleTypeStruct(TypeName iName, size_t iId, size_t iSize, unsigned int iFlags);
+    TupleTypeStruct(TypeName iName, size_t iId, size_t iSize, uint32_t iFlags);
 
     FieldVector m_Data;
   };
@@ -142,9 +142,9 @@ namespace eXl
     friend class TypeManager::NativeTypeReg;
   protected:
     
-    static TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId);
+    static TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId, uint32_t iFlags);
 
-    CoreTupleType(TypeName iName,size_t iId,const List<FieldDesc>& iFields);
+    CoreTupleType(TypeName iName,size_t iId,const List<FieldDesc>& iFields, uint32_t iFlags);
     
     size_t GetNumField() const override;
 

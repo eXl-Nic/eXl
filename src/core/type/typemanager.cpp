@@ -162,13 +162,14 @@ namespace eXl
     };
 
 
-    UsrTypeReg BeginTypeRegistration(TypeName iName)
+    UsrTypeReg BeginTypeRegistration(TypeName iName, uint32_t iFlags)
     {
-      return UsrTypeReg(iName);
+      return UsrTypeReg(iName, iFlags);
     }
     
-    UsrTypeReg::UsrTypeReg(TypeName iName)
+    UsrTypeReg::UsrTypeReg(TypeName iName, uint32_t iFlags)
       : m_Name(iName)
+      , m_Flags(iFlags)
       , m_Offset(0)
     {
       
@@ -225,15 +226,15 @@ namespace eXl
     
     const TupleType* UsrTypeReg::EndRegistration()
     {
-      return MakeTuple(m_Name,m_Fields,nullptr);
+      return MakeTuple(m_Name,m_Fields,nullptr, m_Flags);
     }
 
-    const TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t* iId)
+    const TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t* iId, uint32_t iFlags)
     {
       if(!iList.empty())
       {
         size_t newId = iId==nullptr ? detail::UsrTypeFlag : *iId;
-        TupleType* newType = TupleTypeStruct::MakeTuple(iName,iList,newId);
+        TupleType* newType = TupleTypeStruct::MakeTuple(iName,iList,newId, iFlags);
         List<FieldDesc>::const_iterator iter =  iList.begin();
         List<FieldDesc>::const_iterator iterEnd =  iList.end();
         return newType;

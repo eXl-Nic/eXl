@@ -188,12 +188,12 @@ namespace eXl
     return iter->GetType();
   }
 
-  TupleTypeStruct::TupleTypeStruct(TypeName iName,size_t iId,size_t iSize,unsigned int iFlags)
+  TupleTypeStruct::TupleTypeStruct(TypeName iName,size_t iId,size_t iSize, uint32_t iFlags)
     : TupleTypeAdapter(iName,iId,iSize,iFlags)
   {
   }
 
-  TupleType* TupleTypeStruct::MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId)
+  TupleType* TupleTypeStruct::MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId, uint32_t iAddFlags)
   {
     if(!iList.empty())
     {
@@ -225,9 +225,9 @@ namespace eXl
     return nullptr;
   }
 
-  TupleType* TupleTypeStruct::Create(const List<FieldDesc>& iList, TypeName iName)
+  TupleType* TupleTypeStruct::Create(const List<FieldDesc>& iList, TypeName iName, uint32_t iFlags)
   {
-    TupleType* newType = MakeTuple(iName,iList,0);
+    TupleType* newType = MakeTuple(iName,iList,0, iFlags);
     
     return newType;
   }
@@ -486,7 +486,7 @@ namespace eXl
 
   void TupleTypeStruct::RegisterLua(lua_State* iState) const
   {
-    luabind::detail::class_base newClass(m_ScopedName.back().c_str());
+    luabind::detail::class_base newClass;
     newClass.init(this, luabind::detail::allocate_class_id(this), nullptr, luabind::detail::allocate_class_id(nullptr));
     newClass.add_member(new type_constructor_registration(this));
     newClass.add_default_member(new type_constructor_registration(this));

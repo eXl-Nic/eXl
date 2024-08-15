@@ -1,6 +1,6 @@
 
 char const* linePS =
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 "precision mediump float;\n"
 #else

@@ -163,93 +163,122 @@ namespace eXl
 
     if (m_MainChar.IsAssigned())
     {
-      for (int i = 0; i < (int)iInputs.m_KeyEvts.size(); ++i)
+      CharacterSystem * charSys = GetWorld().GetSystem<CharacterSystem>();
+      const CharacterSystem::Desc * charDesc = charSys->GetDesc( m_MainChar );
+
+      if (charDesc != nullptr && charDesc->controlKind == CharacterSystem::ControlKind::Navigation) 
       {
-        KeyboardEvent& evt = iInputs.m_KeyEvts[i];
-        if (!evt.pressed)
+        bool pickedDest = false;
+        for (int i = 0; i < (int)iInputs.m_MouseEvts.size(); ++i)
         {
-          if (evt.key == K_UP)
+          MouseEvent const& evt = iInputs.m_MouseEvts[i];
+          if (evt.button == MouseButton::Left
+            && !evt.pressed)
           {
-            dirMask &= ~(1 << 2);
-            keyChanged = true;
-          }
-          if (evt.key == K_DOWN)
-          {
-            dirMask &= ~(1 << 3);
-            keyChanged = true;
-          }
-          if (evt.key == K_LEFT)
-          {
-            dirMask &= ~(1 << 1);
-            keyChanged = true;
-          }
-          if (evt.key == K_RIGHT)
-          {
-            dirMask &= ~(1 << 0);
-            keyChanged = true;
-          }
-        }
-        else
-        {
-          if (evt.key == K_UP)
-          {
-            dirMask |= 1 << 2;
-            keyChanged = true;
-          }
-          if (evt.key == K_DOWN)
-          {
-            dirMask |= 1 << 3;
-            keyChanged = true;
-          }
-          if (evt.key == K_LEFT)
-          {
-            dirMask |= 1 << 1;
-            keyChanged = true;
-          }
-          if (evt.key == K_RIGHT)
-          {
-            dirMask |= 1 << 0;
-            keyChanged = true;
+            pickedDest = true;
           }
         }
 
-        if (keyChanged)
-        {
-          iInputs.m_KeyEvts.erase(iInputs.m_KeyEvts.begin() + i);
-          --i;
-        }
-      }
-    }
-    if (keyChanged)
-    {
-      static const Vec3 dirs[] =
-      {
-        UnitX<Vec3>() *  1.0,
-        UnitX<Vec3>() * -1.0,
-        UnitY<Vec3>() *  1.0,
-        UnitY<Vec3>() * -1.0,
-      };
-      Vec3 dir = Zero<Vec3>();
-      for (unsigned int i = 0; i < 4; ++i)
-      {
-        if (dirMask & (1 << i))
-        {
-          dir += dirs[i];
+        NavigatorSystem* navSys = GetWorld().GetSystem<NavigatorSystem>();
+        if (navSys) {
+          GfxSystem& gfx = *iWorld.GetSystem<GfxSystem>();
+          Vec3 curWorldPos;
+          Vec3 view;
+          gfx.ScreenToWorld(curMousePos, curWorldPos, view);
+          navSys->SetDestination(m_MainChar, curWorldPos);
         }
       }
 
-      if (dirMask == 0)
-      {
-        abilities.StopUsingAbility(m_MainChar, WalkAbility::Name());
-      }
       else
       {
-        WalkAbility::SetWalkDirection(&abilities, m_MainChar, MathTools::As2DVec(dir));
-        abilities.UseAbility(m_MainChar, WalkAbility::Name());
+
+        for (int i = 0; i < (int)iInputs.m_KeyEvts.size(); ++i)
+        {
+          KeyboardEvent& evt = iInputs.m_KeyEvts[i];
+          if (!evt.pressed)
+          {
+            if (evt.key == K_UP)
+            {
+              dirMask &= ~(1 << 2);
+              keyChanged = true;
+            }
+            if (evt.key == K_DOWN)
+            {
+              dirMask &= ~(1 << 3);
+              keyChanged = true;
+            }
+            if (evt.key == K_LEFT)
+            {
+              dirMask &= ~(1 << 1);
+              keyChanged = true;
+            }
+            if (evt.key == K_RIGHT)
+            {
+              dirMask &= ~(1 << 0);
+              keyChanged = true;
+            }
+          }
+          else
+          {
+            if (evt.key == K_UP)
+            {
+              dirMask |= 1 << 2;
+              keyChanged = true;
+            }
+            if (evt.key == K_DOWN)
+            {
+              dirMask |= 1 << 3;
+              keyChanged = true;
+            }
+            if (evt.key == K_LEFT)
+            {
+              dirMask |= 1 << 1;
+              keyChanged = true;
+            }
+            if (evt.key == K_RIGHT)
+            {
+              dirMask |= 1 << 0;
+              keyChanged = true;
+            }
+          }
+
+          if (keyChanged)
+          {
+            iInputs.m_KeyEvts.erase(iInputs.m_KeyEvts.begin() + i);
+            --i;
+          }
+        }
+        if (keyChanged)
+        {
+          static const Vec3 dirs[] =
+          {
+            UnitX<Vec3>() * 1.0,
+            UnitX<Vec3>() * -1.0,
+            UnitY<Vec3>() * 1.0,
+            UnitY<Vec3>() * -1.0,
+          };
+          Vec3 dir = Zero<Vec3>();
+          for (unsigned int i = 0; i < 4; ++i)
+          {
+            if (dirMask & (1 << i))
+            {
+              dir += dirs[i];
+            }
+          }
+
+          if (dirMask == 0)
+          {
+            abilities.StopUsingAbility(m_MainChar, WalkAbility::Name());
+          }
+          else
+          {
+            WalkAbility::SetWalkDirection(&abilities, m_MainChar, MathTools::As2DVec(dir));
+            abilities.UseAbility(m_MainChar, WalkAbility::Name());
+          }
+          keyChanged = false;
+        }
       }
-      keyChanged = false;
     }
 
-    GetCamera().ProcessInputs(iWorld, iInputs);
   }
 }

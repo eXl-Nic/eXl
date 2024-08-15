@@ -1,5 +1,5 @@
 
-char const* defaultVS =
+char const* lineVS =
 #if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 "precision mediump float;\n"
@@ -7,7 +7,6 @@ char const* defaultVS =
 "#version 140\n"
 #endif
 R"(in vec4 iPosition;
-in vec2 iTexCoord;
 uniform mat4 worldMatrix;
 
 layout(std140) uniform Camera
@@ -17,14 +16,8 @@ layout(std140) uniform Camera
   mat4 projMatrix;
 };
 
-uniform vec2 tcOffset;
-uniform vec2 tcScaling;
-
-out vec2 texCoord;
-
 void main()
 {
-  texCoord = iTexCoord * tcScaling + tcOffset;
   gl_Position = projMatrix * viewMatrix * worldMatrix * iPosition;
 }
 )";

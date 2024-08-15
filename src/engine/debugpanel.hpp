@@ -76,9 +76,11 @@ namespace eXl
 
     ImGuiLogState()
     {
-      m_Color[0] = One<Vec3>();
-      m_Color[1] = Vec3(0.7, 0.7, 0.0);
-      m_Color[2] = Vec3(0.7, 0.0, 0.0);
+      m_Color[INFO_STREAM] = One<Vec3>();
+      m_Color[WARNING_STREAM] = Vec3(0.7, 0.7, 0.0);
+      m_Color[ERROR_STREAM] = Vec3(0.7, 0.0, 0.0);
+      m_Color[LUA_OUT_STREAM] = m_Color[INFO_STREAM];
+      m_Color[LUA_ERR_STREAM] = m_Color[ERROR_STREAM];
     }
 
     void write(const char* tolog, unsigned int num)
@@ -111,7 +113,7 @@ namespace eXl
 
     String m_Entries[s_numEntries];
     uint32_t m_LogLevel[s_numEntries];
-    Vec3 m_Color[3];
+    Vec3 m_Color[5];
     uint32_t m_Begin = 0;
     uint32_t m_End = 0;
 

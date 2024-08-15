@@ -3,8 +3,6 @@
 #include <ogl/renderer/oglcompiledprogram.hpp>
 #include <ogl/oglutils.hpp>
 
-#define VALIDATE_FLOAT(floatValue) eXl_ASSERT(!std::isnan(floatValue) && std::isfinite(floatValue));
-
 namespace eXl
 {
   SpriteRenderer::SpriteRenderer(GfxSystem& iSys, GameDataView<GfxSpriteComponent::Desc> const& iSpriteDescView, DenseGameDataView<GfxSpriteData>& iSpriteData)
@@ -79,8 +77,8 @@ namespace eXl
         data.m_CurScale.x *= tile->m_Scale.x;
         data.m_CurScale.y *= tile->m_Scale.y;
 
-        VALIDATE_FLOAT(tile->m_Scale.x);
-        VALIDATE_FLOAT(tile->m_Scale.y);
+        EXL_VALIDATE_FLOAT(tile->m_Scale.x);
+        EXL_VALIDATE_FLOAT(tile->m_Scale.y);
 
         data.m_CurOffset = tile->m_Offset;
 
@@ -149,8 +147,8 @@ namespace eXl
 
       data.m_Geometry = geom;
       data.m_SpriteInfo.alphaMult = 1.0;
-      VALIDATE_FLOAT(texStep.x);
-      VALIDATE_FLOAT(texStep.y);
+      EXL_VALIDATE_FLOAT(texStep.x);
+      EXL_VALIDATE_FLOAT(texStep.y);
       data.m_SpriteInfo.tcOffset = Vec2(tileOffset.x * texStep.x, tileOffset.y * texStep.y);
       data.m_SpriteInfo.tcScaling = Vec2(tileSize.x * texStep.x, tileSize.y * texStep.y);
       data.m_SpriteInfo.imageSize = Vec2(imageSize);

@@ -48,7 +48,7 @@ namespace eXl
     **********************************************************************/
     class EXL_CORE_API UsrTypeReg
     {
-      friend EXL_CORE_API UsrTypeReg BeginTypeRegistration(TypeName iName);
+      friend EXL_CORE_API UsrTypeReg BeginTypeRegistration(TypeName iName, uint32_t iFlags);
     public:
       
       UsrTypeReg& AddField(TypeFieldName iName, Type const* iType);
@@ -57,8 +57,9 @@ namespace eXl
 
       const TupleType* EndRegistration();
     private:
-      UsrTypeReg(TypeName iName);
+      UsrTypeReg(TypeName iName, uint32_t iFlags);
       TypeName m_Name;
+      uint32_t m_Flags;
       List<FieldDesc> m_Fields;
       size_t m_Offset;
     };
@@ -88,7 +89,7 @@ namespace eXl
        Returns a NativeTypeReg to register C++ types in the reflexion system.
     **********************************************************************/
     template <class T>
-    NativeTypeReg<T> BeginNativeTypeRegistration(TypeName iName);
+    NativeTypeReg<T> BeginNativeTypeRegistration(TypeName iName, uint32_t iFlags = 0);
     
     /**
        Registraction class used to map C++ structs to the reflexion system.
@@ -96,7 +97,7 @@ namespace eXl
     template <class T>
     class NativeTypeReg
     {
-      friend NativeTypeReg<T> BeginNativeTypeRegistration<T>(TypeName iName);
+      friend NativeTypeReg<T> BeginNativeTypeRegistration<T>(TypeName iName, uint32_t iFlags);
     public:
     
       template <class U>
@@ -110,8 +111,9 @@ namespace eXl
       
       const TupleType* EndRegistration(/*ResourceContainer* iCont*/);
     private:
-      NativeTypeReg(TypeName iName);
+      NativeTypeReg(TypeName iName, uint32_t iFlags);
       String m_Name;
+      uint32_t m_Flags;
       List<FieldDesc> m_Fields;
     };
 
@@ -131,7 +133,7 @@ namespace eXl
     /**
        (internal use)
     **********************************************************************/
-    EXL_CORE_API const TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t* iId);
+    EXL_CORE_API const TupleType* MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t* iId, uint32_t iFlags);
 
     namespace detail
     {

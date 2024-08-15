@@ -329,6 +329,8 @@ do \
 
 #endif
 
+#define EXL_VALIDATE_FLOAT(floatValue) eXl_ASSERT(!std::isnan(floatValue) && std::isfinite(floatValue));
+
 namespace eXl
 {
   template<class T>

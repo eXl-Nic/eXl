@@ -1,6 +1,6 @@
 
 char const* defaultPS = 
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 "precision mediump float;\n"
 #else
@@ -35,7 +35,7 @@ char const* defaultPS =
 ;
 
 char const* defaultUPS = 
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 "precision mediump float;\n"
 #else
@@ -63,7 +63,7 @@ char const* defaultUPS =
 
 char const* fontPS = 
 
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "#version 300 es\n"
 "precision mediump float;\n"
 #else

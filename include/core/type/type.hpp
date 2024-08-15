@@ -68,6 +68,11 @@ namespace eXl
     static const unsigned int Type_Is_CoreType = 1<<2;
     static const unsigned int Type_Is_POD      = 1<<3;
     static const unsigned int Type_Is_TagType  = 1<<4;
+
+    static const unsigned int Type_UserFlag0 = 1 << 5;
+    static const unsigned int Type_UserFlag1 = 1 << 6;
+    static const unsigned int Type_UserFlag2 = 1 << 7;
+    static const unsigned int Type_UserFlag3 = 1 << 8;
   public:
     /**
        Allocate and construct the object.
@@ -202,6 +207,8 @@ namespace eXl
 
     inline bool IsTag() const { return (m_Flags & Type_Is_TagType) != 0; }
 
+    inline bool HasFlag( uint32_t iFlag ) const { return (m_Flags & iFlag) != 0; }
+
     inline size_t GetSize()const{return m_Size;}
 
     inline size_t GetTypeId()const{return m_TypeId;}
@@ -210,15 +217,17 @@ namespace eXl
 
     String GetDisplayName(uint32_t iIgnoreScope = 1) const;
 
+    const SmallVector<String, 2> & GetNames() const { return m_ScopedName; }
+#ifdef EXL_LUA
+    void RegisterScope(lua_State* iState, const luabind::scope& iScope) const;
+#endif
   protected:
 
     Type(TypeName iName,
          size_t iTypeId,
          size_t iSize,
          unsigned int iFlags);
-#ifdef EXL_LUA
-    void RegisterScope(lua_State* iState, luabind::scope& iScope) const;
-#endif
+
     TypeName m_Name;
     SmallVector<String, 2> m_ScopedName;
     size_t m_TypeId;

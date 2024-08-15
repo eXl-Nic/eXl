@@ -1,8 +1,8 @@
 [
   {
     "name" : "boost",
-    "url" : "https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz",
-    "hash" : "94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7",
+    "url" : "https://archives.boost.io/release/1.85.0/source/boost_1_85_0.7z",
+    "hash" : "16d16b9658753117c1434e5450c5eac194957f4b6d0b390b9d07900d37c115a4",
     "patches" : 
     [
       {
@@ -34,8 +34,8 @@
   },
   {
     "name" : "libclang",
-    "url" : "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/LLVM-13.0.0-win64.exe",
-    "hash" : "f81f08a8bd9d787ec0505a7475cdff9653516cbbc5804e973f8749a2139fa1cb",
+    "url" : "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.3/LLVM-18.1.3-win64.exe",
+    "hash" : "45fdce095dbde8981deaee4359a2a7528825fe99b0fc933871f19e2f319159fa",
     "platform" : "Windows"
   }
 ]

@@ -132,7 +132,7 @@ namespace luabind {
 	{
 		module(L)
 			[
-				class_<class_info>("class_info_data")
+				class_<class_info>(/*"class_info_data"*/)
 				.def_readonly("name", &class_info::name)
 			.def_readonly("methods", &class_info::methods)
 			.def_readonly("attributes", &class_info::attributes),

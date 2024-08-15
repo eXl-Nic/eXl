@@ -597,9 +597,22 @@ namespace eXl
           // Trim segment for allowance.
           targetSeg.m_Ext1 += segDir * agentRadius;
           targetSeg.m_Ext2 -= segDir * agentRadius;
-
           Vec2 oDir;
-          float distance = targetSeg.NearestPointSeg(curPos2D, oDir);
+          float distance;
+          if ( Length(targetSeg.m_Ext2 - targetSeg.m_Ext1) > Mathf::ZeroTolerance()) 
+          {
+            distance = targetSeg.NearestPointSeg(curPos2D, oDir);
+          }
+          else 
+          {
+            oDir = ((targetDesc->segment.m_Ext1 + targetDesc->segment.m_Ext2) * 0.5 - curPos2D);
+            distance = NormalizeAndGetLength(oDir);
+          }
+
+          if (distance < Mathf::ZeroTolerance()) 
+          {
+            oDir = Zero<Vec2>();
+          }
 
           float dirIndicator = dot(oDir, agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep]);
 
@@ -612,56 +625,79 @@ namespace eXl
           {
 
             Vec2 pointToReach = curPos2D + oDir * distance;
+            Vector<Segmentf> const & otherWalls = m_NavMesh->GetFaces(agent.m_CurComponent)[targetFaceIdx].m_Walls;
+            Vector<Segmentf> const & curWalls = m_NavMesh->GetFaces(agent.m_CurComponent)[agent.m_CurFaceIdx].m_Walls;
 
             //Aiming for the point after the segment to traverse, in the other face
             pointToReach += agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep] * agentRadius;
 
             Segmentf path = { curPos2D, pointToReach };
 
-            if (TestBoxSegmentExcept(agent.m_CurFace, path, targetSeg, agentRadius)
-              || TestBoxSegmentExcept(m_NavMesh->GetFaces(agent.m_CurComponent)[targetFaceIdx].m_Box, path, targetSeg, agentRadius))
+            bool hitWall = false;
+            auto testWalls = [&hitWall, &path, agentRadius](Vector<Segmentf> const& iWalls) {
+              for (int i = 0; !hitWall && i < iWalls.size(); ++i) {
+                Segmentf inflatedWall = iWalls[i];
+                Vec2 wallDir = normalize(inflatedWall.m_Ext2 - inflatedWall.m_Ext1);
+                inflatedWall.m_Ext1 -= wallDir * agentRadius * ( 1 - Mathf::ZeroTolerance() );
+                inflatedWall.m_Ext2 += wallDir * agentRadius * ( 1 - Mathf::ZeroTolerance() );
+                if ((inflatedWall.Intersect(path) & Segmentf::PointOnSegments) == Segmentf::PointOnSegments) {
+                  hitWall = true;
+                }
+              }
+            };
+            testWalls(otherWalls);
+            testWalls(curWalls);
+
+            if ( hitWall )
             {
               //Aiming for the point before the segment to traverse, in the current face
               pointToReach -= agent.m_CurrentPath.m_EdgeDirs[agent.m_CurPathStep] * 2 * agentRadius;
-
-
-              // Check if we are cutting corners
+#if 0
+              AABB2Df trimmedBox = agent.m_CurFace;
+              trimmedBox.m_Data[0] += One<Vec2>() * agentRadius;
+              trimmedBox.m_Data[1] -= One<Vec2>() * agentRadius;
+              Vec2i size = trimmedBox.GetSize();
+              if (size.x <= 0 || size.y < 0)
               {
-                AABB2Df trimmedBox = agent.m_CurFace;
-                trimmedBox.m_Data[0] += One<Vec2>() * agentRadius;
-                trimmedBox.m_Data[1] -= One<Vec2>() * agentRadius;
-
-                if (!trimmedBox.Contains(curPos2D))
+              } 
+              else
+              {
+                // Check if we are cutting corners
                 {
-                  Segmentf segs[] = {
-                    {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[0].x, trimmedBox.m_Data[1].y)},
-                    {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[1].x, trimmedBox.m_Data[0].y)},
-                    {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[0].x, trimmedBox.m_Data[1].y)},
-                    {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[1].x, trimmedBox.m_Data[0].y)}
-                  };
+                  if (!trimmedBox.Contains(curPos2D))
+                  {
+                    Segmentf segs[] = {
+                      {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[0].x, trimmedBox.m_Data[1].y)},
+                      {trimmedBox.m_Data[0], Vec2(trimmedBox.m_Data[1].x, trimmedBox.m_Data[0].y)},
+                      {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[0].x, trimmedBox.m_Data[1].y)},
+                      {trimmedBox.m_Data[1], Vec2(trimmedBox.m_Data[1].x, trimmedBox.m_Data[0].y)}
+                    };
 
-                  Vec2 dirToPtIn;
-                  float distToPtIn = segs[0].NearestPointSeg(curPos2D, dirToPtIn);
-                  for (int seg = 1; seg < 4; ++seg)
-                  {
-                    Vec2 potDir;
-                    float otherDist = segs[seg].NearestPointSeg(curPos2D, potDir);
-                    if (otherDist < distToPtIn)
+                    Vec2 dirToPtIn;
+                    float distToPtIn = segs[0].NearestPointSeg(curPos2D, dirToPtIn);
+                    for (int seg = 1; seg < 4; ++seg)
                     {
-                      dirToPtIn = potDir;
-                      distToPtIn = otherDist;
+                      Vec2 potDir;
+                      float otherDist = segs[seg].NearestPointSeg(curPos2D, potDir);
+                      if (otherDist < distToPtIn)
+                      {
+                        dirToPtIn = potDir;
+                        distToPtIn = otherDist;
+                      }
                     }
-                  }
-                  if (distToPtIn > Mathf::ZeroTolerance())
-                  {
-                    pointToReach = curPos2D + dirToPtIn * distToPtIn;
+                    if (distToPtIn > Mathf::ZeroTolerance())
+                    {
+                      pointToReach = curPos2D + dirToPtIn * distToPtIn;
+                    }
                   }
                 }
               }
+#endif
             }
 
             Vec2 dir = normalize(pointToReach - curPos2D);
-
+            EXL_VALIDATE_FLOAT(dir.x);
+            EXL_VALIDATE_FLOAT(dir.y);
             agentObs.m_Dir = Vec3(dir.x, dir.y, 0.0);
 
             break;
@@ -864,7 +900,6 @@ namespace eXl
             }
           }
 
-          Vec2 avoidanceVector;
           for (uint32_t neighNum = 0; neighNum < neighbours.numNeigh; ++neighNum)
           {
             ObjectHandle otherObj = iNeigh.GetHandles()[neighbours.neighbors[neighNum]];
@@ -954,6 +989,7 @@ namespace eXl
           }
 #ifndef USE_ORCA
           Vec3 bestVelocity = Vec3(vo.FindBestVelocity(MathTools::As2DVec(agentLinVel)), 0);
+          EXL_VALIDATE_FLOAT(bestVelocity.x);
 #else
           orca.computeNewVelocity(iTime);
           Vec3 bestVelocity = MathTools::To3DVec(orca.newVelocity_);

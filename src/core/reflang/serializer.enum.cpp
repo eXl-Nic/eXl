@@ -90,7 +90,7 @@ namespace eXl
       o << "void Register_" << friendlyName << "_Lua(lua_State* iState)\n";
       o << "{\n";
       o << "luabind::module(iState, \"eXl\")[\n";
-      o << "luabind::class_<" << fullName << ">(\"" << enumName << "\")\n";
+      o << "luabind::class_<" << fullName << ">()\n";
       o << ".enum_(\"Const\")[\n";
       bool firstEnum = true;
       for (auto const& value : e.m_Values)

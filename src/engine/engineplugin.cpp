@@ -20,6 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/map/tilinggroup.hpp>
 #include <engine/map/mcmcmodelrsc.hpp>
 #include <engine/common/project.hpp>
+#include <engine/common/coroutine.hpp>
 #include <engine/game/archetype.hpp>
 #include <engine/game/characteranimation.hpp>
 #include <engine/pathfinding/navigator.hpp>
@@ -44,7 +45,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/script/luaeventhandler.hpp>
 #include <engine/script/luafunctionlibrary.hpp>
 #include <engine/script/luacoroutine.hpp>
-
 #endif
 
 #ifdef EXL_NETWORK_ENABLED

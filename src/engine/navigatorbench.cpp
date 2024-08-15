@@ -106,8 +106,11 @@ namespace eXl
 
       auto const& face = faces[biggestFace];
       Vec2 center = face.m_Box.GetCenter();
-      Vec2 size = face.m_Box.GetSize() - (One<Vec2>() * 4 * 4);
+      Vec2 size = face.m_Box.GetSize() - (One<Vec2>() * 4);
       float radius = Mathf::Min(size.x, size.y) * 0.5;
+      if (radius < 0) {
+        return;
+      }
       float perimeter = radius * 2 * Mathf::Pi();
 
       uint32_t numActors = (perimeter / (1.2 * 4));

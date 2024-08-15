@@ -170,7 +170,7 @@ namespace eXl
   {
     luabind::module(iState, "eXl")[
 
-      luabind::class_<Vec3>("Vec3")
+      luabind::class_<Vec3>()
         .def(luabind::constructor<float, float, float>())
         .def_readwrite("x", &Vec3::x)
         .def_readwrite("y", &Vec3::y)
@@ -183,7 +183,7 @@ namespace eXl
         .def(luabind::self / float())
         ,
 
-        luabind::class_<Vec2>("Vec2")
+        luabind::class_<Vec2>()
         .def(luabind::constructor<float, float>())
         .def_readwrite("x", &Vec2::x)
         .def_readwrite("y", &Vec2::y)
@@ -194,7 +194,7 @@ namespace eXl
         .def(luabind::self / float())
         ,
 
-        luabind::class_<Vec2i>("Vec2i")
+        luabind::class_<Vec2i>()
         .def(luabind::constructor<int, int>())
         .def_readwrite("x", &Vec2i::x)
         .def_readwrite("y", &Vec2i::y)
@@ -205,7 +205,7 @@ namespace eXl
         .def(luabind::self / int())
         ,
 
-        luabind::class_<AABB2Df>("AABB2Df")
+        luabind::class_<AABB2Df>()
         .scope
         [
           luabind::def("FromMinMax", AABB2Df::FromMinMax),
@@ -230,7 +230,7 @@ namespace eXl
         .def("MaxY", (float (AABB2Df::*)()const)(&AABB2Df::MaxY))
         ,
 
-        luabind::class_<AABB2Di>("AABB2Di")
+        luabind::class_<AABB2Di>()
         .scope
         [
           luabind::def("FromMinMax", AABB2Di::FromMinMax),
@@ -255,11 +255,11 @@ namespace eXl
         .def("MaxY", (int (AABB2Di::*)()const)(&AABB2Di::MaxY))
         ,
 
-        luabind::class_<Quaternion>("Quaternion")
+        luabind::class_<Quaternion>()
         .def(luabind::constructor<float, float, float, float>()),
         //.def(luabind::constructor<Vec3 const&, float>()),
 
-        luabind::class_<Mat4>("Mat4")
+        luabind::class_<Mat4>()
         .def(luabind::constructor<>())
 
     ];

@@ -210,7 +210,7 @@ namespace eXl
   {
     for (auto const& typeDecl : m_Types)
     {
-      TypeName const& typeName = typeDecl.first;
+      TypeName const& typeName = "eXlProject::" + typeDecl.first;
 
       List<FieldDesc> fields;
       size_t curOffset = 0;
@@ -229,7 +229,7 @@ namespace eXl
 
       TupleType* newType = TupleTypeStruct::Create(fields, typeName);
       oTypes.m_Types.push_back(std::unique_ptr<TupleType>(newType));
-      oManifest.RegisterPropertySheet(PropertySheetName(typeName.c_str()), newType);
+      oManifest.RegisterPropertySheet(PropertySheetName(typeDecl.first.c_str()), newType);
     }
   }
 

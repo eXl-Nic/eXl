@@ -41,9 +41,8 @@ def unzipLLVM(outPath, packageFileName):
     print("Failed to extract llvm to " + extractDir)
     return False
   os.mkdir(outPath)
-  libDir = os.path.join(extractDir, "_Ÿ€")
-  for dir in os.listdir(libDir):
-    curDir = os.path.join(libDir, dir)
+  for dir in os.listdir(extractDir):
+    curDir = os.path.join(extractDir, dir)
     shutil.move(curDir, outPath)
   shutil.rmtree(extractDir)
   return True
@@ -108,7 +107,7 @@ def main() -> int:
       zipfile.ZipFile(packageFileName).extractall(outPath)
     elif tarfile.is_tarfile(packageFileName):
       tarfile.open(packageFileName).extractall(outPath)
-    elif packageFileName.endswith("LLVM-13.0.0-win64.exe"):
+    elif packageFileName.endswith("LLVM-18.1.3-win64.exe"):
       if not unzipLLVM(outPath, packageFileName):
         continue
     else :

@@ -114,7 +114,7 @@ namespace luabind {
 			void set_type(type_id const& t) { m_type = t; }
 			type_id const& type() const throw() { return m_type; }
 
-			const char* name() const throw() { return m_name; }
+			const char* name() const throw() { return m_name.c_str(); }
 
 			// the lua reference to the metatable for this class' instances
 			int metatable_ref() const throw() { return m_instance_metatable; }
@@ -165,8 +165,8 @@ namespace luabind {
 			// type casts to the base classes
 			std::vector<base_info> m_bases;
 
-			// the class' name (as given when registered to lua with class_)
-			const char* m_name;
+			// the class' name
+			std::string m_name;
 
 			// a reference to this structure itself. Since this struct
 			// is kept inside lua (to let lua collect it when lua_close()

@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "engineexp.hpp"
 #include <core/type/typetraits.hpp>
+#include <core/type/type.hpp>
 
 #define DECLARE_ENGINE_TYPE_EX(type, friendlyname) DECLARE_TYPE_EX(type, friendlyname, EXL_ENGINE_API)
 #define DECLARE_ENGINE_TYPE(type) DECLARE_ENGINE_TYPE_EX(eXl::type, eXl__##type)
@@ -19,6 +20,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace eXl
 {
   class World;
+
+  constexpr uint32_t Type_PropertyFlag = Type::Type_UserFlag0;
 
   DECLARE_ENGINE_TYPE(World)
 }

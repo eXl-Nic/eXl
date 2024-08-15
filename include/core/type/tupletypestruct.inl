@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 template <class T>
-TupleType* CoreTupleType<T>::MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId)
+TupleType* CoreTupleType<T>::MakeTuple(TypeName iName,const List<FieldDesc>& iList,size_t iId, uint32_t iFlags)
 {
   size_t totSize = 0;
   List<FieldDesc>::const_iterator iter = iList.begin();
@@ -20,14 +20,14 @@ TupleType* CoreTupleType<T>::MakeTuple(TypeName iName,const List<FieldDesc>& iLi
     size_t candidate = iter->GetOffset() + iter->GetType()->GetSize();
     totSize = totSize > candidate ? totSize : candidate;
   }
-  TupleType* newType = eXl_NEW CoreTupleType<T>(iName,iId,iList);
+  TupleType* newType = eXl_NEW CoreTupleType<T>(iName,iId,iList, iFlags);
   
   return newType;
 }
 
 template <class T>
-CoreTupleType<T>::CoreTupleType(TypeName iName,size_t iId,const List<FieldDesc>& iList)
-  : TupleTypeAdapter(iName,iId,sizeof(T),Type_Is_CoreType)
+CoreTupleType<T>::CoreTupleType(TypeName iName,size_t iId,const List<FieldDesc>& iList, uint32_t iFlags)
+  : TupleTypeAdapter(iName,iId,sizeof(T),Type_Is_CoreType | iFlags)
 {
   bool isPod = true;
   List<FieldDesc>::const_iterator iter = iList.begin();
@@ -158,7 +158,7 @@ Err CoreTupleType<T>::ConvertFromLuaRaw_Uninit(lua_State* iState,unsigned int& i
 template <class T>
 void CoreTupleType<T>::RegisterLua(lua_State* iState) const
 {
-  luabind::class_<T> newClass(m_ScopedName.back().c_str());
+  luabind::class_<T> newClass;
   newClass.def(luabind::constructor<>());
 
   for (uint32_t i = 0; i < m_Fields.size(); ++i)

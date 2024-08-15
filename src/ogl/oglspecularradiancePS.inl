@@ -1,6 +1,6 @@
 char const* specularMapPS = 
 //"#version 140\n"
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "precision mediump float;\n"
 #endif
 
@@ -72,7 +72,7 @@ char const* specularMapPS =
 
 char const* envBrdfMapPS = 
 //"#version 140\n"
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "precision mediump float;\n"
 #endif
 

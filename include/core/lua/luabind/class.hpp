@@ -227,7 +227,7 @@ namespace luabind {
 		struct LUABIND_API class_base : scope
 		{
 		public:
-			class_base(char const* name);
+			class_base(/*char const* name*/);
 
 			struct base_desc
 			{
@@ -243,6 +243,7 @@ namespace luabind {
 
 			void add_member(registration* member);
 			void add_default_member(registration* member);
+      void add_ext(registration* member);
 
 			const char* name() const;
 
@@ -250,6 +251,8 @@ namespace luabind {
 			void add_inner_scope(scope& s);
 
 			void add_cast(class_id src, class_id target, cast_function cast);
+
+      type_id get_type() const;
 
 		private:
 			class_registration* m_registration;
@@ -309,6 +312,21 @@ namespace luabind {
 				add_overload(object(from_stack(L, -1)), "__init", fn);
 			}
 		};
+
+    template <class Class, class Pointer, class Signature, class Policies>
+    struct named_constructor_registration : registration
+    {
+      named_constructor_registration(const char* iName) : m_name( iName )
+      {}
+
+      void register_(lua_State* L) const
+      {
+        using pointer = typename default_pointer<Pointer, Class>::type;
+        object fn = make_function(L, construct<Class, pointer, Signature>(), Signature(), Policies());
+        add_overload(object(from_stack(L, -1)), m_name.c_str(), fn);
+      }
+      std::string m_name;
+    };
 
 		template <class T>
 		struct reference_result
@@ -406,7 +424,7 @@ namespace luabind {
 
 
 	public:
-		class_(const char* name) : class_base(name), scope(*this)
+		class_(/*const char* name*/) : class_base(/*name*/), scope(*this)
 		{
 #ifndef NDEBUG
 			detail::check_link_compatibility();
@@ -580,9 +598,17 @@ namespace luabind {
 				WrapperType
 			>::type;
 
-			using registration_type = detail::constructor_registration<construct_type, HolderType, signature_type, policy_list_type>;
-			this->add_member(new registration_type());
-			this->add_default_member(new registration_type());
+      {
+        using registration_type = detail::constructor_registration<construct_type, HolderType, signature_type, policy_list_type>;
+        this->add_member(new registration_type());
+        this->add_default_member(new registration_type());
+      }
+      //type_id typeDesc = get_type();
+      //if (typeDesc.get_id()->GetScopeDepth() > 1)
+      //{
+      //  using registration_type = detail::named_constructor_registration<construct_type, HolderType, signature_type, policy_list_type>;
+      //  this->add_ext(new registration_type(typeDesc.get_id()->GetDisplayName(0xFFFF).c_str()));
+      //}
 
 			return *this;
 		}

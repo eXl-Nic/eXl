@@ -1,6 +1,6 @@
 
 if(${MSVC})
-SET(MSBUILD_OPTIONS /p:PlatformToolset=v142 /property:Configuration=Release /property:Platform=x64)
+SET(MSBUILD_OPTIONS /p:PlatformToolset=v143 /property:Configuration=Release /property:Platform=x64)
 if(${EXL_BUILD_SHARED})
 SET(GLEW_BUILD_COMMAND "${GLEW_ROOT}/build/vc15/glew_shared.vcxproj")
 SET(GLEW_BINARY ${GLEW_ROOT}/bin/${GLEW_VARIANT}/glew32.dll)

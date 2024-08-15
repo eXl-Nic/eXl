@@ -57,7 +57,7 @@ template <class T>
 const TupleType* TypeManager::detail::RegisterSignature(size_t iId,const List<FieldDesc>& iFields)
 {
   //const Type* res = TypeManager::MakeTuple(String("Signature")+StringUtil::FromSizeT(iId),iFields,&iId, nullptr);
-  TupleType* newType = TupleTypeStruct::MakeTuple(TypeName(String("Signature")+StringUtil::FromSizeT(iId)),iFields,iId);
+  TupleType* newType = TupleTypeStruct::MakeTuple(TypeName(String("Signature")+StringUtil::FromSizeT(iId)),iFields,iId, 0);
   Type const* regType = RegisterType(newType);
   if(regType)
   {
@@ -68,8 +68,8 @@ const TupleType* TypeManager::detail::RegisterSignature(size_t iId,const List<Fi
 }
 
 template <class T>
-TypeManager::NativeTypeReg<T> TypeManager::BeginNativeTypeRegistration(TypeName iName){
-  return NativeTypeReg<T>(iName);
+TypeManager::NativeTypeReg<T> TypeManager::BeginNativeTypeRegistration(TypeName iName, uint32_t iFlags){
+  return NativeTypeReg<T>(iName, iFlags);
 }
 
 //template <class T>
@@ -79,7 +79,7 @@ TypeManager::NativeTypeReg<T> TypeManager::BeginNativeTypeRegistration(TypeName 
 //}
   
 template <class T>
-TypeManager::NativeTypeReg<T>::NativeTypeReg(TypeName iName):m_Name(iName)
+TypeManager::NativeTypeReg<T>::NativeTypeReg(TypeName iName, uint32_t iFlags):m_Name(iName), m_Flags(iFlags)
 {
     
 }
@@ -123,7 +123,7 @@ TypeManager::NativeTypeReg<T>& TypeManager::NativeTypeReg<T>::AddCustomField(con
 template <class T>
 const TupleType* TypeManager::NativeTypeReg<T>::EndRegistration()
 {
-  TupleType* temp = CoreTupleType<T>::MakeTuple(m_Name, m_Fields, 0);
+  TupleType* temp = CoreTupleType<T>::MakeTuple(m_Name, m_Fields, 0, m_Flags);
   const Type* res = RegisterType(temp);
   ArrayType const* registeredType = GetArrayType(res);
   if (registeredType == nullptr)

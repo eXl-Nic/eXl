@@ -77,20 +77,20 @@ namespace eXl
   {
     char const* strPtr = nullptr;
 
-    luabind::module(iState, "eXl")[
+    luabind::module(iState)[
       
-      luabind::class_<Err>("Err").enum_("Const")[
+      luabind::class_<Err>().enum_("Const")[
         luabind::value("Err::Success",Err::Success),
           luabind::value("Err::Failure",Err::Failure)
       ],
       
-      luabind::class_<RttiObject>("RttiObject")
+      luabind::class_<RttiObject>()
       .def("GetRtti",&RttiObject::GetRtti),
 
-      luabind::class_<Resource, RttiObject>("Resource")
+      luabind::class_<Resource, RttiObject>()
       .def("GetName", &Resource::GetName),
 
-      luabind::class_<String>("String")
+      luabind::class_<String>()
           .def(luabind::constructor<>())
           .def(luabind::constructor<char const*>())
           //.def("size", &String::size)
@@ -100,7 +100,7 @@ namespace eXl
           .def("__tostring", &getStr)
           ,
 
-      luabind::class_<ConstDynObject>("ConstDynObject")
+      luabind::class_<ConstDynObject>()
       .def(luabind::constructor<>())
       .def("GetType",&ConstDynObject::GetType)
       .def("IsValid",&ConstDynObject::IsValid)
@@ -108,7 +108,7 @@ namespace eXl
       .def("GetElementConst",(Err (ConstDynObject::*)(unsigned int, ConstDynObject&)const)&ConstDynObject::GetElement)
       .def("ToLua",&ConstDynObject::ToLua/*,luabind::out_value(_2)*/),
 
-      luabind::class_<DynObject,ConstDynObject>("DynObject")
+      luabind::class_<DynObject,ConstDynObject>()
       .def(luabind::constructor<>())
       .def(luabind::constructor<Type const*, luabind::object const&>())
       .def(luabind::constructor<ConstDynObject const*>())
@@ -116,34 +116,34 @@ namespace eXl
       .def("GetField",(Err (DynObject::*)(TypeFieldName, DynObject&) )&DynObject::GetField)
       .def("GetElement",&DynObject::GetElement),
 
-      luabind::class_<Type>("Type")
+      luabind::class_<Type>()
       //.def("ConvertToLua",&Type::ConvertToLua)
       //.def("ConvertFromLua",TypeConvertFromLua,luabind::adopt(luabind::result))
       .def("IsTuple",&Type::IsTuple,luabind::dependency_policy<0, 1>()),
         
-      luabind::class_<TupleType,Type>("TupleType")
+      luabind::class_<TupleType,Type>()
       /*.def("GetFieldIdx",(DynObject*(TupleType::*)(DynObject*,unsigned int,DynObject*)const)&TupleType::GetField)
       .def("GetFieldStr",(DynObject*(TupleType::*)(DynObject*,const std::string&,DynObject*)const)&TupleType::GetField)
       .def("GetFieldConstIdx",(ConstDynObject*(TupleType::*)(const ConstDynObject*,unsigned int,ConstDynObject*)const)&TupleType::GetField)
       .def("GetFieldConstStr",(ConstDynObject*(TupleType::*)(const ConstDynObject*,const std::string&,ConstDynObject*)const)&TupleType::GetField)*/,
 
-      luabind::class_<TupleTypeStruct,TupleType>("TupleTypeStruct"),
+      luabind::class_<TupleTypeStruct,TupleType>(),
 
-      luabind::class_<EnumType,Type>("EnumType")
+      luabind::class_<EnumType,Type>()
       .def("GetNumEnum",&EnumType::GetNumEnum)
       //.def("GetEnumName",&EnumType::GetEnumName)
       .def("GetEnumValue",&EnumType::GetEnumValue,luabind::pure_out_value<3>()),
 
-      luabind::class_<ArrayType,Type>("ArrayType")
+      luabind::class_<ArrayType,Type>()
       .def("GetElementType",&ArrayType::GetElementType),
       
-      luabind::class_<LuaArrayIterator>("ArrayIterator"),
+      luabind::class_<LuaArrayIterator>(),
 
       luabind::namespace_("TypeManager")[
         luabind::def("GetArrayType",static_cast<ArrayType const*(*)(Type const*)>(&TypeManager::GetArrayType))
         ],
 
-        luabind::class_<Name>("Name")
+        luabind::class_<Name>()
           .def(luabind::constructor<>())
           .def(luabind::constructor<const char*>())
           //.def(luabind::constructor<String const&>())

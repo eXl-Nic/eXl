@@ -14,6 +14,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <math/mathtools.hpp>
 #include <boost/graph/astar_search.hpp>
 #include <engine/pathfinding/penumbratools.hpp>
+#include <core/pooledlist.hpp>
 
 namespace eXl
 {
@@ -137,12 +138,160 @@ namespace eXl
 
   NavMesh NavMesh::MakeFromBoxes(Vector<AABB2Di> const& iBoxes)
   {
+    Vector<uint32_t> sortedBoxIdx;
+    sortedBoxIdx.reserve(iBoxes.size());
+    for (uint32_t i = 0; i < iBoxes.size(); ++i) {
+      sortedBoxIdx.push_back(i);
+    }
+    AABB2Di seekBox;
+    auto compareBoxPredicate = [&iBoxes, &seekBox](uint32_t idx1, uint32_t idx2) {
+      AABB2Di const& iBox1 = idx1 == UINT32_MAX ? seekBox : iBoxes[idx1];
+      AABB2Di const& iBox2 = idx2 == UINT32_MAX ? seekBox : iBoxes[idx2];
+      return LexicographicCompare(iBox1.m_Min, iBox2.m_Min);
+    };
+
+    std::sort(sortedBoxIdx.begin(), sortedBoxIdx.end(), compareBoxPredicate);
+
+
+    Vector< AABB2Di > mergedBoxes;
+
+    struct MergeResult {
+      float score;
+      AABB2Di box;
+      uint32_t index;
+
+      bool operator < (MergeResult const & iOther) const {
+        if (score == iOther.score) {
+          return -int(index) < -int(iOther.index);
+        }
+        return score < iOther.score;
+      }
+
+    };
+
+    Vector<bool> boxUsed(iBoxes.size(), false);
+    uint32_t remainingboxes = iBoxes.size();
+    while (remainingboxes > 0) {
+
+      Vector< MergeResult > mergeScore;
+      for (uint32_t i = 0; i < iBoxes.size(); ++i)
+      {
+        if (boxUsed[sortedBoxIdx[i]]) {
+          continue;
+        }
+        AABB2Di mergedBox = iBoxes[sortedBoxIdx[i]];
+
+        bool mergePossible[2] = { true, true };
+        int32_t mergeAxis = 0;
+        auto seekBegin = sortedBoxIdx.begin() + i;
+        do {
+          const int32_t otherAxis = 1 - mergeAxis;
+
+          seekBox.m_Data[0][mergeAxis] = mergedBox.m_Data[1][mergeAxis];
+          seekBox.m_Data[0][otherAxis] = mergedBox.m_Data[0][otherAxis];
+
+          int32_t stackSize = mergedBox.GetSize()[otherAxis];
+
+          auto foundBoxIdx = std::lower_bound(seekBegin, sortedBoxIdx.end(), UINT32_MAX, compareBoxPredicate);
+
+          if (foundBoxIdx != sortedBoxIdx.end() && !boxUsed[*foundBoxIdx] && iBoxes[*foundBoxIdx].m_Data[0] == seekBox.m_Data[0]) {
+            AABB2Di basis = iBoxes[*foundBoxIdx];
+            stackSize -= basis.GetSize()[otherAxis];
+            seekBegin = foundBoxIdx;
+            ++seekBegin;
+            //sortedBoxes.erase(foundBox);
+            const int32_t basisSize = basis.GetSize()[mergeAxis];
+            while (stackSize > 0) {
+              seekBox.m_Data[0][otherAxis] = basis.m_Data[1][otherAxis];
+              foundBoxIdx = std::lower_bound(seekBegin, sortedBoxIdx.end(), UINT32_MAX, compareBoxPredicate);
+              bool validBox = foundBoxIdx != sortedBoxIdx.end();
+              validBox &= !boxUsed[*foundBoxIdx];
+              {
+                AABB2Di const& boxExtent = iBoxes[*foundBoxIdx];
+                validBox &= boxExtent.m_Data[0] == seekBox.m_Data[0];
+                validBox &= boxExtent.GetSize()[mergeAxis] == basisSize;
+              }
+              if ( validBox ) {
+                const int32_t added = iBoxes[*foundBoxIdx].GetSize()[mergeAxis];
+                stackSize -= added;
+                basis.m_Data[1][otherAxis] += added;
+                seekBegin = foundBoxIdx;
+                ++seekBegin;
+              }
+              else {
+                break;
+              }
+            }
+            if (stackSize == 0)
+            {
+              mergedBox.m_Data[1][mergeAxis] = basis.m_Data[1][mergeAxis];
+              mergePossible[0] = mergePossible[1] = true;
+            }
+            else
+            {
+              mergePossible[mergeAxis] = false;
+            }
+          }
+          else 
+          {
+            mergePossible[mergeAxis] = false;
+          }
+          mergeAxis = 1 - mergeAxis;
+        } while (mergePossible[0] || mergePossible[1]);
+        float boxArea = mergedBox.GetSize().x * mergedBox.GetSize().y;
+        //float boxFlatScore = float(mergedBox.GetSize().x) - mergedBox.GetSize().y;
+        //if (boxFlatScore < 0) {
+        //  boxFlatScore *= -1;
+        //}
+        //float boxFlatScore = float(mergedBox.GetSize().x) / mergedBox.GetSize().y;
+        //if (boxFlatScore > 1) {
+        //  boxFlatScore = 1.0f / boxFlatScore;
+        //}
+        MergeResult result;
+        //result.score = boxArea * boxFlatScore;
+        //result.score = boxArea - boxFlatScore;
+        result.score = boxArea;
+        result.index = i;
+        result.box = mergedBox;
+        mergeScore.push_back(result);
+      }
+
+      std::sort(mergeScore.begin(), mergeScore.end());
+      for (uint32_t i = 0; i < mergeScore.size(); ++i) {
+        MergeResult const& result = mergeScore[mergeScore.size() - i - 1];
+
+        seekBox = result.box;
+        auto seekBegin = std::lower_bound(sortedBoxIdx.begin(), sortedBoxIdx.end(), UINT32_MAX, compareBoxPredicate);
+        seekBox.m_Data[0] = seekBox.m_Data[1];
+        auto seekEnd = std::lower_bound(seekBegin, sortedBoxIdx.end(), UINT32_MAX, compareBoxPredicate);
+        bool freeUse = true;
+        for (auto iter = seekBegin; freeUse && iter < seekEnd; ++iter) {
+          const uint32_t boxIdx = *iter;
+          const AABB2Di& box = iBoxes[boxIdx];
+          if (box.IsInside(result.box, 0) && boxUsed[boxIdx]) {
+            freeUse = false;
+          }
+        }
+        if (freeUse) {
+          mergedBoxes.push_back(result.box);
+          for (auto iter = seekBegin; freeUse && iter < seekEnd; ++iter) {
+            const uint32_t boxIdx = *iter;
+            const AABB2Di& box = iBoxes[boxIdx];
+            if (box.IsInside(result.box, 0)) {
+              boxUsed[boxIdx] = true;
+              --remainingboxes;
+            }
+          }
+        }
+      }
+    }
+
     BoxIndex index;
     Vector<Face> tempFaces;
     EdgeMap tempEdges;
     Vector<Vector<std::pair<uint32_t, uint32_t>>> edgeConnectivity;
 
-    for(auto const& box : iBoxes)
+    for(auto const& box : mergedBoxes)
     {
       auto boxF = AABB2Df::FromMinAndSize(MathTools::ToFVec(box.m_Data[0]), MathTools::ToFVec(box.GetSize()));
       auto value = std::make_pair(boxF, (unsigned int)index.size());

@@ -64,11 +64,11 @@ namespace luabind {
 
 		struct class_registration : registration
 		{
-			class_registration(char const* name);
+			class_registration(/*char const* name*/);
 
 			void register_(lua_State* L) const;
 
-			const char* m_name;
+			mutable std::string m_name;
 
 			mutable std::map<const char*, int, detail::ltstr> m_static_constants;
 
@@ -81,14 +81,15 @@ namespace luabind {
 			type_id  m_wrapper_type;
 			std::vector<cast_entry> m_casts;
 
+      scope m_extScope;
 			scope m_scope;
 			scope m_members;
 			scope m_default_members;
 		};
 
-		class_registration::class_registration(char const* name)
+		class_registration::class_registration(/*char const* name*/)
 		{
-			m_name = name;
+			//m_name = name;
 		}
 
 		void class_registration::register_(lua_State* L) const
@@ -96,8 +97,14 @@ namespace luabind {
 			LUABIND_CHECK_STACK(L);
 
 			assert(lua_type(L, -1) == LUA_TTABLE);
-
-			lua_pushstring(L, m_name);
+      std::string name = m_type.get_id()->GetName();
+      size_t searchStart = 0;
+      while ((searchStart = name.find(':', searchStart)) != std::string::npos)
+      {
+        name[searchStart] = '_';
+      }
+      m_name = name;
+			lua_pushstring(L, m_name.c_str());
 
 			detail::class_rep* crep;
 
@@ -114,7 +121,7 @@ namespace luabind {
 
 			new(crep) detail::class_rep(
 				m_type
-				, m_name
+				, m_name.c_str()
 				, L
 			);
 
@@ -229,14 +236,51 @@ namespace luabind {
 
 			}
 
+      object classRep(luabind::from_stack(L, -1));
 			lua_settable(L, -3);
+      object _G = luabind::globals(L);
+      auto const& scopedNames = m_type.get_id()->GetNames();
+      if (scopedNames.size() > 1 ) 
+      {
+        int t = lua_gettop(L);
+        eXl::String const& moduleName = scopedNames[0];
+        _G.push(L);
+        {
+          int type = lua_type(L, -1);
+          eXl_ASSERT(type == LUA_TTABLE );
+        }
+        for (uint32_t i = 0; i < scopedNames.size() - 1; ++i)
+        {
+          eXl_ASSERT(lua_type(L, -1) == LUA_TTABLE);
+          lua_pushstring(L, scopedNames[i].c_str());
+          int type = lua_gettable( L, -2 );
+          if (type == LUA_TNIL)
+          {
+            lua_pop(L, 1);
+            lua_pushstring(L, scopedNames[i].c_str());
+            lua_newtable(L);
+            lua_settable( L, -3 );
+            lua_pushstring(L, scopedNames[i].c_str());
+            lua_gettable(L, -2);
+          }
+          else
+          {
+            eXl_ASSERT(type == LUA_TTABLE);
+          }
+        }
+        lua_pushstring(L, scopedNames.back().c_str());
+        classRep.push(L);
+        lua_settable(L, -3);
+        lua_pop(L, static_cast<int>(scopedNames.size()));
+        eXl_ASSERT(t == lua_gettop(L));
+      }
 		}
 
 		// -- interface ---------------------------------------------------------
 
-		class_base::class_base(char const* name)
+		class_base::class_base(/*char const* name*/)
 			: scope(std::unique_ptr<registration>(
-				m_registration = new class_registration(name))
+				m_registration = new class_registration(/*name*/))
 			)
 		{
 		}
@@ -268,10 +312,21 @@ namespace luabind {
 			m_registration->m_default_members.operator,(scope(std::move(ptr)));
 		}
 
+    void class_base::add_ext(registration* member)
+    {
+      std::unique_ptr<registration> ptr(member);
+      m_registration->m_extScope.operator,(scope(std::move(ptr)));
+    }
+
 		const char* class_base::name() const
 		{
-			return m_registration->m_name;
+			return m_registration->m_name.c_str();
 		}
+
+    type_id class_base::get_type() const
+    {
+      return m_registration->m_type;
+    }
 
 		void class_base::add_static_constant(const char* name, int val)
 		{

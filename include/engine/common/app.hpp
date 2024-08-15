@@ -52,6 +52,7 @@ namespace eXl
 
     enum InputToProcess
     {
+      None = 0,
       WheelZoom = 1<<0,
       RightClickPan = 1<<1,
       KeyMove = 1<<2,

@@ -167,7 +167,7 @@ namespace eXl
 
   void ArrayType::RegisterLua(lua_State* iState) const
   {
-    luabind::detail::class_base newClass(m_ScopedName.back().c_str());
+    luabind::detail::class_base newClass;
     newClass.init(this, luabind::detail::allocate_class_id(this), nullptr, luabind::detail::allocate_class_id(nullptr));
     newClass.add_member(new type_constructor_registration(this));
     newClass.add_default_member(new type_constructor_registration(this));

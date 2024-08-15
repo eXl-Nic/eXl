@@ -119,20 +119,23 @@ return TypeName(#Enum);                \
 #define EXL_REFLECTION_MARKER_STR eXl_TO_STR(EXL_REFLECTION_MARKER)
 
 #ifdef EXL_REFLANG_COMPILER
-  #define EXL_REFLECT           \
+  #define EXL_REFLECT_EX(flags) \
     public: \
     static void EXL_REFLECTION_MARKER()
   #define EXL_REFLECT_ENUM(Enum, FriendlyName, DLL) \
     void DeclareEnumReflection(Enum iArg) {}
 #else
-  #define EXL_REFLECT           \
+  #define EXL_REFLECT_EX(flags)           \
   public:                       \
     static constexpr bool eXl_Reflected = true; \
+    static constexpr uint32_t eXl_Reflect_Flags = flags; \
     static Type const* GetType(); \
     Err Stream(Streamer& iStreamer) const; \
     Err Unstream(Unstreamer& iStreamer);
   #define EXL_REFLECT_ENUM(Enum, FriendlyName, DLL) DECLARE_ENUM_TYPE(Enum, FriendlyName, DLL)
 #endif
+
+#define EXL_REFLECT EXL_REFLECT_EX(0)
 
 #include <core/name.hpp>
 

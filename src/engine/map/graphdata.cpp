@@ -314,7 +314,7 @@ namespace eXl
       TypeManager::GetType<RoomLayoutInfo>()->RegisterLua(iState);
 
       luabind::module(iState, "eXl")[
-        luabind::class_<GraphWrapper>("GraphWrapper")
+        luabind::class_<GraphWrapper>()
           .def("GetEdges", &GraphWrapper::GetEdges)
           .def("GetTargetNode", &GraphWrapper::GetTargetNode)
           .def("GetNodeTag", &GraphWrapper::GetNodeTag)
@@ -322,15 +322,15 @@ namespace eXl
           .def("FindPath", &GraphWrapper::FindPath)
           ,
 
-          luabind::class_<MatchWrapper>("MatchWrapper")
+          luabind::class_<MatchWrapper>()
           .def("Graph", &MatchWrapper::GetGraph),
 
-          luabind::class_<RewriteWrapper>("RewriteWrapper")
+          luabind::class_<RewriteWrapper>()
           .def("SourceGraph", &RewriteWrapper::GetSrcGraph)
           .def("TargetGraph", &RewriteWrapper::GetDstGraph)
           .def("Match", &RewriteWrapper::GetMatch),
 
-          luabind::class_<GraphFactoryWrapper>("GraphFactoryWrapper")
+          luabind::class_<GraphFactoryWrapper>()
           .def("SetDebugString", &GraphFactoryWrapper::SetDebugString)
 
       ];

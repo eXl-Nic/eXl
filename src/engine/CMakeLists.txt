@@ -146,8 +146,8 @@ engineplugin.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.cpp
 ${CMAKE_CURRENT_BINARY_DIR}/engine_gen.hpp
 
-nativeedit/graphed.hpp
 nativeedit/graphed.cpp
+nativeedit/filedialog.cpp
 
 )
 

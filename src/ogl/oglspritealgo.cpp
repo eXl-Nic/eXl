@@ -18,6 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "ogldefaultPS.inl"
 #include "oglhq2x.inl"
 #include "oglhq4x.inl"
+#include "ogllineVS.inl"
 #include "ogllinePS.inl"
 
 #include <ogl/renderer/oglinclude.hpp>
@@ -249,7 +250,7 @@ namespace eXl
   OGLCompiledProgram const* OGLLineAlgo::CreateProgram(OGLSemanticManager& iSemantics)
   {
 #ifdef EXL_WITH_OGL
-    GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, defaultVS);
+    GLuint defaultVShader = OGLUtils::CompileShader(GL_VERTEX_SHADER, lineVS);
     GLuint defaultFShader = OGLUtils::CompileShader(GL_FRAGMENT_SHADER, linePS);
 
     GLuint defaultProgramId = OGLUtils::LinkProgram(defaultVShader, defaultFShader);
@@ -261,7 +262,7 @@ namespace eXl
 
     OGLProgramInterface lineTechDesc;
     lineTechDesc.AddAttrib(OGLBaseAlgo::GetPosAttrib());
-    lineTechDesc.AddAttrib(OGLBaseAlgo::GetTexCoordAttrib());
+    //lineTechDesc.AddAttrib(OGLBaseAlgo::GetTexCoordAttrib());
     lineTechDesc.AddUniform(OGLBaseAlgo::GetCameraUniform());
     lineTechDesc.AddUniform(OGLBaseAlgo::GetWorldMatUniform());
     lineTechDesc.AddUniform(OGLLineAlgo::GetColor());

@@ -57,10 +57,16 @@ namespace eXl
   }
 
   template<typename T>
+  typename T::value_type Length(T const & iVal)
+  {
+    return glm::length(iVal);
+  }
+
+  template<typename T>
   typename T::value_type NormalizeAndGetLength(T& iVal)
   {
     typename T::value_type len = length(iVal);
-    iVal *= T(1) / len;
+    iVal *= T::value_type(1) / len;
     return len;
   }
 

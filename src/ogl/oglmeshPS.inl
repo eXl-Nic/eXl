@@ -1,6 +1,6 @@
 char const* meshPS = 
 
-#ifdef EXL_PLAY_PLATFORM
+#if EXL_PLAY_PLATFORM
 "precision mediump float;"
 #else
 "#version 140"

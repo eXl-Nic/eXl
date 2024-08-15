@@ -19,6 +19,8 @@ namespace eXl
   {
   public:
 
+    typedef T value_type;
+
     struct ListNode
     {
       ListNode()
@@ -84,7 +86,7 @@ namespace eXl
 
     struct Pool
     {
-      void Reserve(uint32_t iNum)
+      void reserve(uint32_t iNum)
       {
         m_Nodes.reserve(iNum);
         m_FreeIdx.reserve(iNum);
@@ -125,25 +127,25 @@ namespace eXl
 
     ~PooledList()
     {
-      Clear();
+      clear();
     }
 
-    void Clear()
+    void clear()
     {
-      auto iter = Begin();
-      while(iter != End())
+      auto iter = begin();
+      while(iter != end())
       {
-        Erase(iter);
-        iter = Begin(); 
+        erase(iter);
+        iter = begin(); 
       }
     }
 
     PooledList(PooledList const& iList)
       : m_Pool(iList.m_Pool)
     {
-      for(auto iter = iList.Begin(); iter != iList.End(); ++iter)
+      for(auto iter = iList.begin(); iter != iList.end(); ++iter)
       {
-        PushBack(*iter);
+        push_back(*iter);
       }
     }
 
@@ -179,6 +181,7 @@ namespace eXl
       friend class PooledList;
     public:
 
+      typedef T const value_type;
       typedef T const iter_value_t;
       typedef T const& iter_reference_t;
       //iter_difference_t;
@@ -236,6 +239,11 @@ namespace eXl
         return *GetNode().ValuePtr();
       }
 
+      T const* operator->() const
+      {
+        return GetNode().ValuePtr();
+      }
+
     private:
 
       ListNode const& GetNode() const
@@ -252,6 +260,7 @@ namespace eXl
       friend class PooledList;
     public:
 
+      typedef T  value_type;
       typedef T  iter_value_t;
       typedef T& iter_reference_t;
       //iter_difference_t;
@@ -303,6 +312,12 @@ namespace eXl
       {
         return *GetNode().ValuePtr();
       }
+
+      T* operator->() const
+      {
+        return GetNode().ValuePtr();
+      }
+
     private:
       ListNode& GetNode() const
       {
@@ -310,27 +325,27 @@ namespace eXl
       }
     };
 
-    ConstIterator Begin() const
+    ConstIterator begin() const
     {
       return ConstIterator(*this, m_Begin);
     }
 
-    ConstIterator End() const
+    ConstIterator end() const
     {
       return ConstIterator(*this, -1);
     }
 
-    Iterator Begin()
+    Iterator begin()
     {
       return Iterator(*this, m_Begin);
     }
 
-    Iterator End()
+    Iterator end()
     {
       return Iterator(*this, -1);
     }
 
-    void PushFront(T iValue)
+    void push_front(T iValue)
     {
       uint32_t newNodeIdx = m_Pool.AllocateNode();
       auto& newNode = Nodes()[newNodeIdx];
@@ -349,7 +364,7 @@ namespace eXl
       m_Begin = newNodeIdx;
     }
 
-    void PushBack(T iValue)
+    void push_back(T iValue)
     {
       uint32_t newNodeIdx = m_Pool.AllocateNode();
       auto& newNode = Nodes()[newNodeIdx];
@@ -368,19 +383,19 @@ namespace eXl
       m_Last = newNodeIdx;
     }
 
-    void Insert(Iterator iWhere,  T const& iValue)
+    void insert(Iterator iWhere,  T const& iValue)
     {
       //eXl_ASSERT(&iWhere.m_List == this);
-      Insert(ConstIterator(*this, iWhere.m_Cur), iValue);
+      insert(ConstIterator(*this, iWhere.m_Cur), iValue);
     }
 
-    void Insert(ConstIterator iWhere,  T iValue)
+    void insert(ConstIterator iWhere,  T iValue)
     {
       //eXl_ASSERT(&iWhere.m_List == this);
 
-      if(iWhere == End())
+      if(iWhere == end())
       {
-        PushBack(iValue);
+        push_back(iValue);
       }
       else
       {
@@ -406,13 +421,13 @@ namespace eXl
       }
     }
 
-    void Erase(ConstIterator const& iIter)
+    void erase(ConstIterator const& iIter)
     {
       //eXl_ASSERT(&iIter.m_List == this);
       Erase(iIter.m_Cur);
     }
 
-    void Erase(Iterator const& iIter)
+    void erase(Iterator const& iIter)
     {
       //eXl_ASSERT(&iIter.m_List == this);
       Erase(iIter.m_Cur);

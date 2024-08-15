@@ -269,7 +269,7 @@ namespace eXl
     {
       for (auto const& entry : GetImpl().m_Loaders)
       {
-#ifdef EXL_TYPE_ENABLED
+#if defined(EXL_TYPE_ENABLED) && defined(EXL_LUA)
         entry.second.handleType->RegisterLua(iState);
 #endif
       }

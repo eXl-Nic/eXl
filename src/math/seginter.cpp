@@ -21,11 +21,11 @@ namespace eXl
   {
     if(iType == Start)
     {
-      m_SegmentsStart.PushBack(iSeg);
+      m_SegmentsStart.push_back(iSeg);
     }
     else if (iType == End)
     {
-      m_SegmentsEnd.PushBack(iSeg);
+      m_SegmentsEnd.push_back(iSeg);
     }
   }
 
@@ -35,8 +35,8 @@ namespace eXl
     , m_SegmentsEnd(iPool)
     , m_Point(iPoint)
   {
-    m_SegmentsInter.PushBack(iSeg1);
-    m_SegmentsInter.PushBack(iSeg2);
+    m_SegmentsInter.push_back(iSeg1);
+    m_SegmentsInter.push_back(iSeg2);
   }
 
   Intersector::Event::Event(Event const& iEvt)
@@ -79,9 +79,9 @@ namespace eXl
 
   bool Intersector::Event::IsEmpty() const
   {
-    return m_SegmentsStart.Begin() == m_SegmentsStart.End() 
-      && m_SegmentsEnd.Begin() == m_SegmentsEnd.End() 
-      && m_SegmentsInter.Begin() == m_SegmentsInter.End();
+    return m_SegmentsStart.begin() == m_SegmentsStart.end() 
+      && m_SegmentsEnd.begin() == m_SegmentsEnd.end() 
+      && m_SegmentsInter.begin() == m_SegmentsInter.end();
   }
 
   bool operator < (Vector2Q const& iPt1, Vector2Q const& iPt2)
@@ -150,7 +150,7 @@ namespace eXl
         auto lowerBound = std::lower_bound(m_EventQueue.rbegin(), m_EventQueue.rend(), newStart);
         if(lowerBound->m_Point == iSeg2.m_End)
         {
-          lowerBound->m_SegmentsStart.PushBack(seg1Idx);
+          lowerBound->m_SegmentsStart.push_back(seg1Idx);
         }
         else
         {
@@ -167,14 +167,14 @@ namespace eXl
 
         // remove iSeg1's endpoint from the list.
         auto iterToRemove = std::prev(toFixup.base());
-        auto endingSegs = iterToRemove->m_SegmentsEnd.Begin();
+        auto endingSegs = iterToRemove->m_SegmentsEnd.begin();
         while(*endingSegs != seg1Idx)
         {
           ++endingSegs;
         }
 
         //eXl_ASSERT(endingSegs != iterToRemove->m_SegmentsEnd.End());
-        iterToRemove->m_SegmentsEnd.Erase(endingSegs);
+        iterToRemove->m_SegmentsEnd.erase(endingSegs);
 
         if(iterToRemove->IsEmpty())
         {
@@ -212,17 +212,17 @@ namespace eXl
       && lowerBound->m_Point == iEvt.m_Point
       )
     {
-      for(auto startSegIter = iEvt.m_SegmentsStart.Begin(); startSegIter != iEvt.m_SegmentsStart.End(); ++startSegIter )
+      for(auto startSegIter = iEvt.m_SegmentsStart.begin(); startSegIter != iEvt.m_SegmentsStart.end(); ++startSegIter )
       {
-        lowerBound->m_SegmentsStart.PushBack(*startSegIter);
+        lowerBound->m_SegmentsStart.push_back(*startSegIter);
       }
-      for(auto endSegIter = iEvt.m_SegmentsEnd.Begin(); endSegIter != iEvt.m_SegmentsEnd.End(); ++endSegIter )
+      for(auto endSegIter = iEvt.m_SegmentsEnd.begin(); endSegIter != iEvt.m_SegmentsEnd.end(); ++endSegIter )
       {
-        lowerBound->m_SegmentsEnd.PushBack(*endSegIter);
+        lowerBound->m_SegmentsEnd.push_back(*endSegIter);
       }
-      for(auto interSegIter = iEvt.m_SegmentsInter.Begin(); interSegIter != iEvt.m_SegmentsInter.End(); ++interSegIter )
+      for(auto interSegIter = iEvt.m_SegmentsInter.begin(); interSegIter != iEvt.m_SegmentsInter.end(); ++interSegIter )
       {
-        lowerBound->m_SegmentsInter.PushBack(*interSegIter);
+        lowerBound->m_SegmentsInter.push_back(*interSegIter);
       }
     }
     else
@@ -255,22 +255,22 @@ namespace eXl
       for(auto iter = m_EventQueue.begin(); iter!= m_EventQueue.end(); ++iter)
       {
         uint32_t countSeg = 0;
-        PooledList<uint32_t>::Iterator segs[] = {iter->m_SegmentsInter.End(), iter->m_SegmentsInter.End()};
-        for(auto iterSeg = iter->m_SegmentsInter.Begin(); iterSeg != iter->m_SegmentsInter.End(); ++iterSeg)
+        PooledList<uint32_t>::Iterator segs[] = {iter->m_SegmentsInter.end(), iter->m_SegmentsInter.end()};
+        for(auto iterSeg = iter->m_SegmentsInter.begin(); iterSeg != iter->m_SegmentsInter.end(); ++iterSeg)
         {
           ++countSeg;
-          if(*iterSeg == iSeg1 && segs[0] == iter->m_SegmentsInter.End())
+          if(*iterSeg == iSeg1 && segs[0] == iter->m_SegmentsInter.end())
           {
             segs[0] = iterSeg;
           } 
-          if(*iterSeg == iSeg2 && segs[1] == iter->m_SegmentsInter.End())
+          if(*iterSeg == iSeg2 && segs[1] == iter->m_SegmentsInter.end())
           {
             segs[1] = iterSeg;
           }
         }
 
-        if(segs[0] != iter->m_SegmentsInter.End()
-          && segs[1] != iter->m_SegmentsInter.End())
+        if(segs[0] != iter->m_SegmentsInter.end()
+          && segs[1] != iter->m_SegmentsInter.end())
         {
           if(iter->IsEmpty())
           {
@@ -278,8 +278,8 @@ namespace eXl
           }
           else
           {
-            iter->m_SegmentsInter.Erase(segs[0]);
-            iter->m_SegmentsInter.Erase(segs[1]);
+            iter->m_SegmentsInter.erase(segs[0]);
+            iter->m_SegmentsInter.erase(segs[1]);
           }
           //m_SegInsertCount[iSeg1]--;
           //m_SegInsertCount[iSeg2]--;
@@ -319,31 +319,31 @@ namespace eXl
       };
 
       m_SortArray.clear();
-      for(auto startSegIter = evt.m_SegmentsStart.Begin(); startSegIter != evt.m_SegmentsStart.End(); ++startSegIter )
+      for(auto startSegIter = evt.m_SegmentsStart.begin(); startSegIter != evt.m_SegmentsStart.end(); ++startSegIter )
       {
         m_SortArray.push_back(*startSegIter);
       }
-      evt.m_SegmentsStart.Clear();
+      evt.m_SegmentsStart.clear();
 
       std::sort(m_SortArray.begin(), m_SortArray.end(), sortPredicate);
 
       for(uint32_t segIdx : m_SortArray)
       {
-        evt.m_SegmentsStart.PushBack(segIdx);
+        evt.m_SegmentsStart.push_back(segIdx);
       }
 
       m_SortArray.clear();
-      for(auto endSegIter = evt.m_SegmentsEnd.Begin(); endSegIter != evt.m_SegmentsEnd.End(); ++endSegIter )
+      for(auto endSegIter = evt.m_SegmentsEnd.begin(); endSegIter != evt.m_SegmentsEnd.end(); ++endSegIter )
       {
         m_SortArray.push_back(*endSegIter);
       }
-      evt.m_SegmentsEnd.Clear();
+      evt.m_SegmentsEnd.clear();
 
       std::sort(m_SortArray.begin(), m_SortArray.end(), sortPredicate);
 
       for(uint32_t segIdx : m_SortArray)
       {
-        evt.m_SegmentsEnd.PushBack(segIdx);
+        evt.m_SegmentsEnd.push_back(segIdx);
       }
 
     }
@@ -445,13 +445,13 @@ namespace eXl
       {
 
       //case Event::Intersection:
-      if(curEvt.m_SegmentsInter.Begin() != curEvt.m_SegmentsInter.End())
+      if(curEvt.m_SegmentsInter.begin() != curEvt.m_SegmentsInter.end())
       {
         //Set<uint32_t> checkSet;
         int32_t posLow = INT_MAX;
         int32_t posHigh = -INT_MAX;
 
-        for(auto iter = curEvt.m_SegmentsInter.Begin(); iter != curEvt.m_SegmentsInter.End(); ++iter)
+        for(auto iter = curEvt.m_SegmentsInter.begin(); iter != curEvt.m_SegmentsInter.end(); ++iter)
         {
           for(int32_t i = 0; i<m_ActiveSegments.size(); ++i)
           {
@@ -523,7 +523,7 @@ namespace eXl
       }
 
       //case Event::End:
-      for(auto iterEnd = curEvt.m_SegmentsEnd.Begin(); iterEnd != curEvt.m_SegmentsEnd.End(); ++iterEnd)
+      for(auto iterEnd = curEvt.m_SegmentsEnd.begin(); iterEnd != curEvt.m_SegmentsEnd.end(); ++iterEnd)
       {
         uint32_t curSegIdx = *iterEnd;
         auto const& curSeg = m_Segments[curSegIdx];
@@ -581,7 +581,7 @@ namespace eXl
       }
 
       //case Event::Start:
-      for(auto iterStart = curEvt.m_SegmentsStart.Begin(); iterStart != curEvt.m_SegmentsStart.End(); ++iterStart)
+      for(auto iterStart = curEvt.m_SegmentsStart.begin(); iterStart != curEvt.m_SegmentsStart.end(); ++iterStart)
       {
         uint32_t curSegIdx = *iterStart;
         auto const& curSeg = m_Segments[curSegIdx];
@@ -626,7 +626,7 @@ namespace eXl
               {
                 ActiveSegment* activeSeg = nullptr;
                 // Only report event.
-                for(auto iterSeg = optEvt->m_SegmentsInter.Begin(); iterSeg != optEvt->m_SegmentsInter.End(); ++iterSeg)
+                for(auto iterSeg = optEvt->m_SegmentsInter.begin(); iterSeg != optEvt->m_SegmentsInter.end(); ++iterSeg)
                 {
                   uint32_t segIdx = *iterSeg;
                   if(segIdx == curSegIdx)

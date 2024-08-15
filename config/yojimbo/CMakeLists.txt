@@ -21,9 +21,9 @@ set(SODIUM_LIBRARY ${SODIUM_ROOT}/libsodium-android-armv8-a/lib/libsodium.a)
 endif()
 
 if(${MSVC})
-set(SODIUM_LIBRARY ${SODIUM_ROOT}/bin/x64/Release/v142/static/libsodium.lib)
-SET(MSBUILD_OPTIONS /p:PlatformToolset=v142 /property:Configuration=ReleaseLIB /property:Platform=x64)
-SET(SODIUM_BUILD_COMMAND "${SODIUM_ROOT}/builds/msvc/vs2019/libsodium/libsodium.vcxproj")
+set(SODIUM_LIBRARY ${SODIUM_ROOT}/bin/x64/Release/v143/static/libsodium.lib)
+SET(MSBUILD_OPTIONS /p:PlatformToolset=v143 /property:Configuration=ReleaseLIB /property:Platform=x64)
+SET(SODIUM_BUILD_COMMAND "${SODIUM_ROOT}/builds/msvc/vs2022/libsodium/libsodium.vcxproj")
 add_custom_command(OUTPUT ${SODIUM_LIBRARY}
           COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${SODIUM_BUILD_COMMAND} ${MSBUILD_OPTIONS}
     )

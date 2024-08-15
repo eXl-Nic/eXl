@@ -5,10 +5,13 @@
 #include <engine/common/world.hpp>
 #include <engine/common/gamedata.hpp>
 #include <engine/game/archetype.hpp>
-#include <engine/script/luaeventhandler.hpp>
-#include <core/lua/luabind/object.hpp>
 #include <engine/game/commondef.hpp>
 #include <gen/graphrules.hpp>
+
+#ifdef EXL_LUA
+#include <engine/script/luaeventhandler.hpp>
+#include <core/lua/luabind/object.hpp>
+#endif
 
 namespace eXl
 {

@@ -16,7 +16,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <engine/map/map.hpp>
 
 #define EXL_REFLECT_PROPERTY \
-EXL_REFLECT; \
+EXL_REFLECT_EX(eXl::Type_PropertyFlag); \
 static PropertySheetName PropertyName()
 
 namespace eXl

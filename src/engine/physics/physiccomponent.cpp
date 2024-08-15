@@ -68,6 +68,9 @@ namespace eXl
   //void KinematicController::SetTransform(PhysicComponent_Impl& iComp, Quaternion const& iOrient, Vec3 const& iPos)
   void KinematicController::ApplyLinearVelocity(PhysicComponent_Impl& iComp, Vec3 const& iLinVel, float iTimeStep)
   {
+    EXL_VALIDATE_FLOAT(iLinVel.x);
+    EXL_VALIDATE_FLOAT(iLinVel.y);
+    EXL_VALIDATE_FLOAT(iLinVel.z);
     btVector3 linVel = TO_BTVECT(iLinVel);
     btRigidBody* body = btRigidBody::upcast(iComp.m_Object);
     if (body && (iComp.GetFlags() & PhysicFlags::Kinematic) == 0)

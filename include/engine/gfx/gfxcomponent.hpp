@@ -205,7 +205,7 @@ namespace eXl
 	{
     struct EXL_ENGINE_API Desc
     {
-      EXL_REFLECT;
+      EXL_REFLECT_PROPERTY;
 
       ResourceHandle<Tileset> m_Tileset;
       TileName m_TileName;

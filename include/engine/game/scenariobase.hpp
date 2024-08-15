@@ -46,6 +46,11 @@ namespace eXl
       return m_MainChar;
     }
 
+    void SetMainChar(ObjectHandle iObj)
+    {
+      m_MainChar = iObj;
+    }
+
     MapResource::InstanceData const& GetMapData() { return m_InstatiatedMap; }
 
     CharacterAnimation const& GetDefaultAnimation()
@@ -56,6 +61,8 @@ namespace eXl
     ResourceHandle<MapResource> const& GetMapHandle() const { return m_Map; }
     ResourceHandle<Archetype> const& GetMainCharHandle() const { return m_MainCharacter; }
 
+    ObjectHandle SpawnCharacter(World& iWorld, Vec3 const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo = ObjectCreationInfo());
+
   protected:
 
     ResourceHandle<MapResource> m_Map;
@@ -63,8 +70,6 @@ namespace eXl
     MapResource::InstanceData m_InstatiatedMap;
 
     ObjectHandle m_MainChar;
-
-    ObjectHandle SpawnCharacter(World& iWorld, Vec3 const& iPos, EngineCommon::CharacterControlKind iControl, ObjectCreationInfo const& iInfo = ObjectCreationInfo());
     Vec2 m_SpawnPos;
 
     UniquePtr<CharacterAnimation> m_DefaultAnim;
@@ -73,5 +78,7 @@ namespace eXl
     uint32_t dirMask = 0;
     bool keyChanged = false;
     Vec2i curMousePos;
+
+    bool directCharControl = false;
   };
 }

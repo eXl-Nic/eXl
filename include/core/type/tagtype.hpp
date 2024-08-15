@@ -24,8 +24,9 @@ namespace eXl
          size_t iTypeId,
          size_t iSize,
          unsigned int iFlags);
-
+#ifdef EXL_LUA
     void RegisterLua(lua_State* iState) const override;
+#endif
 
   };
 

@@ -11,9 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <core/type/resourcehandletype.hpp>
 #include <core/type/typemanager.hpp>
 #include <core/resource/resource.hpp>
+#ifdef EXL_LUA
 #include <core/lua/luaconverter.hpp>
 #include <core/lua/luamanager.hpp>
 #include <core/lua/luabind/detail/instance_holder.hpp>
+#endif
 
 namespace eXl
 {
@@ -319,7 +321,7 @@ namespace eXl
 
   void ResourceHandleType::RegisterLua(lua_State* iState) const
   {
-    luabind::detail::class_base newClass(m_ScopedName.back().c_str());
+    luabind::detail::class_base newClass;
     newClass.init(this, luabind::detail::allocate_class_id(this), nullptr, luabind::detail::allocate_class_id(nullptr));
     newClass.add_member(new type_constructor_registration(this));
     newClass.add_default_member(new type_constructor_registration(this));

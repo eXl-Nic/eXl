@@ -425,14 +425,16 @@ namespace eXl
       //  Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
       //  return lua_error(iState);
       //}
-
-      luabind::default_converter<PropertySheetName> converterProp;
-      if (converterProp.match(iState, luabind::by_value<PropertySheetName>(), -1) < 0)
-      {
-        lua_pushliteral(iState, "Incorrect argument for property sheet name");
-        Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
-        return lua_error(iState);
-      }
+      const char* propNameStr = lua_tostring( iState, lua_upvalueindex( 1 ) );
+      PropertySheetName prop( propNameStr );
+      
+      //luabind::default_converter<PropertySheetName> converterProp;
+      //if (converterProp.match(iState, luabind::by_value<PropertySheetName>(), -1) < 0)
+      //{
+      //  lua_pushliteral(iState, "Incorrect argument for property sheet name");
+      //  Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      //  return lua_error(iState);
+      //}
 
       //GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -2);
       World* world = LuaScriptSystem::GetWorld_Static();
@@ -443,7 +445,7 @@ namespace eXl
         return lua_error(iState);
       }
       GameDatabase* sys = world->GetSystem<GameDatabase>();
-      PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
+      //PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
 
       LuaGameDataIter ret;
       ret.m_Range = sys->IterateOverData(PropertySheetName(prop));
@@ -466,13 +468,15 @@ namespace eXl
       //  return lua_error(iState);
       //}
 
-      luabind::default_converter<PropertySheetName> converterProp;
-      if (converterProp.match(iState, luabind::by_value<PropertySheetName>(), -1) < 0)
-      {
-        lua_pushliteral(iState, "Incorrect argument for property sheet name");
-        Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
-        return lua_error(iState);
-      }
+      //luabind::default_converter<PropertySheetName> converterProp;
+      //if (converterProp.match(iState, luabind::by_value<PropertySheetName>(), -1) < 0)
+      //{
+      //  lua_pushliteral(iState, "Incorrect argument for property sheet name");
+      //  Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(iState);
+      //  return lua_error(iState);
+      //}
+      const char* propNameStr = lua_tostring(iState, lua_upvalueindex(1));
+      PropertySheetName prop(propNameStr);
 
       //GameDatabase* sys = converterSys.to_cpp(iState, luabind::by_pointer<GameDatabase>(), -2);
       World* world = LuaScriptSystem::GetWorld_Static();
@@ -483,7 +487,7 @@ namespace eXl
         return lua_error(iState);
       }
       GameDatabase* sys = world->GetSystem<GameDatabase>();
-      PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
+      //PropertySheetName prop = converterProp.to_cpp(iState, luabind::by_value<PropertySheetName>(), -1);
 
       LuaGameDataConstIter ret;
       ret.m_Range = sys->IterateOverDataConst(PropertySheetName(prop));
@@ -495,16 +499,127 @@ namespace eXl
 
       return 1;
     }
+
+    struct access_property_gnr_const
+    {
+      access_property_gnr_const(const PropertySheetName& iName)
+        : m_Name(iName)
+      {}
+
+      luabind::object operator()(luabind::argument const& iObject) const
+      {
+        World* world = eXl::LuaScriptSystem::GetWorld_Static();
+        if (world != nullptr)
+        {
+          lua_State* state = iObject.interpreter();
+          GameDatabase& db = *world->GetSystem<GameDatabase>();
+          ObjectHandle obj;
+          luabind::default_converter<ObjectHandle> converterObject;
+          luabind::detail::stack_pop pop(state, 1);
+          iObject.push(state);
+          if (converterObject.match(state, luabind::by_value<ObjectHandle>(), -1) < 0)
+          {
+            lua_pushliteral(state, "Incorrect argument for property sheet access");
+            Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(state);
+            lua_error(state);
+          }
+          else
+          {
+            ObjectHandle obj = converterObject.to_cpp(state, luabind::by_value<ObjectHandle>(), -1);
+            ConstDynObject prop = db.GetData(obj, m_Name);
+
+            return LuaManager::GetLuaRef(state, prop);
+          }
+        }
+
+        return luabind::object();
+      }
+
+      const PropertySheetName m_Name;
+    };
+
+    struct access_property_gnr
+    {
+      access_property_gnr(const PropertySheetName& iName)
+        : m_Name(iName)
+      {}
+
+      luabind::object operator()(luabind::argument const& iObject) const
+      {
+        World* world = eXl::LuaScriptSystem::GetWorld_Static();
+        if (world != nullptr)
+        {
+          lua_State* state = iObject.interpreter();
+          GameDatabase& db = *world->GetSystem<GameDatabase>();
+          ObjectHandle obj;
+          luabind::default_converter<ObjectHandle> converterObject;
+          luabind::detail::stack_pop pop(state, 1);
+          iObject.push(state);
+          if (converterObject.match(state, luabind::by_value<ObjectHandle>(), -1) < 0)
+          {
+            lua_pushliteral(state, "Incorrect argument for property sheet access");
+            Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(state);
+            lua_error(state);
+          }
+          else
+          {
+            ObjectHandle obj = converterObject.to_cpp(state, luabind::by_value<ObjectHandle>(), -1);
+            DynObject prop = db.ModifyData(obj, m_Name);
+
+            return LuaManager::GetLuaRef(state, prop);
+          }
+        }
+
+        return luabind::object();
+      }
+
+      void operator()(luabind::argument const& iObject, luabind::object const& value) const 
+      {
+        World* world = eXl::LuaScriptSystem::GetWorld_Static();
+        if (world != nullptr) 
+        {
+          lua_State* state = iObject.interpreter();
+          GameDatabase& db = *world->GetSystem<GameDatabase>();
+          ObjectHandle obj;
+          luabind::default_converter<ObjectHandle> converterObject;
+          luabind::detail::stack_pop(state, 1);
+          iObject.push(state);
+          if (converterObject.match(state, luabind::by_value<ObjectHandle>(), -1) < 0)
+          {
+            lua_pushliteral(state, "Incorrect argument for property sheet access");
+            Log_Manager::Log(CoreLog::LUA_ERR_STREAM) << LuaManager::StackDump(state);
+            lua_error(state);
+          }
+          else
+          {
+            ObjectHandle obj = converterObject.to_cpp(state, luabind::by_value<ObjectHandle>(), -1);
+            DynObject dstProp = db.ModifyData(obj, m_Name);
+
+            DynObject srcProp = LuaManager::GetObjectRef(value, dstProp.GetType());
+            if (!srcProp.IsValid())
+            {
+              lua_pushliteral(state, "Invalid field for assignment");
+              lua_error(state);
+            }
+
+            dstProp.GetType()->Assign(srcProp.GetType(), srcProp.GetBuffer(), dstProp.GetBuffer());
+          }
+        }
+
+      }
+
+      const PropertySheetName m_Name;
+    };
   }
 
   LUA_REG_FUN(BindEngine)
   {
     luabind::module(iState, "eXl")[
-      luabind::class_<ObjectHandle>("ObjectHandle")
+      luabind::class_<ObjectHandle>()
         .def(luabind::constructor<>())
         .def(luabind::self == ObjectHandle()),
 
-        luabind::class_<Transforms>("Transforms")
+        luabind::class_<Transforms>()
         //.def("AddTransform", &Transforms::AddTransform)
         .def("GetLocalTransform", &Transforms::GetLocalTransform)
         .def("GetWorldTransform", &Transforms::GetWorldTransform)
@@ -526,50 +641,50 @@ namespace eXl
           luabind::def("SetFlat", &GfxSpriteComponent::SetFlat)
         ],
 
-        luabind::class_<Archetype>("Archetype"),
+        luabind::class_<Archetype>(),
 
-        luabind::class_<GfxSystem>("GfxSystem")
+        luabind::class_<GfxSystem>()
         .def("CreateSpriteComponent", &GfxSystem::CreateSpriteComponent),
         //.def("GetSpriteComponent", &GfxSystem::GetSpriteComponent),
 
-        luabind::class_<CharacterSystem>("CharacterSystem")
+        luabind::class_<CharacterSystem>()
         .def("GetCurrentFacingDirection", &CharacterSystem::GetCurrentFacingDirection)
         .def("GetCurrentState", &CharacterSystem::GetCurrentState)
         .def("SetCurDir", &CharacterSystem::SetCurDir)
         .def("SetSpeed", &CharacterSystem::SetSpeed),
 
-        luabind::class_<World>("World")
+        luabind::class_<World>()
         .def("CreateObject", (ObjectHandle (World::*)())&World::CreateObject)
         .def("DeleteObject", &World::DeleteObject)
         .def("GetTransforms", &World::GetSystem<Transforms>)
         .def("GetGfxSystem", &World::GetSystem<GfxSystem>)
         .def("GetCharactersSystem", &World::GetSystem<CharacterSystem>),
 
-        luabind::class_<CoroutineAPI>("CoroutineAPI")
+        luabind::class_<CoroutineAPI>()
         .def("Pause", &CoroutineAPI::Pause)
         .def("Stop", &CoroutineAPI::Stop)
         .def("Yield", &CoroutineAPI::Yield),
 
-        luabind::class_<LuaGameDataIter>("GameDataIterator"),
+        luabind::class_<LuaGameDataIter>(),
 
-        luabind::class_<LuaGameDataConstIter>("GameDataConstIterator"),
+        luabind::class_<LuaGameDataConstIter>(),
 
-        luabind::class_<GameDatabase>("GameDatabase"),
+        luabind::class_<GameDatabase>(),
 
         luabind::def("GetWorld", &LuaScriptSystem::GetWorld_Static)
     ];
 
     luabind::object _G = luabind::globals(iState);
 
-    lua_pushcfunction(iState, &ReadPropertyData);
-    luabind::object readPropFun(luabind::from_stack(iState, -1));
-    _G["eXl"]["ReadProperty"] = readPropFun;
-    lua_pop(iState, 1);
-    
-    lua_pushcfunction(iState, &AccessPropertyData);
-    luabind::object accessPropFun(luabind::from_stack(iState, -1));
-    _G["eXl"]["AccessProperty"] = accessPropFun;
-    lua_pop(iState, 1);
+    //lua_pushcfunction(iState, &ReadPropertyData);
+    //luabind::object readPropFun(luabind::from_stack(iState, -1));
+    //_G["eXl"]["ReadProperty"] = readPropFun;
+    //lua_pop(iState, 1);
+    //
+    //lua_pushcfunction(iState, &AccessPropertyData);
+    //luabind::object accessPropFun(luabind::from_stack(iState, -1));
+    //_G["eXl"]["AccessProperty"] = accessPropFun;
+    //lua_pop(iState, 1);
 
     lua_pushcfunction(iState, &LuaTriggerEvent);
     luabind::object dispatchEventFun(luabind::from_stack(iState, -1));
@@ -583,25 +698,64 @@ namespace eXl
     _G["eXl"]["InstantiateArchetype"] = instantiateArch;
     lua_pop(iState, 1);
 
-    lua_pushcfunction(iState, &GameDatabaseIter);
-    luabind::object iterDbFun(luabind::from_stack(iState, -1));
-    _G["eXl"]["GameDatabase"]["IterateMutable"] = iterDbFun;
-    lua_pop(iState, 1);
-    lua_pushcfunction(iState, &GameDatabaseConstIter);
-    luabind::object iterConstDbFun(luabind::from_stack(iState, -1));
-    _G["eXl"]["GameDatabase"]["Iterate"] = iterConstDbFun;
-    lua_pop(iState, 1);
-    _G["eXl"]["PropertySheetName"] = _G["eXl"]["Name"];
+    //lua_pushcfunction(iState, &GameDatabaseIter);
+    //luabind::object iterDbFun(luabind::from_stack(iState, -1));
+    //_G["eXl"]["GameDataIterateMutable"] = iterDbFun;
+    //lua_pop(iState, 1);
+    //lua_pushcfunction(iState, &GameDatabaseConstIter);
+    //luabind::object iterConstDbFun(luabind::from_stack(iState, -1));
+    //_G["eXl"]["GameDataIterate"] = iterConstDbFun;
+    //lua_pop(iState, 1);
 
     World* world = LuaScriptSystem::GetWorld_Static();
+    {
+      lua_createtable(iState, 0, world->GetConfig().m_Properties.GetProperties().size());
+      luabind::object propTables(luabind::from_stack(iState, -1));
+      _G["eXl"]["GameData"] = propTables;
+      lua_pop(iState, 1);
+    }
+    luabind::object declNamespace = _G["eXl"]["GameData"];
     for (auto const& name : world->GetConfig().m_Properties.GetProperties())
     {
       if(Type const* propType = world->GetConfig().m_Properties.GetTypeFromName(name))
       {
-        if(!propType->IsCoreType())
+        if (!propType->IsCoreType())
         {
           propType->RegisterLua(iState);
         }
+          
+        using get_signature = luabind::meta::type_list<luabind::object, luabind::argument const&>;
+        luabind::object get_function = luabind::make_function(iState, access_property_gnr_const(name), get_signature(), luabind::no_policies());
+
+        using access_signature = luabind::meta::type_list<luabind::object, luabind::argument const&>;
+        luabind::object access_function = luabind::make_function(iState, access_property_gnr(name), access_signature(), luabind::no_policies());
+
+        using set_signature = luabind::meta::type_list<void, luabind::argument const&, luabind::object>;
+        luabind::object set_function = luabind::make_function(iState, access_property_gnr(name), set_signature(), luabind::no_policies());
+
+        lua_pushstring(iState, name.c_str());
+        lua_pushcclosure(iState, &GameDatabaseIter, 1);
+        luabind::object iterDbFun(luabind::from_stack(iState, -1));
+        lua_pop(iState, 1);
+        
+        lua_pushstring(iState, name.c_str());
+        lua_pushcclosure(iState, &GameDatabaseConstIter, 1);
+        luabind::object iterConstDbFun(luabind::from_stack(iState, -1));
+        lua_pop(iState, 1);
+        
+        {
+          lua_createtable(iState, 0, 5);
+          luabind::object classTableUtils(luabind::from_stack(iState, -1));
+          lua_pop(iState, 1);
+          classTableUtils["Get"] = get_function;
+          classTableUtils["Set"] = set_function;
+          classTableUtils["Modify"] = access_function;
+          classTableUtils["Iter"] = iterConstDbFun;
+          classTableUtils["IterModify"] = iterDbFun;
+
+          declNamespace[name.c_str()] = classTableUtils;
+        }
+          
       }
     }
 

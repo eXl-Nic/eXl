@@ -22,10 +22,10 @@ namespace eXl
     : Type(iName,iTypeId,iSize,iFlags)
   {
   }
-
+#ifdef EXL_LUA
   void TagType::RegisterLua(lua_State* iState) const
   {
-    luabind::detail::class_base newClass(GetName().c_str());
+    luabind::detail::class_base newClass;
     newClass.init(this, luabind::detail::allocate_class_id(this), nullptr, luabind::detail::allocate_class_id(nullptr));
 
     luabind::module(iState, "eXl")
@@ -33,7 +33,7 @@ namespace eXl
         newClass
       ];
   }
-
+#endif
   //CoreType::~CoreType()
   //{
   //}

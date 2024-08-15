@@ -417,7 +417,7 @@ namespace eXl
 
   void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iNumInstances)
   {
-    PushDrawInstanced(iKey, iTopo, iNum, iOffset, iNumInstances);
+    PushDrawInstanced(iKey, iTopo, iNum, iOffset, 0, iNumInstances, 0);
   }
 
   void OGLDisplayList::PushDrawInstanced(uint16_t iKey, uint8_t iTopo, uint32_t iNum, uint32_t iOffset, uint32_t iBaseVertex, uint32_t iNumInstances, uint32_t iBaseInstance)

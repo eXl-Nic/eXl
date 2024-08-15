@@ -66,7 +66,7 @@ luabind::detail::class_rep::class_rep(type_id const& type
 	, m_name(name)
 	, m_class_type(cpp_class)
 	, m_operator_cache(0)
-{
+{ 
 	shared_init(L);
 }
 

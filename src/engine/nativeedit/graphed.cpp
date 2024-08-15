@@ -1,4 +1,4 @@
-#include "graphed.hpp"
+#include <engine/nativeedit/graphed.hpp>
 #include <core/resource/resourcemanager.hpp>
 #include <engine/common/gamedatabase.hpp>
 
@@ -6,21 +6,20 @@
 
 namespace eXl 
 { 
-  void UpdateDisplay(GraphEdState& iState);
 
-  void DrawRulesPanel(GraphEdState & iState)
+  void GraphEdState::DrawRulesPanel()
   {
     if (ImGui::BeginPopupModal("RuleNameInput")) 
     {
-      ImGui::InputText("Name", iState.m_NewRuleName, sizeof(iState.m_NewRuleName));
+      ImGui::InputText("Name", m_NewRuleName, sizeof(m_NewRuleName));
       if (ImGui::Button("Ok")) 
       {
-        String newRuleName(iState.m_NewRuleName);
-        iState.m_NewRuleName[0] = 0;
-        auto iter = iState.m_Sys->m_Rules.find(newRuleName);
-        if ( !newRuleName.empty() && iter == iState.m_Sys->m_Rules.end())
+        String newRuleName(m_NewRuleName);
+        m_NewRuleName[0] = 0;
+        auto iter = m_Sys->m_Rules.find(newRuleName);
+        if ( !newRuleName.empty() && iter == m_Sys->m_Rules.end())
         {
-          iState.m_Sys->m_Rules.insert(std::make_pair(newRuleName, Rule()));
+          m_Sys->m_Rules.insert(std::make_pair(newRuleName, Rule()));
         }
         ImGui::CloseCurrentPopup();
       }
@@ -29,6 +28,7 @@ namespace eXl
       {
         ImGui::CloseCurrentPopup();
       }
+      ImGui::EndPopup();
     }
 
     if (ImGui::Button("+")) 
@@ -39,52 +39,47 @@ namespace eXl
 
     if (ImGui::Button("-")) 
     {
-      if (iState.m_CurrentEditedRule != nullptr)
+      if (m_CurrentEditedRule != nullptr)
       {
-        iState.m_Sys->m_Rules.erase(iState.m_CurrentEditedRuleName);
-        iState.m_CurrentEditedRule = nullptr;
-        iState.m_CurrentEditedRuleName.clear();
+        m_Sys->m_Rules.erase(m_CurrentEditedRuleName);
+        m_CurrentEditedRule = nullptr;
+        m_CurrentEditedRuleName.clear();
       }
     }
 
-    ImGui::BeginListBox("Rules");
-
-    for ( auto& ruleEntry : iState.m_Sys->m_Rules) {
-      bool selected = iState.m_CurrentEditedRuleName == ruleEntry.first;
-      if (ImGui::Selectable(ruleEntry.first.c_str(), &selected)) {
-        iState.m_CurrentEditedRuleName = ruleEntry.first;
-        iState.m_CurrentEditedRule = &ruleEntry.second;
-        iState.m_NodeNewStart = iState.m_CurrentEditedRule->m_ContextNodes.size();
-        iState.m_NodeCutStart = iState.m_NodeNewStart + iState.m_CurrentEditedRule->m_CreateNodes.size();
-        iState.m_EdgeNewStart = iState.m_CurrentEditedRule->m_ContextEdges.size();
-        iState.m_EdgeCutStart = iState.m_EdgeNewStart + iState.m_CurrentEditedRule->m_NewEdge.size();
+    if (ImGui::BeginListBox("Rules")) 
+    {
+      for (auto& ruleEntry : m_Sys->m_Rules) {
+        bool selected = m_CurrentEditedRuleName == ruleEntry.first;
+        if (ImGui::Selectable(ruleEntry.first.c_str(), &selected)) {
+          m_CurrentEditedRuleName = ruleEntry.first;
+          m_CurrentEditedRule = &ruleEntry.second;
+        }
       }
+
+      ImGui::EndListBox();
+
     }
     
-    ImGui::EndListBox();
-
-    ImGui::LabelText("RuleScript", "Rule Script");
-    ImGui::SameLine();
-    
-    auto scriptEntry = iState.m_RuleScripts.find( iState.m_CurrentEditedRuleName );
-    const Resource::UUID* uuid = scriptEntry != iState.m_RuleScripts.end() ? &scriptEntry->second.GetUUID() : nullptr;
+    auto scriptEntry = m_RuleScripts.find( m_CurrentEditedRuleName );
+    const Resource::UUID* uuid = scriptEntry != m_RuleScripts.end() ? &scriptEntry->second.GetUUID() : nullptr;
 
     const Resource::Header* selRsc = uuid != nullptr ? ResourceManager::GetHeader(*uuid) : nullptr;
 
-    if (ImGui::BeginCombo("RuleScriptSelector", selRsc != nullptr ? selRsc->m_ResourceName.c_str() : "<none>"))
+    if (ImGui::BeginCombo("Rule Script Selector", selRsc != nullptr ? selRsc->m_ResourceName.c_str() : "<none>"))
     {
       Vector<Resource::Header> resources = ResourceManager::ListResources(LuaEventHandler::StaticLoaderName());
 
-      if (ImGui::Selectable("<none>", scriptEntry == iState.m_RuleScripts.end())) {
-        iState.m_RuleScripts.erase(scriptEntry);
+      if (ImGui::Selectable("<none>", scriptEntry == m_RuleScripts.end())) {
+        m_RuleScripts.erase(scriptEntry);
       }
-      if (iState.m_CurrentEditedRule != nullptr) {
+      if (m_CurrentEditedRule != nullptr) {
         for (const auto& rsc : resources) {
           bool selected = uuid != nullptr && *uuid == rsc.m_ResourceId;
           if (ImGui::Selectable(rsc.m_ResourceName.c_str(), &selected)) {
             ResourceHandle< LuaEventHandler > handle;
             handle.SetUUID(rsc.m_ResourceId);
-            iState.m_RuleScripts.insert(std::make_pair(iState.m_CurrentEditedRuleName, handle));
+            m_RuleScripts.insert(std::make_pair(m_CurrentEditedRuleName, handle));
           }
         }
       }
@@ -93,577 +88,721 @@ namespace eXl
     }
   }
 
-  void DrawTagsPanel(GraphEdState& iState)
+  void GraphEdState::DrawTagsPanel()
   {
+    if (ImGui::BeginPopupModal("TagNameInput"))
+    {
+      ImGui::InputText("Name", m_NewTagName, sizeof(m_NewTagName));
+      ImGui::Checkbox("Tag For Node", &m_NewTagForNode);
+      if (ImGui::Button("Ok"))
+      {
+        Name newTagName(m_NewTagName);
+        
+        m_NewTagName[0] = 0;
+        auto iter = m_Sys->m_Tags.find(newTagName);
+        if (!newTagName.get().empty() && iter == m_Sys->m_Tags.end())
+        {
+          TagDef& newDef = m_Sys->m_Tags.insert(std::make_pair(newTagName, TagDef())).first->second;
+          newDef.m_IsNodeTag = m_NewTagForNode;
+        }
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel"))
+      {
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+    }
+
     if (ImGui::Button("+"))
     {
-      auto iter = iState.m_Sys->m_Tags.find("NewTag");
-      if (iter == iState.m_Sys->m_Tags.end())
-      {
-        iState.m_Sys->m_Tags.insert(std::make_pair("NewRule", TagDef()));
-      }
+      ImGui::OpenPopup("TagNameInput");
     }
     ImGui::SameLine();
 
     if (ImGui::Button("-"))
     {
-      if (iState.m_CurrentEditedTag != nullptr)
+      if (m_CurrentEditedTag != nullptr)
       {
-        iState.m_Sys->m_Tags.erase(iState.m_CurrentEditedTagName);
-        iState.m_CurrentEditedTag = nullptr;
-        iState.m_CurrentEditedTagName = Name();
+        m_Sys->m_Tags.erase(m_CurrentEditedTagName);
+        m_CurrentEditedTag = nullptr;
+        m_CurrentEditedTagName = Name();
       }
     }
 
-    ImGui::BeginListBox("TagsList");
-
-    for (auto& tagEntry : iState.m_Sys->m_Tags) {
-      bool selected = iState.m_CurrentEditedTagName == tagEntry.first;
-      if (ImGui::Selectable(tagEntry.first.c_str(), &selected)) {
-        iState.m_CurrentEditedTagName = tagEntry.first;
-        iState.m_CurrentEditedTag = &tagEntry.second;
+    if (ImGui::BeginListBox("TagsList"))
+    {
+      for (auto& tagEntry : m_Sys->m_Tags) {
+        bool selected = m_CurrentEditedTagName == tagEntry.first;
+        if (ImGui::Selectable(tagEntry.first.c_str(), &selected)) {
+          m_CurrentEditedTagName = tagEntry.first;
+          m_CurrentEditedTag = &tagEntry.second;
+        }
       }
+
+      ImGui::EndListBox();
     }
 
-    ImGui::EndListBox();
-
-    auto archetypeEntry = iState.m_TagsArch.find(iState.m_CurrentEditedTagName);
-    const Resource::UUID* uuid = archetypeEntry != iState.m_TagsArch.end() ? &archetypeEntry->second.GetUUID() : nullptr;
+    auto archetypeEntry = m_TagsArch.find(m_CurrentEditedTagName);
+    const Resource::UUID* uuid = archetypeEntry != m_TagsArch.end() ? &archetypeEntry->second.GetUUID() : nullptr;
 
     const Resource::Header* selRsc = uuid != nullptr ? ResourceManager::GetHeader(*uuid) : nullptr;
 
-    if (ImGui::BeginCombo("TagArchetypeSelector", selRsc != nullptr ? selRsc->m_ResourceName.c_str() : "<none>"))
+    if (ImGui::BeginCombo("Tag Archetype Selector", selRsc != nullptr ? selRsc->m_ResourceName.c_str() : "<none>"))
     {
       Vector<Resource::Header> resources = ResourceManager::ListResources(Archetype::StaticLoaderName());
-      if (ImGui::Selectable("<none>", archetypeEntry == iState.m_TagsArch.end())) {
-        iState.m_TagsArch.erase(archetypeEntry);
+      if (ImGui::Selectable("<none>", archetypeEntry == m_TagsArch.end())) 
+      {
+        m_TagsArch.erase(archetypeEntry);
       }
-      if (iState.m_CurrentEditedTag != nullptr) {
-        for (const auto& rsc : resources) {
+      if (m_CurrentEditedTag != nullptr) 
+      {
+        for (const auto& rsc : resources) 
+        {
           bool selected = uuid != nullptr && *uuid == rsc.m_ResourceId;
-          if (ImGui::Selectable(rsc.m_ResourceName.c_str(), &selected)) {
+          if (ImGui::Selectable(rsc.m_ResourceName.c_str(), &selected)) 
+          {
             ResourceHandle< LuaEventHandler > handle;
             handle.SetUUID(rsc.m_ResourceId);
-            iState.m_RuleScripts.insert(std::make_pair(iState.m_CurrentEditedRuleName, handle));
+            m_RuleScripts.insert(std::make_pair(m_CurrentEditedRuleName, handle));
           }
         }
       }
+
+      ImGui::EndCombo();
     }
 
-    
-
-    ImGui::EndCombo();
   }
 
-  void DrawNodesPanel(GraphEdState& iState)
-  {
-    QWidget* nodesCollection = new QWidget(m_Editor);
-    QVBoxLayout* nodesCollectionLayout = new QVBoxLayout(nodesCollection);
-    nodesCollection->setLayout(nodesCollectionLayout);
-    QToolBar* nodesCollectionTool = new QToolBar(nodesCollection);
-    m_NodesList = new QListWidget(nodesCollection);
+  uint32_t GraphEdState::ComputeCurRuleTotNodes() const {
+    return m_CurrentEditedRule->m_ContextNodes.size()
+      + m_CurrentEditedRule->m_CreateNodes.size()
+      + m_CurrentEditedRule->m_CutNodes.size();
+  }
 
-    nodesCollectionLayout->addWidget(nodesCollectionTool);
-
-    QComboBox* nodeTypeSel = new QComboBox(nodesCollection);
-    nodeTypeSel->addItem("Context");
-    nodeTypeSel->addItem("Cut");
-    nodeTypeSel->addItem("New");
-    nodesCollectionLayout->addWidget(nodeTypeSel);
-
-    int nodeType = 
-
-    QObject::connect(m_NodesList->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
+  uint32_t GraphEdState::ComputeCurRuleTotEdges() const {
+      return m_CurrentEditedRule->m_ContextEdges.size()
+          + m_CurrentEditedRule->m_NewEdge.size()
+          + m_CurrentEditedRule->m_CutEdge.size();
+  }
+  
+  bool GraphEdState::IsCurNodeValid() const {
+    if (m_NodeIdx >= 0) {
+      if (m_NodeIdx < ComputeCurRuleTotNodes())
       {
-        if (iSelected.isEmpty())
-        {
-          m_NodeTagSelection->clear();
-          m_NodeTagSelection->setEnabled(false);
-        }
-        else
-        {
-          auto fillSelectorAndSet = [&](Name nodeTag)
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool GraphEdState::IsCurEdgeValid() const {
+      if (m_EdgeIdx >= 0) {
+          if (m_EdgeIdx < ComputeCurRuleTotEdges())
           {
-            int nodeIdx = 0;
-            for (auto const& tag : m_Sys->m_Tags)
+              return true;
+          }
+      }
+      return false;
+  }
+
+  Vector<Name>& GraphEdState::GetCurNode(uint32_t& oLocalOffset) {
+    ItemType type = GetNodeType( m_NodeIdx, &oLocalOffset );
+    switch (type) {
+    case Context : 
+      return m_CurrentEditedRule->m_ContextNodes;
+    case New:
+      return m_CurrentEditedRule->m_CreateNodes;
+    case Cut:
+        return m_CurrentEditedRule->m_CutNodes;
+    }
+    static Vector<Name> dummy;
+    return dummy;
+  }
+
+  Name& GraphEdState::GetCurNodeTag() {
+    uint32_t localIdx;
+    Vector<Name>& actualArray = GetCurNode(localIdx);
+    return actualArray[localIdx];
+  }
+
+  Name GraphEdState::GetCurNodeTag() const {
+    return const_cast<GraphEdState*>(this)->GetCurNodeTag();
+  }
+
+  void GraphEdState::SetCurNodeTag(Name iName) {
+    GetCurNodeTag() = iName;
+  }
+
+  void GraphEdState::EraseCurrentEdge() {
+      if (IsCurEdgeValid()) {
+          uint32_t locIdx;
+          ItemType type = GetEdgeType(m_NodeIdx, &locIdx);
+          switch (type) {
+          case Context:
+            m_CurrentEditedRule->m_ContextEdges.erase(m_CurrentEditedRule->m_ContextEdges.begin() + locIdx);
+            break;
+          case New:
+            m_CurrentEditedRule->m_NewEdge.erase(m_CurrentEditedRule->m_NewEdge.begin() + locIdx);
+            break;
+          case Cut:
+            m_CurrentEditedRule->m_CutEdge.erase(m_CurrentEditedRule->m_CutEdge.begin() + locIdx);
+
+            for (int i = 0; i < m_CurrentEditedRule->m_NewEdge.size(); ++i)
             {
-              if (tag.second.m_IsNodeTag)
-              {
-                if (tag.first == nodeTag)
-                {
-                  nodeIdx = m_NodeTagSelection->count();
-                }
-                m_NodeTagSelection->addItem(tag.first.c_str());
+              Rule::NewEdge& edge = m_CurrentEditedRule->m_NewEdge[i];
+              if (edge.port[0] == m_EdgeIdx) {
+                edge.port[0] = -1;
+              }
+              else if (edge.port[0] > m_EdgeIdx) {
+                --edge.port[0];
+              }
+              if (edge.port[1] == m_EdgeIdx) {
+                edge.port[1] = -1;
+              }
+              else if (edge.port[1] > m_EdgeIdx) {
+                --edge.port[1];
               }
             }
-            m_NodeTagSelection->setCurrentIndex(nodeIdx);
-            m_NodeTagSelection->setEnabled(true);
-          };
-
-          if (iSelected.indexes().size() == 1)
-          {
-            QSignalBlocker block(m_NodeTagSelection);
-            int selIdx = iSelected.indexes()[0].row();
-            if (selIdx >= m_NodeNewStart)
-            {
-              Name nodeTag = m_CurrentEditedRule->m_CreateNodes[selIdx - m_NodeNewStart];
-              m_NodeTagSelection->clear();
-              fillSelectorAndSet(nodeTag);
-            }
-            else if (selIdx >= m_NodeCutStart)
-            {
-              Name nodeTag = m_CurrentEditedRule->m_CutNodes[selIdx - m_NodeCutStart];
-              m_NodeTagSelection->clear();
-              m_NodeTagSelection->addItem(RewriteSystem::GetAnyTag().c_str());
-              fillSelectorAndSet(nodeTag);
-            }
-            else
-            {
-              Name nodeTag = m_CurrentEditedRule->m_ContextNodes[selIdx];
-              m_NodeTagSelection->clear();
-              m_NodeTagSelection->addItem(RewriteSystem::GetAnyTag().c_str());
-              fillSelectorAndSet(nodeTag);
-            }
+            break;
           }
-        }
-      });
-
-    nodesCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Node", [this, nodeTypeSel]
-      {
-        int nodeType = nodeTypeSel->currentIndex();
-        Name nodeTag = RewriteSystem::GetAnyTag();
-        if (nodeType == 2)
-        {
-          for (auto const& tag : m_Sys->m_Tags)
-          {
-            if (tag.second.m_IsNodeTag)
-            {
-              nodeTag = tag.first;
-            }
-          }
-
-          if (nodeTag == RewriteSystem::GetAnyTag())
-          {
-            LOG_ERROR << "Cannot create a node without a tag";
-            return;
-          }
-        }
-        int insertionPoint;
-        if (nodeType == 0)
-        {
-          insertionPoint = m_CurrentEditedRule->m_ContextNodes.size();
-          m_CurrentEditedRule->m_ContextNodes.push_back(nodeTag);
-        }
-        else if (nodeType == 1)
-        {
-          insertionPoint = m_CurrentEditedRule->m_ContextNodes.size()
-            + m_CurrentEditedRule->m_CutNodes.size();
-          m_CurrentEditedRule->m_CutNodes.push_back(nodeTag);
-        }
-        else
-        {
-          insertionPoint = m_CurrentEditedRule->m_ContextNodes.size()
-            + m_CurrentEditedRule->m_CutNodes.size()
-            + m_CurrentEditedRule->m_CreateNodes.size();
-          m_CurrentEditedRule->m_CreateNodes.push_back(nodeTag);
-        }
-
-        RemapEdgesNode(insertionPoint, true);
-        RebuildNodeList();
-      });
-
-    nodesCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Node", [this]
-      {
-        if (m_NodesList->selectedItems().count() == 1)
-        {
-          int selIdx = m_NodesList->row(m_NodesList->selectedItems()[0]);
-          if (selIdx >= m_NodeNewStart)
-          {
-            m_CurrentEditedRule->m_CreateNodes.erase(m_CurrentEditedRule->m_CreateNodes.begin() + (selIdx - m_NodeNewStart));
-          }
-          else if (selIdx >= m_NodeCutStart)
-          {
-            m_CurrentEditedRule->m_CutNodes.erase(m_CurrentEditedRule->m_CutNodes.begin() + (selIdx - m_NodeCutStart));
-          }
-          else
-          {
-            m_CurrentEditedRule->m_ContextNodes.erase(m_CurrentEditedRule->m_ContextNodes.begin() + selIdx);
-          }
-
-          RemapEdgesNode(selIdx, false);
-          RebuildNodeList();
-          RebuildEdgeList();
-        }
-      });
-
-    nodesCollectionLayout->addWidget(m_NodesList);
-    m_NodeTagSelection = new QComboBox(nodesCollection);
-    QObject::connect(m_NodeTagSelection, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this](int iIndex)
-      {
-        if (iIndex == -1)
-        {
-          return;
-        }
-        if (m_NodesList->selectedItems().isEmpty())
-        {
-          return;
-        }
-        Name selTag(m_NodeTagSelection->itemText(iIndex).toUtf8());
-
-        int selIdx = m_NodesList->row(m_NodesList->selectedItems()[0]);
-        Name& curTag =
-          (selIdx >= m_NodeNewStart) ? m_CurrentEditedRule->m_CreateNodes[selIdx - m_NodeNewStart] :
-          ((selIdx >= m_NodeCutStart) ? m_CurrentEditedRule->m_CutNodes[selIdx - m_NodeCutStart] :
-            m_CurrentEditedRule->m_ContextNodes[selIdx]);
-
-        if (selTag == RewriteSystem::GetAnyTag())
-        {
-          if (curTag == selTag)
-          {
-            return;
-          }
-        }
-        else
-        {
-          auto iter = m_Sys->m_Tags.find(selTag);
-
-          if (iter != m_Sys->m_Tags.end()
-            && iter->second.m_IsNodeTag
-            && curTag == iter->first)
-          {
-            return;
-          }
-        }
-        curTag = selTag;
-        m_Editor->ModifyResource();
-        RebuildNodeList();
-        m_NodesList->setItemSelected(m_NodesList->item(selIdx), true);
-      });
-    m_NodeTagSelection->setEnabled(false);
-    nodesCollectionLayout->addWidget(m_NodeTagSelection);
-
-    return nodesCollection;
+          m_EdgeIdx = -1;
+      }
   }
 
-  QWidget* GraphEditor::Impl::MakeEdgesPanel()
+  void GraphEdState::RemapEdgesNode(uint32_t iNodeIdx, bool iAdded)
   {
-    QWidget* edgesCollection = new QWidget(m_Editor);
-
-    QVBoxLayout* edgesCollectionLayout = new QVBoxLayout(edgesCollection);
-    edgesCollection->setLayout(edgesCollectionLayout);
-    QToolBar* edgesCollectionTool = new QToolBar(edgesCollection);
-    m_EdgesList = new QListWidget(edgesCollection);
-
-    edgesCollectionLayout->addWidget(edgesCollectionTool);
-
-    QComboBox* edgeTypeSel = new QComboBox(edgesCollection);
-    edgeTypeSel->addItem("Context");
-    edgeTypeSel->addItem("Cut");
-    edgeTypeSel->addItem("New");
-    edgesCollectionLayout->addWidget(edgeTypeSel);
-
-    m_EdgeTagSelection = new QComboBox(edgesCollection);
-
-    QObject::connect(m_EdgesList->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& iSelected, const QItemSelection& iDeselected)
-      {
-        if (iSelected.isEmpty())
+    if (!iAdded)
+    {
+      auto cleanupEdges = [iNodeIdx](auto& iCollection)
         {
-          m_EdgeTagSelection->clear();
-          m_EdgeTagSelection->setEnabled(false);
-          m_Node1Sel->setEnabled(false);
-          m_Node2Sel->setEnabled(false);
-          m_Port1Sel->setEnabled(false);
-          m_Port2Sel->setEnabled(false);
-        }
-        else
-        {
-          auto fillSelectorAndSet = [&](Name edgeTag)
+          for (int i = 0; i < iCollection.size(); ++i)
           {
-            int edgeIdx = 0;
-            for (auto const& tag : m_Sys->m_Tags)
+            auto& edge = iCollection[i];
+            if (edge.nodes[0] == iNodeIdx
+              || edge.nodes[1] == iNodeIdx)
             {
-              if (!tag.second.m_IsNodeTag)
-              {
-                if (tag.first == edgeTag)
-                {
-                  edgeIdx = m_EdgeTagSelection->count();
-                }
-                m_EdgeTagSelection->addItem(tag.first.c_str());
+              iCollection.erase(iCollection.begin() + i);
+              --i;
+              continue;
+            }
+            if (edge.nodes[0] > iNodeIdx)
+            {
+              --edge.nodes[0];
+            }
+            if (edge.nodes[1] > iNodeIdx)
+            {
+              --edge.nodes[1];
+            }
+          }
+        };
+
+      cleanupEdges(m_CurrentEditedRule->m_ContextEdges);
+      cleanupEdges(m_CurrentEditedRule->m_CutEdge);
+      cleanupEdges(m_CurrentEditedRule->m_NewEdge);
+    }
+    else
+    {
+      auto shiftEdges = [iNodeIdx](auto& iCollection)
+        {
+          for (int i = 0; i < iCollection.size(); ++i)
+          {
+            auto& edge = iCollection[i];
+            if (edge.nodes[0] >= iNodeIdx)
+            {
+              ++edge.nodes[0];
+            }
+            if (edge.nodes[1] >= iNodeIdx)
+            {
+              ++edge.nodes[1];
+            }
+          }
+        };
+
+      shiftEdges(m_CurrentEditedRule->m_ContextEdges);
+      shiftEdges(m_CurrentEditedRule->m_CutEdge);
+      shiftEdges(m_CurrentEditedRule->m_NewEdge);
+    }
+  }
+
+  void GraphEdState::EraseCurrentNode() {
+
+    if (IsCurNodeValid())
+    {
+      RemapEdgesNode(m_NodeIdx, false);
+      uint32_t localIdx;
+      Vector<Name>& actualArray = GetCurNode(localIdx);
+      actualArray.erase(actualArray.begin() + localIdx);
+      m_NodeIdx = -1;
+    }
+  }
+
+  void GraphEdState::DrawNodesPanel()
+  {
+    if (ImGui::BeginPopupModal("NewNode"))
+    {
+      const char* typeNames[] = { "Context", "New", "Cut" };
+
+      if (ImGui::BeginCombo("Node Type", typeNames[m_NewNodeType])) 
+      {
+        for (int i = 0; i < 3; ++i) 
+        {
+          bool selected = m_NewNodeType == i;
+          if (ImGui::Selectable(typeNames[i])) {
+            m_NewNodeType = i;
+          }
+        }
+        ImGui::EndCombo();
+      }
+      
+      if (ImGui::BeginCombo("Tag", m_CurrentSelectedTag == Name() ? "<None>" : m_CurrentSelectedTag.c_str()))
+      {
+        if (m_CurrentSelectedTag == Name()) {
+          ImGui::Selectable("<None>");
+        }
+        for ( auto tag : m_Sys->m_Tags )
+        {
+          if (tag.second.m_IsNodeTag) {
+            bool selected = tag.first == m_CurrentSelectedTag;
+            if (ImGui::Selectable(tag.first.c_str())) {
+              m_CurrentSelectedTag = tag.first;
+            }
+          }
+        }
+        ImGui::EndCombo();
+      }
+      
+      if (ImGui::Button("Ok"))
+      {
+        if (m_CurrentSelectedTag != Name()) {
+
+          int insertionPoint;
+          switch (m_NewNodeType)
+          {
+          case 0:
+            insertionPoint = m_CurrentEditedRule->m_ContextNodes.size();
+            m_CurrentEditedRule->m_ContextNodes.push_back( m_CurrentSelectedTag );
+            break;
+          case 1:
+            insertionPoint = m_CurrentEditedRule->m_ContextNodes.size() + m_CurrentEditedRule->m_CreateNodes.size();
+            m_CurrentEditedRule->m_CreateNodes.push_back( m_CurrentSelectedTag );
+            break;
+          case 2:
+            insertionPoint = ComputeCurRuleTotNodes();
+            m_CurrentEditedRule->m_CutNodes.push_back( m_CurrentSelectedTag );
+            break;
+          }
+          RemapEdgesNode( insertionPoint, true );
+          m_CurrentSelectedTag = Name();
+        }
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel"))
+      {
+        m_CurrentSelectedTag = Name();
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+    }
+
+    if (ImGui::Button("+"))
+    {
+      ImGui::OpenPopup("NewNode");
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Button("-"))
+    {
+      EraseCurrentNode();
+    }
+
+    if (ImGui::BeginListBox("NodesList"))
+    {
+      uint32_t nodeIdx = 0;
+      uint32_t locIdx = 0;
+      for (uint32_t i = 0; i < m_CurrentEditedRule->m_ContextNodes.size(); ++i ) {
+        bool selected = m_NodeIdx == nodeIdx;
+        String nodeName = ComputeCtxNodeName(locIdx);
+        if (ImGui::Selectable(nodeName.c_str(), &selected)) {
+          m_NodeIdx = nodeIdx;
+        }
+        ++nodeIdx;
+        ++locIdx;
+      }
+      locIdx = 0;
+      for (auto& newNode : m_CurrentEditedRule->m_CreateNodes) {
+        bool selected = m_NodeIdx == nodeIdx;
+        String nodeName = ComputeNewNodeName(locIdx);
+        if (ImGui::Selectable(nodeName.c_str(), &selected)) {
+          m_NodeIdx = nodeIdx;
+        }
+        ++nodeIdx;
+        ++locIdx;
+      }
+      locIdx = 0;
+      for (auto& curNode : m_CurrentEditedRule->m_CutNodes) {
+        bool selected = m_NodeIdx == nodeIdx;
+        String nodeName = ComputeCutNodeName(locIdx);
+        if (ImGui::Selectable(nodeName.c_str(), &selected)) {
+          m_NodeIdx = nodeIdx;
+        }
+        ++nodeIdx;
+        ++locIdx;
+      }
+
+      ImGui::EndListBox();
+    }
+  }
+
+  GraphEdState::ItemType GraphEdState::GetNodeType( uint32_t nodeIdx, uint32_t* locIdx) const 
+  {
+    ItemType type;
+    if (nodeIdx > m_CurrentEditedRule->m_ContextNodes.size())
+    {
+      nodeIdx -= m_CurrentEditedRule->m_ContextNodes.size();
+      if (nodeIdx > m_CurrentEditedRule->m_CreateNodes.size())
+      {
+        nodeIdx -= m_CurrentEditedRule->m_CreateNodes.size();
+        type = Cut;
+      }
+      else
+      {
+        type = New;
+      }
+    }
+    else
+    {
+      type = Context;
+    }
+    if (locIdx != nullptr) {
+      *locIdx = nodeIdx;
+    }
+    return type;
+  }
+
+  GraphEdState::ItemType GraphEdState::GetEdgeType(uint32_t edgeIdx, uint32_t* locIdx) const {
+    ItemType type;
+    if (edgeIdx > m_CurrentEditedRule->m_ContextEdges.size())
+    {
+      edgeIdx -= m_CurrentEditedRule->m_ContextEdges.size();
+      if (edgeIdx > m_CurrentEditedRule->m_NewEdge.size())
+      {
+        edgeIdx -= m_CurrentEditedRule->m_NewEdge.size();
+        type = Cut;
+      }
+      else
+      {
+        type = New;
+      }
+    }
+    else
+    {
+      type = Context;
+    }
+    if (locIdx != nullptr) {
+      *locIdx = edgeIdx;
+    }
+    return type;
+  }
+
+  String GraphEdState::ComputeNodeName(int iNodeIdx) {
+    uint32_t locIdx;
+    ItemType type = GetNodeType(iNodeIdx, &locIdx);
+    switch (type) {
+    case Context:
+      return ComputeCtxNodeName(locIdx);
+    case New:
+      return ComputeNewNodeName(locIdx);
+    case Cut:
+      return ComputeCutNodeName(locIdx);
+    }
+    return "";
+  }
+
+  String GraphEdState::ComputeCtxNodeName(int locIdx) {
+    return "ContextNode " + StringUtil::FromInt(locIdx) + " : " + String(m_CurrentEditedRule->m_ContextNodes[locIdx].c_str());
+  }
+
+  String GraphEdState::ComputeNewNodeName(int locIdx) {
+    return "NewNode " + StringUtil::FromInt(locIdx) + " : " + String(m_CurrentEditedRule->m_CreateNodes[locIdx].c_str());
+  }
+
+  String GraphEdState::ComputeCutNodeName(int locIdx) {
+    return "CutNode " + StringUtil::FromInt(locIdx) + " : " + String(m_CurrentEditedRule->m_CutNodes[locIdx].c_str());
+  }
+
+  String GraphEdState::ComputeEdgeName(int iEdgeIdx) {
+    uint32_t locIdx;
+    ItemType type = GetEdgeType(iEdgeIdx, &locIdx);
+    switch (type) {
+    case Context:
+      return ComputeCtxEdgeName(locIdx);
+    case New:
+      return ComputeNewEdgeName(locIdx);
+    case Cut:
+      return ComputeCutEdgeName(locIdx);
+    }
+    return "";
+  }
+
+  String GraphEdState::ComputeCtxEdgeName(int locIdx) {
+    return "ContextEdge " + StringUtil::FromInt(locIdx) + " : " + String(m_CurrentEditedRule->m_ContextEdges[locIdx].tag.c_str());
+  }
+
+  String GraphEdState::ComputeNewEdgeName(int locIdx) {
+    return "NewEdge " + StringUtil::FromInt(locIdx) + " : " + String(m_CurrentEditedRule->m_NewEdge[locIdx].tag.c_str());
+  }
+
+  String GraphEdState::ComputeCutEdgeName(int locIdx) {
+    return "CutEdge " + StringUtil::FromInt(locIdx) + " : " + String(m_CurrentEditedRule->m_CutEdge[locIdx].tag.c_str());
+  }
+
+  void GraphEdState::DrawEdgesPanel()
+  {
+    if (ImGui::BeginPopupModal("NewEdge"))
+    {
+      const char* typeNames[] = { "Context", "New", "Cut" };
+
+      if (ImGui::BeginCombo("Edge Type", typeNames[m_NewNodeType]))
+      {
+        for (int i = 0; i < 3; ++i)
+        {
+          bool selected = m_NewEdgeType == i;
+          if (ImGui::Selectable(typeNames[i])) {
+            m_NewEdgeType = i;
+          }
+        }
+        ImGui::EndCombo();
+      }
+
+      if (ImGui::BeginCombo("Tag", m_CurrentSelectedTag == Name() ? "<None>" : m_CurrentSelectedTag.c_str()))
+      {
+        if (m_CurrentSelectedTag == Name()) {
+          ImGui::Selectable("<None>");
+        }
+        for (auto tag : m_Sys->m_Tags)
+        {
+          if (!tag.second.m_IsNodeTag) {
+            bool selected = tag.first == m_CurrentSelectedTag;
+            if (ImGui::Selectable(tag.first.c_str())) {
+              m_CurrentSelectedTag = tag.first;
+            }
+          }
+        }
+        ImGui::EndCombo();
+      }
+
+      if (ImGui::Button("Ok"))
+      {
+        if (m_CurrentSelectedTag != Name()) {
+
+          int insertionPoint;
+          switch (m_NewEdgeType)
+          {
+          case Context:
+          {
+            insertionPoint = m_CurrentEditedRule->m_ContextEdges.size();
+            Rule::Edge ctxEdge;
+            ctxEdge.nodes[0] = ctxEdge.nodes[1] = 0;
+            ctxEdge.tag = m_CurrentSelectedTag;
+            m_CurrentEditedRule->m_ContextEdges.push_back(ctxEdge);
+          }
+            break;
+          case New:
+          {
+            insertionPoint = m_CurrentEditedRule->m_ContextEdges.size() + m_CurrentEditedRule->m_NewEdge.size();
+            Rule::NewEdge newEdge;
+            newEdge.nodes[0] = newEdge.nodes[1] = 0;
+            newEdge.port[0] = newEdge.port[1] = -1;
+            newEdge.tag = m_CurrentSelectedTag;
+            m_CurrentEditedRule->m_NewEdge.push_back(newEdge);
+          }
+            break;
+          case Cut:
+          {
+            Rule::Edge cutEdge;
+            cutEdge.nodes[0] = cutEdge.nodes[1] = 0;
+            cutEdge.tag = m_CurrentSelectedTag;
+            insertionPoint = ComputeCurRuleTotEdges();
+            m_CurrentEditedRule->m_CutEdge.push_back(cutEdge);
+          }
+            break;
+          }
+          m_CurrentSelectedTag = Name();
+        }
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel"))
+      {
+        m_CurrentSelectedTag = Name();
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+    }
+
+    if (ImGui::Button("+"))
+    {
+      ImGui::OpenPopup("NewEdge");
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Button("-"))
+    {
+      EraseCurrentNode();
+    }
+
+    if (ImGui::BeginListBox("EdgesList"))
+    {
+      int edgeIdx = 0;
+      int locEdgeIdx = 0;
+      for (auto& ctxEdge : m_CurrentEditedRule->m_ContextEdges) {
+        bool selected = m_EdgeIdx == edgeIdx;
+        String edgeName = ComputeCtxEdgeName(locEdgeIdx);
+        if (ImGui::Selectable(edgeName.c_str(), &selected)) {
+          m_EdgeIdx = edgeIdx;
+        }
+        ++locEdgeIdx;
+        ++edgeIdx;
+      }
+      locEdgeIdx = 0;
+      for (auto& newEdge : m_CurrentEditedRule->m_NewEdge) {
+        bool selected = m_EdgeIdx == edgeIdx;
+        String edgeName = ComputeNewEdgeName(locEdgeIdx);
+        if (ImGui::Selectable(edgeName.c_str(), &selected)) {
+          m_EdgeIdx = edgeIdx;
+        }
+        ++locEdgeIdx;
+        ++edgeIdx;
+      }
+      locEdgeIdx = 0;
+      for (auto& cutEdge : m_CurrentEditedRule->m_CutEdge) {
+        bool selected = m_EdgeIdx == edgeIdx;
+        String edgeName = ComputeCutEdgeName(locEdgeIdx);
+        if (ImGui::Selectable(edgeName.c_str(), &selected)) {
+          m_EdgeIdx = edgeIdx;
+        }
+        ++locEdgeIdx;
+        ++edgeIdx;
+      }
+
+      ImGui::EndListBox();
+    }
+
+    if (IsCurEdgeValid()) {
+
+      const uint32_t newNodesOffset = m_CurrentEditedRule->m_ContextNodes.size();
+      const uint32_t cutNodesOffset = m_CurrentEditedRule->m_ContextNodes.size() + m_CurrentEditedRule->m_CreateNodes.size();
+      const uint32_t cutEdgesOffset = m_CurrentEditedRule->m_ContextEdges.size() + m_CurrentEditedRule->m_NewEdge.size();
+      const uint32_t numNodes = ComputeCurRuleTotNodes();
+
+      uint32_t locIdx;
+      const ItemType edgeType = GetEdgeType(m_EdgeIdx, &locIdx);
+
+      const char* nodeNames[] = { "Node 1", "Node 2" };
+
+      auto selNodeEdge = [this, nodeNames, numNodes]< typename EdgeType > (EdgeType & edge, int idx, uint32_t allowedTypes) {
+        if (ImGui::BeginCombo(nodeNames[idx], ComputeNodeName(edge.nodes[idx]).c_str())) {
+          for (uint32_t i = 0; i < numNodes; ++i) {
+            ItemType type = GetNodeType(i);
+            if (((1 << type) & allowedTypes) != 0 &&
+              i != edge.nodes[0] && i != edge.nodes[1]) {
+              if (ImGui::Selectable(ComputeNodeName(i).c_str(), edge.nodes[idx] == i)) {
+                edge.nodes[idx] = i;
               }
             }
-            m_EdgeTagSelection->setCurrentIndex(edgeIdx);
-            m_EdgeTagSelection->setEnabled(true);
-          };
-
-          if (iSelected.indexes().size() == 1)
-          {
-            m_Node1Sel->setEnabled(true);
-            m_Node2Sel->setEnabled(true);
-            int nodes[2];
-
-            QSignalBlocker block(m_EdgeTagSelection);
-            int selIdx = iSelected.indexes()[0].row();
-            bool const isNewEdge = selIdx >= m_EdgeNewStart;
-            bool const isCutEdge = !isNewEdge && selIdx >= m_EdgeCutStart;
-            int edgeKind = isNewEdge ? 2 : (isCutEdge ? 1 : 0);
-            if (isNewEdge)
-            {
-              auto const& edgeDesc = m_CurrentEditedRule->m_NewEdge[selIdx - m_EdgeNewStart];
-              m_EdgeTagSelection->clear();
-              fillSelectorAndSet(edgeDesc.tag);
-              std::copy(edgeDesc.nodes, ArrayEnd(edgeDesc.nodes), nodes);
-
-              m_Port1Sel->setEnabled(true);
-              m_Port2Sel->setEnabled(true);
-              RebuildPortSelList(m_Port1Sel, edgeDesc.nodes[0], edgeDesc.port[0]);
-              RebuildPortSelList(m_Port2Sel, edgeDesc.nodes[1], edgeDesc.port[1]);
-            }
-            else if (isCutEdge)
-            {
-              auto const& edgeDesc = m_CurrentEditedRule->m_CutEdge[selIdx - m_EdgeCutStart];
-              m_EdgeTagSelection->clear();
-              m_EdgeTagSelection->addItem(RewriteSystem::GetAnyTag().c_str());
-              fillSelectorAndSet(edgeDesc.tag);
-              std::copy(edgeDesc.nodes, ArrayEnd(edgeDesc.nodes), nodes);
-
-              m_Port1Sel->setEnabled(false);
-              m_Port2Sel->setEnabled(false);
-            }
-            else
-            {
-              auto const& edgeDesc = m_CurrentEditedRule->m_ContextEdges[selIdx];
-              m_EdgeTagSelection->clear();
-              m_EdgeTagSelection->addItem(RewriteSystem::GetAnyTag().c_str());
-              fillSelectorAndSet(edgeDesc.tag);
-              std::copy(edgeDesc.nodes, ArrayEnd(edgeDesc.nodes), nodes);
-
-              m_Port1Sel->setEnabled(false);
-              m_Port2Sel->setEnabled(false);
-            }
-            RebuildNodeSelList(m_Node1Sel, nodes[0], nodes[1], edgeKind);
-            RebuildNodeSelList(m_Node2Sel, nodes[1], nodes[0], edgeKind);
           }
+          ImGui::EndCombo();
         }
-      });
+      };
 
-    edgesCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_FileIcon), "Add New Tag", [this, edgeTypeSel]
+      switch (edgeType) {
+      case Context:
       {
-        if (m_NodesList->count() < 2)
-        {
-          LOG_ERROR << "Cannot create an edge without nodes";
-          return;
-        }
-        int edgeType = edgeTypeSel->currentIndex();
-        Name edgeTag = RewriteSystem::GetAnyTag();
-        if (edgeType == 2)
-        {
-          for (auto const& tag : m_Sys->m_Tags)
-          {
-            if (!tag.second.m_IsNodeTag)
-            {
-              edgeTag = tag.first;
-            }
-          }
-
-          if (edgeTag == RewriteSystem::GetAnyTag())
-          {
-            LOG_ERROR << "Cannot create a edge without a tag";
-            return;
-          }
-        }
-        if (edgeType == 0)
-        {
-          Rule::Edge ctxEdge;
-          ctxEdge.tag = edgeTag;
-          ctxEdge.nodes[0] = 0;
-          ctxEdge.nodes[1] = 1;
-          m_CurrentEditedRule->m_ContextEdges.push_back(ctxEdge);
-        }
-        if (edgeType == 1)
-        {
-          Rule::Edge cutEdge;
-          cutEdge.tag = edgeTag;
-          cutEdge.nodes[0] = 0;
-          cutEdge.nodes[1] = 1;
-          m_CurrentEditedRule->m_CutEdge.push_back(cutEdge);
-        }
-        if (edgeType == 2)
-        {
-          Rule::NewEdge newEdge;
-          newEdge.tag = edgeTag;
-          newEdge.nodes[0] = 0;
-          newEdge.nodes[1] = 1;
-          newEdge.port[0] = -1;
-          newEdge.port[1] = -1;
-
-          m_CurrentEditedRule->m_NewEdge.push_back(newEdge);
-        }
-        RebuildEdgeList();
-      });
-
-    edgesCollectionTool->addAction(m_Editor->style()->standardIcon(QStyle::SP_DialogCancelButton), "Remove Tag", [this]
-      {
-        if (m_EdgesList->selectedItems().count() == 1)
-        {
-          int selIdx = m_EdgesList->row(m_EdgesList->selectedItems()[0]);
-          if (selIdx >= m_EdgeNewStart)
-          {
-            m_CurrentEditedRule->m_NewEdge.erase(m_CurrentEditedRule->m_NewEdge.begin() + (selIdx - m_EdgeNewStart));
-          }
-          else if (selIdx >= m_EdgeCutStart)
-          {
-            m_CurrentEditedRule->m_CutEdge.erase(m_CurrentEditedRule->m_CutEdge.begin() + (selIdx - m_EdgeCutStart));
-          }
-          else
-          {
-            m_CurrentEditedRule->m_ContextEdges.erase(m_CurrentEditedRule->m_ContextEdges.begin() + selIdx);
-          }
-
-          RebuildEdgeList();
-        }
-      });
-
-    edgesCollectionLayout->addWidget(m_EdgesList);
-    QObject::connect(m_EdgeTagSelection, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this](int iIndex)
-      {
-        if (iIndex == -1)
-        {
-          return;
-        }
-        if (m_EdgesList->selectedItems().isEmpty())
-        {
-          return;
-        }
-        Name selTag(m_EdgeTagSelection->itemText(iIndex).toUtf8());
-
-        int selIdx = m_EdgesList->row(m_EdgesList->selectedItems()[0]);
-        Name& curTag =
-          (selIdx >= m_EdgeNewStart) ? m_CurrentEditedRule->m_NewEdge[selIdx - m_EdgeNewStart].tag :
-          ((selIdx >= m_EdgeCutStart) ? m_CurrentEditedRule->m_CutEdge[selIdx - m_EdgeCutStart].tag :
-            m_CurrentEditedRule->m_ContextEdges[selIdx].tag);
-
-        if (selTag == RewriteSystem::GetAnyTag())
-        {
-          if (curTag == selTag)
-          {
-            return;
-          }
-        }
-        else
-        {
-          auto iter = m_Sys->m_Tags.find(selTag);
-
-          if (iter != m_Sys->m_Tags.end()
-            && !iter->second.m_IsNodeTag
-            && curTag == iter->first)
-          {
-            return;
-          }
-        }
-
-        curTag = selTag;
-        m_Editor->ModifyResource();
-        RebuildEdgeList();
-        m_EdgesList->setItemSelected(m_EdgesList->item(selIdx), true);
-      });
-    m_EdgeTagSelection->setEnabled(false);
-    edgesCollectionLayout->addWidget(m_EdgeTagSelection);
-
-    m_Node1Sel = new QComboBox(edgesCollection);
-    m_Node2Sel = new QComboBox(edgesCollection);
-
-    m_Port1Sel = new QComboBox(edgesCollection);
-    m_Port2Sel = new QComboBox(edgesCollection);
-
-    edgesCollectionLayout->addWidget(m_Node1Sel);
-    edgesCollectionLayout->addWidget(m_Node2Sel);
-    edgesCollectionLayout->addWidget(m_Port1Sel);
-    edgesCollectionLayout->addWidget(m_Port2Sel);
-
-    m_Node1Sel->setEnabled(false);
-    m_Node2Sel->setEnabled(false);
-    m_Port1Sel->setEnabled(false);
-    m_Port2Sel->setEnabled(false);
-
-    auto onNodeChanged = [this](uint32_t iNodeIndex, int iNodeNum, QComboBox* iOtherBox, QComboBox* iPortSel)
-    {
-      if (m_EdgesList->selectedItems().count() == 1)
-      {
-        int selIdx = m_EdgesList->row(m_EdgesList->selectedItems()[0]);
-        uint32_t* nodes = (selIdx >= m_EdgeNewStart) ? m_CurrentEditedRule->m_NewEdge[selIdx - m_EdgeNewStart].nodes
-          : (selIdx >= m_EdgeCutStart ? m_CurrentEditedRule->m_CutEdge[selIdx - m_EdgeCutStart].nodes
-            : m_CurrentEditedRule->m_ContextEdges[selIdx].nodes);
-
-        bool const isNewEdge = selIdx >= m_EdgeNewStart;
-        bool const isCutEdge = !isNewEdge && selIdx >= m_EdgeCutStart;
-        int edgeKind = isNewEdge ? 2 : (isCutEdge ? 1 : 0);
-
-        nodes[iNodeNum] = iNodeIndex;
-        if (isNewEdge)
-        {
-          RebuildPortSelList(iPortSel, iNodeIndex, m_CurrentEditedRule->m_NewEdge[selIdx - m_EdgeNewStart].port[iNodeNum]);
-        }
-        RebuildNodeSelList(iOtherBox, nodes[1 - iNodeNum], nodes[iNodeNum], edgeKind);
-        UpdateDisplay();
-        m_Editor->ModifyResource();
+        Rule::Edge& edge = m_CurrentEditedRule->m_ContextEdges[locIdx];
+        selNodeEdge(edge, 0, (1 << Context) | (1 << Cut));
+        selNodeEdge(edge, 1, (1 << Context) | (1 << Cut));
       }
-    };
-
-    QObject::connect(m_Node1Sel, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, onNodeChanged](int iIndex)
+      break;
+      case New:
       {
-        onNodeChanged(m_Node1Sel->itemData(iIndex).toInt(), 0, m_Node2Sel, m_Port1Sel);
-      });
+        Rule::NewEdge& edge = m_CurrentEditedRule->m_NewEdge[locIdx];
+        selNodeEdge(edge, 0, (1 << Context) | (1 << New));
+        selNodeEdge(edge, 1, (1 << Context) | (1 << New));
 
-    QObject::connect(m_Node2Sel, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, onNodeChanged](int iIndex)
-      {
-        onNodeChanged(m_Node2Sel->itemData(iIndex).toInt(), 1, m_Node1Sel, m_Port2Sel);
-      });
-
-    auto onPortChanged = [this](uint32_t iEdgeIndex, int iNodeNum)
-    {
-      if (m_EdgesList->selectedItems().count() == 1)
-      {
-        int selIdx = m_EdgesList->row(m_EdgesList->selectedItems()[0]);
-        eXl_ASSERT(selIdx >= m_EdgeNewStart);
-
-        Rule::NewEdge& newEdge = m_CurrentEditedRule->m_NewEdge[selIdx - m_EdgeNewStart];
-        newEdge.port[iNodeNum] = iEdgeIndex;
-        m_Editor->ModifyResource();
+        auto selEdgePort = [this, cutEdgesOffset](Rule::NewEdge & edge, int idx, uint32_t allowedTypes) {
+          const char* portNames[] = { "Port 1", "Port 2" };
+          const char* noPort = "<None>";
+          if (ImGui::BeginCombo(portNames[idx], edge.port[idx] >= 0 ? ComputeEdgeName(edge.port[idx]).c_str() : noPort)) {
+            if (ImGui::Selectable(noPort, edge.port[idx] < 0)) {
+              edge.port[idx] = -1;
+            }
+            for (uint32_t i = 0; i < m_CurrentEditedRule->m_CutEdge.size(); ++i) {
+              const uint32_t edgeIdx = cutEdgesOffset + i;
+              if (edgeIdx != edge.port[idx]) {
+                if (ImGui::Selectable(ComputeCutEdgeName(i).c_str(), edge.port[idx] == edgeIdx)) {
+                  edge.nodes[idx] = edgeIdx;
+                }
+              }
+            }
+            ImGui::EndCombo();
+          }
+        };
       }
-    };
-
-    QObject::connect(m_Port1Sel, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, onPortChanged](int iIndex)
+      break;
+      case Cut:
       {
-        onPortChanged(m_Port1Sel->itemData(iIndex).toInt(), 0);
-      });
-
-    QObject::connect(m_Port2Sel, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this, onPortChanged](int iIndex)
-      {
-        onPortChanged(m_Port2Sel->itemData(iIndex).toInt(), 1);
-      });
-
-    return edgesCollection;
+        Rule::Edge& edge = m_CurrentEditedRule->m_CutEdge[locIdx];
+        selNodeEdge(edge, 0, (1 << Context) | (1 << Cut));
+        selNodeEdge(edge, 1, (1 << Context) | (1 << Cut));
+      }
+      break;
+      }
+    }
   }
 
-
-  void Draw(GraphEdState const& iState) {
+  void GraphEdState::Draw() {
     if (ImGui::Begin("GraphEditor")) {
-      ImGui::BeginMenuBar();
+      
+      ImGui::BeginTable("GraphEditorRoot", 2, ImGuiTableFlags_Resizable );
+      ImGui::TableSetupColumn("Data", ImGuiTableColumnFlags_WidthFixed, 400);
+      ImGui::TableSetupColumn("View");
+      ImGui::TableNextColumn();
+;      const char* tabs[] = { "Tags", "Rules", "Nodes", "Edges" };
+      bool opened[] = { false, false, false, false };
+      opened[m_CurrentTab] = true;
 
-      ImGui::EndMenuBar();
+      void(GraphEdState ::*drawFun[])() = { &GraphEdState::DrawTagsPanel, &GraphEdState::DrawRulesPanel, &GraphEdState::DrawNodesPanel, &GraphEdState::DrawEdgesPanel};
 
       ImGui::BeginTabBar( "EditRoot" );
-
-      ImGui::BeginTabItem("Rules");
-      ImGui::BeginListBox("RuleList");
-      ImGui::EndListBox();
-      ImGui::EndTabBar();
+      for( uint32_t i = 0; i< 4; ++i)
+      {
+        if (i >= 2 && m_CurrentEditedRule == nullptr) 
+        {
+          break;
+        }
+        if (ImGui::BeginTabItem(tabs[i])) 
+        {
+          m_CurrentTab = i;
+          (this->*drawFun[i])();
+        
+          ImGui::EndTabItem();
+        } 
+      }
       
+      ImGui::EndTabBar();
+     
+      ImGui::TableNextColumn();
+      
+
+      ImGui::EndTable();
+
     }
     ImGui::End();
   }
 }
-
 
 #include <gen/pregraph.hpp>
 #include <gen/graphutils.hpp>
@@ -681,10 +820,10 @@ namespace eXl
     nodesColor.clear();
   }
 
-  void UpdateDisplay(World& iWorld, GraphEdState & iState)
+  void GraphEdState::UpdateDisplay(World& iWorld)
   {
-    iState.m_DrawInfos.Clear();
-    if (iState.m_CurrentEditedRule == nullptr)
+    m_DrawInfos.Clear();
+    if (m_CurrentEditedRule == nullptr)
     {
       return;
     }
@@ -698,46 +837,46 @@ namespace eXl
     defaultPos[0] = 0;
     defaultPos[1] = 0;
 
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_ContextNodes.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_ContextNodes.size(); ++i)
     {
-      Name nodeTag = iState.m_CurrentEditedRule->m_ContextNodes[i];
+      Name nodeTag = m_CurrentEditedRule->m_ContextNodes[i];
       nodeTags.push_back(nodeTag);
-      iState.m_DrawInfos.nodesColor.push_back(Vec4(0, 0, 1, 1));
+      m_DrawInfos.nodesColor.push_back(Vec4(0, 0, 1, 1));
       nodes.push_back(boost::add_vertex(srcGraph));
       boost::put(boost::vertex_index, srcGraph, nodes.back(), boost::num_vertices(srcGraph) - 1);
       boost::put(positionMap, nodes.back(), defaultPos);
-      iState.m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i) + " : " + String(nodeTag.get()));
+      m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i) + " : " + String(nodeTag.get()));
     }
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_CutNodes.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_CutNodes.size(); ++i)
     {
-      Name nodeTag = iState.m_CurrentEditedRule->m_CutNodes[i];
+      Name nodeTag = m_CurrentEditedRule->m_CutNodes[i];
       nodeTags.push_back(nodeTag);
-      iState.m_DrawInfos.nodesColor.push_back(Vec4(1.0, 0, 0, 1.0));
+      m_DrawInfos.nodesColor.push_back(Vec4(1.0, 0, 0, 1.0));
       nodes.push_back(boost::add_vertex(srcGraph));
       boost::put(boost::vertex_index, srcGraph, nodes.back(), boost::num_vertices(srcGraph) - 1);
       boost::put(positionMap, nodes.back(), defaultPos);
-      iState.m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i + iState.m_NodeCutStart) + " : " + String(nodeTag.get()));
+      m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i) + " : " + String(nodeTag.get()));
     }
 
     Vector<ES_RuleSystem::GraphEdge> edges;
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_ContextEdges.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_ContextEdges.size(); ++i)
     {
-      auto const& edge = iState.m_CurrentEditedRule->m_ContextEdges[i];
-      iState.m_DrawInfos.edgesColor.push_back(Vec4(0, 0, 1.0, 1.0));
+      auto const& edge = m_CurrentEditedRule->m_ContextEdges[i];
+      m_DrawInfos.edgesColor.push_back(Vec4(0, 0, 1.0, 1.0));
       edges.push_back(boost::add_edge(nodes[edge.nodes[0]], nodes[edge.nodes[1]], srcGraph).first);
-      iState.m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i) + " : " + String(edge.tag.get()));
+      m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i) + " : " + String(edge.tag.get()));
     }
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_CutEdge.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_CutEdge.size(); ++i)
     {
-      auto const& edge = iState.m_CurrentEditedRule->m_CutEdge[i];
-      iState.m_DrawInfos.edgesColor.push_back(Vec4(1.0, 0, 0, 1.0));
+      auto const& edge = m_CurrentEditedRule->m_CutEdge[i];
+      m_DrawInfos.edgesColor.push_back(Vec4(1.0, 0, 0, 1.0));
       edges.push_back(boost::add_edge(nodes[edge.nodes[0]], nodes[edge.nodes[1]], srcGraph).first);
-      iState.m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i + iState.m_EdgeCutStart) + " : " + String(edge.tag.get()));
+      m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i) + " : " + String(edge.tag.get()));
     }
 
-    uint32_t const totNumNodes = iState.m_CurrentEditedRule->m_ContextNodes.size() 
-                               + iState.m_CurrentEditedRule->m_CreateNodes.size()
-                               + iState.m_CurrentEditedRule->m_CutNodes.size();
+    uint32_t const totNumNodes = m_CurrentEditedRule->m_ContextNodes.size()
+                               + m_CurrentEditedRule->m_CreateNodes.size()
+                               + m_CurrentEditedRule->m_CutNodes.size();
 
     const float nodeSize = 10;
 
@@ -753,12 +892,14 @@ namespace eXl
     {
       auto const& vtx = nodes[i];
       auto pos = boost::get(positionMap, vtx);
-      iState.m_DrawInfos.nodes.push_back(Vec2(pos[0], pos[1]));
+      m_DrawInfos.nodes.push_back(Vec2(pos[0], pos[1]));
 
       Name tag = nodeTags[i];
-      auto iter = iState.m_Sys->m_Tags.find(tag);
-      if (iter != iState.m_Sys->m_Tags.end())
+      auto iter = m_Sys->m_Tags.find(tag);
+      if (iter != m_Sys->m_Tags.end())
       {
+        
+        
         //auto iterAdd = m_SysRsc->m_Tags.find(tag);
         //if (iterAdd != m_SysRsc->m_Tags.end() && iterAdd->second.m_Archetype.GetUUID().IsValid())
         //{
@@ -774,7 +915,7 @@ namespace eXl
         //}
       }
     }
-
+    
     for (auto const& edge : edges)
     {
       auto pos1 = boost::get(positionMap, edge.m_source);
@@ -784,7 +925,7 @@ namespace eXl
       Vec2d dir = normalize(pos2V - pos1V);
       pos2V -= dir * double(nodeSize);
       pos1V += dir * double(nodeSize);
-      iState.m_DrawInfos.edges.push_back(Segmentf(Vec2(pos1[0], pos1[1]), Vec2(pos2[0], pos2[1])));
+      m_DrawInfos.edges.push_back(Segmentf(Vec2(pos1[0], pos1[1]), Vec2(pos2[0], pos2[1])));
     }
 
     rectangle = boost::rectangle_topology<>(dist * 0.3, -dist, dist * 1.3, dist);
@@ -794,42 +935,40 @@ namespace eXl
     edges.clear();
     positionMap.m_Map.clear();
 
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_ContextNodes.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_ContextNodes.size(); ++i)
     {
-      Name nodeTag = iState.m_CurrentEditedRule->m_ContextNodes[i];
+      Name nodeTag = m_CurrentEditedRule->m_ContextNodes[i];
       nodeTags.push_back(nodeTag);
-      iState.m_DrawInfos.nodesColor.push_back(Vec4(0, 0, 1.0, 1.0));
+      m_DrawInfos.nodesColor.push_back(Vec4(0, 0, 1.0, 1.0));
       nodes.push_back(boost::add_vertex(srcGraph));
       boost::put(boost::vertex_index, srcGraph, nodes.back(), boost::num_vertices(srcGraph) - 1);
       boost::put(positionMap, nodes.back(), defaultPos);
-      iState.m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i) + " : " + String(nodeTag.get()));
+      m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i) + " : " + String(nodeTag.get()));
     }
-    nodes.resize(iState.m_NodeNewStart, ES_RuleSystem::Graph::null_vertex());
-    nodeTags.resize(iState.m_NodeNewStart, Name());
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_CreateNodes.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_CreateNodes.size(); ++i)
     {
-      Name nodeTag = iState.m_CurrentEditedRule->m_CreateNodes[i];
+      Name nodeTag = m_CurrentEditedRule->m_CreateNodes[i];
       nodeTags.push_back(nodeTag);
-      iState.m_DrawInfos.nodesColor.push_back(Vec4(0, 1.0, 0, 1.0));
+      m_DrawInfos.nodesColor.push_back(Vec4(0, 1.0, 0, 1.0));
       nodes.push_back(boost::add_vertex(srcGraph));
       boost::put(boost::vertex_index, srcGraph, nodes.back(), boost::num_vertices(srcGraph) - 1);
       boost::put(positionMap, nodes.back(), defaultPos);
-      iState.m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i + iState.m_NodeNewStart) + " : " + String(nodeTag.get()));
+      m_DrawInfos.nodeDesc.push_back(StringUtil::FromInt(i) + " : " + String(nodeTag.get()));
     }
 
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_ContextEdges.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_ContextEdges.size(); ++i)
     {
-      auto const& edge = iState.m_CurrentEditedRule->m_ContextEdges[i];
-      iState.m_DrawInfos.edgesColor.push_back(Vec4(0, 0, 1.0, 1.0));
+      auto const& edge = m_CurrentEditedRule->m_ContextEdges[i];
+      m_DrawInfos.edgesColor.push_back(Vec4(0, 0, 1.0, 1.0));
       edges.push_back(boost::add_edge(nodes[edge.nodes[0]], nodes[edge.nodes[1]], srcGraph).first);
-      iState.m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i) + " : " + String(edge.tag.get()));
+      m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i) + " : " + String(edge.tag.get()));
     }
-    for (uint32_t i = 0; i < iState.m_CurrentEditedRule->m_NewEdge.size(); ++i)
+    for (uint32_t i = 0; i < m_CurrentEditedRule->m_NewEdge.size(); ++i)
     {
-      auto const& edge = iState.m_CurrentEditedRule->m_NewEdge[i];
-      iState.m_DrawInfos.edgesColor.push_back(Vec4(0, 1.0, 0, 1.0));
+      auto const& edge = m_CurrentEditedRule->m_NewEdge[i];
+      m_DrawInfos.edgesColor.push_back(Vec4(0, 1.0, 0, 1.0));
       edges.push_back(boost::add_edge(nodes[edge.nodes[0]], nodes[edge.nodes[1]], srcGraph).first);
-      iState.m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i + iState.m_EdgeNewStart) + " : " + String(edge.tag.get()));
+      m_DrawInfos.edgeDesc.push_back(StringUtil::FromInt(i) + " : " + String(edge.tag.get()));
     }
 
     boost::random_graph_layout(srcGraph, MakeRef(positionMap), rectangle);
@@ -843,11 +982,11 @@ namespace eXl
         continue;
       }
       auto pos = boost::get(positionMap, vtx);
-      iState.m_DrawInfos.nodes.push_back(Vec2(pos[0], pos[1]));
+      m_DrawInfos.nodes.push_back(Vec2(pos[0], pos[1]));
 
       Name tag = nodeTags[i];
-      auto iter = iState.m_Sys->m_Tags.find(tag);
-      if (iter != iState.m_Sys->m_Tags.end())
+      auto iter = m_Sys->m_Tags.find(tag);
+      if (iter != m_Sys->m_Tags.end())
       {
         //auto iterAdd = m_SysRsc->m_Tags.find(tag);
         //if (iterAdd != m_SysRsc->m_Tags.end() && iterAdd->second.m_Archetype.GetUUID().IsValid())
@@ -874,7 +1013,7 @@ namespace eXl
       Vec2d dir = normalize(pos2V - pos1V);
       pos2V -= dir * double(nodeSize);
       pos1V += dir * double(nodeSize);
-      iState.m_DrawInfos.edges.push_back(Segmentf(Vec2(pos1[0], pos1[1]), Vec2(pos2[0], pos2[1])));
+      m_DrawInfos.edges.push_back(Segmentf(Vec2(pos1[0], pos1[1]), Vec2(pos2[0], pos2[1])));
     }
   }
 }

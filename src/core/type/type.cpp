@@ -26,7 +26,7 @@ namespace eXl{
 
   Type const* Type::GetType()
   {
-    static ClassType s_Class("Type", StaticRtti(), ClassType::DynamicCast(RttiObject::GetType()));
+    static ClassType s_Class("eXl::Type", StaticRtti(), ClassType::DynamicCast(RttiObject::GetType()));
 
     return &s_Class;
   }
@@ -261,7 +261,7 @@ namespace eXl{
   KString Type::GetLuaNativeType() const
   { return KString(); }
 
-  void Type::RegisterScope(lua_State* iState, luabind::scope& iScope) const
+  void Type::RegisterScope(lua_State* iState, luabind::scope const& iScope) const
   {
     String const& moduleName = m_ScopedName[0];
 

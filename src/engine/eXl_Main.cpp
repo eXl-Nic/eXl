@@ -75,6 +75,7 @@ extern "C"
 #include <engine/pathfinding/navigator.hpp>
 #include <engine/common/project.hpp>
 #include <engine/game/scenariobase.hpp>
+#include <engine/nativeedit/graphed.hpp>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -306,6 +307,65 @@ private:
   ProfilingState const& m_State;
 };
 
+struct ControlState {
+  ControlState(Scenario_Base& iScenario) : m_Scenario(iScenario){}
+  Scenario_Base& m_Scenario;
+  CameraState::InputToProcess m_CamInputs = CameraState::None;
+  bool m_PlayerDirectControl = true;
+  bool m_CamControl = true;
+};
+
+class ControlPanel : public MenuManager::Panel
+{
+public:
+  ControlPanel(ControlState & iState) : m_State(iState)
+  {}
+private:
+  void Display() override
+  {
+    
+    if (ImGui::Checkbox("Camera Control", &m_State.m_CamControl)) 
+    {
+      Transforms& transforms = *m_State.m_Scenario.GetWorld().GetSystem<Transforms>();
+      if (!m_State.m_CamControl) 
+      {
+        transforms.Attach(m_State.m_Scenario.GetCamera().cameraObj, m_State.m_Scenario.GetMainChar(), Transforms::Position);
+      }
+      else 
+      {
+        transforms.Detach(m_State.m_Scenario.GetCamera().cameraObj);
+      }
+    }
+    bool wheelZoom = (m_State.m_CamInputs & CameraState::WheelZoom) != CameraState::None;
+    bool rightClickPan = (m_State.m_CamInputs & CameraState::RightClickPan) != CameraState::None;
+    bool keyMove = (m_State.m_CamInputs & CameraState::KeyMove) != CameraState::None;
+    ImGui::Checkbox("Camera Wheel zoom", &wheelZoom);
+    ImGui::Checkbox("Camera Right click pan", &rightClickPan);
+    ImGui::Checkbox("Camera Key move", &keyMove);
+    m_State.m_CamInputs = CameraState::InputToProcess(
+        (wheelZoom ? CameraState::WheelZoom : CameraState::None) |
+        (rightClickPan ? CameraState::RightClickPan : CameraState::None) |
+        (keyMove ? CameraState::KeyMove : CameraState::None));
+
+    if (ImGui::Checkbox("Player Control", &m_State.m_PlayerDirectControl)) 
+    {
+      Transforms& transforms = *m_State.m_Scenario.GetWorld().GetSystem<Transforms>();
+      Vec3 curPos = transforms.GetWorldTransform(m_State.m_Scenario.GetMainChar())[3];
+      m_State.m_Scenario.GetWorld().DeleteObject(m_State.m_Scenario.GetMainChar());
+      if( m_State.m_PlayerDirectControl)
+      {
+        m_State.m_Scenario.SetMainChar(m_State.m_Scenario.SpawnCharacter(m_State.m_Scenario.GetWorld(), curPos, EngineCommon::CharacterControlKind::PlayerControl));
+      }
+      else
+      {
+        m_State.m_Scenario.SetMainChar(m_State.m_Scenario.SpawnCharacter(m_State.m_Scenario.GetWorld(), curPos, EngineCommon::CharacterControlKind::Navigation));
+      }
+    }
+  }
+
+  ControlState & m_State;
+};
+
 namespace eXl
 {
   class SDL_Application : public Engine_Application
@@ -323,6 +383,7 @@ namespace eXl
     WorldState* m_World = nullptr;
     Project* m_Project = nullptr;
     Optional<WorldConfig> m_Conf;
+    Optional<ControlState> m_ControlState;
     bool m_DisplayDebugUI = false;
 
     void InitOGL()
@@ -384,8 +445,8 @@ namespace eXl
       SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
       SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 #else
-      //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-      //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
@@ -397,6 +458,8 @@ namespace eXl
       {
         Log_Manager::AddOutput(eXl_NEW ImGuiLogOutput(m_LogState, logLevel), 1 << logLevel);
       }
+      Log_Manager::AddOutput(eXl_NEW ImGuiLogOutput(m_LogState, LUA_OUT_STREAM), LUA_OUT_STREAM_FLAG);
+      Log_Manager::AddOutput(eXl_NEW ImGuiLogOutput(m_LogState, LUA_ERR_STREAM), LUA_ERR_STREAM_FLAG);
 
 #ifndef __ANDROID__
       IMGUI_CHECKVERSION();
@@ -416,13 +479,25 @@ namespace eXl
         .AddOpenPanelCommand("Profiling", [this] {return eXl_NEW ProfilingPanel(m_World->GetProfilingState()); })
         .AddOpenPanelCommand("Debug", [this] {return eXl_NEW DebugPanel(m_World->GetWorld()); })
         .AddOpenPanelCommand("Debug Visualizer", [this] {return eXl_NEW DebugVisualizerPanel(m_DebugVisState); })
-        //.AddOpenPanelCommand("Console", [this] {return eXl_NEW LuaConsolePanel(m_Console); })
+        .AddOpenPanelCommand("Console", [this] {return eXl_NEW LuaConsolePanel(*m_Console); })
         .EndMenu();
+
+      if (GetScenario()->GetRtti().IsKindOf(Scenario_Base::StaticRtti())) {
+        m_ControlState.emplace(static_cast<Scenario_Base&>(*GetScenario()));
+        menuMgr.AddMenu("Control").AddOpenPanelCommand("Controls", [this] {return eXl_NEW ControlPanel(*m_ControlState); }).EndMenu();
+      }
+
       NavigatorBench::AddNavigatorBenchMenu(menuMgr, m_World->GetWorld());
 #endif
 
       m_World->GetCamera().view.viewportSize = viewportSize;
       m_World->GetWorld().GetSystem<GUISystem>()->SetViewport(viewportSize);
+
+      TagDef tag;
+      tag.m_IsNodeTag = true;
+      rwSys.m_Tags.insert(std::make_pair(Name("Room"), tag));
+      tag.m_IsNodeTag = false;
+      rwSys.m_Tags.insert(std::make_pair(Name("Connection"), tag));
     }
 
     void PumpMessages(float iDelta)
@@ -603,7 +678,10 @@ namespace eXl
 #ifndef __ANDROID__
         if (m_DisplayDebugUI)
         {
+          graphEd.m_Sys = &rwSys;
           menuMgr.DisplayPanels();
+
+          //graphEd.Draw();
         }
 #endif
 
@@ -630,6 +708,15 @@ namespace eXl
       InputSystem& inputs = GetInputSystem();
 
       //m_CamState.ProcessInputs(world, inputs);
+      if (m_ControlState.has_value()) 
+      {
+        m_World->GetCamera().ProcessInputs(m_World->GetWorld(), inputs, m_ControlState->m_CamInputs );
+      } 
+      else
+      {
+        m_World->GetCamera().ProcessInputs(m_World->GetWorld(), inputs );
+      }
+      
       m_World->Tick();
 
       inputs.Clear();
@@ -697,6 +784,8 @@ namespace eXl
     PropertiesManifest appManifest;
     EventsManifest events;
     ComponentManifest component;
+    GraphEdState graphEd;
+    RewriteSystem rwSys;
   };
 }
 

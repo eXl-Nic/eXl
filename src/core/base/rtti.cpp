@@ -20,7 +20,7 @@ namespace eXl
 #ifdef EXL_TYPE_ENABLED
   Type const* RttiObject::GetType()
   {
-    static ClassType s_Class("RttiObject", StaticRtti(), nullptr);
+    static ClassType s_Class("eXl::RttiObject", StaticRtti(), nullptr);
 
     return &s_Class;
   }
